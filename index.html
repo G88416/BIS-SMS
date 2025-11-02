@@ -12,62 +12,62 @@
     <script src="https://cdn.jsdelivr.net/npm/mammoth@1.4.2/mammoth.browser.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <style>
-        body { font-family: 'Poppins', sans-serif; background-color: #f0f8ff; color: #333; } /* Light sky blue background */
-        .sidebar { background-color: #e6f3ff; border-right: 1px solid #87ceeb; height: 100vh; position: fixed; width: 250px; padding: 20px; overflow-y: auto; transition: width 0.3s ease; z-index: 1000; } /* Sky blue tint */
+        body { font-family: 'Poppins', sans-serif; background-color: #f0f8ff; color: #333; box-shadow: inset 0 0 20px rgba(255, 165, 0, 0.1); } /* Light sky blue background with subtle orange inset shadow */
+        .sidebar { background-color: #e6f3ff; border-right: 1px solid #87ceeb; height: 100vh; position: fixed; width: 250px; padding: 20px; overflow-y: auto; transition: width 0.3s ease; z-index: 1000; box-shadow: 2px 0 15px rgba(255, 165, 0, 0.2); } /* Sky blue tint with orange shadow */
         .sidebar.collapsed { width: 60px; }
         .sidebar.collapsed .nav-text { display: none; }
         .sidebar .nav-link { color: #001f3f; font-weight: 500; margin-bottom: 10px; padding: 10px; transition: all 0.2s; } /* Navy blue text */
-        .sidebar .nav-link:hover { color: #4169e1; background-color: #add8e6; border-radius: 5px; } /* Royal blue text, light sky blue bg */
-        .sidebar .nav-link.active { color: #4169e1; background-color: #b0e0e6; border-radius: 5px; } /* Royal blue text, powder blue bg */
-        .content { margin-left: 250px; padding: 40px; transition: margin-left 0.3s ease; background-color: #f8fbff; } /* Very light sky blue */
+        .sidebar .nav-link:hover { color: #4169e1; background-color: #add8e6; border-radius: 5px; box-shadow: 0 2px 5px rgba(255, 165, 0, 0.3); } /* Royal blue text, light sky blue bg with orange shadow */
+        .sidebar .nav-link.active { color: #4169e1; background-color: #b0e0e6; border-radius: 5px; box-shadow: 0 2px 5px rgba(255, 165, 0, 0.4); } /* Royal blue text, powder blue bg with orange shadow */
+        .content { margin-left: 250px; padding: 40px; transition: margin-left 0.3s ease; background-color: #f8fbff; box-shadow: inset 0 0 20px rgba(255, 165, 0, 0.05); } /* Very light sky blue with subtle orange inset */
         .content.expanded { margin-left: 60px; }
-        .card-metric { background-color: #ffffff; border: 1px solid #add8e6; box-shadow: 0 4px 15px rgba(135,206,235,0.2); border-radius: 10px; transition: transform 0.2s; } /* Sky blue border and shadow */
-        .card-metric:hover { transform: translateY(-5px); }
-        .table { background-color: #ffffff; box-shadow: 0 2px 10px rgba(135,206,235,0.1); border-radius: 10px; overflow: hidden; border: 1px solid #e6f3ff; } /* Sky blue subtle shadow and border */
-        .modal-content { border-radius: 15px; box-shadow: 0 5px 20px rgba(65,105,225,0.2); border: 1px solid #add8e6; } /* Royal blue shadow, sky blue border */
+        .card-metric { background-color: #ffffff; border: 1px solid #add8e6; box-shadow: 0 4px 15px rgba(255, 165, 0, 0.3); border-radius: 10px; transition: transform 0.2s; } /* Sky blue border and orange shadow */
+        .card-metric:hover { transform: translateY(-5px); box-shadow: 0 6px 20px rgba(255, 165, 0, 0.4); }
+        .table { background-color: #ffffff; box-shadow: 0 2px 10px rgba(255, 165, 0, 0.2); border-radius: 10px; overflow: hidden; border: 1px solid #e6f3ff; } /* Sky blue subtle shadow and border, now with orange shadow */
+        .modal-content { border-radius: 15px; box-shadow: 0 5px 20px rgba(255, 165, 0, 0.3); border: 1px solid #add8e6; } /* Royal blue shadow replaced with orange, sky blue border */
         #dashboardChart { max-height: 400px; }
         .section { animation: fadeIn 0.5s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         .search-input { max-width: 300px; }
-        .btn-toggle-sidebar { position: fixed; top: 20px; left: 260px; z-index: 1001; transition: left 0.3s ease; background-color: #4169e1; border-color: #4169e1; } /* Royal blue button */
+        .btn-toggle-sidebar { position: fixed; top: 20px; left: 260px; z-index: 1001; transition: left 0.3s ease; background-color: #4169e1; border-color: #4169e1; box-shadow: 0 2px 5px rgba(255, 165, 0, 0.3); } /* Royal blue button with orange shadow */
         .btn-toggle-sidebar.expanded { left: 70px; }
-        #pdfViewer { height: 500px; width: 100%; border: 1px solid #87ceeb; } /* Sky blue border */
+        #pdfViewer { height: 500px; width: 100%; border: 1px solid #87ceeb; box-shadow: inset 0 0 10px rgba(255, 165, 0, 0.1); } /* Sky blue border with orange inset */
         #previewTable { max-height: 400px; overflow-y: auto; }
-        .compliance-card { background: linear-gradient(135deg, #0d6efd 0%, #4169e1 50%, #001f3f 100%); color: white; } /* Gradient: blue to royal to navy */
+        .compliance-card { background: linear-gradient(135deg, #0d6efd 0%, #4169e1 50%, #001f3f 100%); color: white; box-shadow: 0 4px 15px rgba(255, 165, 0, 0.3); } /* Gradient: blue to royal to navy with orange shadow */
         .checklist-item { display: flex; align-items: center; }
         .checklist-item input[type="checkbox"]:checked + label { text-decoration: line-through; }
-        .checklist-section { border: 1px solid #add8e6; padding: 15px; border-radius: 8px; margin-bottom: 20px; background-color: #f0f8ff; } /* Sky blue border and light bg */
-        .preview-canvas { max-width: 100%; height: auto; border: 1px solid #87ceeb; } /* Sky blue border */
+        .checklist-section { border: 1px solid #add8e6; padding: 15px; border-radius: 8px; margin-bottom: 20px; background-color: #f0f8ff; box-shadow: 0 2px 5px rgba(255, 165, 0, 0.1); } /* Sky blue border and light bg with orange shadow */
+        .preview-canvas { max-width: 100%; height: auto; border: 1px solid #87ceeb; box-shadow: 0 2px 5px rgba(255, 165, 0, 0.2); } /* Sky blue border with orange shadow */
         .upload-preview { max-height: 300px; overflow: auto; }
         @media (max-width: 768px) {
-            .sidebar { width: 60px; }
+            .sidebar { width: 60px; box-shadow: 2px 0 10px rgba(255, 165, 0, 0.2); }
             .content { margin-left: 60px; }
             .btn-toggle-sidebar { left: 70px; }
             .sidebar .nav-text { display: none; }
         }
 
-        /* Dark Mode Styles (enhanced with blue tones) */
-        .dark-mode { background-color: #001f3f; color: #e0e0e0; } /* Navy blue bg */
-        .dark-mode .sidebar { background-color: #0d1b2a; border-right: 1px solid #4169e1; } /* Dark navy with royal accent */
+        /* Dark Mode Styles (enhanced with orange shadows) */
+        .dark-mode { background-color: #001f3f; color: #e0e0e0; box-shadow: inset 0 0 20px rgba(255, 165, 0, 0.05); } /* Navy blue bg with subtle orange inset */
+        .dark-mode .sidebar { background-color: #0d1b2a; border-right: 1px solid #4169e1; box-shadow: 2px 0 15px rgba(255, 165, 0, 0.2); } /* Dark navy with royal accent and orange shadow */
         .dark-mode .nav-link { color: #add8e6; } /* Sky blue text */
-        .dark-mode .nav-link:hover { color: #ffffff; background-color: #4169e1; } /* White text, royal blue bg */
-        .dark-mode .nav-link.active { color: #0d6efd; background-color: #4169e1; } /* Blue text, royal bg */
-        .dark-mode .content { background-color: #001f3f; } /* Navy bg */
-        .dark-mode .card-metric { background-color: #0d1b2a; box-shadow: 0 4px 15px rgba(65,105,225,0.3); border: 1px solid #4169e1; } /* Dark with royal shadow/border */
-        .dark-mode .table { background-color: #0d1b2a; color: #e0e0e0; border: 1px solid #add8e6; } /* Dark with sky blue border */
+        .dark-mode .nav-link:hover { color: #ffffff; background-color: #4169e1; box-shadow: 0 2px 5px rgba(255, 165, 0, 0.4); } /* White text, royal blue bg with orange shadow */
+        .dark-mode .nav-link.active { color: #0d6efd; background-color: #4169e1; box-shadow: 0 2px 5px rgba(255, 165, 0, 0.4); } /* Blue text, royal bg with orange shadow */
+        .dark-mode .content { background-color: #001f3f; box-shadow: inset 0 0 20px rgba(255, 165, 0, 0.05); } /* Navy bg with orange inset */
+        .dark-mode .card-metric { background-color: #0d1b2a; box-shadow: 0 4px 15px rgba(255, 165, 0, 0.3); border: 1px solid #4169e1; } /* Dark with royal border and orange shadow */
+        .dark-mode .table { background-color: #0d1b2a; color: #e0e0e0; border: 1px solid #add8e6; box-shadow: 0 2px 10px rgba(255, 165, 0, 0.2); } /* Dark with sky blue border and orange shadow */
         .dark-mode .table-striped tbody tr:nth-of-type(odd) { background-color: #1a2b4a; } /* Darker navy */
-        .dark-mode .table thead th { background-color: #4169e1; color: white; } /* Royal blue header */
-        .dark-mode .modal-content { background-color: #0d1b2a; color: #e0e0e0; border: 1px solid #4169e1; } /* Dark with royal border */
-        .dark-mode .form-control { background-color: #1a2b4a; color: #e0e0e0; border: 1px solid #add8e6; } /* Dark navy with sky border */
-        .dark-mode .form-control:focus { background-color: #1a2b4a; color: #e0e0e0; border-color: #0d6efd; box-shadow: 0 0 0 0.25rem rgba(13,110,253,.25); }
-        .dark-mode .btn-primary { background-color: #4169e1; border-color: #4169e1; } /* Royal blue */
-        .dark-mode .btn-primary:hover { background-color: #0d6efd; border-color: #0d6efd; } /* Blue hover */
-        .dark-mode #pdfViewer { border-color: #add8e6; } /* Sky blue */
-        .dark-mode .compliance-card { background: linear-gradient(135deg, #0d6efd 0%, #4169e1 50%, #001f3f 100%); } /* Keep blue gradient */
-        .dark-mode .checklist-section { background-color: #1a2b4a; border-color: #add8e6; } /* Dark navy with sky border */
-        .dark-mode .preview-canvas { border-color: #add8e6; } /* Sky blue */
+        .dark-mode .table thead th { background-color: #4169e1; color: white; box-shadow: 0 2px 5px rgba(255, 165, 0, 0.2); } /* Royal blue header with orange shadow */
+        .dark-mode .modal-content { background-color: #0d1b2a; color: #e0e0e0; border: 1px solid #4169e1; box-shadow: 0 5px 20px rgba(255, 165, 0, 0.3); } /* Dark with royal border and orange shadow */
+        .dark-mode .form-control { background-color: #1a2b4a; color: #e0e0e0; border: 1px solid #add8e6; box-shadow: 0 2px 5px rgba(255, 165, 0, 0.1); } /* Dark navy with sky border and orange shadow */
+        .dark-mode .form-control:focus { background-color: #1a2b4a; color: #e0e0e0; border-color: #0d6efd; box-shadow: 0 0 0 0.25rem rgba(13,110,253,.25), 0 2px 5px rgba(255, 165, 0, 0.3); }
+        .dark-mode .btn-primary { background-color: #4169e1; border-color: #4169e1; box-shadow: 0 2px 5px rgba(255, 165, 0, 0.3); } /* Royal blue with orange shadow */
+        .dark-mode .btn-primary:hover { background-color: #0d6efd; border-color: #0d6efd; box-shadow: 0 4px 10px rgba(255, 165, 0, 0.4); } /* Blue hover with enhanced orange shadow */
+        .dark-mode #pdfViewer { border-color: #add8e6; box-shadow: inset 0 0 10px rgba(255, 165, 0, 0.1); } /* Sky blue with orange inset */
+        .dark-mode .compliance-card { background: linear-gradient(135deg, #0d6efd 0%, #4169e1 50%, #001f3f 100%); box-shadow: 0 4px 15px rgba(255, 165, 0, 0.3); } /* Keep blue gradient with orange shadow */
+        .dark-mode .checklist-section { background-color: #1a2b4a; border-color: #add8e6; box-shadow: 0 2px 5px rgba(255, 165, 0, 0.1); } /* Dark navy with sky border and orange shadow */
+        .dark-mode .preview-canvas { border-color: #add8e6; box-shadow: 0 2px 5px rgba(255, 165, 0, 0.2); } /* Sky blue with orange shadow */
 
-        /* Login Styles */
+        /* Login Styles with orange shadows */
         #loginContainer {
             position: fixed;
             top: 0;
@@ -79,13 +79,14 @@
             align-items: center;
             justify-content: center;
             z-index: 2000;
+            box-shadow: inset 0 0 30px rgba(255, 165, 0, 0.1);
         }
         #loginCard {
             width: 350px;
             padding: 30px;
             border: 1px solid #add8e6;
             border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(135,206,235,0.2);
+            box-shadow: 0 4px 15px rgba(255, 165, 0, 0.3);
             background-color: #ffffff;
         }
         #loginCard h3 {
@@ -149,7 +150,7 @@
                 </div>
             </section>
 
-            <!-- Employees Section -->
+            <!-- Employees Section (Enhanced with Department Tabs) -->
             <section id="employees" class="section d-none">
                 <h2>Employee Management</h2>
                 <div class="d-flex justify-content-between mb-3 align-items-center flex-wrap">
@@ -159,16 +160,41 @@
                         <input type="file" id="importFile" style="display:none" accept=".csv,.xlsx,.docx,.pdf,.jpg,.png" onchange="handleImport(event)">
                     </div>
                     <div class="d-flex">
-                        <select class="form-control me-2" id="branchFilter" onchange="filterEmployees()">
-                            <option value="">All Branches</option>
-                        </select>
                         <input type="text" class="form-control search-input" id="employeeSearch" placeholder="Search Employees..." oninput="searchEmployees()">
                     </div>
                 </div>
-                <table class="table table-striped">
-                    <thead><tr><th>ID</th><th>Name</th><th>Position</th><th>Department</th><th>Branch</th><th>Salary</th><th>Join Date</th><th>Contract Status</th><th>Cert Status</th><th>Email</th><th>Actions</th></tr></thead>
-                    <tbody id="employeeTable"></tbody>
-                </table>
+                <!-- Department Tabs (Folders) -->
+                <ul class="nav nav-tabs mb-3" id="employeeTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="all-tab" data-bs-toggle="tab" onclick="showEmployeeTab('All')" type="button" role="tab" aria-controls="all" aria-selected="true">All Staff</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="hospice-tab" data-bs-toggle="tab" onclick="showEmployeeTab('Bophelong Hospice')" type="button" role="tab" aria-controls="hospice" aria-selected="false">Hospice</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="oldage-tab" data-bs-toggle="tab" onclick="showEmployeeTab('Bophelong Old Age Home')" type="button" role="tab" aria-controls="oldage" aria-selected="false">Old Age</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="orphan-tab" data-bs-toggle="tab" onclick="showEmployeeTab('Bophelong Orphan Age')" type="button" role="tab" aria-controls="orphan" aria-selected="false">Orphan Age</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="disability-tab" data-bs-toggle="tab" onclick="showEmployeeTab('Bophelong Mental and Disability Home')" type="button" role="tab" aria-controls="disability" aria-selected="false">Disability Home</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="school-tab" data-bs-toggle="tab" onclick="showEmployeeTab('School')" type="button" role="tab" aria-controls="school" aria-selected="false">BCI School</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="church-tab" data-bs-toggle="tab" onclick="showEmployeeTab('Charity and Faith Mission Church')" type="button" role="tab" aria-controls="church" aria-selected="false">Church</button>
+                    </li>
+                </ul>
+                <div class="tab-content" id="employeeTabContent">
+                    <div class="tab-pane fade show active" id="all" role="tabpanel" aria-labelledby="all-tab">
+                        <table class="table table-striped">
+                            <thead><tr><th>ID</th><th>Name</th><th>Position</th><th>Department</th><th>Branch</th><th>Salary</th><th>Join Date</th><th>Contract Status</th><th>Cert Status</th><th>Email</th><th>Actions</th></tr></thead>
+                            <tbody id="employeeTable"></tbody>
+                        </table>
+                    </div>
+                </div>
             </section>
 
             <!-- Payroll Section (enhanced with compliance) -->
@@ -669,9 +695,20 @@
             'Charity and Faith Mission Church'
         ];
 
+        // Department Mapping for Tabs (School groups both school branches)
+        const departmentMap = {
+            'Hospice': 'Bophelong Hospice',
+            'Old Age': 'Bophelong Old Age Home',
+            'Orphan Age': 'Bophelong Orphan Age',
+            'Disability Home': 'Bophelong Mental and Disability Home',
+            'BCI School': ['Bophelong Independent School Mamelodi', 'Bophelong Independent School Kwa-Mhlanga'],
+            'Church': 'Charity and Faith Mission Church'
+        };
+
         let importData = [];
         let currentFileType = '';
         let currentPreviewFile = null;
+        let currentEmployeeFilter = 'All'; // For tab filtering
 
         // Login Function
         function login() {
@@ -952,6 +989,32 @@
             logAudit('Section Viewed', sectionId);
         }
 
+        // New Employee Tab Function
+        function showEmployeeTab(branch) {
+            currentEmployeeFilter = branch;
+            document.querySelectorAll('#employeeTabs .nav-link').forEach(link => link.classList.remove('active'));
+            event.target.classList.add('active');
+            filterEmployeesByBranch(branch);
+            // Update tab panes if needed, but since single table, just filter
+            document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('show', 'active'));
+            document.getElementById('all').classList.add('show', 'active'); // Keep all pane active for simplicity
+        }
+
+        function filterEmployeesByBranch(branch) {
+            const rows = document.querySelectorAll('#employeeTable tr');
+            rows.forEach(row => {
+                if (row.cells.length < 5) return; // Skip header
+                const rowBranch = row.cells[4].textContent.trim();
+                if (branch === 'All') {
+                    row.style.display = '';
+                } else if (branch === 'School') {
+                    row.style.display = (rowBranch.includes('Bophelong Independent School')) ? '' : 'none';
+                } else {
+                    row.style.display = (rowBranch === branch) ? '' : 'none';
+                }
+            });
+        }
+
         function toggleSidebar() {
             const sidebar = document.querySelector('.sidebar');
             const content = document.querySelector('.content');
@@ -988,6 +1051,8 @@
             populateEmployeeSelects();
             renderEmployees();
             updateDashboard();
+            // Re-apply current filter
+            if (currentEmployeeFilter !== 'All') filterEmployeesByBranch(currentEmployeeFilter);
             bootstrap.Modal.getInstance(document.getElementById('addEmployeeModal')).hide();
             document.getElementById('employeeForm').reset();
             document.getElementById('empContractPreview').innerHTML = '';
@@ -1018,7 +1083,8 @@
                     </tr>
                 `;
             });
-            populateBranchFilter();
+            // Apply current filter on render
+            if (currentEmployeeFilter !== 'All') filterEmployeesByBranch(currentEmployeeFilter);
         }
 
         function editEmployee(index) {
@@ -1068,23 +1134,9 @@
             const rows = document.querySelectorAll('#employeeTable tr');
             rows.forEach(row => {
                 const text = row.textContent.toLowerCase();
-                row.style.display = text.includes(query) ? '' : 'none';
+                const visible = text.includes(query);
+                row.style.display = visible ? '' : 'none';
             });
-        }
-
-        function filterEmployees() {
-            const filter = document.getElementById('branchFilter').value;
-            const rows = document.querySelectorAll('#employeeTable tr');
-            rows.forEach(row => {
-                const branch = row.cells[4].textContent;
-                row.style.display = !filter || branch === filter ? '' : 'none';
-            });
-        }
-
-        function populateBranchFilter() {
-            const select = document.getElementById('branchFilter');
-            const uniqueBranches = [...new Set(employees.map(e => e.branch))];
-            select.innerHTML = '<option value="">All Branches</option>' + uniqueBranches.map(b => `<option value="${b}">${b}</option>`).join('');
         }
 
         function populateEmployeeSelects() {
@@ -1718,7 +1770,6 @@
             populateBranchSelect('jobBranch');
             populateBranchSelect('courseBranch');
             populateEmployeeSelects();
-            populateBranchFilter();
             renderEmployees();
             renderPayrolls();
             renderCompliance();
@@ -1737,6 +1788,15 @@
                 renderEmployees();
                 updateDashboard();
             }
+            // Initialize employee tabs
+            var employeeTabList = [].slice.call(document.querySelectorAll('#employeeTabs button'));
+            employeeTabList.forEach(function (triggerEl) {
+                var tabTrigger = new bootstrap.Tab(triggerEl);
+                triggerEl.addEventListener('click', function (event) {
+                    event.preventDefault();
+                    tabTrigger.show();
+                });
+            });
         }
 
         // Initial Load Check
