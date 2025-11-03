@@ -637,6 +637,22 @@
         .docx-content, .xlsx-content {
             overflow-x: auto;
         }
+        /* Validation Styles */
+        input:invalid, select:invalid, textarea:invalid {
+            border-color: #dc3545;
+        }
+        input:valid, select:valid, textarea:valid {
+            border-color: #28a745;
+        }
+        .error-message {
+            color: #dc3545;
+            font-size: 0.875em;
+            margin-top: 0.25rem;
+            display: none;
+        }
+        .error-message.show {
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -675,9 +691,12 @@
         <details id="mdf-folder">
             <summary>MDF</summary>
             <div class="folder-content">
-                <form id="memberForm">
-                    <input type="text" id="name" placeholder="Full Name" required>
-                    <select id="branch">
+                <form id="memberForm" novalidate>
+                    <label for="name">Full Name:</label>
+                    <input type="text" id="name" placeholder="Full Name" required minlength="2" maxlength="100">
+                    <div class="error-message" id="name-error"></div>
+                    <label for="branch">Branch:</label>
+                    <select id="branch" required>
                         <option value="">Select Branch</option>
                         <option value="Khutsong">Khutsong</option>
                         <option value="Mamelodi EXT5">Mamelodi EXT5</option>
@@ -688,15 +707,27 @@
                         <option value="Nelmaphius ext4">Nelmaphius ext4</option>
                         <option value="Nelmaphius ext 6">Nelmaphius ext 6</option>
                     </select>
+                    <div class="error-message" id="branch-error"></div>
+                    <label for="email">Email:</label>
                     <input type="email" id="email" placeholder="Email" required>
-                    <input type="tel" id="cell" placeholder="Cell Number (e.g., +1234567890)" required>
-                    <input type="text" id="address" placeholder="Address" required>
-                    <input type="date" id="joinDate" required>
-                    <select id="role">
+                    <div class="error-message" id="email-error"></div>
+                    <label for="cell">Cell Number:</label>
+                    <input type="tel" id="cell" placeholder="Cell Number (e.g., +1234567890)" required pattern="[+]?[0-9\s\-\(\)]{10,}" title="Enter a valid phone number (at least 10 digits)">
+                    <div class="error-message" id="cell-error"></div>
+                    <label for="address">Address:</label>
+                    <input type="text" id="address" placeholder="Address" required minlength="5" maxlength="200">
+                    <div class="error-message" id="address-error"></div>
+                    <label for="joinDate">Join Date:</label>
+                    <input type="date" id="joinDate" required max="2025-11-03">
+                    <div class="error-message" id="joinDate-error"></div>
+                    <label for="role">Role:</label>
+                    <select id="role" required>
+                        <option value="">Select Role</option>
                         <option value="Member">Member</option>
                         <option value="Volunteer">Volunteer</option>
                         <option value="Leader">Leader</option>
                     </select>
+                    <div class="error-message" id="role-error"></div>
                     <button type="submit">Add Member</button>
                 </form>
                 <table id="memberTable">
@@ -743,8 +774,11 @@
         <details id="visitor-directory-folder">
             <summary>Visitor Directory</summary>
             <div class="folder-content">
-                <form id="visitorForm">
-                    <input type="text" id="visitorName" placeholder="Full Name" required>
+                <form id="visitorForm" novalidate>
+                    <label for="visitorName">Full Name:</label>
+                    <input type="text" id="visitorName" placeholder="Full Name" required minlength="2" maxlength="100">
+                    <div class="error-message" id="visitorName-error"></div>
+                    <label for="visitorBranch">Branch:</label>
                     <select id="visitorBranch">
                         <option value="">Select Branch</option>
                         <option value="Khutsong">Khutsong</option>
@@ -756,11 +790,22 @@
                         <option value="Nelmaphius ext4">Nelmaphius ext4</option>
                         <option value="Nelmaphius ext 6">Nelmaphius ext 6</option>
                     </select>
+                    <div class="error-message" id="visitorBranch-error"></div>
+                    <label for="visitorEmail">Email:</label>
                     <input type="email" id="visitorEmail" placeholder="Email">
-                    <input type="tel" id="visitorCell" placeholder="Cell Number (e.g., +1234567890)" required>
-                    <input type="text" id="visitorAddress" placeholder="Address">
-                    <input type="date" id="visitorVisitDate" required>
-                    <textarea id="visitorNotes" placeholder="Notes (e.g., interests, follow-up needs)"></textarea>
+                    <div class="error-message" id="visitorEmail-error"></div>
+                    <label for="visitorCell">Cell Number:</label>
+                    <input type="tel" id="visitorCell" placeholder="Cell Number (e.g., +1234567890)" required pattern="[+]?[0-9\s\-\(\)]{10,}" title="Enter a valid phone number (at least 10 digits)">
+                    <div class="error-message" id="visitorCell-error"></div>
+                    <label for="visitorAddress">Address:</label>
+                    <input type="text" id="visitorAddress" placeholder="Address" minlength="5" maxlength="200">
+                    <div class="error-message" id="visitorAddress-error"></div>
+                    <label for="visitorVisitDate">Visit Date:</label>
+                    <input type="date" id="visitorVisitDate" required max="2025-11-03">
+                    <div class="error-message" id="visitorVisitDate-error"></div>
+                    <label for="visitorNotes">Notes:</label>
+                    <textarea id="visitorNotes" placeholder="Notes (e.g., interests, follow-up needs)" maxlength="500"></textarea>
+                    <div class="error-message" id="visitorNotes-error"></div>
                     <button type="submit">Add Visitor</button>
                 </form>
                 <table id="visitorTable">
@@ -792,17 +837,30 @@
         <details id="follow-ups-folder">
             <summary>Visitor Follow-ups</summary>
             <div class="folder-content">
-                <form id="followUpForm">
-                    <select id="followUpVisitorSelect" required></select>
-                    <select id="followUpStatus">
+                <form id="followUpForm" novalidate>
+                    <label for="followUpVisitorSelect">Visitor:</label>
+                    <select id="followUpVisitorSelect" required>
+                        <option value="">Select Visitor</option>
+                    </select>
+                    <div class="error-message" id="followUpVisitorSelect-error"></div>
+                    <label for="followUpStatus">Status:</label>
+                    <select id="followUpStatus" required>
+                        <option value="">Select Status</option>
                         <option value="Contacted">Contacted</option>
                         <option value="Interested">Interested</option>
                         <option value="Joined">Joined</option>
                         <option value="Not Interested">Not Interested</option>
                     </select>
-                    <input type="date" id="followUpDate">
-                    <input type="date" id="followUpReminderDate" placeholder="Reminder Date">
-                    <textarea id="followUpNotes" placeholder="Notes"></textarea>
+                    <div class="error-message" id="followUpStatus-error"></div>
+                    <label for="followUpDate">Date:</label>
+                    <input type="date" id="followUpDate" max="2025-11-03">
+                    <div class="error-message" id="followUpDate-error"></div>
+                    <label for="followUpReminderDate">Reminder Date:</label>
+                    <input type="date" id="followUpReminderDate" min="2025-11-03">
+                    <div class="error-message" id="followUpReminderDate-error"></div>
+                    <label for="followUpNotes">Notes:</label>
+                    <textarea id="followUpNotes" placeholder="Notes" maxlength="500"></textarea>
+                    <div class="error-message" id="followUpNotes-error"></div>
                     <button type="submit">Log Follow-up</button>
                 </form>
                 <ul id="followUpList" class="follow-up-list">
@@ -835,11 +893,15 @@
         <details id="send-visitor-message-folder">
             <summary>Send Visitor Message</summary>
             <div class="folder-content">
-                <form id="visitorWhatsAppForm" class="tithe-message-form">
+                <form id="visitorWhatsAppForm" class="tithe-message-form" novalidate>
                     <label for="visitorWhatsAppSelect">Select Visitor:</label>
-                    <select id="visitorWhatsAppSelect" required></select>
+                    <select id="visitorWhatsAppSelect" required>
+                        <option value="">Select Visitor</option>
+                    </select>
+                    <div class="error-message" id="visitorWhatsAppSelect-error"></div>
                     <label for="visitorWhatsAppMessage">Message:</label>
-                    <textarea id="visitorWhatsAppMessage" placeholder="Enter your message..." required></textarea>
+                    <textarea id="visitorWhatsAppMessage" placeholder="Enter your message..." required minlength="1" maxlength="1000"></textarea>
+                    <div class="error-message" id="visitorWhatsAppMessage-error"></div>
                     <div class="template-buttons">
                         <button type="button" class="template-btn" onclick="fillVisitorTemplate('Welcome [Name]! We\'re glad you visited us. Join us next Sunday at 9 AM. God bless!')">Welcome Message</button>
                         <button type="button" class="template-btn" onclick="fillVisitorTemplate('Hello [Name], we have a visitor follow-up class on [Date]. Interested? Reply yes!')">Follow-up Invite</button>
@@ -929,10 +991,17 @@
         <details id="events-folder">
             <summary>Events Directory</summary>
             <div class="folder-content">
-                <form id="eventForm">
-                    <input type="text" id="eventTitle" placeholder="Event Title" required>
-                    <textarea id="eventDescription" placeholder="Description"></textarea>
-                    <input type="date" id="eventDate" required>
+                <form id="eventForm" novalidate>
+                    <label for="eventTitle">Event Title:</label>
+                    <input type="text" id="eventTitle" placeholder="Event Title" required minlength="3" maxlength="100">
+                    <div class="error-message" id="eventTitle-error"></div>
+                    <label for="eventDescription">Description:</label>
+                    <textarea id="eventDescription" placeholder="Description" maxlength="500"></textarea>
+                    <div class="error-message" id="eventDescription-error"></div>
+                    <label for="eventDate">Date:</label>
+                    <input type="date" id="eventDate" required min="2025-01-01" max="2026-12-31">
+                    <div class="error-message" id="eventDate-error"></div>
+                    <label for="eventBranch">Branch:</label>
                     <select id="eventBranch">
                         <option value="">Select Branch</option>
                         <option value="Khutsong">Khutsong</option>
@@ -944,7 +1013,10 @@
                         <option value="Nelmaphius ext4">Nelmaphius ext4</option>
                         <option value="Nelmaphius ext 6">Nelmaphius ext 6</option>
                     </select>
-                    <input type="text" id="eventOrganizer" placeholder="Organizer">
+                    <div class="error-message" id="eventBranch-error"></div>
+                    <label for="eventOrganizer">Organizer:</label>
+                    <input type="text" id="eventOrganizer" placeholder="Organizer" minlength="2" maxlength="100">
+                    <div class="error-message" id="eventOrganizer-error"></div>
                     <button type="submit">Add Event</button>
                 </form>
                 <table id="eventTable">
@@ -975,7 +1047,7 @@
             <div class="folder-content">
                 <div class="budget-date">
                     <label for="budgetDate">Budget Date: </label>
-                    <input type="date" id="budgetDate" value="2025-10-31">
+                    <input type="date" id="budgetDate" value="2025-10-31" min="2025-01-01" max="2025-11-03">
                 </div>
                 <!-- September Conference -->
                 <details>
@@ -984,37 +1056,37 @@
                         <h4>Transport</h4>
                         <table class="transport-table">
                             <thead><tr><th>Amount</th></tr></thead>
-                            <tbody><tr><td><input type="number" class="budget-input" data-event="september" data-category="transport" value="0" step="0.01"></td></tr></tbody>
+                            <tbody><tr><td><input type="number" class="budget-input" data-event="september" data-category="transport" value="0" step="0.01" min="0"></td></tr></tbody>
                         </table>
                         <h4>Decoration (Deco)</h4>
                         <table class="stage-deco-table">
                             <thead><tr><th>Amount</th></tr></thead>
-                            <tbody><tr><td><input type="number" class="budget-input" data-event="september" data-category="deco" value="0" step="0.01"></td></tr></tbody>
+                            <tbody><tr><td><input type="number" class="budget-input" data-event="september" data-category="deco" value="0" step="0.01" min="0"></td></tr></tbody>
                         </table>
                         <h4>Security</h4>
                         <table class="essentials-table">
                             <thead><tr><th>Amount</th></tr></thead>
-                            <tbody><tr><td><input type="number" class="budget-input" data-event="september" data-category="security" value="0" step="0.01"></td></tr></tbody>
+                            <tbody><tr><td><input type="number" class="budget-input" data-event="september" data-category="security" value="0" step="0.01" min="0"></td></tr></tbody>
                         </table>
                         <h4>Sound/Media</h4>
                         <table class="sound-media-table">
                             <thead><tr><th>Amount</th></tr></thead>
-                            <tbody><tr><td><input type="number" class="budget-input" data-event="september" data-category="sound-media" value="0" step="0.01"></td></tr></tbody>
+                            <tbody><tr><td><input type="number" class="budget-input" data-event="september" data-category="sound-media" value="0" step="0.01" min="0"></td></tr></tbody>
                         </table>
                         <h4>Guest Pastor</h4>
                         <table class="guest-pastor-table">
                             <thead><tr><th>Amount</th></tr></thead>
-                            <tbody><tr><td><input type="number" class="budget-input" data-event="september" data-category="guest-pastor" value="0" step="0.01"></td></tr></tbody>
+                            <tbody><tr><td><input type="number" class="budget-input" data-event="september" data-category="guest-pastor" value="0" step="0.01" min="0"></td></tr></tbody>
                         </table>
                         <h4>Grocery and Conference Essentials</h4>
                         <table class="grocery-table">
                             <thead><tr><th>Amount</th></tr></thead>
-                            <tbody><tr><td><input type="number" class="budget-input" data-event="september" data-category="grocery" value="0" step="0.01"></td></tr></tbody>
+                            <tbody><tr><td><input type="number" class="budget-input" data-event="september" data-category="grocery" value="0" step="0.01" min="0"></td></tr></tbody>
                         </table>
                         <h4>Sunday School</h4>
                         <table class="sunday-school-table">
                             <thead><tr><th>Amount</th></tr></thead>
-                            <tbody><tr><td><input type="number" class="budget-input" data-event="september" data-category="sunday-school" value="0" step="0.01"></td></tr></tbody>
+                            <tbody><tr><td><input type="number" class="budget-input" data-event="september" data-category="sunday-school" value="0" step="0.01" min="0"></td></tr></tbody>
                         </table>
                         <div class="budget-total" id="september-total">Total: $0.00</div>
                     </div>
@@ -1026,37 +1098,37 @@
                         <h4>Transport</h4>
                         <table class="transport-table">
                             <thead><tr><th>Amount</th></tr></thead>
-                            <tbody><tr><td><input type="number" class="budget-input" data-event="easter" data-category="transport" value="0" step="0.01"></td></tr></tbody>
+                            <tbody><tr><td><input type="number" class="budget-input" data-event="easter" data-category="transport" value="0" step="0.01" min="0"></td></tr></tbody>
                         </table>
                         <h4>Decoration (Deco)</h4>
                         <table class="stage-deco-table">
                             <thead><tr><th>Amount</th></tr></thead>
-                            <tbody><tr><td><input type="number" class="budget-input" data-event="easter" data-category="deco" value="0" step="0.01"></td></tr></tbody>
+                            <tbody><tr><td><input type="number" class="budget-input" data-event="easter" data-category="deco" value="0" step="0.01" min="0"></td></tr></tbody>
                         </table>
                         <h4>Security</h4>
                         <table class="essentials-table">
                             <thead><tr><th>Amount</th></tr></thead>
-                            <tbody><tr><td><input type="number" class="budget-input" data-event="easter" data-category="security" value="0" step="0.01"></td></tr></tbody>
+                            <tbody><tr><td><input type="number" class="budget-input" data-event="easter" data-category="security" value="0" step="0.01" min="0"></td></tr></tbody>
                         </table>
                         <h4>Sound/Media</h4>
                         <table class="sound-media-table">
                             <thead><tr><th>Amount</th></tr></thead>
-                            <tbody><tr><td><input type="number" class="budget-input" data-event="easter" data-category="sound-media" value="0" step="0.01"></td></tr></tbody>
+                            <tbody><tr><td><input type="number" class="budget-input" data-event="easter" data-category="sound-media" value="0" step="0.01" min="0"></td></tr></tbody>
                         </table>
                         <h4>Guest Pastor</h4>
                         <table class="guest-pastor-table">
                             <thead><tr><th>Amount</th></tr></thead>
-                            <tbody><tr><td><input type="number" class="budget-input" data-event="easter" data-category="guest-pastor" value="0" step="0.01"></td></tr></tbody>
+                            <tbody><tr><td><input type="number" class="budget-input" data-event="easter" data-category="guest-pastor" value="0" step="0.01" min="0"></td></tr></tbody>
                         </table>
                         <h4>Grocery and Conference Essentials</h4>
                         <table class="grocery-table">
                             <thead><tr><th>Amount</th></tr></thead>
-                            <tbody><tr><td><input type="number" class="budget-input" data-event="easter" data-category="grocery" value="0" step="0.01"></td></tr></tbody>
+                            <tbody><tr><td><input type="number" class="budget-input" data-event="easter" data-category="grocery" value="0" step="0.01" min="0"></td></tr></tbody>
                         </table>
                         <h4>Sunday School</h4>
                         <table class="sunday-school-table">
                             <thead><tr><th>Amount</th></tr></thead>
-                            <tbody><tr><td><input type="number" class="budget-input" data-event="easter" data-category="sunday-school" value="0" step="0.01"></td></tr></tbody>
+                            <tbody><tr><td><input type="number" class="budget-input" data-event="easter" data-category="sunday-school" value="0" step="0.01" min="0"></td></tr></tbody>
                         </table>
                         <div class="budget-total" id="easter-total">Total: $0.00</div>
                     </div>
@@ -1068,17 +1140,17 @@
                         <h4>Combined Essentials</h4>
                         <table class="essentials-table">
                             <thead><tr><th>Amount</th></tr></thead>
-                            <tbody><tr><td><input type="number" class="budget-input" data-event="combined" data-category="essentials" value="0" step="0.01"></td></tr></tbody>
+                            <tbody><tr><td><input type="number" class="budget-input" data-event="combined" data-category="essentials" value="0" step="0.01" min="0"></td></tr></tbody>
                         </table>
                         <h4>Transport</h4>
                         <table class="transport-table">
                             <thead><tr><th>Amount</th></tr></thead>
-                            <tbody><tr><td><input type="number" class="budget-input" data-event="combined" data-category="transport" value="0" step="0.01"></td></tr></tbody>
+                            <tbody><tr><td><input type="number" class="budget-input" data-event="combined" data-category="transport" value="0" step="0.01" min="0"></td></tr></tbody>
                         </table>
                         <h4>Sunday School</h4>
                         <table class="sunday-school-table">
                             <thead><tr><th>Amount</th></tr></thead>
-                            <tbody><tr><td><input type="number" class="budget-input" data-event="combined" data-category="sunday-school" value="0" step="0.01"></td></tr></tbody>
+                            <tbody><tr><td><input type="number" class="budget-input" data-event="combined" data-category="sunday-school" value="0" step="0.01" min="0"></td></tr></tbody>
                         </table>
                         <div class="budget-total" id="combined-total">Total: $0.00</div>
                     </div>
@@ -1105,14 +1177,26 @@
             <h3>Search Tithes</h3>
             <input type="text" id="titheSearch" placeholder="Search by member, type, or date...">
         </div>
-        <form id="titheForm">
-            <select id="titheMemberSelect"></select>
-            <select id="titheType">
+        <form id="titheForm" novalidate>
+            <label for="titheMemberSelect">Member:</label>
+            <select id="titheMemberSelect" required>
+                <option value="">Select Member</option>
+            </select>
+            <div class="error-message" id="titheMemberSelect-error"></div>
+            <label for="titheType">Type:</label>
+            <select id="titheType" required>
+                <option value="">Select Type</option>
                 <option value="Tithe">Tithe</option>
                 <option value="Offering">Offering</option>
             </select>
-            <input type="number" id="titheAmount" placeholder="Amount" step="0.01" required>
-            <input type="date" id="titheDate" required>
+            <div class="error-message" id="titheType-error"></div>
+            <label for="titheAmount">Amount:</label>
+            <input type="number" id="titheAmount" placeholder="Amount" step="0.01" required min="0.01" max="10000">
+            <div class="error-message" id="titheAmount-error"></div>
+            <label for="titheDate">Date:</label>
+            <input type="date" id="titheDate" required max="2025-11-03">
+            <div class="error-message" id="titheDate-error"></div>
+            <label for="titheBranch">Branch:</label>
             <select id="titheBranch">
                 <option value="">Select Branch</option>
                 <option value="Khutsong">Khutsong</option>
@@ -1124,6 +1208,7 @@
                 <option value="Nelmaphius ext4">Nelmaphius ext4</option>
                 <option value="Nelmaphius ext 6">Nelmaphius ext 6</option>
             </select>
+            <div class="error-message" id="titheBranch-error"></div>
             <button type="submit">Record Tithe/Offering</button>
         </form>
         <table id="titheTable">
@@ -1159,9 +1244,12 @@
                 <details id="ministry-leaders-folder">
                     <summary>Ministry Leaders</summary>
                     <div class="folder-content">
-                        <form id="ministryLeaderForm">
-                            <input type="text" id="ministryLeaderName" placeholder="Full Name" required>
-                            <select id="ministryLeaderBranch">
+                        <form id="ministryLeaderForm" novalidate>
+                            <label for="ministryLeaderName">Full Name:</label>
+                            <input type="text" id="ministryLeaderName" placeholder="Full Name" required minlength="2" maxlength="100">
+                            <div class="error-message" id="ministryLeaderName-error"></div>
+                            <label for="ministryLeaderBranch">Branch:</label>
+                            <select id="ministryLeaderBranch" required>
                                 <option value="">Select Branch</option>
                                 <option value="Khutsong">Khutsong</option>
                                 <option value="Mamelodi EXT5">Mamelodi EXT5</option>
@@ -1172,9 +1260,16 @@
                                 <option value="Nelmaphius ext4">Nelmaphius ext4</option>
                                 <option value="Nelmaphius ext 6">Nelmaphius ext 6</option>
                             </select>
+                            <div class="error-message" id="ministryLeaderBranch-error"></div>
+                            <label for="ministryLeaderEmail">Email:</label>
                             <input type="email" id="ministryLeaderEmail" placeholder="Email" required>
-                            <input type="tel" id="ministryLeaderCell" placeholder="Cell Number" required>
-                            <input type="text" id="ministryLeaderMinistry" placeholder="Ministry" required>
+                            <div class="error-message" id="ministryLeaderEmail-error"></div>
+                            <label for="ministryLeaderCell">Cell Number:</label>
+                            <input type="tel" id="ministryLeaderCell" placeholder="Cell Number" required pattern="[+]?[0-9\s\-\(\)]{10,}" title="Enter a valid phone number (at least 10 digits)">
+                            <div class="error-message" id="ministryLeaderCell-error"></div>
+                            <label for="ministryLeaderMinistry">Ministry:</label>
+                            <input type="text" id="ministryLeaderMinistry" placeholder="Ministry" required minlength="2" maxlength="50">
+                            <div class="error-message" id="ministryLeaderMinistry-error"></div>
                             <button type="submit">Add Ministry Leader</button>
                         </form>
                         <table id="ministryLeaderTable">
@@ -1204,9 +1299,12 @@
                 <details id="cell-leaders-folder">
                     <summary>Cell Leaders</summary>
                     <div class="folder-content">
-                        <form id="cellLeaderForm">
-                            <input type="text" id="cellLeaderName" placeholder="Full Name" required>
-                            <select id="cellLeaderBranch">
+                        <form id="cellLeaderForm" novalidate>
+                            <label for="cellLeaderName">Full Name:</label>
+                            <input type="text" id="cellLeaderName" placeholder="Full Name" required minlength="2" maxlength="100">
+                            <div class="error-message" id="cellLeaderName-error"></div>
+                            <label for="cellLeaderBranch">Branch:</label>
+                            <select id="cellLeaderBranch" required>
                                 <option value="">Select Branch</option>
                                 <option value="Khutsong">Khutsong</option>
                                 <option value="Mamelodi EXT5">Mamelodi EXT5</option>
@@ -1217,9 +1315,16 @@
                                 <option value="Nelmaphius ext4">Nelmaphius ext4</option>
                                 <option value="Nelmaphius ext 6">Nelmaphius ext 6</option>
                             </select>
+                            <div class="error-message" id="cellLeaderBranch-error"></div>
+                            <label for="cellLeaderEmail">Email:</label>
                             <input type="email" id="cellLeaderEmail" placeholder="Email" required>
-                            <input type="tel" id="cellLeaderCell" placeholder="Cell Number" required>
-                            <input type="text" id="cellLeaderCellGroup" placeholder="Cell Group" required>
+                            <div class="error-message" id="cellLeaderEmail-error"></div>
+                            <label for="cellLeaderCell">Cell Number:</label>
+                            <input type="tel" id="cellLeaderCell" placeholder="Cell Number" required pattern="[+]?[0-9\s\-\(\)]{10,}" title="Enter a valid phone number (at least 10 digits)">
+                            <div class="error-message" id="cellLeaderCell-error"></div>
+                            <label for="cellLeaderCellGroup">Cell Group:</label>
+                            <input type="text" id="cellLeaderCellGroup" placeholder="Cell Group" required minlength="2" maxlength="50">
+                            <div class="error-message" id="cellLeaderCellGroup-error"></div>
                             <button type="submit">Add Cell Leader</button>
                         </form>
                         <table id="cellLeaderTable">
@@ -1249,9 +1354,12 @@
                 <details id="elders-folder">
                     <summary>Elders</summary>
                     <div class="folder-content">
-                        <form id="elderForm">
-                            <input type="text" id="elderName" placeholder="Full Name" required>
-                            <select id="elderBranch">
+                        <form id="elderForm" novalidate>
+                            <label for="elderName">Full Name:</label>
+                            <input type="text" id="elderName" placeholder="Full Name" required minlength="2" maxlength="100">
+                            <div class="error-message" id="elderName-error"></div>
+                            <label for="elderBranch">Branch:</label>
+                            <select id="elderBranch" required>
                                 <option value="">Select Branch</option>
                                 <option value="Khutsong">Khutsong</option>
                                 <option value="Mamelodi EXT5">Mamelodi EXT5</option>
@@ -1262,9 +1370,16 @@
                                 <option value="Nelmaphius ext4">Nelmaphius ext4</option>
                                 <option value="Nelmaphius ext 6">Nelmaphius ext 6</option>
                             </select>
+                            <div class="error-message" id="elderBranch-error"></div>
+                            <label for="elderEmail">Email:</label>
                             <input type="email" id="elderEmail" placeholder="Email" required>
-                            <input type="tel" id="elderCell" placeholder="Cell Number" required>
-                            <input type="date" id="elderOrdinationDate" required>
+                            <div class="error-message" id="elderEmail-error"></div>
+                            <label for="elderCell">Cell Number:</label>
+                            <input type="tel" id="elderCell" placeholder="Cell Number" required pattern="[+]?[0-9\s\-\(\)]{10,}" title="Enter a valid phone number (at least 10 digits)">
+                            <div class="error-message" id="elderCell-error"></div>
+                            <label for="elderOrdinationDate">Ordination Date:</label>
+                            <input type="date" id="elderOrdinationDate" required max="2025-11-03">
+                            <div class="error-message" id="elderOrdinationDate-error"></div>
                             <button type="submit">Add Elder</button>
                         </form>
                         <table id="elderTable">
@@ -1294,9 +1409,12 @@
                 <details id="pastors-folder">
                     <summary>Pastors</summary>
                     <div class="folder-content">
-                        <form id="pastorForm">
-                            <input type="text" id="pastorName" placeholder="Full Name" required>
-                            <select id="pastorBranch">
+                        <form id="pastorForm" novalidate>
+                            <label for="pastorName">Full Name:</label>
+                            <input type="text" id="pastorName" placeholder="Full Name" required minlength="2" maxlength="100">
+                            <div class="error-message" id="pastorName-error"></div>
+                            <label for="pastorBranch">Branch:</label>
+                            <select id="pastorBranch" required>
                                 <option value="">Select Branch</option>
                                 <option value="Khutsong">Khutsong</option>
                                 <option value="Mamelodi EXT5">Mamelodi EXT5</option>
@@ -1307,9 +1425,16 @@
                                 <option value="Nelmaphius ext4">Nelmaphius ext4</option>
                                 <option value="Nelmaphius ext 6">Nelmaphius ext 6</option>
                             </select>
+                            <div class="error-message" id="pastorBranch-error"></div>
+                            <label for="pastorEmail">Email:</label>
                             <input type="email" id="pastorEmail" placeholder="Email" required>
-                            <input type="tel" id="pastorCell" placeholder="Cell Number" required>
-                            <input type="date" id="pastorAppointmentDate" required>
+                            <div class="error-message" id="pastorEmail-error"></div>
+                            <label for="pastorCell">Cell Number:</label>
+                            <input type="tel" id="pastorCell" placeholder="Cell Number" required pattern="[+]?[0-9\s\-\(\)]{10,}" title="Enter a valid phone number (at least 10 digits)">
+                            <div class="error-message" id="pastorCell-error"></div>
+                            <label for="pastorAppointmentDate">Appointment Date:</label>
+                            <input type="date" id="pastorAppointmentDate" required max="2025-11-03">
+                            <div class="error-message" id="pastorAppointmentDate-error"></div>
                             <button type="submit">Add Pastor</button>
                         </form>
                         <table id="pastorTable">
@@ -1339,9 +1464,12 @@
                 <details id="branch-coordinators-folder">
                     <summary>Branch Coordinators</summary>
                     <div class="folder-content">
-                        <form id="branchCoordForm">
-                            <input type="text" id="branchCoordName" placeholder="Full Name" required>
-                            <select id="branchCoordBranch">
+                        <form id="branchCoordForm" novalidate>
+                            <label for="branchCoordName">Full Name:</label>
+                            <input type="text" id="branchCoordName" placeholder="Full Name" required minlength="2" maxlength="100">
+                            <div class="error-message" id="branchCoordName-error"></div>
+                            <label for="branchCoordBranch">Branch:</label>
+                            <select id="branchCoordBranch" required>
                                 <option value="">Select Branch</option>
                                 <option value="Khutsong">Khutsong</option>
                                 <option value="Mamelodi EXT5">Mamelodi EXT5</option>
@@ -1352,9 +1480,16 @@
                                 <option value="Nelmaphius ext4">Nelmaphius ext4</option>
                                 <option value="Nelmaphius ext 6">Nelmaphius ext 6</option>
                             </select>
+                            <div class="error-message" id="branchCoordBranch-error"></div>
+                            <label for="branchCoordEmail">Email:</label>
                             <input type="email" id="branchCoordEmail" placeholder="Email" required>
-                            <input type="tel" id="branchCoordCell" placeholder="Cell Number" required>
-                            <textarea id="branchCoordNotes" placeholder="Notes"></textarea>
+                            <div class="error-message" id="branchCoordEmail-error"></div>
+                            <label for="branchCoordCell">Cell Number:</label>
+                            <input type="tel" id="branchCoordCell" placeholder="Cell Number" required pattern="[+]?[0-9\s\-\(\)]{10,}" title="Enter a valid phone number (at least 10 digits)">
+                            <div class="error-message" id="branchCoordCell-error"></div>
+                            <label for="branchCoordNotes">Notes:</label>
+                            <textarea id="branchCoordNotes" placeholder="Notes" maxlength="500"></textarea>
+                            <div class="error-message" id="branchCoordNotes-error"></div>
                             <button type="submit">Add Branch Coordinator</button>
                         </form>
                         <table id="branchCoordTable">
@@ -1398,8 +1533,9 @@
             <h3>Search Attendance</h3>
             <input type="text" id="attendanceSearch" placeholder="Search by branch or date...">
         </div>
-        <form id="attendanceForm" class="attendance-form">
-            <select id="attendanceBranch">
+        <form id="attendanceForm" class="attendance-form" novalidate>
+            <label for="attendanceBranch">Branch:</label>
+            <select id="attendanceBranch" required>
                 <option value="">Select Branch</option>
                 <option value="Khutsong">Khutsong</option>
                 <option value="Mamelodi EXT5">Mamelodi EXT5</option>
@@ -1410,10 +1546,19 @@
                 <option value="Nelmaphius ext4">Nelmaphius ext4</option>
                 <option value="Nelmaphius ext 6">Nelmaphius ext 6</option>
             </select>
-            <input type="date" id="attendanceDate" required>
-            <input type="number" id="youthAttendance" placeholder="Youth Attendance" min="0">
-            <input type="number" id="adultAttendance" placeholder="Adult Attendance" min="0">
-            <input type="number" id="sundaySchoolAttendance" placeholder="Sunday School Attendance" min="0">
+            <div class="error-message" id="attendanceBranch-error"></div>
+            <label for="attendanceDate">Date:</label>
+            <input type="date" id="attendanceDate" required max="2025-11-03">
+            <div class="error-message" id="attendanceDate-error"></div>
+            <label for="youthAttendance">Youth Attendance:</label>
+            <input type="number" id="youthAttendance" placeholder="Youth Attendance" min="0" max="1000">
+            <div class="error-message" id="youthAttendance-error"></div>
+            <label for="adultAttendance">Adult Attendance:</label>
+            <input type="number" id="adultAttendance" placeholder="Adult Attendance" min="0" max="1000">
+            <div class="error-message" id="adultAttendance-error"></div>
+            <label for="sundaySchoolAttendance">Sunday School Attendance:</label>
+            <input type="number" id="sundaySchoolAttendance" placeholder="Sunday School Attendance" min="0" max="1000">
+            <div class="error-message" id="sundaySchoolAttendance-error"></div>
             <button type="submit">Record Attendance</button>
         </form>
         <table id="attendanceTable">
@@ -1458,11 +1603,15 @@
         <details id="broadcast-folder">
             <summary>Broadcast Messages</summary>
             <div class="folder-content">
-                <form id="broadcastForm" class="broadcast-form">
+                <form id="broadcastForm" class="broadcast-form" novalidate>
                     <label for="broadcastSelect">Select Recipients (Hold Ctrl/Cmd for multiple):</label>
-                    <select id="broadcastSelect" multiple class="broadcast-select"></select>
+                    <select id="broadcastSelect" multiple class="broadcast-select" required>
+                        <option value="">Select Recipients</option>
+                    </select>
+                    <div class="error-message" id="broadcastSelect-error"></div>
                     <label for="broadcastMessage">Message:</label>
-                    <textarea id="broadcastMessage" placeholder="Enter broadcast message..." required></textarea>
+                    <textarea id="broadcastMessage" placeholder="Enter broadcast message..." required minlength="1" maxlength="1000"></textarea>
+                    <div class="error-message" id="broadcastMessage-error"></div>
                     <div class="broadcast-actions">
                         <button type="button" class="broadcast-btn" onclick="sendBroadcast()">Send Now</button>
                         <button type="button" class="broadcast-btn" onclick="scheduleBroadcast()">Schedule</button>
@@ -1477,10 +1626,16 @@
         <details id="conference-reports-folder">
             <summary>Conference Reports</summary>
             <div class="folder-content">
-                <form id="conferenceReportForm">
-                    <input type="text" id="conferenceReportTitle" placeholder="Report Title" required>
-                    <textarea id="conferenceReportContent" placeholder="Report Content" required></textarea>
-                    <input type="date" id="conferenceReportDate">
+                <form id="conferenceReportForm" novalidate>
+                    <label for="conferenceReportTitle">Report Title:</label>
+                    <input type="text" id="conferenceReportTitle" placeholder="Report Title" required minlength="3" maxlength="100">
+                    <div class="error-message" id="conferenceReportTitle-error"></div>
+                    <label for="conferenceReportContent">Report Content:</label>
+                    <textarea id="conferenceReportContent" placeholder="Report Content" required minlength="10" maxlength="5000"></textarea>
+                    <div class="error-message" id="conferenceReportContent-error"></div>
+                    <label for="conferenceReportDate">Date:</label>
+                    <input type="date" id="conferenceReportDate" max="2025-11-03">
+                    <div class="error-message" id="conferenceReportDate-error"></div>
                     <button type="submit">Add Report</button>
                 </form>
                 <ul id="conferenceReportList" class="report-list">
@@ -1497,9 +1652,13 @@
         <details id="conference-report-files-folder">
             <summary>Conference Report Files</summary>
             <div class="folder-content conference-file-upload">
-                <form id="conferenceReportUploadForm">
-                    <input type="text" id="fileReportTitle" placeholder="File Title" required>
+                <form id="conferenceReportUploadForm" novalidate>
+                    <label for="fileReportTitle">File Title:</label>
+                    <input type="text" id="fileReportTitle" placeholder="File Title" required minlength="3" maxlength="100">
+                    <div class="error-message" id="fileReportTitle-error"></div>
+                    <label for="conferenceReportFile">File:</label>
                     <input type="file" id="conferenceReportFile" accept=".pdf,.docx,.xlsx" required>
+                    <div class="error-message" id="conferenceReportFile-error"></div>
                     <button type="submit">Upload File</button>
                 </form>
                 <ul id="conferenceReportFileList" class="report-list">
@@ -1516,10 +1675,16 @@
         <details id="tithe-reports-folder">
             <summary>Tithe Reports</summary>
             <div class="folder-content">
-                <form id="titheReportForm">
-                    <input type="text" id="titheReportTitle" placeholder="Report Title" required>
-                    <textarea id="titheReportContent" placeholder="Report Content" required></textarea>
-                    <input type="date" id="titheReportDate">
+                <form id="titheReportForm" novalidate>
+                    <label for="titheReportTitle">Report Title:</label>
+                    <input type="text" id="titheReportTitle" placeholder="Report Title" required minlength="3" maxlength="100">
+                    <div class="error-message" id="titheReportTitle-error"></div>
+                    <label for="titheReportContent">Report Content:</label>
+                    <textarea id="titheReportContent" placeholder="Report Content" required minlength="10" maxlength="5000"></textarea>
+                    <div class="error-message" id="titheReportContent-error"></div>
+                    <label for="titheReportDate">Date:</label>
+                    <input type="date" id="titheReportDate" max="2025-11-03">
+                    <div class="error-message" id="titheReportDate-error"></div>
                     <button type="submit">Add Report</button>
                 </form>
                 <ul id="titheReportList" class="report-list">
@@ -1536,10 +1701,16 @@
         <details id="visitors-reports-folder">
             <summary>Visitors Reports</summary>
             <div class="folder-content">
-                <form id="visitorsReportForm">
-                    <input type="text" id="visitorsReportTitle" placeholder="Report Title" required>
-                    <textarea id="visitorsReportContent" placeholder="Report Content" required></textarea>
-                    <input type="date" id="visitorsReportDate">
+                <form id="visitorsReportForm" novalidate>
+                    <label for="visitorsReportTitle">Report Title:</label>
+                    <input type="text" id="visitorsReportTitle" placeholder="Report Title" required minlength="3" maxlength="100">
+                    <div class="error-message" id="visitorsReportTitle-error"></div>
+                    <label for="visitorsReportContent">Report Content:</label>
+                    <textarea id="visitorsReportContent" placeholder="Report Content" required minlength="10" maxlength="5000"></textarea>
+                    <div class="error-message" id="visitorsReportContent-error"></div>
+                    <label for="visitorsReportDate">Date:</label>
+                    <input type="date" id="visitorsReportDate" max="2025-11-03">
+                    <div class="error-message" id="visitorsReportDate-error"></div>
                     <button type="submit">Add Report</button>
                 </form>
                 <ul id="visitorsReportList" class="report-list">
@@ -1556,9 +1727,13 @@
         <details id="secure-vault-folder">
             <summary>Secure Vault Notes</summary>
             <div class="folder-content">
-                <form id="vaultForm">
-                    <input type="text" id="vaultTitle" placeholder="Note Title" required>
-                    <textarea id="vaultContent" placeholder="Secure Note Content" required></textarea>
+                <form id="vaultForm" novalidate>
+                    <label for="vaultTitle">Note Title:</label>
+                    <input type="text" id="vaultTitle" placeholder="Note Title" required minlength="3" maxlength="100">
+                    <div class="error-message" id="vaultTitle-error"></div>
+                    <label for="vaultContent">Secure Note Content:</label>
+                    <textarea id="vaultContent" placeholder="Secure Note Content" required minlength="10" maxlength="5000"></textarea>
+                    <div class="error-message" id="vaultContent-error"></div>
                     <button type="submit">Add Secure Note</button>
                 </form>
                 <ul id="vaultList" class="report-list">
@@ -1579,13 +1754,16 @@
         <div class="payment-modal-content">
             <span onclick="closePaymentModal()" style="float:right; cursor:pointer; font-size:24px;">&times;</span>
             <h3>Online Donation</h3>
-            <form id="paymentForm">
+            <form id="paymentForm" novalidate>
                 <label for="donationAmount">Amount ($):</label>
-                <input type="number" id="donationAmount" min="1" step="0.01" value="10" required>
+                <input type="number" id="donationAmount" min="1" step="0.01" value="10" required max="10000">
+                <div class="error-message" id="donationAmount-error"></div>
                 <label for="donorName">Name:</label>
-                <input type="text" id="donorName" required>
+                <input type="text" id="donorName" required minlength="2" maxlength="100">
+                <div class="error-message" id="donorName-error"></div>
                 <label for="donorEmail">Email:</label>
                 <input type="email" id="donorEmail" required>
+                <div class="error-message" id="donorEmail-error"></div>
                 <div class="recurring-option">
                     <label><input type="radio" name="recurring" value="one-time" checked> One-time</label>
                     <label><input type="radio" name="recurring" value="monthly"> Monthly</label>
@@ -1780,6 +1958,57 @@
             notif.textContent = message;
             notif.className = `notification show ${type}`;
             setTimeout(() => notif.classList.remove('show'), 3000);
+        }
+
+        // Data Validation Functions
+        function validateForm(formId) {
+            const form = document.getElementById(formId);
+            let isValid = true;
+            const inputs = form.querySelectorAll('input, select, textarea');
+            inputs.forEach(input => {
+                const errorDiv = document.getElementById(input.id + '-error');
+                if (errorDiv) {
+                    errorDiv.classList.remove('show');
+                }
+                if (input.hasAttribute('required') && !input.value.trim()) {
+                    isValid = false;
+                    if (errorDiv) {
+                        errorDiv.textContent = `${input.previousElementSibling?.textContent || input.placeholder} is required.`;
+                        errorDiv.classList.add('show');
+                    }
+                } else if (input.type === 'email' && input.value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.value)) {
+                    isValid = false;
+                    if (errorDiv) {
+                        errorDiv.textContent = 'Please enter a valid email address.';
+                        errorDiv.classList.add('show');
+                    }
+                } else if (input.type === 'tel' && input.value && !input.checkValidity()) {
+                    isValid = false;
+                    if (errorDiv) {
+                        errorDiv.textContent = input.validationMessage;
+                        errorDiv.classList.add('show');
+                    }
+                } else if (input.type === 'number' && (input.value < (input.min || 0) || input.value > (input.max || Infinity))) {
+                    isValid = false;
+                    if (errorDiv) {
+                        errorDiv.textContent = `Value must be between ${input.min || 0} and ${input.max || 'no limit'}.`;
+                        errorDiv.classList.add('show');
+                    }
+                } else if (input.type === 'date' && input.value && new Date(input.value) > new Date('2025-11-03')) {
+                    isValid = false;
+                    if (errorDiv) {
+                        errorDiv.textContent = 'Date cannot be in the future.';
+                        errorDiv.classList.add('show');
+                    }
+                } else if (input.minLength && input.value.length < input.minLength) {
+                    isValid = false;
+                    if (errorDiv) {
+                        errorDiv.textContent = `Minimum length is ${input.minLength} characters.`;
+                        errorDiv.classList.add('show');
+                    }
+                }
+            });
+            return isValid;
         }
 
         // Navigation
@@ -1997,6 +2226,10 @@
 
             form.addEventListener('submit', async (e) => {
                 e.preventDefault();
+                if (!validateForm(formId.replace('bulk', ''))) {
+                    showNotification('Please fix validation errors before uploading.', 'error');
+                    return;
+                }
                 const file = fileInput.files[0];
                 if (!file) return alert('Please select a file.');
                 try {
@@ -2013,8 +2246,18 @@
                         if (storeName === 'tithes' && !item.type) item.type = 'Offering'; // Default type
                         return item;
                     });
-                    await batchAdd(storeName, newItems);
-                    showNotification(`${newItems.length} items added successfully with improved field mapping.`);
+                    // Additional bulk validation
+                    const invalidItems = newItems.filter(item => {
+                        if (item.amount && (item.amount <= 0 || item.amount > 10000)) return true;
+                        if (item.date && new Date(item.date) > new Date(today)) return true;
+                        return false;
+                    });
+                    if (invalidItems.length > 0) {
+                        showNotification(`${invalidItems.length} items have invalid data (e.g., negative amounts or future dates). Skipping them.`, 'error');
+                    }
+                    const validItems = newItems.filter(item => !invalidItems.includes(item));
+                    await batchAdd(storeName, validItems);
+                    showNotification(`${validItems.length} items added successfully with improved field mapping.`);
                     form.reset();
                     previewDiv.style.display = 'none';
                     parsedData = [];
@@ -2048,6 +2291,7 @@
             if (uploadForm) {
                 uploadForm.addEventListener('submit', async (e) => {
                     e.preventDefault();
+                    if (!validateForm('conferenceReportUploadForm')) return;
                     const file = document.getElementById('conferenceReportFile').files[0];
                     const title = document.getElementById('fileReportTitle').value;
                     if (!file || !title) return showNotification('Title and file required!', 'error');
@@ -2111,6 +2355,7 @@
 
             document.getElementById('paymentForm').addEventListener('submit', async (e) => {
                 e.preventDefault();
+                if (!validateForm('paymentForm')) return;
                 if (document.querySelector('input[name="paymentMethod"]:checked').value !== 'stripe') return;
                 const amount = document.getElementById('donationAmount').value * 100; // Cents
                 const recurring = document.querySelector('input[name="recurring"]:checked').value;
@@ -2143,6 +2388,33 @@
 
             document.querySelectorAll('input[name="paymentMethod"]').forEach(radio => {
                 radio.addEventListener('change', togglePaymentMethod);
+            });
+
+            // Add real-time validation to all forms
+            document.querySelectorAll('form[novalidate]').forEach(form => {
+                const inputs = form.querySelectorAll('input, select, textarea');
+                inputs.forEach(input => {
+                    input.addEventListener('blur', () => {
+                        const errorDiv = document.getElementById(input.id + '-error');
+                        if (errorDiv) errorDiv.classList.remove('show');
+                        if (input.checkValidity()) {
+                            input.style.borderColor = '#28a745';
+                        } else {
+                            input.style.borderColor = '#dc3545';
+                            if (errorDiv) {
+                                errorDiv.textContent = input.validationMessage || 'Invalid input.';
+                                errorDiv.classList.add('show');
+                            }
+                        }
+                    });
+                });
+                form.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    if (validateForm(form.id)) {
+                        // Original submit logic here
+                        form.dispatchEvent(new Event('submitValidated', { bubbles: true }));
+                    }
+                });
             });
         });
 
@@ -2288,8 +2560,7 @@
             }
         }
 
-        document.getElementById('memberForm').addEventListener('submit', (e) => {
-            e.preventDefault();
+        document.getElementById('memberForm').addEventListener('submitValidated', (e) => {
             const today = new Date().toISOString().split('T')[0];
             const memberData = {
                 name: document.getElementById('name').value,
@@ -2345,8 +2616,7 @@
             if (titheSelect) titheSelect.innerHTML = members.map(m => `<option value="${m.id}">${m.name}</option>`).join('') + visitors.map(v => `<option value="${v.id}">${v.name} (Visitor)</option>`).join('');
         }
 
-        document.getElementById('visitorForm').addEventListener('submit', (e) => {
-            e.preventDefault();
+        document.getElementById('visitorForm').addEventListener('submitValidated', (e) => {
             const today = new Date().toISOString().split('T')[0];
             const visitorData = {
                 name: document.getElementById('visitorName').value,
@@ -2385,8 +2655,7 @@
             }
         }
 
-        document.getElementById('followUpForm').addEventListener('submit', (e) => {
-            e.preventDefault();
+        document.getElementById('followUpForm').addEventListener('submitValidated', (e) => {
             const visitorId = document.getElementById('followUpVisitorSelect').value;
             const visitor = visitors.find(v => v.id == visitorId);
             const followUpData = {
@@ -2458,8 +2727,7 @@
             document.getElementById('totalOfferingDisplay').textContent = calculateTotal(offeringData).toFixed(2);
         }
 
-        document.getElementById('titheForm').addEventListener('submit', (e) => {
-            e.preventDefault();
+        document.getElementById('titheForm').addEventListener('submitValidated', (e) => {
             const today = new Date().toISOString().split('T')[0];
             const memberId = document.getElementById('titheMemberSelect').value;
             const member = members.find(m => m.id == memberId) || visitors.find(v => v.id == memberId);
@@ -2550,6 +2818,20 @@
         }
 
         window.saveBudgets = function() {
+            // Validate budget inputs
+            let isValid = true;
+            document.querySelectorAll('.budget-input').forEach(input => {
+                if (parseFloat(input.value) < 0) {
+                    isValid = false;
+                    input.style.borderColor = '#dc3545';
+                } else {
+                    input.style.borderColor = '#28a745';
+                }
+            });
+            if (!isValid) {
+                showNotification('Budget amounts cannot be negative.', 'error');
+                return;
+            }
             const inputs = document.querySelectorAll('.budget-input');
             const budgetDate = document.getElementById('budgetDate').value;
             inputs.forEach(input => {
@@ -2573,8 +2855,7 @@
             showNotification('Totals calculated!');
         };
 
-        document.getElementById('eventForm').addEventListener('submit', (e) => {
-            e.preventDefault();
+        document.getElementById('eventForm').addEventListener('submitValidated', (e) => {
             const today = new Date().toISOString().split('T')[0];
             const eventData = {
                 title: document.getElementById('eventTitle').value,
@@ -2617,8 +2898,7 @@
             }
         }
 
-        document.getElementById('ministryLeaderForm').addEventListener('submit', (e) => {
-            e.preventDefault();
+        document.getElementById('ministryLeaderForm').addEventListener('submitValidated', (e) => {
             const mlData = {
                 name: document.getElementById('ministryLeaderName').value,
                 branch: document.getElementById('ministryLeaderBranch').value,
@@ -2648,8 +2928,7 @@
             }
         }
 
-        document.getElementById('cellLeaderForm').addEventListener('submit', (e) => {
-            e.preventDefault();
+        document.getElementById('cellLeaderForm').addEventListener('submitValidated', (e) => {
             const clData = {
                 name: document.getElementById('cellLeaderName').value,
                 branch: document.getElementById('cellLeaderBranch').value,
@@ -2679,8 +2958,7 @@
             }
         }
 
-        document.getElementById('elderForm').addEventListener('submit', (e) => {
-            e.preventDefault();
+        document.getElementById('elderForm').addEventListener('submitValidated', (e) => {
             const today = new Date().toISOString().split('T')[0];
             const elData = {
                 name: document.getElementById('elderName').value,
@@ -2712,8 +2990,7 @@
             }
         }
 
-        document.getElementById('pastorForm').addEventListener('submit', (e) => {
-            e.preventDefault();
+        document.getElementById('pastorForm').addEventListener('submitValidated', (e) => {
             const today = new Date().toISOString().split('T')[0];
             const pData = {
                 name: document.getElementById('pastorName').value,
@@ -2745,8 +3022,7 @@
             }
         }
 
-        document.getElementById('branchCoordForm').addEventListener('submit', (e) => {
-            e.preventDefault();
+        document.getElementById('branchCoordForm').addEventListener('submitValidated', (e) => {
             const bcData = {
                 name: document.getElementById('branchCoordName').value,
                 branch: document.getElementById('branchCoordBranch').value,
@@ -2774,8 +3050,7 @@
             }
         }
 
-        document.getElementById('conferenceReportForm').addEventListener('submit', (e) => {
-            e.preventDefault();
+        document.getElementById('conferenceReportForm').addEventListener('submitValidated', (e) => {
             const today = new Date().toISOString().split('T')[0];
             const crData = {
                 title: document.getElementById('conferenceReportTitle').value,
@@ -2818,8 +3093,7 @@
             }
         }
 
-        document.getElementById('titheReportForm').addEventListener('submit', (e) => {
-            e.preventDefault();
+        document.getElementById('titheReportForm').addEventListener('submitValidated', (e) => {
             const today = new Date().toISOString().split('T')[0];
             const trData = {
                 title: document.getElementById('titheReportTitle').value,
@@ -2847,8 +3121,7 @@
             }
         }
 
-        document.getElementById('visitorsReportForm').addEventListener('submit', (e) => {
-            e.preventDefault();
+        document.getElementById('visitorsReportForm').addEventListener('submitValidated', (e) => {
             const today = new Date().toISOString().split('T')[0];
             const vrData = {
                 title: document.getElementById('visitorsReportTitle').value,
@@ -2890,8 +3163,7 @@
             `).join('');
         }
 
-        document.getElementById('attendanceForm').addEventListener('submit', (e) => {
-            e.preventDefault();
+        document.getElementById('attendanceForm').addEventListener('submitValidated', (e) => {
             const today = new Date().toISOString().split('T')[0];
             const record = {
                 branch: document.getElementById('attendanceBranch').value,
@@ -2949,8 +3221,7 @@
             document.getElementById('visitorWhatsAppMessage').value = template.replace('[Name]', name).replace('[Date]', new Date().toLocaleDateString());
         };
 
-        document.getElementById('visitorWhatsAppForm').addEventListener('submit', (e) => {
-            e.preventDefault();
+        document.getElementById('visitorWhatsAppForm').addEventListener('submitValidated', (e) => {
             const visitorId = document.getElementById('visitorWhatsAppSelect').value;
             const visitor = visitors.find(v => v.id == visitorId);
             if (!visitor) return showNotification('Visitor not found!', 'error');
@@ -3004,8 +3275,7 @@
             }
         }
 
-        document.getElementById('vaultForm').addEventListener('submit', (e) => {
-            e.preventDefault();
+        document.getElementById('vaultForm').addEventListener('submitValidated', (e) => {
             const vaultData = {
                 title: document.getElementById('vaultTitle').value,
                 content: document.getElementById('vaultContent').value
