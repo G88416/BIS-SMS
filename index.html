@@ -1857,7 +1857,7 @@
         let titheReports = loadData('titheReports', []);
         let visitorsReports = loadData('visitorsReports', []);
         let vault = loadData('vault', []);
-        let conferenceBudgets = loadData('conferenceBudgets', []);
+        let conferenceBudgets = loadData('conferenceBudgets', { september: {}, easter: {}, combined: {} });
 
         // Utility functions
         function loadData(key, defaultValue) {
@@ -1900,8 +1900,8 @@
             saveData(key, newData);
         }
 
-        function calculateTotal(data) {
-            return data.reduce((sum, item) => sum + parseFloat(item.amount || 0), 0);
+        function calculateTotal(data, filterFn = () => true) {
+            return data.filter(filterFn).reduce((sum, item) => sum + parseFloat(item.amount || 0), 0).toFixed(2);
         }
 
         function showSection(section, btn) {
@@ -1910,9 +1910,18 @@
             document.getElementById(section).classList.add('active');
             btn.classList.add('active');
             if (section === 'analytics') updateAnalytics();
-            if (section === 'tithe') renderTithes();
+            if (section === 'tithe') {
+                populateTitheMemberSelect();
+                renderTithes();
+            }
             if (section === 'members') renderMembers();
-            if (section === 'visitors') renderVisitors();
+            if (section === 'visitors') {
+                populateFollowUpVisitorSelect();
+                populateVisitorWhatsAppSelect();
+                renderVisitors();
+                renderFollowUps();
+                renderReminders();
+            }
             if (section === 'events') renderEvents();
             if (section === 'church-admin') {
                 renderMinistryLeaders();
@@ -1922,7 +1931,10 @@
                 renderBranchCoordinators();
             }
             if (section === 'attendance') renderAttendance();
-            if (section === 'whatsapp') renderWhatsAppHistory();
+            if (section === 'whatsapp') {
+                populateBroadcastSelect();
+                renderWhatsAppHistory();
+            }
             if (section === 'vault') {
                 renderConferenceReports();
                 renderConferenceReportFiles();
@@ -1935,7 +1947,7 @@
         function showNotification(message, type = 'success') {
             const notif = document.getElementById('notification');
             notif.textContent = message;
-            notif.className = type === 'error' ? 'notification show' : 'notification show';
+            notif.className = `notification show ${type === 'error' ? 'error' : ''}`;
             setTimeout(() => notif.classList.remove('show'), 3000);
         }
 
@@ -2091,8 +2103,9 @@
         }
 
         function useAISuggestion() {
-            const textareaId = document.querySelector('#ai-suggestion').previousElementSibling.querySelector('textarea').id;
-            document.getElementById(textareaId).value = document.getElementById('ai-message').textContent;
+            const message = document.getElementById('ai-message').textContent;
+            const activeForm = document.querySelector('.content.active form textarea');
+            if (activeForm) activeForm.value = message;
             closeAISuggestion();
         }
 
@@ -2104,7 +2117,7 @@
             // Simple AI-like analysis
             const insights = [];
             if (visitors.length > tithes.length / 2) insights.push('High visitor engagement – consider more follow-ups.');
-            if (calculateTotal(tithes.filter(t => t.type === 'Tithe')) < 1000) insights.push('Tithe below average – AI suggests targeted giving campaign.');
+            if (calculateTotal(tithes, t => t.type === 'Tithe') < 1000) insights.push('Tithe below average – AI suggests targeted giving campaign.');
             showNotification('AI Insights: ' + insights.join(' '));
         }
 
@@ -2126,7 +2139,944 @@
             }));
         }
 
-        // Initialize event listeners
+        // Render Functions
+        function renderMembers() {
+            const tbody = document.querySelector('#memberTable tbody');
+            tbody.innerHTML = '';
+            members.forEach(member => {
+                const row = document.createElement('tr');
+                row.dataset.id = member.id;
+                row.innerHTML = `
+                    <td>${member.name || ''}</td>
+                    <td>${member.branch || ''}</td>
+                    <td>${member.email || ''}</td>
+                    <td>${member.cell || ''}</td>
+                    <td>${member.address || ''}</td>
+                    <td>${member.joinDate || ''}</td>
+                    <td>${member.role || ''}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function renderVisitors() {
+            const tbody = document.querySelector('#visitorTable tbody');
+            tbody.innerHTML = '';
+            visitors.forEach(visitor => {
+                const row = document.createElement('tr');
+                row.dataset.id = visitor.id;
+                row.innerHTML = `
+                    <td>${visitor.name || ''}</td>
+                    <td>${visitor.branch || ''}</td>
+                    <td>${visitor.email || ''}</td>
+                    <td>${visitor.cell || ''}</td>
+                    <td>${visitor.address || ''}</td>
+                    <td>${visitor.visitDate || ''}</td>
+                    <td>${visitor.notes || ''}</td>
+                    <td class="${visitor.status === 'Converted' ? 'converted' : ''}">${visitor.status || 'Pending'}</td>
+                    <td>
+                        <button class="convert-btn" onclick="convertVisitorToMember(${visitor.id})">Convert to Member</button>
+                        <button class="delete-btn" onclick="deleteData('visitors', ${visitor.id}); renderVisitors();">Delete</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function renderEvents() {
+            const tbody = document.querySelector('#eventTable tbody');
+            tbody.innerHTML = '';
+            events.forEach(event => {
+                const row = document.createElement('tr');
+                row.dataset.id = event.id;
+                row.innerHTML = `
+                    <td>${event.title || ''}</td>
+                    <td>${event.description || ''}</td>
+                    <td>${event.date || ''}</td>
+                    <td>${event.branch || ''}</td>
+                    <td>${event.organizer || ''}</td>
+                    <td><button class="delete-btn" onclick="deleteData('events', ${event.id}); renderEvents();">Delete</button></td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function renderTithes() {
+            const tbody = document.querySelector('#titheTable tbody');
+            tbody.innerHTML = '';
+            tithes.forEach(tithe => {
+                const row = document.createElement('tr');
+                row.dataset.id = tithe.id;
+                row.innerHTML = `
+                    <td>${tithe.memberName || ''}</td>
+                    <td>${tithe.type || ''}</td>
+                    <td>${tithe.amount || ''}</td>
+                    <td>${tithe.date || ''}</td>
+                    <td>${tithe.branch || ''}</td>
+                    <td><button class="delete-btn" onclick="deleteData('tithes', ${tithe.id}); renderTithes();">Delete</button></td>
+                `;
+                tbody.appendChild(row);
+            });
+            const totalTithe = calculateTotal(tithes, t => t.type === 'Tithe');
+            const totalOffering = calculateTotal(tithes, t => t.type === 'Offering');
+            document.getElementById('totalTitheDisplay').textContent = totalTithe;
+            document.getElementById('totalOfferingDisplay').textContent = totalOffering;
+        }
+
+        function renderMinistryLeaders() {
+            const tbody = document.querySelector('#ministryLeaderTable tbody');
+            tbody.innerHTML = '';
+            ministryLeaders.forEach(leader => {
+                const row = document.createElement('tr');
+                row.dataset.id = leader.id;
+                row.innerHTML = `
+                    <td>${leader.name || ''}</td>
+                    <td>${leader.branch || ''}</td>
+                    <td>${leader.email || ''}</td>
+                    <td>${leader.cell || ''}</td>
+                    <td>${leader.ministry || ''}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function renderCellLeaders() {
+            const tbody = document.querySelector('#cellLeaderTable tbody');
+            tbody.innerHTML = '';
+            cellLeaders.forEach(leader => {
+                const row = document.createElement('tr');
+                row.dataset.id = leader.id;
+                row.innerHTML = `
+                    <td>${leader.name || ''}</td>
+                    <td>${leader.branch || ''}</td>
+                    <td>${leader.email || ''}</td>
+                    <td>${leader.cell || ''}</td>
+                    <td>${leader.cellGroup || ''}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function renderElders() {
+            const tbody = document.querySelector('#elderTable tbody');
+            tbody.innerHTML = '';
+            elders.forEach(elder => {
+                const row = document.createElement('tr');
+                row.dataset.id = elder.id;
+                row.innerHTML = `
+                    <td>${elder.name || ''}</td>
+                    <td>${elder.branch || ''}</td>
+                    <td>${elder.email || ''}</td>
+                    <td>${elder.cell || ''}</td>
+                    <td>${elder.ordinationDate || ''}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function renderPastors() {
+            const tbody = document.querySelector('#pastorTable tbody');
+            tbody.innerHTML = '';
+            pastors.forEach(pastor => {
+                const row = document.createElement('tr');
+                row.dataset.id = pastor.id;
+                row.innerHTML = `
+                    <td>${pastor.name || ''}</td>
+                    <td>${pastor.branch || ''}</td>
+                    <td>${pastor.email || ''}</td>
+                    <td>${pastor.cell || ''}</td>
+                    <td>${pastor.appointmentDate || ''}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function renderBranchCoordinators() {
+            const tbody = document.querySelector('#branchCoordTable tbody');
+            tbody.innerHTML = '';
+            branchCoordinators.forEach(coord => {
+                const row = document.createElement('tr');
+                row.dataset.id = coord.id;
+                row.innerHTML = `
+                    <td>${coord.name || ''}</td>
+                    <td>${coord.branch || ''}</td>
+                    <td>${coord.email || ''}</td>
+                    <td>${coord.cell || ''}</td>
+                    <td>${coord.notes || ''}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function renderAttendance() {
+            const tbody = document.querySelector('#attendanceTable tbody');
+            tbody.innerHTML = '';
+            attendance.forEach(att => {
+                const total = parseInt(att.youth || 0) + parseInt(att.adult || 0) + parseInt(att.sundaySchool || 0);
+                const row = document.createElement('tr');
+                row.dataset.id = att.id;
+                row.innerHTML = `
+                    <td>${att.branch || ''}</td>
+                    <td>${att.date || ''}</td>
+                    <td>${att.youth || 0}</td>
+                    <td>${att.adult || 0}</td>
+                    <td>${att.sundaySchool || 0}</td>
+                    <td>${total}</td>
+                    <td><button class="delete-btn" onclick="deleteData('attendance', ${att.id}); renderAttendance();">Delete</button></td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function renderWhatsAppHistory() {
+            const list = document.getElementById('whatsappList');
+            list.innerHTML = '';
+            whatsappHistory.forEach(item => {
+                const li = document.createElement('li');
+                li.className = 'whatsapp-item';
+                li.innerHTML = `
+                    <div class="whatsapp-item-details">
+                        <strong>To:</strong> ${item.recipients.join(', ')}<br>
+                        <strong>Message:</strong> ${item.message}<br>
+                        <strong>Sent:</strong> ${item.date}
+                    </div>
+                `;
+                list.appendChild(li);
+            });
+        }
+
+        function renderFollowUps() {
+            const list = document.getElementById('followUpList');
+            list.innerHTML = '';
+            followUps.forEach(fu => {
+                const li = document.createElement('li');
+                li.className = 'follow-up-item';
+                li.innerHTML = `
+                    <strong>Visitor:</strong> ${fu.visitorName}<br>
+                    <strong>Status:</strong> ${fu.status}<br>
+                    <strong>Date:</strong> ${fu.date || 'N/A'}<br>
+                    <strong>Notes:</strong> ${fu.notes || 'N/A'}
+                `;
+                list.appendChild(li);
+            });
+        }
+
+        function renderReminders() {
+            const list = document.getElementById('reminderList');
+            list.innerHTML = '';
+            const today = new Date().toISOString().split('T')[0];
+            reminders.sort((a, b) => new Date(a.reminderDate) - new Date(b.reminderDate));
+            reminders.forEach(rem => {
+                const li = document.createElement('li');
+                li.className = 'reminder-item';
+                if (rem.reminderDate === today) li.classList.add('due');
+                if (rem.reminderDate < today) li.classList.add('overdue');
+                li.innerHTML = `
+                    <strong>Visitor:</strong> ${rem.visitorName}<br>
+                    <strong>Reminder Date:</strong> ${rem.reminderDate}<br>
+                    <strong>Notes:</strong> ${rem.notes || 'Follow up'}
+                `;
+                list.appendChild(li);
+            });
+        }
+
+        function renderConferenceReports() {
+            const list = document.getElementById('conferenceReportList');
+            list.innerHTML = '';
+            conferenceReports.forEach(report => {
+                const li = document.createElement('li');
+                li.className = 'report-item';
+                li.innerHTML = `
+                    <strong>${report.title}</strong> (${report.date})<br>
+                    ${report.content}<br>
+                    <button class="report-delete-btn" onclick="deleteData('conferenceReports', ${report.id}); renderConferenceReports();">Delete</button>
+                `;
+                list.appendChild(li);
+            });
+        }
+
+        function renderConferenceReportFiles() {
+            const list = document.getElementById('conferenceReportFileList');
+            list.innerHTML = '';
+            conferenceReportFiles.forEach(file => {
+                const li = document.createElement('li');
+                li.className = 'report-item';
+                li.innerHTML = `
+                    <strong>${file.title}</strong> (${file.date}) - ${file.fileName}<br>
+                    <a class="file-download-link" href="${file.fileData}" download="${file.fileName}">Download</a>
+                    <button class="view-btn" onclick="viewConferenceFile(${file.id})">View</button>
+                    <button class="report-delete-btn" onclick="deleteData('conferenceReportFiles', ${file.id}); renderConferenceReportFiles();">Delete</button>
+                `;
+                list.appendChild(li);
+            });
+        }
+
+        function renderTitheReports() {
+            const list = document.getElementById('titheReportList');
+            list.innerHTML = '';
+            titheReports.forEach(report => {
+                const li = document.createElement('li');
+                li.className = 'report-item';
+                li.innerHTML = `
+                    <strong>${report.title}</strong> (${report.date})<br>
+                    ${report.content}<br>
+                    <button class="report-delete-btn" onclick="deleteData('titheReports', ${report.id}); renderTitheReports();">Delete</button>
+                `;
+                list.appendChild(li);
+            });
+        }
+
+        function renderVisitorsReports() {
+            const list = document.getElementById('visitorsReportList');
+            list.innerHTML = '';
+            visitorsReports.forEach(report => {
+                const li = document.createElement('li');
+                li.className = 'report-item';
+                li.innerHTML = `
+                    <strong>${report.title}</strong> (${report.date})<br>
+                    ${report.content}<br>
+                    <button class="report-delete-btn" onclick="deleteData('visitorsReports', ${report.id}); renderVisitorsReports();">Delete</button>
+                `;
+                list.appendChild(li);
+            });
+        }
+
+        function renderVault() {
+            const list = document.getElementById('vaultList');
+            list.innerHTML = '';
+            vault.forEach(note => {
+                const li = document.createElement('li');
+                li.className = 'report-item';
+                li.innerHTML = `
+                    <strong>${note.title}</strong><br>
+                    ${note.content}<br>
+                    <button class="report-delete-btn" onclick="deleteData('vault', ${note.id}); renderVault();">Delete</button>
+                `;
+                list.appendChild(li);
+            });
+        }
+
+        // Population Functions
+        function populateTitheMemberSelect() {
+            const select = document.getElementById('titheMemberSelect');
+            select.innerHTML = '<option value="">Select Member</option>';
+            members.forEach(member => {
+                const option = document.createElement('option');
+                option.value = member.name;
+                option.textContent = member.name;
+                select.appendChild(option);
+            });
+        }
+
+        function populateFollowUpVisitorSelect() {
+            const select = document.getElementById('followUpVisitorSelect');
+            select.innerHTML = '<option value="">Select Visitor</option>';
+            visitors.forEach(visitor => {
+                const option = document.createElement('option');
+                option.value = visitor.id;
+                option.textContent = visitor.name;
+                select.appendChild(option);
+            });
+        }
+
+        function populateVisitorWhatsAppSelect() {
+            const select = document.getElementById('visitorWhatsAppSelect');
+            select.innerHTML = '<option value="">Select Visitor</option>';
+            visitors.forEach(visitor => {
+                const option = document.createElement('option');
+                option.value = visitor.cell;
+                option.textContent = visitor.name;
+                select.appendChild(option);
+            });
+        }
+
+        function populateBroadcastSelect() {
+            const select = document.getElementById('broadcastSelect');
+            select.innerHTML = '';
+            const allContacts = [...members.map(m => ({name: m.name, cell: m.cell})), ...visitors.map(v => ({name: v.name, cell: v.cell}))];
+            allContacts.forEach(contact => {
+                const option = document.createElement('option');
+                option.value = contact.cell;
+                option.textContent = contact.name;
+                select.appendChild(option);
+            });
+        }
+
+        // Action Functions
+        function convertVisitorToMember(id) {
+            const visitor = visitors.find(v => v.id === id);
+            if (visitor) {
+                addData('members', {
+                    name: visitor.name,
+                    branch: visitor.branch,
+                    email: visitor.email,
+                    cell: visitor.cell,
+                    address: visitor.address,
+                    joinDate: new Date().toISOString().split('T')[0],
+                    role: 'Member'
+                });
+                updateData('visitors', id, { status: 'Converted' });
+                renderVisitors();
+                renderMembers();
+                showNotification('Visitor converted to member!');
+            }
+        }
+
+        function bulkSendDueReminders() {
+            const today = new Date().toISOString().split('T')[0];
+            const due = reminders.filter(rem => rem.reminderDate <= today && !rem.sent);
+            if (due.length === 0) return showNotification('No due reminders!');
+            due.forEach(rem => {
+                // Mock send
+                showNotification(`Sent reminder to ${rem.visitorName}`);
+                updateData('reminders', rem.id, { sent: true });
+            });
+            renderReminders();
+        }
+
+        function sendBroadcast() {
+            const selected = Array.from(document.getElementById('broadcastSelect').selectedOptions).map(opt => opt.value);
+            const message = document.getElementById('broadcastMessage').value;
+            if (selected.length === 0 || !message) return showNotification('Select recipients and message!', 'error');
+            addData('whatsappHistory', { recipients: selected, message, date: new Date().toLocaleString() });
+            renderWhatsAppHistory();
+            showNotification('Broadcast sent!');
+        }
+
+        function scheduleBroadcast() {
+            showNotification('Broadcast scheduled (mock)');
+        }
+
+        function fillVisitorTemplate(template) {
+            const select = document.getElementById('visitorWhatsAppSelect');
+            const name = select.options[select.selectedIndex]?.text || '[Name]';
+            const date = new Date().toLocaleDateString();
+            const message = template.replace('[Name]', name).replace('[Date]', date);
+            document.getElementById('visitorWhatsAppMessage').value = message;
+        }
+
+        // Budget Functions
+        function calculateTotals() {
+            let grandTotal = 0;
+            ['september', 'easter', 'combined'].forEach(event => {
+                let eventTotal = 0;
+                document.querySelectorAll(`.budget-input[data-event="${event}"]`).forEach(input => {
+                    eventTotal += parseFloat(input.value || 0);
+                });
+                document.getElementById(`${event}-total`).textContent = `Total: $${eventTotal.toFixed(2)}`;
+                grandTotal += eventTotal;
+            });
+            document.getElementById('grand-total').textContent = `Grand Total: $${grandTotal.toFixed(2)}`;
+        }
+
+        function saveBudgets() {
+            const budgets = { september: {}, easter: {}, combined: {} };
+            document.querySelectorAll('.budget-input').forEach(input => {
+                budgets[input.dataset.event][input.dataset.category] = parseFloat(input.value || 0);
+            });
+            saveData('conferenceBudgets', budgets);
+            showNotification('Budgets saved!');
+        }
+
+        // Analytics Update
+        function updateAnalytics() {
+            // Stats
+            document.getElementById('totalVisitors').textContent = visitors.length;
+            const converted = visitors.filter(v => v.status === 'Converted').length;
+            document.getElementById('totalConverted').textContent = converted;
+            document.getElementById('conversionRate').textContent = visitors.length ? ((converted / visitors.length) * 100).toFixed(2) + '%' : '0%';
+            document.getElementById('pendingFollowUps').textContent = followUps.filter(f => f.status !== 'Joined' && f.status !== 'Not Interested').length;
+            document.getElementById('totalTithe').textContent = calculateTotal(tithes, t => t.type === 'Tithe');
+            document.getElementById('totalOffering').textContent = calculateTotal(tithes, t => t.type === 'Offering');
+            const avgTithe = tithes.length ? (calculateTotal(tithes) / tithes.length).toFixed(2) : 0;
+            document.getElementById('averageTithe').textContent = avgTithe;
+            document.getElementById('totalAttendance').textContent = attendance.reduce((sum, att) => sum + parseInt(att.youth || 0) + parseInt(att.adult || 0) + parseInt(att.sundaySchool || 0), 0);
+
+            // Charts (using Chart.js)
+            const ctxVisitors = document.getElementById('visitorsChart').getContext('2d');
+            new Chart(ctxVisitors, {
+                type: 'line',
+                data: { labels: visitors.map(v => v.visitDate), datasets: [{ label: 'Visitors', data: visitors.map(() => 1) }] }
+            });
+
+            const ctxConversion = document.getElementById('conversionChart').getContext('2d');
+            new Chart(ctxConversion, {
+                type: 'pie',
+                data: { labels: ['Converted', 'Pending'], datasets: [{ data: [converted, visitors.length - converted] }] }
+            });
+
+            const ctxTithe = document.getElementById('titheChart').getContext('2d');
+            new Chart(ctxTithe, {
+                type: 'bar',
+                data: { labels: tithes.map(t => t.date), datasets: [{ label: 'Tithe', data: tithes.filter(t => t.type === 'Tithe').map(t => t.amount) }, { label: 'Offering', data: tithes.filter(t => t.type === 'Offering').map(t => t.amount) }] }
+            });
+
+            const ctxAttendance = document.getElementById('attendanceChart').getContext('2d');
+            new Chart(ctxAttendance, {
+                type: 'line',
+                data: { labels: attendance.map(a => a.date), datasets: [{ label: 'Total', data: attendance.map(a => parseInt(a.youth) + parseInt(a.adult) + parseInt(a.sundaySchool)) }] }
+            });
+        }
+
+        // Payment Functions
+        function openPaymentModal() {
+            document.getElementById('paymentModal').style.display = 'block';
+            togglePaymentMethod();
+        }
+
+        function closePaymentModal() {
+            document.getElementById('paymentModal').style.display = 'none';
+        }
+
+        function togglePaymentMethod() {
+            const method = document.querySelector('input[name="paymentMethod"]:checked').value;
+            document.getElementById('stripe-payment').classList.toggle('active', method === 'stripe');
+            document.getElementById('paypal-payment').classList.toggle('active', method === 'paypal');
+        }
+
+        // File Viewer Functions
+        let currentPdf = null, currentPage = 1, totalPages = 0, currentScale = 1;
+
+        async function viewConferenceFile(id) {
+            const file = conferenceReportFiles.find(f => f.id === id);
+            if (!file) return;
+            const modal = document.getElementById('fileViewerModal');
+            const content = document.getElementById('fileViewerContent');
+            const toolbar = document.getElementById('viewerToolbar');
+            const loading = content.querySelector('.viewer-loading');
+            loading.style.display = 'block';
+            toolbar.style.display = 'none';
+            modal.style.display = 'block';
+            currentPage = 1;
+            currentScale = 1;
+            document.getElementById('zoomLevel').value = 100;
+
+            try {
+                // Assuming file.fileData is a base64 data URL
+                const base64 = file.fileData.split(',')[1];
+                const binary = atob(base64);
+                const arrayBuffer = new Uint8Array(binary.length);
+                for (let i = 0; i < binary.length; i++) {
+                    arrayBuffer[i] = binary.charCodeAt(i);
+                }
+                const blob = new Blob([arrayBuffer], { type: file.fileType });
+                const url = URL.createObjectURL(blob);
+
+                loading.style.display = 'none';
+
+                if (file.fileType === 'application/pdf') {
+                    currentPdf = await pdfjsLib.getDocument(url).promise;
+                    totalPages = currentPdf.numPages;
+                    document.getElementById('pageInfo').textContent = `${currentPage} / ${totalPages}`;
+                    toolbar.style.display = 'flex';
+                    document.getElementById('pdfNav').style.display = 'flex';
+                    renderPdfPage(currentPdf, currentPage, currentScale);
+                } else if (file.fileType.includes('word') || file.fileType.includes('document')) {
+                    const result = await mammoth.convertToHtml({ arrayBuffer });
+                    content.innerHTML += `<div class="docx-content">${result.value}</div>`;
+                    toolbar.style.display = 'flex';
+                    document.getElementById('pdfNav').style.display = 'none';
+                } else if (file.fileType.includes('spreadsheet') || file.fileType.includes('excel')) {
+                    const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+                    const html = XLSX.utils.sheet_to_html(workbook.Sheets[workbook.SheetNames[0]]);
+                    content.innerHTML += `<div class="xlsx-content">${html}</div>`;
+                    toolbar.style.display = 'flex';
+                    document.getElementById('pdfNav').style.display = 'none';
+                } else {
+                    content.innerHTML += '<iframe src="' + url + '" style="width:100%; height:500px;"></iframe>';
+                    toolbar.style.display = 'none';
+                }
+            } catch (error) {
+                loading.textContent = `Error viewing file: ${error.message}`;
+            }
+        }
+
+        async function renderPdfPage(pdf, pageNum, scale) {
+            const page = await pdf.getPage(pageNum);
+            const viewport = page.getViewport({ scale });
+            const canvas = document.createElement('canvas');
+            canvas.className = 'pdf-canvas';
+            canvas.height = viewport.height;
+            canvas.width = viewport.width;
+            const renderContext = { canvasContext: canvas.getContext('2d'), viewport };
+            await page.render(renderContext).promise;
+            document.getElementById('fileViewerContent').appendChild(canvas);
+            document.getElementById('pageInfo').textContent = `${pageNum} / ${totalPages}`;
+        }
+
+        function prevPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                renderPdfPage(currentPdf, currentPage, currentScale);
+            }
+        }
+
+        function nextPage() {
+            if (currentPage < totalPages) {
+                currentPage++;
+                renderPdfPage(currentPdf, currentPage, currentScale);
+            }
+        }
+
+        function zoomIn() {
+            currentScale += 0.25;
+            document.getElementById('zoomLevel').value = currentScale * 100;
+            renderPdfPage(currentPdf, currentPage, currentScale);
+        }
+
+        function zoomOut() {
+            if (currentScale > 0.25) {
+                currentScale -= 0.25;
+                document.getElementById('zoomLevel').value = currentScale * 100;
+                renderPdfPage(currentPdf, currentPage, currentScale);
+            }
+        }
+
+        function setZoom(value) {
+            currentScale = parseInt(value) / 100;
+            renderPdfPage(currentPdf, currentPage, currentScale);
+        }
+
+        function closeFileViewer() {
+            document.getElementById('fileViewerModal').style.display = 'none';
+            document.getElementById('fileViewerContent').innerHTML = '<span class="close-viewer" onclick="closeFileViewer()">&times;</span><div id="viewerToolbar" class="viewer-toolbar" style="display:none;"><div class="pdf-page-nav" id="pdfNav" style="display:none;"><button onclick="prevPage()">Prev</button><span id="pageInfo">1 / 1</span><button onclick="nextPage()">Next</button></div><div class="zoom-controls"><button onclick="zoomOut()">-</button><input type="number" id="zoomLevel" min="50" max="200" value="100" onchange="setZoom(this.value)"><button onclick="zoomIn()">+</button></div></div><div class="viewer-loading">Loading...</div>';
+        }
+
+        // Export, Print, Email Functions (Mock Implementations)
+        function exportData(data, filename) {
+            const csv = data.map(row => Object.values(row).join(',')).join('\n');
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+        }
+
+        function emailData(data, subject) {
+            // Mock email
+            showNotification(`Email sent with subject: ${subject}`);
+        }
+
+        function printFolder(folderId) {
+            const content = document.getElementById(`${folderId}-folder`).innerHTML;
+            const printWin = window.open('');
+            printWin.document.write(`<html><body>${content}</body></html>`);
+            printWin.print();
+            printWin.close();
+        }
+
+        function toggleFolder(folderId) {
+            document.getElementById(`${folderId}-folder`).open = !document.getElementById(`${folderId}-folder`).open;
+        }
+
+        function exportMembers() { exportData(members, 'members.csv'); }
+        function emailMembers() { emailData(members, 'Members List'); }
+        function exportVisitors() { exportData(visitors, 'visitors.csv'); }
+        function emailVisitors() { emailData(visitors, 'Visitors List'); }
+        function exportEvents() { exportData(events, 'events.csv'); }
+        function emailEvents() { emailData(events, 'Events List'); }
+        function exportTithes() { exportData(tithes, 'tithes.csv'); }
+        function emailTithes() { emailData(tithes, 'Tithes List'); }
+        function printTithes() { printFolder('tithe'); }
+        function exportMinistryLeaders() { exportData(ministryLeaders, 'ministryLeaders.csv'); }
+        function emailMinistryLeaders() { emailData(ministryLeaders, 'Ministry Leaders List'); }
+        function exportCellLeaders() { exportData(cellLeaders, 'cellLeaders.csv'); }
+        function emailCellLeaders() { emailData(cellLeaders, 'Cell Leaders List'); }
+        function exportElders() { exportData(elders, 'elders.csv'); }
+        function emailElders() { emailData(elders, 'Elders List'); }
+        function exportPastors() { exportData(pastors, 'pastors.csv'); }
+        function emailPastors() { emailData(pastors, 'Pastors List'); }
+        function exportBranchCoordinators() { exportData(branchCoordinators, 'branchCoordinators.csv'); }
+        function emailBranchCoordinators() { emailData(branchCoordinators, 'Branch Coordinators List'); }
+        function exportAttendance() { exportData(attendance, 'attendance.csv'); }
+        function emailAttendance() { emailData(attendance, 'Attendance List'); }
+        function printAttendance() { printFolder('attendance'); }
+        function exportWhatsApp() { exportData(whatsappHistory, 'whatsappHistory.csv'); }
+        function emailWhatsApp() { emailData(whatsappHistory, 'WhatsApp History'); }
+        function exportFollowUps() { exportData(followUps, 'followUps.csv'); }
+        function emailFollowUps() { emailData(followUps, 'Follow-Ups List'); }
+        function exportReminders() { exportData(reminders, 'reminders.csv'); }
+        function emailReminders() { emailData(reminders, 'Reminders List'); }
+        function exportConferenceReports() { exportData(conferenceReports, 'conferenceReports.csv'); }
+        function emailConferenceReports() { emailData(conferenceReports, 'Conference Reports'); }
+        function exportTitheReports() { exportData(titheReports, 'titheReports.csv'); }
+        function emailTitheReports() { emailData(titheReports, 'Tithe Reports'); }
+        function exportVisitorsReports() { exportData(visitorsReports, 'visitorsReports.csv'); }
+        function emailVisitorsReports() { emailData(visitorsReports, 'Visitors Reports'); }
+        function exportVault() { exportData(vault, 'vault.csv'); }
+        function emailVault() { emailData(vault, 'Vault Notes'); }
+
+        // Form Submission Listeners
+        function initFormListeners() {
+            // Members
+            document.getElementById('memberForm').addEventListener('submitValidated', () => {
+                const form = document.getElementById('memberForm');
+                const item = {
+                    name: document.getElementById('name').value,
+                    branch: document.getElementById('branch').value,
+                    email: document.getElementById('email').value,
+                    cell: document.getElementById('cell').value,
+                    address: document.getElementById('address').value,
+                    joinDate: document.getElementById('joinDate').value,
+                    role: document.getElementById('role').value
+                };
+                addData('members', item);
+                renderMembers();
+                form.reset();
+                showNotification('Member added!');
+            });
+
+            // Visitors
+            document.getElementById('visitorForm').addEventListener('submitValidated', () => {
+                const form = document.getElementById('visitorForm');
+                const item = {
+                    name: document.getElementById('visitorName').value,
+                    branch: document.getElementById('visitorBranch').value,
+                    email: document.getElementById('visitorEmail').value,
+                    cell: document.getElementById('visitorCell').value,
+                    address: document.getElementById('visitorAddress').value,
+                    visitDate: document.getElementById('visitorVisitDate').value,
+                    notes: document.getElementById('visitorNotes').value,
+                    status: 'Pending'
+                };
+                addData('visitors', item);
+                renderVisitors();
+                form.reset();
+                showNotification('Visitor added!');
+            });
+
+            // Follow-Ups
+            document.getElementById('followUpForm').addEventListener('submitValidated', () => {
+                const form = document.getElementById('followUpForm');
+                const visitorId = parseInt(document.getElementById('followUpVisitorSelect').value);
+                const visitor = visitors.find(v => v.id === visitorId);
+                const item = {
+                    visitorId,
+                    visitorName: visitor ? visitor.name : '',
+                    status: document.getElementById('followUpStatus').value,
+                    date: document.getElementById('followUpDate').value,
+                    reminderDate: document.getElementById('followUpReminderDate').value,
+                    notes: document.getElementById('followUpNotes').value
+                };
+                addData('followUps', item);
+                if (item.reminderDate) addData('reminders', { ...item, sent: false });
+                renderFollowUps();
+                renderReminders();
+                form.reset();
+                showNotification('Follow-up logged!');
+            });
+
+            // Events
+            document.getElementById('eventForm').addEventListener('submitValidated', () => {
+                const form = document.getElementById('eventForm');
+                const item = {
+                    title: document.getElementById('eventTitle').value,
+                    description: document.getElementById('eventDescription').value,
+                    date: document.getElementById('eventDate').value,
+                    branch: document.getElementById('eventBranch').value,
+                    organizer: document.getElementById('eventOrganizer').value
+                };
+                addData('events', item);
+                renderEvents();
+                form.reset();
+                showNotification('Event added!');
+            });
+
+            // Tithes
+            document.getElementById('titheForm').addEventListener('submitValidated', () => {
+                const form = document.getElementById('titheForm');
+                const item = {
+                    memberName: document.getElementById('titheMemberSelect').value,
+                    type: document.getElementById('titheType').value,
+                    amount: document.getElementById('titheAmount').value,
+                    date: document.getElementById('titheDate').value,
+                    branch: document.getElementById('titheBranch').value
+                };
+                addData('tithes', item);
+                renderTithes();
+                form.reset();
+                showNotification('Tithe/Offering recorded!');
+            });
+
+            // Ministry Leaders
+            document.getElementById('ministryLeaderForm').addEventListener('submitValidated', () => {
+                const form = document.getElementById('ministryLeaderForm');
+                const item = {
+                    name: document.getElementById('ministryLeaderName').value,
+                    branch: document.getElementById('ministryLeaderBranch').value,
+                    email: document.getElementById('ministryLeaderEmail').value,
+                    cell: document.getElementById('ministryLeaderCell').value,
+                    ministry: document.getElementById('ministryLeaderMinistry').value
+                };
+                addData('ministryLeaders', item);
+                renderMinistryLeaders();
+                form.reset();
+                showNotification('Ministry Leader added!');
+            });
+
+            // Cell Leaders
+            document.getElementById('cellLeaderForm').addEventListener('submitValidated', () => {
+                const form = document.getElementById('cellLeaderForm');
+                const item = {
+                    name: document.getElementById('cellLeaderName').value,
+                    branch: document.getElementById('cellLeaderBranch').value,
+                    email: document.getElementById('cellLeaderEmail').value,
+                    cell: document.getElementById('cellLeaderCell').value,
+                    cellGroup: document.getElementById('cellLeaderCellGroup').value
+                };
+                addData('cellLeaders', item);
+                renderCellLeaders();
+                form.reset();
+                showNotification('Cell Leader added!');
+            });
+
+            // Elders
+            document.getElementById('elderForm').addEventListener('submitValidated', () => {
+                const form = document.getElementById('elderForm');
+                const item = {
+                    name: document.getElementById('elderName').value,
+                    branch: document.getElementById('elderBranch').value,
+                    email: document.getElementById('elderEmail').value,
+                    cell: document.getElementById('elderCell').value,
+                    ordinationDate: document.getElementById('elderOrdinationDate').value
+                };
+                addData('elders', item);
+                renderElders();
+                form.reset();
+                showNotification('Elder added!');
+            });
+
+            // Pastors
+            document.getElementById('pastorForm').addEventListener('submitValidated', () => {
+                const form = document.getElementById('pastorForm');
+                const item = {
+                    name: document.getElementById('pastorName').value,
+                    branch: document.getElementById('pastorBranch').value,
+                    email: document.getElementById('pastorEmail').value,
+                    cell: document.getElementById('pastorCell').value,
+                    appointmentDate: document.getElementById('pastorAppointmentDate').value
+                };
+                addData('pastors', item);
+                renderPastors();
+                form.reset();
+                showNotification('Pastor added!');
+            });
+
+            // Branch Coordinators
+            document.getElementById('branchCoordForm').addEventListener('submitValidated', () => {
+                const form = document.getElementById('branchCoordForm');
+                const item = {
+                    name: document.getElementById('branchCoordName').value,
+                    branch: document.getElementById('branchCoordBranch').value,
+                    email: document.getElementById('branchCoordEmail').value,
+                    cell: document.getElementById('branchCoordCell').value,
+                    notes: document.getElementById('branchCoordNotes').value
+                };
+                addData('branchCoordinators', item);
+                renderBranchCoordinators();
+                form.reset();
+                showNotification('Branch Coordinator added!');
+            });
+
+            // Attendance
+            document.getElementById('attendanceForm').addEventListener('submitValidated', () => {
+                const form = document.getElementById('attendanceForm');
+                const item = {
+                    branch: document.getElementById('attendanceBranch').value,
+                    date: document.getElementById('attendanceDate').value,
+                    youth: document.getElementById('youthAttendance').value,
+                    adult: document.getElementById('adultAttendance').value,
+                    sundaySchool: document.getElementById('sundaySchoolAttendance').value
+                };
+                addData('attendance', item);
+                renderAttendance();
+                form.reset();
+                showNotification('Attendance logged!');
+            });
+
+            // Broadcast
+            document.getElementById('broadcastForm').addEventListener('submitValidated', sendBroadcast);
+
+            // Visitor WhatsApp
+            document.getElementById('visitorWhatsAppForm').addEventListener('submitValidated', () => {
+                const select = document.getElementById('visitorWhatsAppSelect');
+                const recipient = select.value;
+                const message = document.getElementById('visitorWhatsAppMessage').value;
+                addData('whatsappHistory', { recipients: [recipient], message, date: new Date().toLocaleString() });
+                renderWhatsAppHistory();
+                showNotification('Message sent via WhatsApp!');
+            });
+
+            // Vault Forms
+            document.getElementById('conferenceReportForm').addEventListener('submitValidated', () => {
+                const form = document.getElementById('conferenceReportForm');
+                const item = {
+                    title: document.getElementById('conferenceReportTitle').value,
+                    content: document.getElementById('conferenceReportContent').value,
+                    date: document.getElementById('conferenceReportDate').value || new Date().toISOString().split('T')[0]
+                };
+                addData('conferenceReports', item);
+                renderConferenceReports();
+                form.reset();
+                showNotification('Conference report added!');
+            });
+
+            document.getElementById('titheReportForm').addEventListener('submitValidated', () => {
+                const form = document.getElementById('titheReportForm');
+                const item = {
+                    title: document.getElementById('titheReportTitle').value,
+                    content: document.getElementById('titheReportContent').value,
+                    date: document.getElementById('titheReportDate').value || new Date().toISOString().split('T')[0]
+                };
+                addData('titheReports', item);
+                renderTitheReports();
+                form.reset();
+                showNotification('Tithe report added!');
+            });
+
+            document.getElementById('visitorsReportForm').addEventListener('submitValidated', () => {
+                const form = document.getElementById('visitorsReportForm');
+                const item = {
+                    title: document.getElementById('visitorsReportTitle').value,
+                    content: document.getElementById('visitorsReportContent').value,
+                    date: document.getElementById('visitorsReportDate').value || new Date().toISOString().split('T')[0]
+                };
+                addData('visitorsReports', item);
+                renderVisitorsReports();
+                form.reset();
+                showNotification('Visitors report added!');
+            });
+
+            document.getElementById('vaultForm').addEventListener('submitValidated', () => {
+                const form = document.getElementById('vaultForm');
+                const item = {
+                    title: document.getElementById('vaultTitle').value,
+                    content: document.getElementById('vaultContent').value
+                };
+                addData('vault', item);
+                renderVault();
+                form.reset();
+                showNotification('Secure note added!');
+            });
+
+            // Report Generation Buttons
+            document.getElementById('generateVisitorReportBtn').addEventListener('click', () => {
+                const content = `Total Visitors: ${visitors.length}\nConverted: ${visitors.filter(v => v.status === 'Converted').length}`;
+                addData('visitorsReports', { title: 'Generated Visitors Report', content, date: new Date().toISOString().split('T')[0] });
+                renderVisitorsReports();
+                showNotification('Visitors report generated!');
+            });
+
+            document.getElementById('generateTitheReportBtn').addEventListener('click', () => {
+                const content = `Total Tithe: $${calculateTotal(tithes, t => t.type === 'Tithe')}\nTotal Offering: $${calculateTotal(tithes, t => t.type === 'Offering')}`;
+                addData('titheReports', { title: 'Generated Tithe Report', content, date: new Date().toISOString().split('T')[0] });
+                renderTitheReports();
+                showNotification('Tithe report generated!');
+            });
+        }
+
+        // DOMContentLoaded
         document.addEventListener('DOMContentLoaded', () => {
             // Bulk uploads
             handleBulkUpload('bulkMemberForm', 'members', ['name', 'email', 'cell', 'address', 'joinDate', 'role', 'branch'], 'membersFilePreview');
@@ -2168,7 +3118,7 @@
             enhancedSearch('eventsSearch', '#eventTable', events, ['title', 'description', 'date', 'branch', 'organizer']);
             enhancedSearch('attendanceSearch', '#attendanceTable', attendance, ['branch', 'date']);
 
-            // Form validations and submissions (ensuring add buttons work)
+            // Form validations and submissions
             document.querySelectorAll('form[novalidate]').forEach(form => {
                 form.addEventListener('submit', (e) => {
                     e.preventDefault();
@@ -2194,8 +3144,10 @@
                 });
             });
 
-            // Stripe and PayPal (unchanged demo)
-            const stripe = Stripe('pk_test_your_publishable_key_here');
+            initFormListeners();
+
+            // Stripe and PayPal
+            const stripe = Stripe('pk_test_your_publishable_key_here');  // Replace with actual key
             const elements = stripe.elements();
             const card = elements.create('card', { style: { base: { fontSize: '16px' } } });
             card.mount('#card-element');
@@ -2268,68 +3220,14 @@
                 radio.addEventListener('change', togglePaymentMethod);
             });
 
-            // File Viewer (unchanged)
-            window.viewConferenceFile = async function(id) {
-                const file = conferenceReportFiles.find(f => f.id === id);
-                if (!file) return;
-                const modal = document.getElementById('fileViewerModal');
-                const content = document.getElementById('fileViewerContent');
-                const toolbar = document.getElementById('viewerToolbar');
-                content.innerHTML = '<div class="viewer-loading">Loading file...</div>';
-                toolbar.style.display = 'none';
-                modal.style.display = 'block';
-                let currentPdf = null, currentPage = 1, totalPages = 0, currentScale = 1;
-                document.getElementById('zoomLevel').value = 100;
-
-                try {
-                    const response = await fetch(file.fileData);
-                    const blob = await response.blob();
-                    const url = URL.createObjectURL(blob);
-
-                    if (file.fileType === 'application/pdf') {
-                        currentPdf = await pdfjsLib.getDocument(url).promise;
-                        totalPages = currentPdf.numPages;
-                        toolbar.style.display = 'flex';
-                        document.getElementById('pdfNav').style.display = 'flex';
-                        // renderPdfPage function as before
-                    } else if (file.fileType.includes('word') || file.fileType.includes('document')) {
-                        const arrayBuffer = await blob.arrayBuffer();
-                        const result = await mammoth.convertToHtml({ arrayBuffer });
-                        content.innerHTML = `<div class="docx-content">${result.value}</div>`;
-                        toolbar.style.display = 'flex';
-                        document.getElementById('pdfNav').style.display = 'none';
-                    } else if (file.fileType.includes('spreadsheet') || file.fileType.includes('excel')) {
-                        const arrayBuffer = await blob.arrayBuffer();
-                        const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-                        const html = XLSX.utils.sheet_to_html(workbook.Sheets[workbook.SheetNames[0]]);
-                        content.innerHTML = `<div class="xlsx-content">${html}</div>`;
-                        toolbar.style.display = 'flex';
-                        document.getElementById('pdfNav').style.display = 'none';
-                    } else {
-                        content.innerHTML = '<iframe src="' + url + '" style="width:100%; height:500px;"></iframe>';
-                        toolbar.style.display = 'none';
-                    }
-                } catch (error) {
-                    content.innerHTML = `<p>Error viewing file: ${error.message}</p>`;
-                }
-            };
-
-            // Other functions like renderMembers, renderVisitors, etc., remain as in original, but with enhanced searches integrated
-            // ... (all render and form submit listeners as in original code)
-
             // Initialize
             showSection('members', document.querySelector('nav button.active'));
         });
 
-        // Remaining functions (print, export, etc.) as in original
-        function printFolder(folder) { window.print(); }
-        // ... (all mock functions as before)
-
-        // Sample data init as before
+        // Sample data init
         function initSampleData() {
             if (events.length === 0) {
                 addData('events', {title: 'September Conference', description: 'Annual September Conference', date: '2025-09-15', branch: 'All', organizer: 'Church Admin'});
-                // ... other samples
             }
         }
         setTimeout(initSampleData, 1000);
