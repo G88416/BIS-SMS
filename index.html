@@ -131,6 +131,430 @@
 
         <div class="content">
             <!-- Dynamic Sections -->
+            <div id="dashboard" class="section">
+                <h2 class="sage-header">Dashboard</h2>
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="card card-metric">
+                            <div class="card-body">
+                                <h5>Total Employees</h5>
+                                <p id="totalEmployees">0</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card card-metric">
+                            <div class="card-body">
+                                <h5>Open Positions</h5>
+                                <p id="openPositions">0</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card card-metric">
+                            <div class="card-body">
+                                <h5>Avg Performance</h5>
+                                <p id="avgPerformance">0/5</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card card-metric">
+                            <div class="card-body">
+                                <h5>Pending Leaves</h5>
+                                <p id="pendingLeaves">0</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <div class="card compliance-card">
+                            <div class="card-body">
+                                <h5>Compliance Score</h5>
+                                <p id="complianceScore">0%</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card card-metric">
+                            <div class="card-body">
+                                <h5>Expiring Certs (30 days)</h5>
+                                <p id="expiringCerts">0</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <canvas id="dashboardChart" height="200" class="mt-3"></canvas>
+            </div>
+            <div id="employees" class="section d-none">
+                <h2 class="sage-header">Employees</h2>
+                <input type="text" id="employeeSearch" class="form-control search-input mb-3" placeholder="Search Employees" oninput="searchEmployees()">
+                <select id="branchFilter" class="form-control search-input mb-3" onchange="filterEmployees()">
+                    <option value="">All Branches</option>
+                </select>
+                <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addEmployeeModal">Add Employee</button>
+                <input type="file" id="importFile" class="form-control mb-3" accept=".csv,.xlsx,.pdf,.docx,.jpg,.png" onchange="handleImport(event)">
+                <table class="table table-striped sage-grid">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Position</th>
+                            <th>Department</th>
+                            <th>Branch</th>
+                            <th>Salary</th>
+                            <th>Join Date</th>
+                            <th>Contract Status</th>
+                            <th>Cert Status</th>
+                            <th>Email</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="employeeTable"></tbody>
+                </table>
+            </div>
+            <div id="payroll" class="section d-none">
+                <h2 class="sage-header">Payroll</h2>
+                <select id="payEmpId" class="form-control mb-3">
+                    <option value="">Select Employee</option>
+                </select>
+                <input type="number" id="paySalary" class="form-control mb-3" placeholder="Gross Salary">
+                <input type="number" id="payeTax" class="form-control mb-3" placeholder="PAYE Tax">
+                <div class="mb-3">
+                    <label>UIF Employee:</label>
+                    <input type="text" id="uifEmp" class="form-control" readonly>
+                </div>
+                <div class="mb-3">
+                    <label>UIF Employer:</label>
+                    <input type="text" id="uifEmply" class="form-control" readonly>
+                </div>
+                <div class="mb-3">
+                    <label>SDL:</label>
+                    <input type="text" id="sdl" class="form-control" readonly>
+                </div>
+                <button class="btn btn-primary mb-3" onclick="calculatePayroll()">Calculate Payroll</button>
+                <table class="table table-striped sage-grid">
+                    <thead>
+                        <tr>
+                            <th>Employee</th>
+                            <th>Branch</th>
+                            <th>Gross</th>
+                            <th>UIF Total</th>
+                            <th>SDL</th>
+                            <th>PAYE</th>
+                            <th>Net Pay</th>
+                            <th>Date</th>
+                            <th>Compliance</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="payrollTable"></tbody>
+                </table>
+                <h3 class="mt-4">Payroll Compliance</h3>
+                <input type="month" id="payrollMonth" class="form-control mb-3" onchange="loadPayrollCompliance()">
+                <select id="payrollCompliance" class="form-control mb-3">
+                    <option value="">Select Action</option>
+                    <option value="uif_paid">UIF Paid</option>
+                    <option value="sars_submitted">SARS Submitted</option>
+                    <option value="reconciliation_done">Reconciliation Done</option>
+                    <option value="sdl_paid">SDL Paid</option>
+                </select>
+                <button class="btn btn-primary mb-3" onclick="processPayrollCompliance()">Process</button>
+                <button class="btn btn-success mb-3" onclick="markPayrollCompliant()">Mark Compliant</button>
+                <table class="table sage-grid">
+                    <thead>
+                        <tr>
+                            <th>Month</th>
+                            <th>UIF</th>
+                            <th>SARS</th>
+                            <th>Reconciliation</th>
+                            <th>SDL</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="payrollComplianceTable"></tbody>
+                </table>
+            </div>
+            <div id="recruitment" class="section d-none">
+                <h2 class="sage-header">Recruitment</h2>
+                <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addJobModal">Add Job</button>
+                <table class="table table-striped sage-grid">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Title</th>
+                            <th>Description</th>
+                            <th>Branch</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="jobTable"></tbody>
+                </table>
+            </div>
+            <div id="performance" class="section d-none">
+                <h2 class="sage-header">Performance</h2>
+                <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addReviewModal">Add Review</button>
+                <table class="table table-striped sage-grid">
+                    <thead>
+                        <tr>
+                            <th>Employee</th>
+                            <th>Branch</th>
+                            <th>Score</th>
+                            <th>Comments</th>
+                            <th>Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="performanceTable"></tbody>
+                </table>
+            </div>
+            <div id="attendance" class="section d-none">
+                <h2 class="sage-header">Attendance</h2>
+                <select id="attEmpId" class="form-control mb-3">
+                    <option value="">Select Employee</option>
+                </select>
+                <button class="btn btn-primary me-2 mb-3" onclick="clockIn()">Clock In</button>
+                <button class="btn btn-warning mb-3" onclick="clockOut()">Clock Out</button>
+                <table class="table table-striped sage-grid">
+                    <thead>
+                        <tr>
+                            <th>Employee</th>
+                            <th>Branch</th>
+                            <th>Date</th>
+                            <th>In Time</th>
+                            <th>Out Time</th>
+                            <th>Hours</th>
+                        </tr>
+                    </thead>
+                    <tbody id="attendanceTable"></tbody>
+                </table>
+            </div>
+            <div id="leaves" class="section d-none">
+                <h2 class="sage-header">Leaves</h2>
+                <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addLeaveModal">Apply for Leave</button>
+                <table class="table table-striped sage-grid">
+                    <thead>
+                        <tr>
+                            <th>Employee</th>
+                            <th>Branch</th>
+                            <th>Start</th>
+                            <th>End</th>
+                            <th>Reason</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leavesTable"></tbody>
+                </table>
+            </div>
+            <div id="benefits" class="section d-none">
+                <h2 class="sage-header">Benefits</h2>
+                <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addBenefitModal">Add Benefit</button>
+                <table class="table table-striped sage-grid">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Description</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="benefitsTable"></tbody>
+                </table>
+            </div>
+            <div id="training" class="section d-none">
+                <h2 class="sage-header">Training</h2>
+                <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addCourseModal">Add Course</button>
+                <table class="table table-striped sage-grid">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Title</th>
+                            <th>Description</th>
+                            <th>Assigned To</th>
+                            <th>Branch</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="trainingTable"></tbody>
+                </table>
+            </div>
+            <div id="compliance" class="section d-none">
+                <h2 class="sage-header">Compliance</h2>
+                <ul class="nav nav-tabs sage-tab" id="complianceTabs">
+                    <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#checklist">Checklist</button></li>
+                    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#payrollComplianceTab">Payroll</button></li>
+                    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#deptCompliance">Departmental</button></li>
+                    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#certifications">Certifications</button></li>
+                    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#docs">Documents</button></li>
+                    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#audit">Audit Log</button></li>
+                </ul>
+                <div class="tab-content mt-3">
+                    <div class="tab-pane active" id="checklist">
+                        <div class="checklist-section">
+                            <h5>Employment Equity</h5>
+                            <div class="checklist-item"><input type="checkbox" id="bbee-plan"><label for="bbee-plan">BBEE Plan Updated</label></div>
+                            <div class="checklist-item"><input type="checkbox" id="ee-report"><label for="ee-report">EE Report Submitted</label></div>
+                            <div class="checklist-item"><input type="checkbox" id="diversity-training"><label for="diversity-training">Diversity Training Completed</label></div>
+                            <div class="checklist-item"><input type="checkbox" id="ee-consultation"><label for="ee-consultation">EE Consultation Held</label></div>
+                            <div class="checklist-item"><input type="checkbox" id="barrier-analysis"><label for="barrier-analysis">Barrier Analysis Done</label></div>
+                            <div class="checklist-item"><input type="checkbox" id="numerical-targets"><label for="numerical-targets">Numerical Targets Set</label></div>
+                        </div>
+                        <div class="checklist-section">
+                            <h5>OHS & POPIA</h5>
+                            <div class="checklist-item"><input type="checkbox" id="ohs-audit"><label for="ohs-audit">OHS Audit Conducted</label></div>
+                            <div class="checklist-item"><input type="checkbox" id="popia-training"><label for="popia-training">POPIA Training Completed</label></div>
+                            <div class="checklist-item"><input type="checkbox" id="data-breach-protocol"><label for="data-breach-protocol">Data Breach Protocol Updated</label></div>
+                            <div class="checklist-item"><input type="checkbox" id="risk-assessment"><label for="risk-assessment">Risk Assessment Done</label></div>
+                            <div class="checklist-item"><input type="checkbox" id="incident-reporting"><label for="incident-reporting">Incident Reporting System Active</label></div>
+                            <div class="checklist-item"><input type="checkbox" id="emergency-drills"><label for="emergency-drills">Emergency Drills Conducted</label></div>
+                        </div>
+                        <div class="checklist-section">
+                            <h5>Labour Relations</h5>
+                            <div class="checklist-item"><input type="checkbox" id="collective-agreement"><label for="collective-agreement">Collective Agreement Reviewed</label></div>
+                            <div class="checklist-item"><input type="checkbox" id="dispute-resolution"><label for="dispute-resolution">Dispute Resolution Process Updated</label></div>
+                            <div class="checklist-item"><input type="checkbox" id="union-consultation"><label for="union-consultation">Union Consultation Held</label></div>
+                            <div class="checklist-item"><input type="checkbox" id="grievance-procedure"><label for="grievance-procedure">Grievance Procedure Active</label></div>
+                        </div>
+                        <div class="checklist-section">
+                            <h5>UIF & SARS</h5>
+                            <div class="checklist-item"><input type="checkbox" id="uif-registration"><label for="uif-registration">UIF Registration Updated</label></div>
+                            <div class="checklist-item"><input type="checkbox" id="sars-submissions"><label for="sars-submissions">SARS Submissions Done</label></div>
+                            <div class="checklist-item"><input type="checkbox" id="paye-deductions"><label for="paye-deductions">PAYE Deductions Accurate</label></div>
+                            <div class="checklist-item"><input type="checkbox" id="annual-reconciliations"><label for="annual-reconciliations">Annual Reconciliations Completed</label></div>
+                        </div>
+                        <button class="btn btn-primary" onclick="saveComplianceChecklist()">Save Checklist</button>
+                    </div>
+                    <div class="tab-pane" id="payrollComplianceTab">
+                        <input type="month" id="payrollMonth" class="form-control mb-3" onchange="loadPayrollCompliance()">
+                        <select id="payrollCompliance" class="form-control mb-3">
+                            <option value="">Select Action</option>
+                            <option value="uif_paid">UIF Paid</option>
+                            <option value="sars_submitted">SARS Submitted</option>
+                            <option value="reconciliation_done">Reconciliation Done</option>
+                            <option value="sdl_paid">SDL Paid</option>
+                        </select>
+                        <button class="btn btn-primary mb-3" onclick="processPayrollCompliance()">Process</button>
+                        <button class="btn btn-success mb-3" onclick="markPayrollCompliant()">Mark Compliant</button>
+                        <table class="table sage-grid">
+                            <thead>
+                                <tr>
+                                    <th>Month</th>
+                                    <th>UIF</th>
+                                    <th>SARS</th>
+                                    <th>Reconciliation</th>
+                                    <th>SDL</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="payrollComplianceTable"></tbody>
+                        </table>
+                    </div>
+                    <div class="tab-pane" id="deptCompliance">
+                        <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addDeptComplianceModal">Add Dept Compliance</button>
+                        <select id="deptComplianceFilter" class="form-control mb-3" onchange="renderDeptCompliance()">
+                            <option value="">All Departments</option>
+                        </select>
+                        <table class="table sage-grid">
+                            <thead>
+                                <tr>
+                                    <th>Branch</th>
+                                    <th>Items</th>
+                                    <th>Completion</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="deptComplianceTable"></tbody>
+                        </table>
+                    </div>
+                    <div class="tab-pane" id="certifications">
+                        <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addCertModal">Add Certification</button>
+                        <table class="table sage-grid">
+                            <thead>
+                                <tr>
+                                    <th>Employee</th>
+                                    <th>Type</th>
+                                    <th>Issue Date</th>
+                                    <th>Expiry Date</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="certificationsTable"></tbody>
+                        </table>
+                    </div>
+                    <div class="tab-pane" id="docs">
+                        <input type="file" class="form-control mb-3" onchange="handleComplianceUpload(event)">
+                        <table class="table sage-grid">
+                            <thead>
+                                <tr>
+                                    <th>Type</th>
+                                    <th>Name</th>
+                                    <th>Date</th>
+                                    <th>Size</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="complianceDocsTable"></tbody>
+                        </table>
+                    </div>
+                    <div class="tab-pane" id="audit">
+                        <table class="table sage-grid">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>User</th>
+                                    <th>Action</th>
+                                    <th>Details</th>
+                                </tr>
+                            </thead>
+                            <tbody id="auditTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div id="reports" class="section d-none">
+                <h2 class="sage-header">Reports</h2>
+                <button class="btn btn-primary me-2" onclick="generateEmployeeReport()">Employee Report</button>
+                <button class="btn btn-primary me-2" onclick="generatePayrollReport()">Payroll Report</button>
+                <button class="btn btn-primary me-2" onclick="generateAttendanceReport()">Attendance Report</button>
+                <button class="btn btn-primary" onclick="generateComplianceReport()">Compliance Report</button>
+                <div id="reportOutput" class="mt-3"></div>
+            </div>
+            <div id="settings" class="section d-none">
+                <h2 class="sage-header">Settings</h2>
+                <input type="text" id="companyName" class="form-control mb-3" placeholder="Company Name">
+                <input type="number" id="taxRate" class="form-control mb-3" placeholder="Tax Rate (%)">
+                <input type="number" id="uifRate" class="form-control mb-3" placeholder="UIF Rate (%)" value="1">
+                <input type="number" id="sdlRate" class="form-control mb-3" placeholder="SDL Rate (%)" value="1">
+                <div class="form-check mb-3">
+                    <input type="checkbox" class="form-check-input" id="darkMode">
+                    <label class="form-check-label" for="darkMode">Dark Mode</label>
+                </div>
+                <button class="btn btn-primary" onclick="saveSettings()">Save</button>
+            </div>
+            <div id="accounts" class="section d-none"></div>
+            <div id="sageModules" class="section d-none">
+                <h2 class="sage-header">Sage HRMS Modules</h2>
+                <p>Sage HRMS integrates seamlessly with Sage 300 ERP, providing a comprehensive suite of modules for managing HR processes, payroll, employee data, and compliance. Below is a list of the key modules along with brief descriptions:</p>
+                <ul>
+                    <li><strong>HR Core</strong>: Centralizes employee data management, including records, demographics, and organizational hierarchies for streamlined HR operations.</li>
+                    <li><strong>HRMS Payroll</strong>: Handles payroll processing, including calculations for earnings, deductions, taxes, and direct deposits; can function as a standalone or integrated solution.</li>
+                    <li><strong>Employee Self-Service</strong>: Allows employees to access and update personal information, view pay stubs, request time off, and manage benefits via a secure online portal.</li>
+                    <li><strong>Benefits Enrollment</strong>: Facilitates online open enrollment for benefits, enabling employees to select plans, update dependents, and manage beneficiaries.</li>
+                    <li><strong>Training</strong>: Tracks employee training programs, certifications, and development activities to support skill enhancement and compliance.</li>
+                    <li><strong>My Workforce Analyzer</strong>: Provides analytics for workforce trends, ACA compliance reporting, and regulatory requirements like health care mandates.</li>
+                    <li><strong>Benefits Messenger</strong>: Automates secure transmission of benefits enrollment data to insurance carriers, reducing manual paperwork.</li>
+                    <li><strong>Alerts & Workflow</strong>: Automates HR workflows with notifications for events like onboarding, performance reviews, or policy changes.</li>
+                    <li><strong>Time & Attendance</strong>: Captures real-time employee attendance, labor data, and absences for accurate tracking and integration with payroll.</li>
+                    <li><strong>HR Actions</strong>: Manages HR forms and processes for actions such as hiring, promotions, terminations, and performance evaluations.</li>
+                    <li><strong>HR Analytics</strong>: Offers interactive reporting and dashboards for insights into HR metrics, trends, and decision-making.</li>
+                    <li><strong>iRecruit</strong>: Supports recruitment by posting jobs, tracking applicants, and managing the hiring process efficiently.</li>
+                </ul>
+                <p>These modules can be customized and scaled based on organizational needs, with direct data synchronization between Sage HRMS and Sage 300 for payroll, benefits, and employee records. For implementation details or licensing, consult Sage's official resources or a certified partner.</p>
+            </div>
         </div>
     </div>
 
@@ -235,6 +659,28 @@
                     </form>
                 </div>
                 <div class="modal-footer"><button class="btn btn-primary" onclick="addJob()">Save</button></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Job Modal -->
+    <div class="modal fade" id="editJobModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header"><h5>Edit Job Posting</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <form id="editJobForm">
+                        <input type="hidden" id="editJobIndex">
+                        <input type="text" class="form-control mb-3" id="editJobTitle" placeholder="Job Title" required>
+                        <textarea class="form-control mb-3" id="editJobDescription" placeholder="Description" required></textarea>
+                        <select class="form-control mb-3" id="editJobBranch" required>
+                            <option value="">Select Branch</option>
+                        </select>
+                        <div class="mb-3"><label>Update Job Description File</label><input type="file" class="form-control" id="editJobFile" accept=".pdf,.docx,.jpg,.png" onchange="previewFile(this, 'editJobFilePreview')"></div>
+                        <div id="editJobFilePreview" class="upload-preview"></div>
+                    </form>
+                </div>
+                <div class="modal-footer"><button class="btn btn-primary" onclick="updateJob()">Update</button></div>
             </div>
         </div>
     </div>
@@ -593,6 +1039,7 @@
                     <li><a href="#reports" class="nav-link" onclick="showSection('reports')"><i class="fas fa-file-alt me-2"></i><span class="nav-text">Reports</span></a></li>
                     <li><a href="#settings" class="nav-link" onclick="showSection('settings')"><i class="fas fa-cog me-2"></i><span class="nav-text">Settings</span></a></li>
                     <li><a href="#accounts" class="nav-link" onclick="showSection('accounts')"><i class="fas fa-user-plus me-2"></i><span class="nav-text">Manage Accounts</span></a></li>
+                    <li><a href="#sageModules" class="nav-link" onclick="showSection('sageModules')"><i class="fas fa-info-circle me-2"></i><span class="nav-text">Sage Modules</span></a></li>
                     <li><a href="#" class="nav-link text-danger" onclick="logout()"><i class="fas fa-sign-out-alt me-2"></i><span class="nav-text">Logout</span></a></li>
                 `;
             } else {
@@ -605,21 +1052,23 @@
 
         // Manage Accounts Section for Admin
         function renderAccountsSection() {
-            const content = document.querySelector('.content');
-            content.innerHTML = `
-                <h2 class="sage-header">Manage User Accounts</h2>
-                <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#createAccountModal">Create Employee Account</button>
-                <table class="table table-striped sage-grid">
-                    <thead><tr><th>Username</th><th>Role</th><th>Employee</th><th>Actions</th></tr></thead>
-                    <tbody id="accountsTable"></tbody>
-                </table>
-            `;
-            const table = document.getElementById('accountsTable');
-            users.forEach((u, idx) => {
-                if (u.role === 'admin') return;
-                const emp = employees[u.empIndex] || { name: 'N/A' };
-                table.innerHTML += `<tr><td>${u.username}</td><td>${u.role}</td><td>${emp.name}</td><td><button class="btn btn-sm btn-danger" onclick="deleteAccount(${idx})">Delete</button></td></tr>`;
-            });
+            const content = document.querySelector('#accounts');
+            if (content) {
+                content.innerHTML = `
+                    <h2 class="sage-header">Manage User Accounts</h2>
+                    <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#createAccountModal">Create Employee Account</button>
+                    <table class="table table-striped sage-grid">
+                        <thead><tr><th>Username</th><th>Role</th><th>Employee</th><th>Actions</th></tr></thead>
+                        <tbody id="accountsTable"></tbody>
+                    </table>
+                `;
+                const table = document.getElementById('accountsTable');
+                users.forEach((u, idx) => {
+                    if (u.role === 'admin') return;
+                    const emp = employees[u.empIndex] || { name: 'N/A' };
+                    table.innerHTML += `<tr><td>${u.username}</td><td>${u.role}</td><td>${emp.name}</td><td><button class="btn btn-sm btn-danger" onclick="deleteAccount(${idx})">Delete</button></td></tr>`;
+                });
+            }
         }
 
         function deleteAccount(idx) {
@@ -734,7 +1183,7 @@
         function processPayrollCompliance() {
             const action = document.getElementById('payrollCompliance').value;
             if (action) {
-                const month = new Date().toLocaleDateString('en-CA', { year: 'numeric', month: '2-digit' });
+                const month = document.getElementById('payrollMonth').value || new Date().toLocaleDateString('en-CA', { year: 'numeric', month: '2-digit' });
                 if (!payrollCompliance[month]) payrollCompliance[month] = { uif: false, sars: false, reconciliation: false, sdl: false };
                 payrollCompliance[month][action.split('_')[0]] = true;
                 localStorage.setItem('payrollCompliance', JSON.stringify(payrollCompliance));
@@ -797,7 +1246,7 @@
             Object.keys(deptCompliance).filter(key => !filter || key === filter).forEach(branch => {
                 const items = deptCompliance[branch];
                 const checked = items.filter(i => i.checked).length;
-                const percent = Math.round((checked / items.length) * 100);
+                const percent = items.length ? Math.round((checked / items.length) * 100) : 0;
                 let itemsHtml = items.map((i, idx) => `<div class="checklist-item mb-1"><input type="checkbox" ${i.checked ? 'checked' : ''} onchange="toggleDeptItem('${branch}', ${idx})"><label>${i.item}</label></div>`).join('');
                 table.innerHTML += `<tr><td>${branch}</td><td>${itemsHtml}</td><td>${percent}%</td><td><button class="btn btn-sm btn-danger" onclick="deleteDeptCompliance('${branch}')">Delete</button></td></tr>`;
             });
@@ -843,7 +1292,10 @@
             if (link) link.classList.add('active');
             if (sectionId === 'dashboard') renderDashboard();
             if (sectionId === 'employees') renderEmployees();
-            if (sectionId === 'payroll') renderPayrolls();
+            if (sectionId === 'payroll') {
+                renderPayrolls();
+                loadPayrollCompliance();
+            }
             if (sectionId === 'recruitment') renderJobs();
             if (sectionId === 'performance') renderReviews();
             if (sectionId === 'attendance') renderAttendance();
@@ -870,6 +1322,7 @@
             if (sectionId === 'reports') renderReports();
             if (sectionId === 'settings') loadSettings();
             if (sectionId === 'accounts') renderAccountsSection();
+            if (sectionId === 'sageModules') {} // No special rendering needed, static content
             logAudit('Section Viewed', sectionId);
         }
 
@@ -998,7 +1451,7 @@
             const filter = document.getElementById('branchFilter').value;
             const rows = document.querySelectorAll('#employeeTable tr');
             rows.forEach(row => {
-                const branch = row.cells[4].textContent;
+                const branch = row.cells[4] ? row.cells[4].textContent : '';
                 row.style.display = !filter || branch === filter ? '' : 'none';
             });
         }
@@ -1022,6 +1475,7 @@
             populateBranchSelect('editEmpBranch');
             populateBranchSelect('deptBranch');
             populateBranchSelect('jobBranch');
+            populateBranchSelect('editJobBranch');
             populateBranchSelect('courseBranch');
             populateBranchSelect('deptComplianceFilter');
         }
@@ -1358,8 +1812,26 @@
             });
         }
 
-        function editJob(idx) {
-            alert('Edit Job - Implement edit modal if needed');
+        function editJob(index) {
+            const job = jobs[index];
+            document.getElementById('editJobIndex').value = index;
+            document.getElementById('editJobTitle').value = job.title;
+            document.getElementById('editJobDescription').value = job.description;
+            document.getElementById('editJobBranch').value = job.branch;
+            bootstrap.Modal.getInstance(document.getElementById('editJobModal')).show();
+        }
+
+        function updateJob() {
+            const index = document.getElementById('editJobIndex').value;
+            const file = document.getElementById('editJobFile').files[0];
+            jobs[index].title = document.getElementById('editJobTitle').value;
+            jobs[index].description = document.getElementById('editJobDescription').value;
+            jobs[index].branch = document.getElementById('editJobBranch').value;
+            if (file) jobs[index].file = URL.createObjectURL(file);
+            localStorage.setItem('jobs', JSON.stringify(jobs));
+            renderJobs();
+            bootstrap.Modal.getInstance(document.getElementById('editJobModal')).hide();
+            logAudit('Job Updated', jobs[index].title);
         }
 
         function deleteJob(idx) {
@@ -1696,6 +2168,7 @@
             populateBranchSelect('empBranch');
             populateBranchSelect('editEmpBranch');
             populateBranchSelect('jobBranch');
+            populateBranchSelect('editJobBranch');
             populateBranchSelect('courseBranch');
             populateEmployeeSelects();
             populateBranchFilter();
