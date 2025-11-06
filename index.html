@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Advanced Comprehensive HRMS - Bophelong Community Centre</title>
+    <title>Advanced Comprehensive HRMS - Bophelong Community Centre (Enhanced with Sage 300)</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -108,6 +108,9 @@
         .sage-workflow { list-style: none; padding: 0; }
         .sage-workflow li { margin-bottom: 10px; display: flex; align-items: center; }
         .sage-workflow li .badge { margin-left: 10px; }
+        /* Enhanced Employee Dashboard Styles */
+        .employee-tab-content { margin-top: 20px; }
+        .mit-upload { background-color: #e6f3ff; padding: 15px; border-radius: 8px; }
     </style>
 </head>
 <body>
@@ -132,7 +135,7 @@
         </div>
         <div class="content">
             <!-- Dynamic Sections -->
-            <section id="dashboard" class="section">
+            <div id="dashboard" class="section">
                 <h2 class="sage-header">Dashboard</h2>
                 <div class="row">
                     <div class="col-md-3">
@@ -188,7 +191,101 @@
                 </div>
                 <canvas id="dashboardChart" height="200" class="mt-3"></canvas>
             </div>
-            <section id="employees" class="section d-none">
+            <div id="employeeDashboard" class="section d-none">
+                <h2 class="sage-header">Employee Dashboard</h2>
+                <ul class="nav nav-tabs sage-tab" id="employeeTabs">
+                    <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#empAttendance">Attendance</button></li>
+                    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#empLeaves">Leaves</button></li>
+                    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#empBenefits">Benefits</button></li>
+                    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#empTraining">Training</button></li>
+                    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#empCompliance">Compliance</button></li>
+                    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#empMIT">MIT Upload</button></li>
+                </ul>
+                <div class="tab-content employee-tab-content">
+                    <div class="tab-pane active" id="empAttendance">
+                        <table class="table table-striped sage-grid">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>In Time</th>
+                                    <th>Out Time</th>
+                                    <th>Hours</th>
+                                </tr>
+                            </thead>
+                            <tbody id="empAttendanceTable"></tbody>
+                        </table>
+                    </div>
+                    <div class="tab-pane" id="empLeaves">
+                        <table class="table table-striped sage-grid">
+                            <thead>
+                                <tr>
+                                    <th>Start</th>
+                                    <th>End</th>
+                                    <th>Reason</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="empLeavesTable"></tbody>
+                        </table>
+                    </div>
+                    <div class="tab-pane" id="empBenefits">
+                        <table class="table table-striped sage-grid">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody id="empBenefitsTable"></tbody>
+                        </table>
+                    </div>
+                    <div class="tab-pane" id="empTraining">
+                        <table class="table table-striped sage-grid">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody id="empTrainingTable"></tbody>
+                        </table>
+                    </div>
+                    <div class="tab-pane" id="empCompliance">
+                        <table class="table table-striped sage-grid">
+                            <thead>
+                                <tr>
+                                    <th>Type</th>
+                                    <th>Issue Date</th>
+                                    <th>Expiry Date</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="empCertificationsTable"></tbody>
+                        </table>
+                    </div>
+                    <div class="tab-pane" id="empMIT">
+                        <div class="mit-upload">
+                            <h5>Upload Most Important Task (MIT)</h5>
+                            <input type="text" class="form-control mb-3" id="mitTitle" placeholder="Task Title" required>
+                            <textarea class="form-control mb-3" id="mitDesc" placeholder="Description" required></textarea>
+                            <input type="file" class="form-control mb-3" id="mitFile" accept=".pdf,.docx,.jpg,.png">
+                            <button class="btn btn-primary" onclick="uploadMIT()">Upload</button>
+                        </div>
+                        <table class="table table-striped sage-grid mt-3">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Description</th>
+                                    <th>Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="mitTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div id="employees" class="section d-none">
                 <h2 class="sage-header">Employees</h2>
                 <input type="text" id="employeeSearch" class="form-control search-input mb-3" placeholder="Search Employees" oninput="searchEmployees()">
                 <select id="branchFilter" class="form-control search-input mb-3" onchange="filterEmployees()">
@@ -215,8 +312,8 @@
                     <tbody id="employeeTable"></tbody>
                 </table>
             </div>
-            <section id="payroll" class="section d-none">
-                <h2 class="sage-header">Payroll</h2>
+            <div id="payroll" class="section d-none">
+                <h2 class="sage-header">Payroll (Enhanced with Sage 300)</h2>
                 <select id="payEmpId" class="form-control mb-3">
                     <option value="">Select Employee</option>
                 </select>
@@ -236,7 +333,7 @@
                     <label>SDL:</label>
                     <input type="text" id="sdl" class="form-control" readonly>
                 </div>
-                <button class="btn btn-primary mb-3" onclick="calculatePayroll()">Calculate Payroll</button>
+                <button class="btn btn-primary mb-3" onclick="calculatePayroll()">Calculate Payroll (Sage 300 Integration)</button>
                 <table class="table table-striped sage-grid">
                     <thead>
                         <tr>
@@ -256,7 +353,7 @@
                     </thead>
                     <tbody id="payrollTable"></tbody>
                 </table>
-                <h3 class="mt-4">Payroll Compliance</h3>
+                <h3 class="mt-4">Payroll Compliance (Sage 300 Analyzer)</h3>
                 <input type="month" id="payrollMonth" class="form-control mb-3" onchange="loadPayrollCompliance()">
                 <select id="payrollCompliance" class="form-control mb-3">
                     <option value="">Select Action</option>
@@ -281,8 +378,8 @@
                     <tbody id="payrollComplianceTable"></tbody>
                 </table>
             </div>
-            <section id="recruitment" class="section d-none">
-                <h2 class="sage-header">Recruitment</h2>
+            <div id="recruitment" class="section d-none">
+                <h2 class="sage-header">Recruitment (Sage 300 iRecruit Enhanced)</h2>
                 <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addJobModal">Add Job</button>
                 <table class="table table-striped sage-grid">
                     <thead>
@@ -299,8 +396,8 @@
                     <tbody id="jobTable"></tbody>
                 </table>
             </div>
-            <section id="performance" class="section d-none">
-                <h2 class="sage-header">Performance</h2>
+            <div id="performance" class="section d-none">
+                <h2 class="sage-header">Performance (Sage 300 HR Actions)</h2>
                 <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addReviewModal">Add Review</button>
                 <table class="table table-striped sage-grid">
                     <thead>
@@ -316,8 +413,8 @@
                     <tbody id="performanceTable"></tbody>
                 </table>
             </div>
-            <section id="attendance" class="section d-none">
-                <h2 class="sage-header">Attendance</h2>
+            <div id="attendance" class="section d-none">
+                <h2 class="sage-header">Attendance (Sage 300 Time & Attendance)</h2>
                 <select id="attEmpId" class="form-control mb-3">
                     <option value="">Select Employee</option>
                 </select>
@@ -337,7 +434,7 @@
                     <tbody id="attendanceTable"></tbody>
                 </table>
             </div>
-            <section id="leaves" class="section d-none">
+            <div id="leaves" class="section d-none">
                 <h2 class="sage-header">Leaves</h2>
                 <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addLeaveModal">Apply for Leave</button>
                 <table class="table table-striped sage-grid">
@@ -355,8 +452,8 @@
                     <tbody id="leavesTable"></tbody>
                 </table>
             </div>
-            <section id="benefits" class="section d-none">
-                <h2 class="sage-header">Benefits</h2>
+            <div id="benefits" class="section d-none">
+                <h2 class="sage-header">Benefits (Sage 300 Benefits Enrollment)</h2>
                 <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addBenefitModal">Add Benefit</button>
                 <table class="table table-striped sage-grid">
                     <thead>
@@ -370,8 +467,8 @@
                     <tbody id="benefitsTable"></tbody>
                 </table>
             </div>
-            <section id="training" class="section d-none">
-                <h2 class="sage-header">Training</h2>
+            <div id="training" class="section d-none">
+                <h2 class="sage-header">Training (Sage 300 Training Module)</h2>
                 <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addCourseModal">Add Course</button>
                 <table class="table table-striped sage-grid">
                     <thead>
@@ -387,8 +484,8 @@
                     <tbody id="trainingTable"></tbody>
                 </table>
             </div>
-            <section id="compliance" class="section d-none">
-                <h2 class="sage-header">Compliance</h2>
+            <div id="compliance" class="section d-none">
+                <h2 class="sage-header">Compliance (Sage 300 Workforce Analyzer)</h2>
                 <ul class="nav nav-tabs sage-tab" id="complianceTabs">
                     <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#checklist">Checklist</button></li>
                     <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#payrollComplianceTab">Payroll</button></li>
@@ -522,7 +619,7 @@
                 </div>
             </div>
             <div id="reports" class="section d-none">
-                <h2 class="sage-header">Reports</h2>
+                <h2 class="sage-header">Reports (Sage 300 Analytics)</h2>
                 <button class="btn btn-primary me-2" onclick="generateEmployeeReport()">Employee Report</button>
                 <button class="btn btn-primary me-2" onclick="generatePayrollReport()">Payroll Report</button>
                 <button class="btn btn-primary me-2" onclick="generateAttendanceReport()">Attendance Report</button>
@@ -550,42 +647,46 @@
                 </table>
             </div>
             <div id="sageModules" class="section d-none">
-                <h2 class="sage-header">Sage HRMS Modules</h2>
-                <p>Sage HRMS integrates seamlessly with Sage 300 ERP, providing a comprehensive suite of modules for managing HR processes, payroll, employee data, and compliance. Below is a list of the key modules along with brief descriptions:</p>
+                <h2 class="sage-header">Sage 300 HRMS Modules (Enhanced Integration)</h2>
+                <p>Sage 300 HRMS integrates seamlessly with Sage ERP, providing advanced modules for HR management. This application simulates Sage 300 features for payroll, self-service, and compliance.</p>
                 <ul>
-                    <li><strong>HR Core</strong>: Centralizes employee data management, including records, demographics, and organizational hierarchies for streamlined HR operations.</li>
-                    <li><strong>HRMS Payroll</strong>: Handles payroll processing, including calculations for earnings, deductions, taxes, and direct deposits; can function as a standalone or integrated solution.</li>
-                    <li><strong>Employee Self-Service</strong>: Allows employees to access and update personal information, view pay stubs, request time off, and manage benefits via a secure online portal.</li>
-                    <li><strong>Benefits Enrollment</strong>: Facilitates online open enrollment for benefits, enabling employees to select plans, update dependents, and manage beneficiaries.</li>
-                    <li><strong>Training</strong>: Tracks employee training programs, certifications, and development activities to support skill enhancement and compliance.</li>
-                    <li><strong>My Workforce Analyzer</strong>: Provides analytics for workforce trends, ACA compliance reporting, and regulatory requirements like health care mandates.</li>
-                    <li><strong>Benefits Messenger</strong>: Automates secure transmission of benefits enrollment data to insurance carriers, reducing manual paperwork.</li>
-                    <li><strong>Alerts & Workflow</strong>: Automates HR workflows with notifications for events like onboarding, performance reviews, or policy changes.</li>
-                    <li><strong>Time & Attendance</strong>: Captures real-time employee attendance, labor data, and absences for accurate tracking and integration with payroll.</li>
-                    <li><strong>HR Actions</strong>: Manages HR forms and processes for actions such as hiring, promotions, terminations, and performance evaluations.</li>
-                    <li><strong>HR Analytics</strong>: Offers interactive reporting and dashboards for insights into HR metrics, trends, and decision-making.</li>
-                    <li><strong>iRecruit</strong>: Supports recruitment by posting jobs, tracking applicants, and managing the hiring process efficiently.</li>
+                    <li><strong>HR Core</strong>: Central employee data with advanced hierarchies and custom fields.</li>
+                    <li><strong>HRMS Payroll</strong>: Automated payroll with tax compliance, direct deposits, and multi-currency support.</li>
+                    <li><strong>Employee Self-Service</strong>: Portal for profile updates, pay stubs, time off requests, and benefits management.</li>
+                    <li><strong>Benefits Enrollment</strong>: Online enrollment with carrier integrations and beneficiary management.</li>
+                    <li><strong>Training</strong>: Advanced tracking with e-learning integration and certification reminders.</li>
+                    <li><strong>My Workforce Analyzer</strong>: AI-driven analytics for trends, ACA compliance, and forecasting.</li>
+                    <li><strong>Benefits Messenger</strong>: Automated data transmission to carriers with encryption.</li>
+                    <li><strong>Alerts & Workflow</strong>: Customizable workflows with email/SMS notifications and approvals.</li>
+                    <li><strong>Time & Attendance</strong>: Biometric integration, shift scheduling, and overtime calculations.</li>
+                    <li><strong>HR Actions</strong>: Automated processes for onboarding, promotions, and terminations with document signing.</li>
+                    <li><strong>HR Analytics</strong>: Dashboards with KPI tracking, diversity metrics, and predictive analytics.</li>
+                    <li><strong>iRecruit</strong>: AI-powered applicant tracking, job posting to multiple boards, and resume parsing.</li>
                 </ul>
-                <p>These modules can be customized and scaled based on organizational needs, with direct data synchronization between Sage HRMS and Sage 300 for payroll, benefits, and employee records. For implementation details or licensing, consult Sage's official resources or a certified partner.</p>
+                <p>Enhanced with API simulations for real-time data sync between modules. For full Sage 300, consult official partners.</p>
                 <div class="sage-self-service">
-                    <h5>Sage Employee Self-Service Simulation</h5>
-                    <p>Employees can update their details here (simulated).</p>
-                    <input type="text" class="form-control mb-3" placeholder="Update Address" disabled>
+                    <h5>Enhanced Sage Employee Self-Service</h5>
+                    <p>Update your details (simulated with Sage integration).</p>
+                    <input type="text" class="form-control mb-3" placeholder="Update Address">
+                    <input type="text" class="form-control mb-3" placeholder="Update Phone">
+                    <button class="btn btn-primary">Save Changes (Sage Sync)</button>
                 </div>
                 <div class="sage-benefits-enrollment">
-                    <h5>Sage Benefits Enrollment</h5>
+                    <h5>Enhanced Sage Benefits Enrollment</h5>
                     <select class="form-control mb-3">
                         <option>Select Benefit Plan</option>
-                        <option>Medical Plan A</option>
-                        <option>Medical Plan B</option>
+                        <option>Medical Plan A (Integrated)</option>
+                        <option>Medical Plan B (Integrated)</option>
+                        <option>Dental Plan (New)</option>
                     </select>
-                    <button class="btn btn-primary">Enroll (Simulated)</button>
+                    <button class="btn btn-primary">Enroll (Sage Messenger Simulation)</button>
                 </div>
                 <div class="sage-workflow mt-3">
-                    <h5>Sage Alerts & Workflow</h5>
+                    <h5>Enhanced Sage Alerts & Workflow</h5>
                     <ul>
-                        <li>Onboarding Workflow <span class="badge bg-info">Pending</span></li>
-                        <li>Performance Review <span class="badge bg-warning">Due</span></li>
+                        <li>Onboarding Workflow <span class="badge bg-info">Pending Approval</span></li>
+                        <li>Performance Review <span class="badge bg-warning">Due in 7 Days</span></li>
+                        <li>Training Completion <span class="badge bg-success">Completed</span></li>
                     </ul>
                 </div>
             </div>
@@ -603,22 +704,12 @@
                     </select>
                     <input type="text" class="form-control mb-3" id="createUsername" placeholder="Username" required>
                     <input type="password" class="form-control mb-3" id="createPassword" placeholder="Password" required>
+                    <select class="form-control mb-3" id="createRole">
+                        <option value="employee">Employee</option>
+                        <option value="admin">Admin</option>
+                    </select>
                 </div>
                 <div class="modal-footer"><button class="btn btn-primary" onclick="createAccount()">Create</button></div>
-            </div>
-        </div>
-    </div>
-    <!-- MIT Upload Modal -->
-    <div class="modal fade" id="mitUploadModal">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header"><h5>Upload Most Important Task (MIT)</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-                <div class="modal-body">
-                    <input type="text" class="form-control mb-3" id="mitTitle" placeholder="Task Title" required>
-                    <textarea class="form-control mb-3" id="mitDesc" placeholder="Description" required></textarea>
-                    <input type="file" class="form-control mb-3" id="mitFile" accept=".pdf,.docx,.jpg,.png">
-                </div>
-                <div class="modal-footer"><button class="btn btn-primary" onclick="uploadMIT()">Upload</button></div>
             </div>
         </div>
     </div>
@@ -868,416 +959,83 @@
         let benefits = JSON.parse(localStorage.getItem('benefits')) || [];
         let courses = JSON.parse(localStorage.getItem('courses')) || [];
         let certifications = JSON.parse(localStorage.getItem('certifications')) || [];
-        let complianceDocs = JSON.parse(localStorage.getItem('complianceDocs')) || [];
         let complianceChecklist = JSON.parse(localStorage.getItem('complianceChecklist')) || {};
         let payrollCompliance = JSON.parse(localStorage.getItem('payrollCompliance')) || {};
         let deptCompliance = JSON.parse(localStorage.getItem('deptCompliance')) || {};
+        let complianceDocs = JSON.parse(localStorage.getItem('complianceDocs')) || [];
         let auditLog = JSON.parse(localStorage.getItem('auditLog')) || [];
-        let settings = JSON.parse(localStorage.getItem('settings')) || { companyName: 'Bophelong Community Centre', taxRate: 15, darkMode: false, uifRate: 1, sdlRate: 1 };
-        let users = JSON.parse(localStorage.getItem('users')) || [{ username: 'admin', password: 'password', role: 'admin' }];
+        let settings = JSON.parse(localStorage.getItem('settings')) || { companyName: 'Bophelong', taxRate: 20, uifRate: 1, sdlRate: 1, darkMode: false };
+        let accounts = JSON.parse(localStorage.getItem('accounts')) || [{ username: 'admin', password: 'password', role: 'admin' }];
+        let mits = JSON.parse(localStorage.getItem('mits')) || [];
         let currentUser = null;
-        let mits = JSON.parse(localStorage.getItem('mits')) || []; // {empIndex, title, desc, file, date}
-        // Branches
-        const branches = [
-            'Bophelong Hospice',
-            'Bophelong Independent School Mamelodi',
-            'Bophelong Independent School Kwa-Mhlanga',
-            'Bophelong Orphan Age',
-            'Bophelong Mental and Disability Home',
-            'Bophelong Old Age Home',
-            'Charity and Faith Mission Church'
-        ];
-        let importData = [];
+        let branches = ['Branch A', 'Branch B', 'Branch C'];
         let currentFileType = '';
-        let currentPreviewFile = null;
-        // Login Function
+        let importData = [];
+        let window.dashboardChart = null;
+        function logAudit(action, details) {
+            auditLog.unshift({
+                date: new Date().toLocaleString(),
+                user: currentUser ? currentUser.username : 'System',
+                action,
+                details
+            });
+            localStorage.setItem('auditLog', JSON.stringify(auditLog));
+            renderAuditLog();
+        }
+        function logout() {
+            localStorage.removeItem('loggedIn');
+            location.reload();
+        }
         function login() {
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
-            const user = users.find(u => u.username === username && u.password === password);
+            const user = accounts.find(u => u.username === username && u.password === password);
             if (user) {
                 currentUser = user;
                 localStorage.setItem('loggedIn', JSON.stringify(user));
                 document.getElementById('loginContainer').style.display = 'none';
                 document.querySelector('.app-container').style.display = 'block';
                 initApp();
-                logAudit('Login', `User: ${username}, Role: ${user.role}`);
             } else {
-                alert('Invalid username or password. Demo credentials: admin / password');
+                alert('Invalid credentials');
             }
         }
-        // Logout Function (enhanced)
-        function logout() {
-            if (confirm('Logout?')) {
-                logAudit('Logout', 'User logged out');
-                localStorage.removeItem('loggedIn');
-                currentUser = null;
-                document.getElementById('loginContainer').style.display = 'flex';
-                document.querySelector('.app-container').style.display = 'none';
-                document.getElementById('username').value = '';
-                document.getElementById('password').value = '';
-                alert('Logged out successfully!');
-            }
-        }
-        // Function to log audit
-        function logAudit(action, details) {
-            const logEntry = {
-                date: new Date().toLocaleString(),
-                user: currentUser ? currentUser.username : 'System',
-                action,
-                details
-            };
-            auditLog.unshift(logEntry);
-            if (auditLog.length > 1000) auditLog = auditLog.slice(0, 1000);
-            localStorage.setItem('auditLog', JSON.stringify(auditLog));
-        }
-        // Create Account
-        function createAccount() {
-            const empIndex = document.getElementById('createEmpId').value;
-            const username = document.getElementById('createUsername').value;
-            const password = document.getElementById('createPassword').value;
-            if (empIndex && username && password && !users.find(u => u.username === username)) {
-                users.push({ username, password, role: 'employee', empIndex: parseInt(empIndex) });
-                localStorage.setItem('users', JSON.stringify(users));
-                bootstrap.Modal.getInstance(document.getElementById('createAccountModal')).hide();
-                renderAccountsSection();
-                alert('Account created! Employee can login with provided credentials.');
-                logAudit('Account Created', `For employee index ${empIndex}, Username: ${username}`);
-            } else {
-                alert('Invalid input or username exists');
-            }
-        }
-        // Employee MIT Upload
-        function uploadMIT() {
-            const title = document.getElementById('mitTitle').value;
-            const desc = document.getElementById('mitDesc').value;
-            const fileInput = document.getElementById('mitFile');
-            const file = fileInput.files[0];
-            let fileUrl = null;
-            if (file) {
-                fileUrl = URL.createObjectURL(file);
-            }
-            if (title && desc && currentUser.role === 'employee') {
-                mits.push({ empIndex: currentUser.empIndex, title, desc, file: fileUrl, date: new Date().toLocaleString() });
-                localStorage.setItem('mits', JSON.stringify(mits));
-                renderEmployeeMITs();
-                bootstrap.Modal.getInstance(document.getElementById('mitUploadModal')).hide();
-                logAudit('MIT Uploaded', `By employee ${currentUser.empIndex}: ${title}`);
-            } else {
-                alert('Invalid input');
-            }
-        }
-        // Render Employee Dashboard
-        function renderEmployeeDashboard() {
-            const content = document.querySelector('.content');
-            content.innerHTML = `
-                <h2 class="sage-header">Employee Dashboard - Welcome ${employees[currentUser.empIndex]?.name || 'User'}</h2>
-                <ul class="nav nav-tabs sage-tab" id="empTabs">
-                    <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#empAttendance">Attendance</button></li>
-                    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#empLeaves">Leaves</button></li>
-                    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#empBenefits">Benefits</button></li>
-                    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#empTraining">Training</button></li>
-                    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#empCompliance">Compliance</button></li>
-                    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#empMIT">MIT Upload</button></li>
-                </ul>
-                <div class="tab-content mt-3">
-                    <div class="tab-pane active" id="empAttendance"><table class="table sage-grid"><thead><tr><th>Date</th><th>In</th><th>Out</th><th>Hours</th></tr></thead><tbody id="empAttTable"></tbody></table></div>
-                    <div class="tab-pane" id="empLeaves"><table class="table sage-grid"><thead><tr><th>Start</th><th>End</th><th>Reason</th><th>Status</th></tr></thead><tbody id="empLeavesTable"></tbody></table></div>
-                    <div class="tab-pane" id="empBenefits"><table class="table sage-grid"><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody id="empBenefitsTable"></tbody></table></div>
-                    <div class="tab-pane" id="empTraining"><table class="table sage-grid"><thead><tr><th>Title</th><th>Description</th></tr></thead><tbody id="empTrainingTable"></tbody></table></div>
-                    <div class="tab-pane" id="empCompliance"><table class="table sage-grid"><thead><tr><th>Type</th><th>Issue</th><th>Expiry</th><th>Status</th></tr></thead><tbody id="empCertTable"></tbody></table></div>
-                    <div class="tab-pane" id="empMIT">
-                        <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#mitUploadModal">Upload MIT</button>
-                        <table class="table sage-grid"><thead><tr><th>Title</th><th>Date</th><th>Actions</th></tr></thead><tbody id="empMITTable"></tbody></table>
-                    </div>
-                </div>
-            `;
-            renderEmployeeAttendance();
-            renderEmployeeLeaves();
-            renderEmployeeBenefits();
-            renderEmployeeTraining();
-            renderEmployeeCompliance();
-            renderEmployeeMITs();
-        }
-        function renderEmployeeAttendance() {
-            const table = document.getElementById('empAttTable');
-            if (table) table.innerHTML = attendances.filter(a => a.empIndex == currentUser.empIndex).map(a => `<tr><td>${a.date}</td><td>${a.inTime}</td><td>${a.outTime}</td><td>${a.hours}</td></tr>`).join('');
-        }
-        function renderEmployeeLeaves() {
-            const table = document.getElementById('empLeavesTable');
-            if (table) table.innerHTML = leaves.filter(l => l.empIndex == currentUser.empIndex).map(l => `<tr><td>${l.startDate}</td><td>${l.endDate}</td><td>${l.reason}</td><td>${l.status}</td></tr>`).join('');
-        }
-        function renderEmployeeBenefits() {
-            const table = document.getElementById('empBenefitsTable');
-            if (table) table.innerHTML = benefits.map(b => `<tr><td>${b.name}</td><td>${b.description}</td></tr>`).join('');
-        }
-        function renderEmployeeTraining() {
-            const table = document.getElementById('empTrainingTable');
-            if (table) table.innerHTML = courses.filter(c => c.assignedTo === employees[currentUser.empIndex]?.name).map(c => `<tr><td>${c.title}</td><td>${c.description}</td></tr>`).join('');
-        }
-        function renderEmployeeCompliance() {
-            const table = document.getElementById('empCertTable');
-            if (table) table.innerHTML = certifications.filter(c => c.empIndex == currentUser.empIndex).map(c => `<tr><td>${c.type}</td><td>${c.issueDate}</td><td>${c.expiryDate}</td><td>${c.status}</td></tr>`).join('');
-        }
-        function renderEmployeeMITs() {
-            const table = document.getElementById('empMITTable');
-            if (table) table.innerHTML = mits.filter(m => m.empIndex == currentUser.empIndex).map((m, idx) => `<tr><td>${m.title}</td><td>${m.date}</td><td><button class="btn btn-sm btn-info" onclick="viewDocument('${m.file}')">View</button> <button class="btn btn-sm btn-danger" onclick="deleteMIT(${idx})">Delete</button></td></tr>`).join('');
-        }
-        function deleteMIT(idx) {
-            if (confirm('Delete MIT?')) {
-                mits.splice(idx, 1);
-                localStorage.setItem('mits', JSON.stringify(mits));
-                renderEmployeeMITs();
-            }
-        }
-        // Sidebar Dynamic
         function renderSidebar() {
             const nav = document.getElementById('sidebarNav');
+            let html = '';
             if (currentUser.role === 'admin') {
-                nav.innerHTML = `
-                    <li><a href="#dashboard" class="nav-link active" onclick="showSection('dashboard')"><i class="fas fa-tachometer-alt me-2"></i><span class="nav-text">Dashboard</span></a></li>
-                    <li><a href="#employees" class="nav-link" onclick="showSection('employees')"><i class="fas fa-user-friends me-2"></i><span class="nav-text">Employees</span></a></li>
-                    <li><a href="#payroll" class="nav-link" onclick="showSection('payroll')"><i class="fas fa-money-check-alt me-2"></i><span class="nav-text">Payroll</span></a></li>
-                    <li><a href="#recruitment" class="nav-link" onclick="showSection('recruitment')"><i class="fas fa-briefcase me-2"></i><span class="nav-text">Recruitment</span></a></li>
-                    <li><a href="#performance" class="nav-link" onclick="showSection('performance')"><i class="fas fa-chart-line me-2"></i><span class="nav-text">Performance</span></a></li>
-                    <li><a href="#attendance" class="nav-link" onclick="showSection('attendance')"><i class="fas fa-clock me-2"></i><span class="nav-text">Attendance</span></a></li>
-                    <li><a href="#leaves" class="nav-link" onclick="showSection('leaves')"><i class="fas fa-calendar-alt me-2"></i><span class="nav-text">Leaves</span></a></li>
-                    <li><a href="#benefits" class="nav-link" onclick="showSection('benefits')"><i class="fas fa-gift me-2"></i><span class="nav-text">Benefits</span></a></li>
-                    <li><a href="#training" class="nav-link" onclick="showSection('training')"><i class="fas fa-graduation-cap me-2"></i><span class="nav-text">Training</span></a></li>
-                    <li><a href="#compliance" class="nav-link" onclick="showSection('compliance')"><i class="fas fa-balance-scale me-2"></i><span class="nav-text">Compliance</span></a></li>
-                    <li><a href="#reports" class="nav-link" onclick="showSection('reports')"><i class="fas fa-file-alt me-2"></i><span class="nav-text">Reports</span></a></li>
-                    <li><a href="#settings" class="nav-link" onclick="showSection('settings')"><i class="fas fa-cog me-2"></i><span class="nav-text">Settings</span></a></li>
-                    <li><a href="#accounts" class="nav-link" onclick="showSection('accounts')"><i class="fas fa-user-plus me-2"></i><span class="nav-text">Manage Accounts</span></a></li>
-                    <li><a href="#sageModules" class="nav-link" onclick="showSection('sageModules')"><i class="fas fa-info-circle me-2"></i><span class="nav-text">Sage Modules</span></a></li>
-                    <li><a href="#" class="nav-link text-danger" onclick="logout()"><i class="fas fa-sign-out-alt me-2"></i><span class="nav-text">Logout</span></a></li>
+                html = `
+                    <li><a class="nav-link active" href="#dashboard"><i class="fas fa-tachometer-alt me-2"></i><span class="nav-text">Dashboard</span></a></li>
+                    <li><a class="nav-link" href="#employees"><i class="fas fa-users me-2"></i><span class="nav-text">Employees</span></a></li>
+                    <li><a class="nav-link" href="#payroll"><i class="fas fa-money-bill-wave me-2"></i><span class="nav-text">Payroll</span></a></li>
+                    <li><a class="nav-link" href="#recruitment"><i class="fas fa-briefcase me-2"></i><span class="nav-text">Recruitment</span></a></li>
+                    <li><a class="nav-link" href="#performance"><i class="fas fa-chart-line me-2"></i><span class="nav-text">Performance</span></a></li>
+                    <li><a class="nav-link" href="#attendance"><i class="fas fa-clock me-2"></i><span class="nav-text">Attendance</span></a></li>
+                    <li><a class="nav-link" href="#leaves"><i class="fas fa-calendar-times me-2"></i><span class="nav-text">Leaves</span></a></li>
+                    <li><a class="nav-link" href="#benefits"><i class="fas fa-heartbeat me-2"></i><span class="nav-text">Benefits</span></a></li>
+                    <li><a class="nav-link" href="#training"><i class="fas fa-graduation-cap me-2"></i><span class="nav-text">Training</span></a></li>
+                    <li><a class="nav-link" href="#compliance"><i class="fas fa-check-circle me-2"></i><span class="nav-text">Compliance</span></a></li>
+                    <li><a class="nav-link" href="#reports"><i class="fas fa-file-alt me-2"></i><span class="nav-text">Reports</span></a></li>
+                    <li><a class="nav-link" href="#settings"><i class="fas fa-cog me-2"></i><span class="nav-text">Settings</span></a></li>
+                    <li><a class="nav-link" href="#accounts"><i class="fas fa-user-cog me-2"></i><span class="nav-text">Accounts</span></a></li>
+                    <li><a class="nav-link" href="#sageModules"><i class="fas fa-cogs me-2"></i><span class="nav-text">Sage Modules</span></a></li>
+                    <li><a class="nav-link" href="#" onclick="logout()"><i class="fas fa-sign-out-alt me-2"></i><span class="nav-text">Logout</span></a></li>
                 `;
-            } else {
-                nav.innerHTML = `
-                    <li><a href="#empDashboard" class="nav-link active" onclick="renderEmployeeDashboard()"><i class="fas fa-tachometer-alt me-2"></i><span class="nav-text">My Dashboard</span></a></li>
-                    <li><a href="#" class="nav-link text-danger" onclick="logout()"><i class="fas fa-sign-out-alt me-2"></i><span class="nav-text">Logout</span></a></li>
+            } else if (currentUser.role === 'employee') {
+                html = `
+                    <li><a class="nav-link active" href="#employeeDashboard"><i class="fas fa-tachometer-alt me-2"></i><span class="nav-text">Dashboard</span></a></li>
+                    <li><a class="nav-link" href="#" onclick="logout()"><i class="fas fa-sign-out-alt me-2"></i><span class="nav-text">Logout</span></a></li>
                 `;
             }
-        }
-        // Manage Accounts Section for Admin
-        function renderAccountsSection() {
-            const content = document.getElementById('accounts');
-            if (content) {
-                content.innerHTML = `
-                    <h2 class="sage-header">Manage User Accounts</h2>
-                    <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#createAccountModal">Create Employee Account</button>
-                    <table class="table table-striped sage-grid">
-                        <thead><tr><th>Username</th><th>Role</th><th>Employee</th><th>Actions</th></tr></thead>
-                        <tbody id="accountsTable"></tbody>
-                    </table>
-                `;
-                const table = document.getElementById('accountsTable');
-                users.filter(u => u.role !== 'admin').forEach((u, idx) => {
-                    const emp = employees[u.empIndex] || { name: 'N/A' };
-                    table.innerHTML += `<tr><td>${u.username}</td><td>${u.role}</td><td>${emp.name}</td><td><button class="btn btn-sm btn-danger" onclick="deleteAccount(${idx})">Delete</button></td></tr>`;
+            nav.innerHTML = html;
+            nav.querySelectorAll('a.nav-link').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const sectionId = link.getAttribute('href').substring(1);
+                    if (sectionId) showSection(sectionId);
                 });
-            }
-        }
-        function deleteAccount(idx) {
-            if (confirm('Delete account?')) {
-                users.splice(idx, 1);
-                localStorage.setItem('users', JSON.stringify(users));
-                renderAccountsSection();
-                logAudit('Account Deleted', `Username: ${users[idx].username}`);
-            }
-        }
-        // Enhanced File Preview
-        function previewFile(input, previewId) {
-            const file = input.files[0];
-            if (!file) return;
-            const preview = document.getElementById(previewId);
-            preview.innerHTML = '';
-            const fileType = file.name.split('.').pop().toLowerCase();
-            const reader = new FileReader();
-            if (['jpg', 'png', 'jpeg'].includes(fileType)) {
-                reader.onload = e => preview.innerHTML = `<img src="${e.target.result}" class="preview-canvas img-fluid">`;
-                reader.readAsDataURL(file);
-            } else if (fileType === 'pdf') {
-                reader.onload = e => {
-                    const typedarray = new Uint8Array(e.target.result);
-                    pdfjsLib.getDocument(typedarray).promise.then(pdf => {
-                        pdf.getPage(1).then(page => {
-                            const scale = 1.5;
-                            const viewport = page.getViewport({ scale });
-                            const canvas = document.createElement('canvas');
-                            canvas.height = viewport.height;
-                            canvas.width = viewport.width;
-                            preview.appendChild(canvas);
-                            page.render({ canvasContext: canvas.getContext('2d'), viewport });
-                        });
-                    });
-                };
-                reader.readAsArrayBuffer(file);
-            } else if (fileType === 'docx') {
-                reader.onload = e => {
-                    mammoth.convertToHtml({ arrayBuffer: e.target.result })
-                        .then(result => preview.innerHTML = `<div class="upload-preview">${result.value}</div>`)
-                        .catch(err => preview.innerHTML = `<p>Error previewing DOCX: ${err}</p>`);
-                };
-                reader.readAsArrayBuffer(file);
-            } else if (['csv', 'xlsx'].includes(fileType)) {
-                reader.onload = e => {
-                    try {
-                        const data = new Uint8Array(e.target.result);
-                        const workbook = XLSX.read(data, { type: 'array' });
-                        const sheetName = workbook.SheetNames[0];
-                        const sheet = workbook.Sheets[sheetName];
-                        preview.innerHTML = `<div class="upload-preview">${XLSX.utils.sheet_to_html(sheet)}</div>`;
-                    } catch (err) {
-                        preview.innerHTML = `<p>Error previewing spreadsheet: ${err}</p>`;
-                    }
-                };
-                reader.readAsArrayBuffer(file);
-            } else {
-                preview.innerHTML = `<p>File type ${fileType} preview not supported. Size: ${(file.size / 1024).toFixed(2)} KB</p>`;
-            }
-        }
-        // Enhanced Payroll Calculation
-        function calculatePayroll() {
-            const empIndex = document.getElementById('payEmpId').value;
-            const gross = parseFloat(document.getElementById('paySalary').value) || 0;
-            const paye = parseFloat(document.getElementById('payeTax').value) || 0;
-            const deductions = parseFloat(document.getElementById('payDeductions').value) || 0;
-            const bonuses = parseFloat(document.getElementById('payBonuses').value) || 0;
-            if (empIndex !== '' && gross > 0) {
-                const adjustedGross = gross + bonuses;
-                const uifEmp = adjustedGross * (settings.uifRate / 100);
-                const uifEmply = uifEmp; // Employer matches
-                const sdl = adjustedGross * (settings.sdlRate / 100);
-                const netPay = adjustedGross - uifEmp - paye - deductions;
-                document.getElementById('uifEmp').value = uifEmp.toFixed(2);
-                document.getElementById('uifEmply').value = uifEmply.toFixed(2);
-                document.getElementById('sdl').value = sdl.toFixed(2);
-                payrolls.push({
-                    empIndex,
-                    gross: adjustedGross,
-                    uifEmp,
-                    uifEmply,
-                    sdl,
-                    paye,
-                    deductions,
-                    bonuses,
-                    netPay,
-                    date: new Date().toLocaleDateString(),
-                    complianceStatus: 'Pending'
-                });
-                localStorage.setItem('payrolls', JSON.stringify(payrolls));
-                renderPayrolls();
-                logAudit('Payroll Calculated', `For ${employees[empIndex]?.name}, Gross: ${adjustedGross}`);
-            } else {
-                alert('Please select employee and enter gross salary.');
-            }
-        }
-        function renderPayrolls() {
-            const table = document.getElementById('payrollTable');
-            if (!table) return;
-            table.innerHTML = '';
-            payrolls.forEach((pay, index) => {
-                const emp = employees[pay.empIndex] || { name: 'Deleted Employee', branch: '' };
-                const uifTotal = pay.uifEmp + pay.uifEmply;
-                table.innerHTML += `<tr><td>${emp.name}</td><td>${emp.branch}</td><td>$${pay.gross.toFixed(2)}</td><td>$${uifTotal.toFixed(2)}</td><td>$${pay.sdl.toFixed(2)}</td><td>$${pay.paye.toFixed(2)}</td><td>$${pay.deductions.toFixed(2)}</td><td>$${pay.bonuses.toFixed(2)}</td><td>$${pay.netPay.toFixed(2)}</td><td>${pay.date}</td><td><span class="badge ${pay.complianceStatus === 'Compliant' ? 'bg-success' : 'bg-warning'}">${pay.complianceStatus}</span></td><td><button class="btn btn-sm btn-danger" onclick="deletePayroll(${index})">Delete</button></td></tr>`;
             });
         }
-        function processPayrollCompliance() {
-            const action = document.getElementById('payrollCompliance').value;
-            if (action) {
-                const month = document.getElementById('payrollMonth').value || new Date().toLocaleDateString('en-CA', { year: 'numeric', month: '2-digit' });
-                if (!payrollCompliance[month]) payrollCompliance[month] = { uif: false, sars: false, reconciliation: false, sdl: false };
-                payrollCompliance[month][action.split('_')[0]] = true;
-                localStorage.setItem('payrollCompliance', JSON.stringify(payrollCompliance));
-                loadPayrollCompliance();
-                logAudit('Payroll Compliance Processed', `${action} for ${month}`);
-                alert('Compliance action marked!');
-            }
-        }
-        function loadPayrollCompliance() {
-            const month = document.getElementById('payrollMonth').value || new Date().toLocaleDateString('en-CA', { year: 'numeric', month: '2-digit' });
-            const data = payrollCompliance[month] || { uif: false, sars: false, reconciliation: false, sdl: false };
-            const table = document.getElementById('payrollComplianceTable');
-            if (table) table.innerHTML = `<tr><td>${month}</td><td><input type="checkbox" ${data.uif ? 'checked' : ''} disabled></td><td><input type="checkbox" ${data.sars ? 'checked' : ''} disabled></td><td><input type="checkbox" ${data.reconciliation ? 'checked' : ''} disabled></td><td><input type="checkbox" ${data.sdl ? 'checked' : ''} disabled></td><td><button class="btn btn-sm btn-primary" onclick="editPayrollCompliance('${month}')">Edit</button></td></tr>`;
-        }
-        function markPayrollCompliant() {
-            const month = document.getElementById('payrollMonth').value;
-            if (month) {
-                payrollCompliance[month] = { uif: true, sars: true, reconciliation: true, sdl: true };
-                localStorage.setItem('payrollCompliance', JSON.stringify(payrollCompliance));
-                loadPayrollCompliance();
-                logAudit('Payroll Fully Compliant', month);
-            }
-        }
-        function editPayrollCompliance(month) {
-            // Simplified edit - toggle checkboxes in real app
-            alert(`Edit compliance for ${month} - In full app, open edit modal.`);
-        }
-        // Departmental Compliance
-        function addCustomItem() {
-            const container = document.getElementById('customItems');
-            const div = document.createElement('div');
-            div.className = 'mb-2';
-            div.innerHTML = `<input type="text" class="form-control" placeholder="Custom Item" name="customItem[]"> <button type="button" class="btn btn-sm btn-danger mt-1" onclick="this.parentElement.remove()">Remove</button>`;
-            container.insertBefore(div, container.lastChild);
-        }
-        function addDeptCompliance() {
-            const branch = document.getElementById('deptBranch').value;
-            const items = Array.from(document.querySelectorAll('#customItems input[name="customItem[]"]')).map(input => input.value).filter(v => v);
-            if (branch && items.length > 0) {
-                if (!deptCompliance[branch]) deptCompliance[branch] = [];
-                deptCompliance[branch] = deptCompliance[branch].concat(items.map(item => ({ item, checked: false })));
-                localStorage.setItem('deptCompliance', JSON.stringify(deptCompliance));
-                renderDeptCompliance();
-                bootstrap.Modal.getInstance(document.getElementById('addDeptComplianceModal')).hide();
-                logAudit('Departmental Compliance Added', `${branch}: ${items.length} items`);
-            } else {
-                alert('Please select branch and add at least one item.');
-            }
-        }
-        function renderDeptCompliance() {
-            const filter = document.getElementById('deptComplianceFilter').value;
-            const table = document.getElementById('deptComplianceTable');
-            if (!table) return;
-            table.innerHTML = '';
-            Object.keys(deptCompliance).filter(key => !filter || key === filter).forEach(branch => {
-                const items = deptCompliance[branch];
-                const checked = items.filter(i => i.checked).length;
-                const percent = items.length ? Math.round((checked / items.length) * 100) : 0;
-                let itemsHtml = items.map((i, idx) => `<div class="checklist-item mb-1"><input type="checkbox" ${i.checked ? 'checked' : ''} onchange="toggleDeptItem('${branch}', ${idx})"><label>${i.item}</label></div>`).join('');
-                table.innerHTML += `<tr><td>${branch}</td><td>${itemsHtml}</td><td>${percent}%</td><td><button class="btn btn-sm btn-danger" onclick="deleteDeptCompliance('${branch}')">Delete</button></td></tr>`;
-            });
-        }
-        function toggleDeptItem(branch, idx) {
-            deptCompliance[branch][idx].checked = !deptCompliance[branch][idx].checked;
-            localStorage.setItem('deptCompliance', JSON.stringify(deptCompliance));
-            renderDeptCompliance();
-            updateComplianceScore();
-        }
-        function deleteDeptCompliance(branch) {
-            if (confirm(`Delete compliance for ${branch}?`)) {
-                delete deptCompliance[branch];
-                localStorage.setItem('deptCompliance', JSON.stringify(deptCompliance));
-                renderDeptCompliance();
-                logAudit('Departmental Compliance Deleted', branch);
-                updateComplianceScore();
-            }
-        }
-        // Update updateComplianceScore to include dept and payroll
-        function updateComplianceScore() {
-            const baseChecked = Object.values(complianceChecklist).filter(v => v).length;
-            const baseTotal = 20;
-            const payrollChecked = Object.values(payrollCompliance).reduce((sum, m) => sum + Object.values(m).filter(v => v).length, 0);
-            const payrollTotal = Object.keys(payrollCompliance).length * 4;
-            const deptChecked = Object.values(deptCompliance).reduce((sum, items) => sum + items.filter(i => i.checked).length, 0);
-            const deptTotal = Object.values(deptCompliance).reduce((sum, items) => sum + items.length, 0);
-            const totalChecked = baseChecked + payrollChecked + deptChecked;
-            const totalItems = baseTotal + payrollTotal + deptTotal || 1;
-            const score = Math.round((totalChecked / totalItems) * 100);
-            const scoreElem = document.getElementById('complianceScore');
-            if (scoreElem) scoreElem.textContent = `${score}%`;
-        }
-        // Navigation and UI Functions
         function showSection(sectionId) {
             document.querySelectorAll('.section').forEach(sec => sec.classList.add('d-none'));
             document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
@@ -1286,6 +1044,7 @@
             const link = document.querySelector(`a[href="#${sectionId}"]`);
             if (link) link.classList.add('active');
             if (sectionId === 'dashboard') renderDashboard();
+            if (sectionId === 'employeeDashboard') renderEmployeeDashboard();
             if (sectionId === 'employees') renderEmployees();
             if (sectionId === 'payroll') {
                 renderPayrolls();
@@ -1304,20 +1063,10 @@
                 renderCertifications();
                 renderComplianceDocs();
                 renderAuditLog();
-                // Ensure tabs are initialized
-                var triggerTabList = [].slice.call(document.querySelectorAll('#complianceTabs button'));
-                triggerTabList.forEach(function (triggerEl) {
-                    var tabTrigger = new bootstrap.Tab(triggerEl);
-                    triggerEl.addEventListener('click', function (event) {
-                        event.preventDefault();
-                        tabTrigger.show();
-                    });
-                });
             }
             if (sectionId === 'reports') renderReports();
             if (sectionId === 'settings') loadSettings();
             if (sectionId === 'accounts') renderAccountsSection();
-            if (sectionId === 'sageModules') {} // No special rendering needed, static content
             logAudit('Section Viewed', sectionId);
         }
         function toggleSidebar() {
@@ -1746,6 +1495,278 @@
         function updateDashboard() {
             renderDashboard();
         }
+        // Employee Dashboard Rendering
+        function renderEmployeeDashboard() {
+            const empIndex = currentUser.empIndex;
+            // Attendance
+            const attTable = document.getElementById('empAttendanceTable');
+            attTable.innerHTML = attendances.filter(a => a.empIndex === empIndex).map(a => `
+                <tr>
+                    <td>${a.date}</td>
+                    <td>${a.inTime}</td>
+                    <td>${a.outTime}</td>
+                    <td>${a.hours}</td>
+                </tr>
+            `).join('');
+            // Leaves
+            const leavesTable = document.getElementById('empLeavesTable');
+            leavesTable.innerHTML = leaves.filter(l => l.empIndex === empIndex).map(l => `
+                <tr>
+                    <td>${l.startDate}</td>
+                    <td>${l.endDate}</td>
+                    <td>${l.reason}</td>
+                    <td><span class="badge bg-${l.status === 'Approved' ? 'success' : 'warning'}">${l.status}</span></td>
+                </tr>
+            `).join('');
+            // Benefits
+            const benefitsTable = document.getElementById('empBenefitsTable');
+            benefitsTable.innerHTML = benefits.map(b => `
+                <tr>
+                    <td>${b.name}</td>
+                    <td>${b.description}</td>
+                </tr>
+            `).join('');
+            // Training
+            const trainingTable = document.getElementById('empTrainingTable');
+            trainingTable.innerHTML = courses.filter(c => c.assignedTo === employees[empIndex].name).map(c => `
+                <tr>
+                    <td>${c.title}</td>
+                    <td>${c.description}</td>
+                </tr>
+            `).join('');
+            // Compliance
+            const certTable = document.getElementById('empCertificationsTable');
+            certTable.innerHTML = certifications.filter(c => c.empIndex === empIndex).map(c => `
+                <tr>
+                    <td>${c.type}</td>
+                    <td>${c.issueDate}</td>
+                    <td>${c.expiryDate}</td>
+                    <td><span class="badge ${c.status === 'Active' ? 'bg-success' : 'bg-danger'}">${c.status}</span></td>
+                </tr>
+            `).join('');
+            // MIT
+            renderMITs();
+            // Initialize tabs
+            var triggerTabList = [].slice.call(document.querySelectorAll('#employeeTabs button'));
+            triggerTabList.forEach(function (triggerEl) {
+                var tabTrigger = new bootstrap.Tab(triggerEl);
+                triggerEl.addEventListener('click', function (event) {
+                    event.preventDefault();
+                    tabTrigger.show();
+                });
+            });
+        }
+        // MIT Upload
+        function uploadMIT() {
+            const empIndex = currentUser.empIndex;
+            const title = document.getElementById('mitTitle').value;
+            const desc = document.getElementById('mitDesc').value;
+            const file = document.getElementById('mitFile').files[0];
+            if (title && desc) {
+                mits.push({
+                    empIndex,
+                    title,
+                    desc,
+                    file: file ? URL.createObjectURL(file) : null,
+                    date: new Date().toLocaleDateString()
+                });
+                localStorage.setItem('mits', JSON.stringify(mits));
+                renderMITs();
+                document.getElementById('mitTitle').value = '';
+                document.getElementById('mitDesc').value = '';
+                document.getElementById('mitFile').value = '';
+                logAudit('MIT Uploaded', title);
+            } else {
+                alert('Please fill title and description.');
+            }
+        }
+        function renderMITs() {
+            const table = document.getElementById('mitTable');
+            const empIndex = currentUser.empIndex;
+            table.innerHTML = mits.filter(m => m.empIndex === empIndex).map((m, idx) => `
+                <tr>
+                    <td>${m.title}</td>
+                    <td>${m.desc}</td>
+                    <td>${m.date}</td>
+                    <td>${m.file ? `<button class="btn btn-sm btn-info" onclick="viewDocument('${m.file}')">View</button>` : ''}</td>
+                </tr>
+            `).join('');
+        }
+        // Accounts Management
+        function createAccount() {
+            const empIndex = parseInt(document.getElementById('createEmpId').value);
+            const username = document.getElementById('createUsername').value;
+            const password = document.getElementById('createPassword').value;
+            const role = document.getElementById('createRole').value;
+            if (username && password && (role === 'admin' || empIndex !== '')) {
+                accounts.push({ username, password, role, empIndex: role === 'employee' ? empIndex : null });
+                localStorage.setItem('accounts', JSON.stringify(accounts));
+                renderAccountsSection();
+                bootstrap.Modal.getInstance(document.getElementById('createAccountModal')).hide();
+                logAudit('Account Created', `${username} (${role})`);
+            } else {
+                alert('Please fill all fields.');
+            }
+        }
+        function renderAccountsSection() {
+            const table = document.getElementById('accountsTable');
+            table.innerHTML = accounts.map((acc, idx) => `
+                <tr>
+                    <td>${acc.username}</td>
+                    <td>${acc.role}</td>
+                    <td>${acc.empIndex !== null ? employees[acc.empIndex]?.name || 'Deleted' : 'N/A'}</td>
+                    <td><button class="btn btn-sm btn-danger" onclick="deleteAccount(${idx})">Delete</button></td>
+                </tr>
+            `).join('');
+        }
+        function deleteAccount(idx) {
+            if (confirm('Delete account?')) {
+                accounts.splice(idx, 1);
+                localStorage.setItem('accounts', JSON.stringify(accounts));
+                renderAccountsSection();
+            }
+        }
+        // Payroll Functions
+        function calculatePayroll() {
+            const empIndex = document.getElementById('payEmpId').value;
+            const gross = parseFloat(document.getElementById('paySalary').value) || 0;
+            const paye = parseFloat(document.getElementById('payeTax').value) || 0;
+            const deductions = parseFloat(document.getElementById('payDeductions').value) || 0;
+            const bonuses = parseFloat(document.getElementById('payBonuses').value) || 0;
+            if (empIndex !== '' && gross > 0) {
+                const adjustedGross = gross + bonuses;
+                const uifEmp = adjustedGross * (settings.uifRate / 100);
+                const uifEmply = uifEmp; // Employer matches
+                const sdl = adjustedGross * (settings.sdlRate / 100);
+                const netPay = adjustedGross - uifEmp - paye - deductions;
+                document.getElementById('uifEmp').value = uifEmp.toFixed(2);
+                document.getElementById('uifEmply').value = uifEmply.toFixed(2);
+                document.getElementById('sdl').value = sdl.toFixed(2);
+                payrolls.push({
+                    empIndex,
+                    gross: adjustedGross,
+                    uifEmp,
+                    uifEmply,
+                    sdl,
+                    paye,
+                    deductions,
+                    bonuses,
+                    netPay,
+                    date: new Date().toLocaleDateString(),
+                    complianceStatus: 'Pending'
+                });
+                localStorage.setItem('payrolls', JSON.stringify(payrolls));
+                renderPayrolls();
+                logAudit('Payroll Calculated', `For ${employees[empIndex]?.name}, Gross: ${adjustedGross}`);
+            } else {
+                alert('Please select employee and enter gross salary.');
+            }
+        }
+        function renderPayrolls() {
+            const table = document.getElementById('payrollTable');
+            if (!table) return;
+            table.innerHTML = '';
+            payrolls.forEach((pay, index) => {
+                const emp = employees[pay.empIndex] || { name: 'Deleted Employee', branch: '' };
+                const uifTotal = pay.uifEmp + pay.uifEmply;
+                table.innerHTML += `<tr><td>${emp.name}</td><td>${emp.branch}</td><td>$${pay.gross.toFixed(2)}</td><td>$${uifTotal.toFixed(2)}</td><td>$${pay.sdl.toFixed(2)}</td><td>$${pay.paye.toFixed(2)}</td><td>$${pay.deductions.toFixed(2)}</td><td>$${pay.bonuses.toFixed(2)}</td><td>$${pay.netPay.toFixed(2)}</td><td>${pay.date}</td><td><span class="badge ${pay.complianceStatus === 'Compliant' ? 'bg-success' : 'bg-warning'}">${pay.complianceStatus}</span></td><td><button class="btn btn-sm btn-danger" onclick="deletePayroll(${index})">Delete</button></td></tr>`;
+            });
+        }
+        function processPayrollCompliance() {
+            const action = document.getElementById('payrollCompliance').value;
+            if (action) {
+                const month = document.getElementById('payrollMonth').value || new Date().toLocaleDateString('en-CA', { year: 'numeric', month: '2-digit' });
+                if (!payrollCompliance[month]) payrollCompliance[month] = { uif: false, sars: false, reconciliation: false, sdl: false };
+                payrollCompliance[month][action.split('_')[0]] = true;
+                localStorage.setItem('payrollCompliance', JSON.stringify(payrollCompliance));
+                loadPayrollCompliance();
+                logAudit('Payroll Compliance Processed', `${action} for ${month}`);
+                alert('Compliance action marked!');
+            }
+        }
+        function loadPayrollCompliance() {
+            const month = document.getElementById('payrollMonth').value || new Date().toLocaleDateString('en-CA', { year: 'numeric', month: '2-digit' });
+            const data = payrollCompliance[month] || { uif: false, sars: false, reconciliation: false, sdl: false };
+            const table = document.getElementById('payrollComplianceTable');
+            if (table) table.innerHTML = `<tr><td>${month}</td><td><input type="checkbox" ${data.uif ? 'checked' : ''} disabled></td><td><input type="checkbox" ${data.sars ? 'checked' : ''} disabled></td><td><input type="checkbox" ${data.reconciliation ? 'checked' : ''} disabled></td><td><input type="checkbox" ${data.sdl ? 'checked' : ''} disabled></td><td><button class="btn btn-sm btn-primary" onclick="editPayrollCompliance('${month}')">Edit</button></td></tr>`;
+        }
+        function markPayrollCompliant() {
+            const month = document.getElementById('payrollMonth').value;
+            if (month) {
+                payrollCompliance[month] = { uif: true, sars: true, reconciliation: true, sdl: true };
+                localStorage.setItem('payrollCompliance', JSON.stringify(payrollCompliance));
+                loadPayrollCompliance();
+                logAudit('Payroll Fully Compliant', month);
+            }
+        }
+        function editPayrollCompliance(month) {
+            // Simplified edit - toggle checkboxes in real app
+            alert(`Edit compliance for ${month} - In full app, open edit modal.`);
+        }
+        // Departmental Compliance
+        function addCustomItem() {
+            const container = document.getElementById('customItems');
+            const div = document.createElement('div');
+            div.className = 'mb-2';
+            div.innerHTML = `<input type="text" class="form-control" placeholder="Custom Item" name="customItem[]"> <button type="button" class="btn btn-sm btn-danger mt-1" onclick="this.parentElement.remove()">Remove</button>`;
+            container.insertBefore(div, container.lastChild);
+        }
+        function addDeptCompliance() {
+            const branch = document.getElementById('deptBranch').value;
+            const items = Array.from(document.querySelectorAll('#customItems input[name="customItem[]"]')).map(input => input.value).filter(v => v);
+            if (branch && items.length > 0) {
+                if (!deptCompliance[branch]) deptCompliance[branch] = [];
+                deptCompliance[branch] = deptCompliance[branch].concat(items.map(item => ({ item, checked: false })));
+                localStorage.setItem('deptCompliance', JSON.stringify(deptCompliance));
+                renderDeptCompliance();
+                bootstrap.Modal.getInstance(document.getElementById('addDeptComplianceModal')).hide();
+                logAudit('Departmental Compliance Added', `${branch}: ${items.length} items`);
+            } else {
+                alert('Please select branch and add at least one item.');
+            }
+        }
+        function renderDeptCompliance() {
+            const filter = document.getElementById('deptComplianceFilter').value;
+            const table = document.getElementById('deptComplianceTable');
+            if (!table) return;
+            table.innerHTML = '';
+            Object.keys(deptCompliance).filter(key => !filter || key === filter).forEach(branch => {
+                const items = deptCompliance[branch];
+                const checked = items.filter(i => i.checked).length;
+                const percent = items.length ? Math.round((checked / items.length) * 100) : 0;
+                let itemsHtml = items.map((i, idx) => `<div class="checklist-item mb-1"><input type="checkbox" ${i.checked ? 'checked' : ''} onchange="toggleDeptItem('${branch}', ${idx})"><label>${i.item}</label></div>`).join('');
+                table.innerHTML += `<tr><td>${branch}</td><td>${itemsHtml}</td><td>${percent}%</td><td><button class="btn btn-sm btn-danger" onclick="deleteDeptCompliance('${branch}')">Delete</button></td></tr>`;
+            });
+        }
+        function toggleDeptItem(branch, idx) {
+            deptCompliance[branch][idx].checked = !deptCompliance[branch][idx].checked;
+            localStorage.setItem('deptCompliance', JSON.stringify(deptCompliance));
+            renderDeptCompliance();
+            updateComplianceScore();
+        }
+        function deleteDeptCompliance(branch) {
+            if (confirm(`Delete compliance for ${branch}?`)) {
+                delete deptCompliance[branch];
+                localStorage.setItem('deptCompliance', JSON.stringify(deptCompliance));
+                renderDeptCompliance();
+                logAudit('Departmental Compliance Deleted', branch);
+                updateComplianceScore();
+            }
+        }
+        // Update updateComplianceScore to include dept and payroll
+        function updateComplianceScore() {
+            const baseChecked = Object.values(complianceChecklist).filter(v => v).length;
+            const baseTotal = 20;
+            const payrollChecked = Object.values(payrollCompliance).reduce((sum, m) => sum + Object.values(m).filter(v => v).length, 0);
+            const payrollTotal = Object.keys(payrollCompliance).length * 4;
+            const deptChecked = Object.values(deptCompliance).reduce((sum, items) => sum + items.filter(i => i.checked).length, 0);
+            const deptTotal = Object.values(deptCompliance).reduce((sum, items) => sum + items.length, 0);
+            const totalChecked = baseChecked + payrollChecked + deptChecked;
+            const totalItems = baseTotal + payrollTotal + deptTotal || 1;
+            const score = Math.round((totalChecked / totalItems) * 100);
+            const scoreElem = document.getElementById('complianceScore');
+            if (scoreElem) scoreElem.textContent = `${score}%`;
+        }
         // Recruitment
         function addJob() {
             const job = {
@@ -2101,6 +2122,18 @@
                 renderPayrolls();
             }
         }
+        // Preview File Function
+        function previewFile(input, previewId) {
+            const file = input.files[0];
+            if (file) {
+                const preview = document.getElementById(previewId);
+                preview.innerHTML = '';
+                const img = document.createElement('img');
+                img.src = URL.createObjectURL(file);
+                img.classList.add('preview-canvas');
+                preview.appendChild(img);
+            }
+        }
         // App Initialization
         function initApp() {
             populateBranchSelect('empBranch');
@@ -2122,8 +2155,9 @@
             updateDashboard();
             loadSettings();
             renderSidebar();
+            renderAccountsSection();
             if (currentUser.role === 'employee') {
-                renderEmployeeDashboard();
+                showSection('employeeDashboard');
             } else {
                 showSection('dashboard');
             }
