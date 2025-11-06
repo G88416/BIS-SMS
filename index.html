@@ -45,7 +45,6 @@
             .btn-toggle-sidebar { left: 70px; }
             .sidebar .nav-text { display: none; }
         }
-
         /* Dark Mode Styles (enhanced with blue tones) */
         .dark-mode { background-color: #001f3f; color: #e0e0e0; } /* Navy blue bg */
         .dark-mode .sidebar { background-color: #0d1b2a; border-right: 1px solid #4169e1; } /* Dark navy with royal accent */
@@ -66,7 +65,6 @@
         .dark-mode .compliance-card { background: linear-gradient(135deg, #0d6efd 0%, #4169e1 50%, #001f3f 100%); } /* Keep blue gradient */
         .dark-mode .checklist-section { background-color: #1a2b4a; border-color: #add8e6; } /* Dark navy with sky border */
         .dark-mode .preview-canvas { border-color: #add8e6; } /* Sky blue */
-
         /* Login Styles */
         #loginContainer {
             position: fixed;
@@ -96,7 +94,6 @@
         .app-container {
             display: none;
         }
-
         /* Sage 300 Inspired Styles - Enhanced for modular, professional look */
         .sage-header { background-color: #2a3f54; color: white; padding: 10px; font-weight: bold; border-bottom: 2px solid #ccc; } /* Dark blue header with border */
         .sage-grid { border: 1px solid #ccc; background-color: #f8f9fa; } /* Light gray grid style */
@@ -105,6 +102,12 @@
         .sage-nav-menu { list-style: none; padding: 0; } /* Custom navigation menu */
         .sage-nav-menu li { margin-bottom: 10px; }
         .sage-custom-field { display: flex; align-items: center; } /* For customizable fields */
+        /* Additional Sage Features Styles */
+        .sage-self-service { border: 1px solid #add8e6; padding: 15px; border-radius: 8px; background-color: #f0f8ff; }
+        .sage-benefits-enrollment { margin-top: 20px; }
+        .sage-workflow { list-style: none; padding: 0; }
+        .sage-workflow li { margin-bottom: 10px; display: flex; align-items: center; }
+        .sage-workflow li .badge { margin-left: 10px; }
     </style>
 </head>
 <body>
@@ -119,7 +122,6 @@
             </div>
         </div>
     </div>
-
     <div class="app-container">
         <button class="btn btn-sm btn-primary btn-toggle-sidebar" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
         <div class="sidebar">
@@ -128,7 +130,6 @@
                 <!-- Dynamic based on role -->
             </ul>
         </div>
-
         <div class="content">
             <!-- Dynamic Sections -->
             <div id="dashboard" class="section">
@@ -221,6 +222,8 @@
                 </select>
                 <input type="number" id="paySalary" class="form-control mb-3" placeholder="Gross Salary">
                 <input type="number" id="payeTax" class="form-control mb-3" placeholder="PAYE Tax">
+                <input type="number" id="payDeductions" class="form-control mb-3" placeholder="Other Deductions (e.g., Loans)">
+                <input type="number" id="payBonuses" class="form-control mb-3" placeholder="Bonuses/Earnings">
                 <div class="mb-3">
                     <label>UIF Employee:</label>
                     <input type="text" id="uifEmp" class="form-control" readonly>
@@ -243,6 +246,8 @@
                             <th>UIF Total</th>
                             <th>SDL</th>
                             <th>PAYE</th>
+                            <th>Deductions</th>
+                            <th>Bonuses</th>
                             <th>Net Pay</th>
                             <th>Date</th>
                             <th>Compliance</th>
@@ -287,6 +292,7 @@
                             <th>Description</th>
                             <th>Branch</th>
                             <th>Status</th>
+                            <th>Applicants</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -535,7 +541,14 @@
                 </div>
                 <button class="btn btn-primary" onclick="saveSettings()">Save</button>
             </div>
-            <div id="accounts" class="section d-none"></div>
+            <div id="accounts" class="section d-none">
+                <h2 class="sage-header">Manage Accounts</h2>
+                <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#createAccountModal">Create Employee Account</button>
+                <table class="table table-striped sage-grid">
+                    <thead><tr><th>Username</th><th>Role</th><th>Employee</th><th>Actions</th></tr></thead>
+                    <tbody id="accountsTable"></tbody>
+                </table>
+            </div>
             <div id="sageModules" class="section d-none">
                 <h2 class="sage-header">Sage HRMS Modules</h2>
                 <p>Sage HRMS integrates seamlessly with Sage 300 ERP, providing a comprehensive suite of modules for managing HR processes, payroll, employee data, and compliance. Below is a list of the key modules along with brief descriptions:</p>
@@ -554,10 +567,30 @@
                     <li><strong>iRecruit</strong>: Supports recruitment by posting jobs, tracking applicants, and managing the hiring process efficiently.</li>
                 </ul>
                 <p>These modules can be customized and scaled based on organizational needs, with direct data synchronization between Sage HRMS and Sage 300 for payroll, benefits, and employee records. For implementation details or licensing, consult Sage's official resources or a certified partner.</p>
+                <div class="sage-self-service">
+                    <h5>Sage Employee Self-Service Simulation</h5>
+                    <p>Employees can update their details here (simulated).</p>
+                    <input type="text" class="form-control mb-3" placeholder="Update Address" disabled>
+                </div>
+                <div class="sage-benefits-enrollment">
+                    <h5>Sage Benefits Enrollment</h5>
+                    <select class="form-control mb-3">
+                        <option>Select Benefit Plan</option>
+                        <option>Medical Plan A</option>
+                        <option>Medical Plan B</option>
+                    </select>
+                    <button class="btn btn-primary">Enroll (Simulated)</button>
+                </div>
+                <div class="sage-workflow mt-3">
+                    <h5>Sage Alerts & Workflow</h5>
+                    <ul>
+                        <li>Onboarding Workflow <span class="badge bg-info">Pending</span></li>
+                        <li>Performance Review <span class="badge bg-warning">Due</span></li>
+                    </ul>
+                </div>
             </div>
         </div>
     </div>
-
     <!-- Modals -->
     <!-- Create Account Modal -->
     <div class="modal fade" id="createAccountModal">
@@ -575,7 +608,6 @@
             </div>
         </div>
     </div>
-
     <!-- Employee MIT Upload Modal -->
     <div class="modal fade" id="mitUploadModal">
         <div class="modal-dialog">
@@ -590,7 +622,6 @@
             </div>
         </div>
     </div>
-
     <!-- Add Employee Modal -->
     <div class="modal fade" id="addEmployeeModal">
         <div class="modal-dialog">
@@ -615,7 +646,6 @@
             </div>
         </div>
     </div>
-
     <!-- Edit Employee Modal -->
     <div class="modal fade" id="editEmployeeModal">
         <div class="modal-dialog">
@@ -641,7 +671,6 @@
             </div>
         </div>
     </div>
-
     <!-- Add Job Modal -->
     <div class="modal fade" id="addJobModal">
         <div class="modal-dialog">
@@ -662,7 +691,6 @@
             </div>
         </div>
     </div>
-
     <!-- Edit Job Modal -->
     <div class="modal fade" id="editJobModal">
         <div class="modal-dialog">
@@ -684,7 +712,6 @@
             </div>
         </div>
     </div>
-
     <!-- Add Review Modal -->
     <div class="modal fade" id="addReviewModal">
         <div class="modal-dialog">
@@ -703,7 +730,6 @@
             </div>
         </div>
     </div>
-
     <!-- Add Leave Modal -->
     <div class="modal fade" id="addLeaveModal">
         <div class="modal-dialog">
@@ -723,7 +749,6 @@
             </div>
         </div>
     </div>
-
     <!-- Add Benefit Modal -->
     <div class="modal fade" id="addBenefitModal">
         <div class="modal-dialog">
@@ -739,7 +764,6 @@
             </div>
         </div>
     </div>
-
     <!-- Add Course Modal -->
     <div class="modal fade" id="addCourseModal">
         <div class="modal-dialog">
@@ -761,7 +785,6 @@
             </div>
         </div>
     </div>
-
     <!-- Add Certification Modal -->
     <div class="modal fade" id="addCertModal">
         <div class="modal-dialog">
@@ -781,7 +804,6 @@
             </div>
         </div>
     </div>
-
     <!-- Add Departmental Compliance Modal -->
     <div class="modal fade" id="addDeptComplianceModal">
         <div class="modal-dialog">
@@ -800,7 +822,6 @@
             </div>
         </div>
     </div>
-
     <!-- Preview Modal for Import (enhanced) -->
     <div class="modal fade" id="previewModal">
         <div class="modal-dialog modal-xl">
@@ -819,7 +840,6 @@
             </div>
         </div>
     </div>
-
     <!-- Document Viewer Modal (enhanced) -->
     <div class="modal fade" id="docViewerModal">
         <div class="modal-dialog modal-xl">
@@ -834,12 +854,10 @@
             </div>
         </div>
     </div>
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // PDF.js Worker Setup
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-
         // Data Storage (enhanced)
         let employees = JSON.parse(localStorage.getItem('employees')) || [];
         let payrolls = JSON.parse(localStorage.getItem('payrolls')) || [];
@@ -859,7 +877,6 @@
         let users = JSON.parse(localStorage.getItem('users')) || [{ username: 'admin', password: 'password', role: 'admin' }];
         let currentUser = null;
         let mits = JSON.parse(localStorage.getItem('mits')) || []; // {empIndex, title, desc, file, date}
-
         // Branches
         const branches = [
             'Bophelong Hospice',
@@ -870,11 +887,9 @@
             'Bophelong Old Age Home',
             'Charity and Faith Mission Church'
         ];
-
         let importData = [];
         let currentFileType = '';
         let currentPreviewFile = null;
-
         // Login Function
         function login() {
             const username = document.getElementById('username').value;
@@ -891,7 +906,6 @@
                 alert('Invalid username or password. Demo credentials: admin / password');
             }
         }
-
         // Logout Function (enhanced)
         function logout() {
             if (confirm('Logout?')) {
@@ -905,7 +919,6 @@
                 alert('Logged out successfully!');
             }
         }
-
         // Function to log audit
         function logAudit(action, details) {
             const logEntry = {
@@ -918,7 +931,6 @@
             if (auditLog.length > 1000) auditLog = auditLog.slice(0, 1000);
             localStorage.setItem('auditLog', JSON.stringify(auditLog));
         }
-
         // Create Account
         function createAccount() {
             const empIndex = document.getElementById('createEmpId').value;
@@ -935,33 +947,38 @@
                 alert('Invalid input or username exists');
             }
         }
-
         // Employee MIT Upload
         function uploadMIT() {
             const title = document.getElementById('mitTitle').value;
             const desc = document.getElementById('mitDesc').value;
-            const file = document.getElementById('mitFile').files[0] ? URL.createObjectURL(document.getElementById('mitFile').files[0]) : null;
+            const fileInput = document.getElementById('mitFile');
+            const file = fileInput.files[0];
+            let fileUrl = null;
+            if (file) {
+                fileUrl = URL.createObjectURL(file);
+            }
             if (title && desc && currentUser.role === 'employee') {
-                mits.push({ empIndex: currentUser.empIndex, title, desc, file, date: new Date().toLocaleString() });
+                mits.push({ empIndex: currentUser.empIndex, title, desc, file: fileUrl, date: new Date().toLocaleString() });
                 localStorage.setItem('mits', JSON.stringify(mits));
                 renderEmployeeMITs();
                 bootstrap.Modal.getInstance(document.getElementById('mitUploadModal')).hide();
                 logAudit('MIT Uploaded', `By employee ${currentUser.empIndex}: ${title}`);
+            } else {
+                alert('Invalid input');
             }
         }
-
         // Render Employee Dashboard
         function renderEmployeeDashboard() {
             const content = document.querySelector('.content');
             content.innerHTML = `
-                <h2 class="sage-header">Employee Dashboard - Welcome ${employees[currentUser.empIndex].name}</h2>
+                <h2 class="sage-header">Employee Dashboard - Welcome ${employees[currentUser.empIndex]?.name || 'User'}</h2>
                 <ul class="nav nav-tabs sage-tab" id="empTabs">
-                    <li class="nav-item"><a class="nav-link active" href="#empAttendance" data-bs-toggle="tab">Attendance</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#empLeaves" data-bs-toggle="tab">Leaves</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#empBenefits" data-bs-toggle="tab">Benefits</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#empTraining" data-bs-toggle="tab">Training</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#empCompliance" data-bs-toggle="tab">Compliance</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#empMIT" data-bs-toggle="tab">MIT Upload</a></li>
+                    <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#empAttendance">Attendance</button></li>
+                    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#empLeaves">Leaves</button></li>
+                    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#empBenefits">Benefits</button></li>
+                    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#empTraining">Training</button></li>
+                    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#empCompliance">Compliance</button></li>
+                    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#empMIT">MIT Upload</button></li>
                 </ul>
                 <div class="tab-content mt-3">
                     <div class="tab-pane active" id="empAttendance"><table class="table sage-grid"><thead><tr><th>Date</th><th>In</th><th>Out</th><th>Hours</th></tr></thead><tbody id="empAttTable"></tbody></table></div>
@@ -982,37 +999,30 @@
             renderEmployeeCompliance();
             renderEmployeeMITs();
         }
-
         function renderEmployeeAttendance() {
             const table = document.getElementById('empAttTable');
             if (table) table.innerHTML = attendances.filter(a => a.empIndex == currentUser.empIndex).map(a => `<tr><td>${a.date}</td><td>${a.inTime}</td><td>${a.outTime}</td><td>${a.hours}</td></tr>`).join('');
         }
-
         function renderEmployeeLeaves() {
             const table = document.getElementById('empLeavesTable');
             if (table) table.innerHTML = leaves.filter(l => l.empIndex == currentUser.empIndex).map(l => `<tr><td>${l.startDate}</td><td>${l.endDate}</td><td>${l.reason}</td><td>${l.status}</td></tr>`).join('');
         }
-
         function renderEmployeeBenefits() {
             const table = document.getElementById('empBenefitsTable');
             if (table) table.innerHTML = benefits.map(b => `<tr><td>${b.name}</td><td>${b.description}</td></tr>`).join('');
         }
-
         function renderEmployeeTraining() {
             const table = document.getElementById('empTrainingTable');
-            if (table) table.innerHTML = courses.filter(c => c.assignedTo === employees[currentUser.empIndex].name).map(c => `<tr><td>${c.title}</td><td>${c.description}</td></tr>`).join('');
+            if (table) table.innerHTML = courses.filter(c => c.assignedTo === employees[currentUser.empIndex]?.name).map(c => `<tr><td>${c.title}</td><td>${c.description}</td></tr>`).join('');
         }
-
         function renderEmployeeCompliance() {
             const table = document.getElementById('empCertTable');
             if (table) table.innerHTML = certifications.filter(c => c.empIndex == currentUser.empIndex).map(c => `<tr><td>${c.type}</td><td>${c.issueDate}</td><td>${c.expiryDate}</td><td>${c.status}</td></tr>`).join('');
         }
-
         function renderEmployeeMITs() {
             const table = document.getElementById('empMITTable');
             if (table) table.innerHTML = mits.filter(m => m.empIndex == currentUser.empIndex).map((m, idx) => `<tr><td>${m.title}</td><td>${m.date}</td><td><button class="btn btn-sm btn-info" onclick="viewDocument('${m.file}')">View</button> <button class="btn btn-sm btn-danger" onclick="deleteMIT(${idx})">Delete</button></td></tr>`).join('');
         }
-
         function deleteMIT(idx) {
             if (confirm('Delete MIT?')) {
                 mits.splice(idx, 1);
@@ -1020,7 +1030,6 @@
                 renderEmployeeMITs();
             }
         }
-
         // Sidebar Dynamic
         function renderSidebar() {
             const nav = document.getElementById('sidebarNav');
@@ -1049,10 +1058,9 @@
                 `;
             }
         }
-
         // Manage Accounts Section for Admin
         function renderAccountsSection() {
-            const content = document.querySelector('#accounts');
+            const content = document.getElementById('accounts');
             if (content) {
                 content.innerHTML = `
                     <h2 class="sage-header">Manage User Accounts</h2>
@@ -1063,14 +1071,12 @@
                     </table>
                 `;
                 const table = document.getElementById('accountsTable');
-                users.forEach((u, idx) => {
-                    if (u.role === 'admin') return;
+                users.filter(u => u.role !== 'admin').forEach((u, idx) => {
                     const emp = employees[u.empIndex] || { name: 'N/A' };
                     table.innerHTML += `<tr><td>${u.username}</td><td>${u.role}</td><td>${emp.name}</td><td><button class="btn btn-sm btn-danger" onclick="deleteAccount(${idx})">Delete</button></td></tr>`;
                 });
             }
         }
-
         function deleteAccount(idx) {
             if (confirm('Delete account?')) {
                 users.splice(idx, 1);
@@ -1079,7 +1085,6 @@
                 logAudit('Account Deleted', `Username: ${users[idx].username}`);
             }
         }
-
         // Enhanced File Preview
         function previewFile(input, previewId) {
             const file = input.files[0];
@@ -1088,47 +1093,40 @@
             preview.innerHTML = '';
             const fileType = file.name.split('.').pop().toLowerCase();
             const reader = new FileReader();
-
-            if (fileType === 'jpg' || fileType === 'png' || fileType === 'jpeg') {
-                reader.onload = function(e) {
-                    preview.innerHTML = `<img src="${e.target.result}" class="preview-canvas img-fluid">`;
-                };
+            if (['jpg', 'png', 'jpeg'].includes(fileType)) {
+                reader.onload = e => preview.innerHTML = `<img src="${e.target.result}" class="preview-canvas img-fluid">`;
                 reader.readAsDataURL(file);
             } else if (fileType === 'pdf') {
-                reader.onload = function(e) {
+                reader.onload = e => {
                     const typedarray = new Uint8Array(e.target.result);
                     pdfjsLib.getDocument(typedarray).promise.then(pdf => {
                         pdf.getPage(1).then(page => {
                             const scale = 1.5;
                             const viewport = page.getViewport({ scale });
                             const canvas = document.createElement('canvas');
-                            const context = canvas.getContext('2d');
                             canvas.height = viewport.height;
                             canvas.width = viewport.width;
                             preview.appendChild(canvas);
-                            page.render({ canvasContext: context, viewport }).promise.then(() => {});
+                            page.render({ canvasContext: canvas.getContext('2d'), viewport });
                         });
                     });
                 };
                 reader.readAsArrayBuffer(file);
             } else if (fileType === 'docx') {
-                reader.onload = function(e) {
+                reader.onload = e => {
                     mammoth.convertToHtml({ arrayBuffer: e.target.result })
-                        .then(result => {
-                            preview.innerHTML = `<div class="upload-preview">${result.value}</div>`;
-                        })
+                        .then(result => preview.innerHTML = `<div class="upload-preview">${result.value}</div>`)
                         .catch(err => preview.innerHTML = `<p>Error previewing DOCX: ${err}</p>`);
                 };
                 reader.readAsArrayBuffer(file);
-            } else if (fileType === 'csv' || fileType === 'xlsx') {
-                reader.onload = function(e) {
+            } else if (['csv', 'xlsx'].includes(fileType)) {
+                reader.onload = e => {
                     try {
                         const data = new Uint8Array(e.target.result);
                         const workbook = XLSX.read(data, { type: 'array' });
                         const sheetName = workbook.SheetNames[0];
                         const sheet = workbook.Sheets[sheetName];
-                        const html = XLSX.utils.sheet_to_html(sheet);
-                        preview.innerHTML = `<div class="upload-preview">${html}</div>`;
+                        preview.innerHTML = `<div class="upload-preview">${XLSX.utils.sheet_to_html(sheet)}</div>`;
                     } catch (err) {
                         preview.innerHTML = `<p>Error previewing spreadsheet: ${err}</p>`;
                     }
@@ -1138,37 +1136,42 @@
                 preview.innerHTML = `<p>File type ${fileType} preview not supported. Size: ${(file.size / 1024).toFixed(2)} KB</p>`;
             }
         }
-
         // Enhanced Payroll Calculation
         function calculatePayroll() {
             const empIndex = document.getElementById('payEmpId').value;
-            const gross = parseFloat(document.getElementById('paySalary').value);
-            if (empIndex !== '' && gross) {
-                const uifEmp = gross * (settings.uifRate / 100);
+            const gross = parseFloat(document.getElementById('paySalary').value) || 0;
+            const paye = parseFloat(document.getElementById('payeTax').value) || 0;
+            const deductions = parseFloat(document.getElementById('payDeductions').value) || 0;
+            const bonuses = parseFloat(document.getElementById('payBonuses').value) || 0;
+            if (empIndex !== '' && gross > 0) {
+                const adjustedGross = gross + bonuses;
+                const uifEmp = adjustedGross * (settings.uifRate / 100);
                 const uifEmply = uifEmp; // Employer matches
-                const sdl = gross * (settings.sdlRate / 100);
-                const paye = parseFloat(document.getElementById('payeTax').value) || 0;
-                const netPay = gross - uifEmp - paye;
+                const sdl = adjustedGross * (settings.sdlRate / 100);
+                const netPay = adjustedGross - uifEmp - paye - deductions;
                 document.getElementById('uifEmp').value = uifEmp.toFixed(2);
                 document.getElementById('uifEmply').value = uifEmply.toFixed(2);
                 document.getElementById('sdl').value = sdl.toFixed(2);
-                payrolls.push({ 
-                    empIndex, 
-                    gross, 
-                    uifEmp, 
-                    uifEmply, 
-                    sdl, 
-                    paye, 
-                    netPay, 
+                payrolls.push({
+                    empIndex,
+                    gross: adjustedGross,
+                    uifEmp,
+                    uifEmply,
+                    sdl,
+                    paye,
+                    deductions,
+                    bonuses,
+                    netPay,
                     date: new Date().toLocaleDateString(),
                     complianceStatus: 'Pending'
                 });
                 localStorage.setItem('payrolls', JSON.stringify(payrolls));
                 renderPayrolls();
-                logAudit('Payroll Calculated', `For ${employees[empIndex]?.name}, Gross: ${gross}`);
+                logAudit('Payroll Calculated', `For ${employees[empIndex]?.name}, Gross: ${adjustedGross}`);
+            } else {
+                alert('Please select employee and enter gross salary.');
             }
         }
-
         function renderPayrolls() {
             const table = document.getElementById('payrollTable');
             if (!table) return;
@@ -1176,10 +1179,9 @@
             payrolls.forEach((pay, index) => {
                 const emp = employees[pay.empIndex] || { name: 'Deleted Employee', branch: '' };
                 const uifTotal = pay.uifEmp + pay.uifEmply;
-                table.innerHTML += `<tr><td>${emp.name}</td><td>${emp.branch}</td><td>$${pay.gross}</td><td>$${uifTotal.toFixed(2)}</td><td>$${pay.sdl.toFixed(2)}</td><td>$${pay.paye.toFixed(2)}</td><td>$${pay.netPay.toFixed(2)}</td><td>${pay.date}</td><td><span class="badge ${pay.complianceStatus === 'Compliant' ? 'bg-success' : 'bg-warning'}">${pay.complianceStatus}</span></td><td><button class="btn btn-sm btn-danger" onclick="deletePayroll(${index})">Delete</button></td></tr>`;
+                table.innerHTML += `<tr><td>${emp.name}</td><td>${emp.branch}</td><td>$${pay.gross.toFixed(2)}</td><td>$${uifTotal.toFixed(2)}</td><td>$${pay.sdl.toFixed(2)}</td><td>$${pay.paye.toFixed(2)}</td><td>$${pay.deductions.toFixed(2)}</td><td>$${pay.bonuses.toFixed(2)}</td><td>$${pay.netPay.toFixed(2)}</td><td>${pay.date}</td><td><span class="badge ${pay.complianceStatus === 'Compliant' ? 'bg-success' : 'bg-warning'}">${pay.complianceStatus}</span></td><td><button class="btn btn-sm btn-danger" onclick="deletePayroll(${index})">Delete</button></td></tr>`;
             });
         }
-
         function processPayrollCompliance() {
             const action = document.getElementById('payrollCompliance').value;
             if (action) {
@@ -1192,14 +1194,12 @@
                 alert('Compliance action marked!');
             }
         }
-
         function loadPayrollCompliance() {
             const month = document.getElementById('payrollMonth').value || new Date().toLocaleDateString('en-CA', { year: 'numeric', month: '2-digit' });
             const data = payrollCompliance[month] || { uif: false, sars: false, reconciliation: false, sdl: false };
             const table = document.getElementById('payrollComplianceTable');
             if (table) table.innerHTML = `<tr><td>${month}</td><td><input type="checkbox" ${data.uif ? 'checked' : ''} disabled></td><td><input type="checkbox" ${data.sars ? 'checked' : ''} disabled></td><td><input type="checkbox" ${data.reconciliation ? 'checked' : ''} disabled></td><td><input type="checkbox" ${data.sdl ? 'checked' : ''} disabled></td><td><button class="btn btn-sm btn-primary" onclick="editPayrollCompliance('${month}')">Edit</button></td></tr>`;
         }
-
         function markPayrollCompliant() {
             const month = document.getElementById('payrollMonth').value;
             if (month) {
@@ -1209,37 +1209,34 @@
                 logAudit('Payroll Fully Compliant', month);
             }
         }
-
         function editPayrollCompliance(month) {
-            // Modal or inline edit - simplified alert
+            // Simplified edit - toggle checkboxes in real app
             alert(`Edit compliance for ${month} - In full app, open edit modal.`);
         }
-
         // Departmental Compliance
         function addCustomItem() {
             const container = document.getElementById('customItems');
             const div = document.createElement('div');
             div.className = 'mb-2';
             div.innerHTML = `<input type="text" class="form-control" placeholder="Custom Item" name="customItem[]"> <button type="button" class="btn btn-sm btn-danger mt-1" onclick="this.parentElement.remove()">Remove</button>`;
-            container.appendChild(div);
+            container.insertBefore(div, container.lastChild);
         }
-
         function addDeptCompliance() {
             const branch = document.getElementById('deptBranch').value;
             const items = Array.from(document.querySelectorAll('#customItems input[name="customItem[]"]')).map(input => input.value).filter(v => v);
             if (branch && items.length > 0) {
                 if (!deptCompliance[branch]) deptCompliance[branch] = [];
-                deptCompliance[branch].push(...items.map(item => ({ item, checked: false })));
+                deptCompliance[branch] = deptCompliance[branch].concat(items.map(item => ({ item, checked: false })));
                 localStorage.setItem('deptCompliance', JSON.stringify(deptCompliance));
                 renderDeptCompliance();
                 bootstrap.Modal.getInstance(document.getElementById('addDeptComplianceModal')).hide();
                 logAudit('Departmental Compliance Added', `${branch}: ${items.length} items`);
+            } else {
+                alert('Please select branch and add at least one item.');
             }
         }
-
         function renderDeptCompliance() {
             const filter = document.getElementById('deptComplianceFilter').value;
-            populateBranchSelect('deptComplianceFilter'); // Reuse
             const table = document.getElementById('deptComplianceTable');
             if (!table) return;
             table.innerHTML = '';
@@ -1251,22 +1248,21 @@
                 table.innerHTML += `<tr><td>${branch}</td><td>${itemsHtml}</td><td>${percent}%</td><td><button class="btn btn-sm btn-danger" onclick="deleteDeptCompliance('${branch}')">Delete</button></td></tr>`;
             });
         }
-
         function toggleDeptItem(branch, idx) {
             deptCompliance[branch][idx].checked = !deptCompliance[branch][idx].checked;
             localStorage.setItem('deptCompliance', JSON.stringify(deptCompliance));
             renderDeptCompliance();
+            updateComplianceScore();
         }
-
         function deleteDeptCompliance(branch) {
             if (confirm(`Delete compliance for ${branch}?`)) {
                 delete deptCompliance[branch];
                 localStorage.setItem('deptCompliance', JSON.stringify(deptCompliance));
                 renderDeptCompliance();
                 logAudit('Departmental Compliance Deleted', branch);
+                updateComplianceScore();
             }
         }
-
         // Update updateComplianceScore to include dept and payroll
         function updateComplianceScore() {
             const baseChecked = Object.values(complianceChecklist).filter(v => v).length;
@@ -1281,7 +1277,6 @@
             const scoreElem = document.getElementById('complianceScore');
             if (scoreElem) scoreElem.textContent = `${score}%`;
         }
-
         // Navigation and UI Functions
         function showSection(sectionId) {
             document.querySelectorAll('.section').forEach(sec => sec.classList.add('d-none'));
@@ -1325,7 +1320,6 @@
             if (sectionId === 'sageModules') {} // No special rendering needed, static content
             logAudit('Section Viewed', sectionId);
         }
-
         function toggleSidebar() {
             const sidebar = document.querySelector('.sidebar');
             const content = document.querySelector('.content');
@@ -1334,14 +1328,12 @@
             content.classList.toggle('expanded');
             toggleBtn.classList.toggle('expanded');
         }
-
         // Populate Branch Selects
         function populateBranchSelect(selectId) {
             const select = document.getElementById(selectId);
             if (!select) return;
             select.innerHTML = '<option value="">Select Branch</option>' + branches.map(b => `<option value="${b}">${b}</option>`).join('');
         }
-
         // Employee Management
         function addEmployee() {
             const emp = {
@@ -1357,6 +1349,10 @@
                 certStatus: 'Pending',
                 contractFile: document.getElementById('empContract').files[0] ? URL.createObjectURL(document.getElementById('empContract').files[0]) : null
             };
+            if (!emp.name || !emp.branch) {
+                alert('Please fill required fields.');
+                return;
+            }
             employees.push(emp);
             localStorage.setItem('employees', JSON.stringify(employees));
             populateEmployeeSelects();
@@ -1367,35 +1363,30 @@
             document.getElementById('empContractPreview').innerHTML = '';
             logAudit('Employee Added', emp.name);
         }
-
         function renderEmployees() {
             const table = document.getElementById('employeeTable');
             if (!table) return;
-            table.innerHTML = '';
-            employees.forEach((emp, index) => {
-                table.innerHTML += `
-                    <tr>
-                        <td>${emp.id}</td>
-                        <td>${emp.name}</td>
-                        <td>${emp.position}</td>
-                        <td>${emp.department}</td>
-                        <td>${emp.branch}</td>
-                        <td>$${emp.salary}</td>
-                        <td>${emp.joinDate}</td>
-                        <td><span class="badge ${emp.contractStatus === 'Active' ? 'bg-success' : 'bg-warning'}">${emp.contractStatus}</span></td>
-                        <td><span class="badge ${emp.certStatus === 'Compliant' ? 'bg-success' : 'bg-warning'}">${emp.certStatus}</span></td>
-                        <td>${emp.email}</td>
-                        <td>
-                            <button class="btn btn-sm btn-primary me-1" onclick="editEmployee(${index})">Edit</button>
-                            <button class="btn btn-sm btn-danger" onclick="deleteEmployee(${index})">Delete</button>
-                            ${emp.contractFile ? `<button class="btn btn-sm btn-info" onclick="viewDocument('${emp.contractFile}')">View Contract</button>` : ''}
-                        </td>
-                    </tr>
-                `;
-            });
+            table.innerHTML = employees.map((emp, index) => `
+                <tr>
+                    <td>${emp.id}</td>
+                    <td>${emp.name}</td>
+                    <td>${emp.position}</td>
+                    <td>${emp.department}</td>
+                    <td>${emp.branch}</td>
+                    <td>$${emp.salary}</td>
+                    <td>${emp.joinDate}</td>
+                    <td><span class="badge ${emp.contractStatus === 'Active' ? 'bg-success' : 'bg-warning'}">${emp.contractStatus}</span></td>
+                    <td><span class="badge ${emp.certStatus === 'Compliant' ? 'bg-success' : 'bg-warning'}">${emp.certStatus}</span></td>
+                    <td>${emp.email}</td>
+                    <td>
+                        <button class="btn btn-sm btn-primary me-1" onclick="editEmployee(${index})">Edit</button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteEmployee(${index})">Delete</button>
+                        ${emp.contractFile ? `<button class="btn btn-sm btn-info" onclick="viewDocument('${emp.contractFile}')">View Contract</button>` : ''}
+                    </td>
+                </tr>
+            `).join('');
             populateBranchFilter();
         }
-
         function editEmployee(index) {
             const emp = employees[index];
             document.getElementById('editEmpIndex').value = index;
@@ -1406,11 +1397,11 @@
             document.getElementById('editEmpSalary').value = emp.salary;
             document.getElementById('editEmpJoinDate').value = emp.joinDate;
             document.getElementById('editEmpEmail').value = emp.email;
+            document.getElementById('editEmpContractPreview').innerHTML = emp.contractFile ? `<img src="${emp.contractFile}" class="preview-canvas img-fluid">` : '';
             bootstrap.Modal.getInstance(document.getElementById('editEmployeeModal')).show();
         }
-
         function updateEmployee() {
-            const index = document.getElementById('editEmpIndex').value;
+            const index = parseInt(document.getElementById('editEmpIndex').value);
             const file = document.getElementById('editEmpContract').files[0];
             employees[index].name = document.getElementById('editEmpName').value;
             employees[index].position = document.getElementById('editEmpPosition').value;
@@ -1426,7 +1417,6 @@
             bootstrap.Modal.getInstance(document.getElementById('editEmployeeModal')).hide();
             logAudit('Employee Updated', employees[index].name);
         }
-
         function deleteEmployee(index) {
             if (confirm('Delete employee?')) {
                 logAudit('Employee Deleted', employees[index].name);
@@ -1437,7 +1427,6 @@
                 populateEmployeeSelects();
             }
         }
-
         function searchEmployees() {
             const query = document.getElementById('employeeSearch').value.toLowerCase();
             const rows = document.querySelectorAll('#employeeTable tr');
@@ -1446,7 +1435,6 @@
                 row.style.display = text.includes(query) ? '' : 'none';
             });
         }
-
         function filterEmployees() {
             const filter = document.getElementById('branchFilter').value;
             const rows = document.querySelectorAll('#employeeTable tr');
@@ -1455,14 +1443,12 @@
                 row.style.display = !filter || branch === filter ? '' : 'none';
             });
         }
-
         function populateBranchFilter() {
             const select = document.getElementById('branchFilter');
             if (!select) return;
-            const uniqueBranches = [...new Set(employees.map(e => e.branch))];
+            const uniqueBranches = [...new Set(employees.map(e => e.branch).filter(b => b))];
             select.innerHTML = '<option value="">All Branches</option>' + uniqueBranches.map(b => `<option value="${b}">${b}</option>`).join('');
         }
-
         function populateEmployeeSelects() {
             const selects = ['payEmpId', 'attEmpId', 'certEmpId', 'reviewEmpId', 'leaveEmpId', 'courseAssigned', 'createEmpId'];
             selects.forEach(id => {
@@ -1479,7 +1465,6 @@
             populateBranchSelect('courseBranch');
             populateBranchSelect('deptComplianceFilter');
         }
-
         // Import Handling (Enhanced for multiple formats)
         function handleImport(event) {
             const file = event.target.files[0];
@@ -1487,8 +1472,7 @@
             currentFileType = file.name.split('.').pop().toLowerCase();
             const reader = new FileReader();
             importData = [];
-
-            if (currentFileType === 'csv' || currentFileType === 'xlsx') {
+            if (['csv', 'xlsx'].includes(currentFileType)) {
                 reader.onload = function(e) {
                     try {
                         const data = new Uint8Array(e.target.result);
@@ -1504,7 +1488,7 @@
                             salary: parseFloat(row.Salary) || 0,
                             joinDate: row['Join Date'] || '',
                             email: row.Email || ''
-                        }));
+                        })).filter(emp => emp.name);
                         showPreview('Employee Import Preview', importData, 'employees');
                     } catch (err) {
                         alert('Error parsing spreadsheet: ' + err);
@@ -1534,31 +1518,31 @@
                     }
                 };
                 reader.readAsArrayBuffer(file);
-            } else if (currentFileType === 'jpg' || currentFileType === 'png') {
+            } else if (['jpg', 'png'].includes(currentFileType)) {
                 // OCR simulation - in real app, integrate Tesseract.js
                 alert('Image OCR not implemented in this demo. Use CSV/XLSX for import.');
                 reader.readAsDataURL(file);
+            } else {
+                alert('Unsupported file type.');
             }
         }
-
         function parseTextToEmployees(text) {
-            // Simple parsing - extract lines assuming format: Name, Position, etc.
+            // Improved parsing - assume comma or tab separated lines
             const lines = text.split('\n').filter(l => l.trim());
-            importData = lines.slice(0, Math.min(lines.length, 10)).map(line => { // Limit for demo
-                const parts = line.split(',');
+            importData = lines.map(line => {
+                const parts = line.split(/[,|\t]/).map(p => p.trim());
                 return {
-                    name: parts[0] ? parts[0].trim() : '',
-                    position: parts[1] ? parts[1].trim() : '',
-                    department: parts[2] ? parts[2].trim() : '',
-                    branch: parts[3] ? parts[3].trim() : '',
+                    name: parts[0] || '',
+                    position: parts[1] || '',
+                    department: parts[2] || '',
+                    branch: parts[3] || '',
                     salary: parseFloat(parts[4]) || 0,
-                    joinDate: parts[5] ? parts[5].trim() : '',
-                    email: parts[6] ? parts[6].trim() : ''
+                    joinDate: parts[5] || '',
+                    email: parts[6] || ''
                 };
             }).filter(emp => emp.name);
             showPreview('Employee Import Preview from Document', importData, 'employees');
         }
-
         function showPreview(title, data, type) {
             document.getElementById('previewTitle').textContent = title;
             const content = document.getElementById('previewContent');
@@ -1566,9 +1550,9 @@
                 content.innerHTML = `<table class="table table-striped" id="previewTable"><thead><tr><th>Name</th><th>Position</th><th>Department</th><th>Branch</th><th>Salary</th><th>Join Date</th><th>Email</th></tr></thead><tbody>${data.map(emp => `<tr><td>${emp.name}</td><td>${emp.position}</td><td>${emp.department}</td><td>${emp.branch}</td><td>$${emp.salary}</td><td>${emp.joinDate}</td><td>${emp.email}</td></tr>`).join('')}</tbody></table>`;
             }
             // Add other types if needed
-            bootstrap.Modal.getInstance(document.getElementById('previewModal')).show();
+            const modal = bootstrap.Modal.getInstance(document.getElementById('previewModal')) || new bootstrap.Modal(document.getElementById('previewModal'));
+            modal.show();
         }
-
         function confirmImportData() {
             if (importData.length > 0) {
                 importData.forEach(emp => {
@@ -1588,17 +1572,21 @@
                 populateEmployeeSelects();
                 logAudit('Employees Imported', `${importData.length} records`);
             }
-            bootstrap.Modal.getInstance(document.getElementById('previewModal')).hide();
+            const modal = bootstrap.Modal.getInstance(document.getElementById('previewModal'));
+            modal.hide();
             document.getElementById('importFile').value = '';
         }
-
         // Document Viewing
         function viewDocument(url) {
+            if (!url) {
+                alert('No file to view.');
+                return;
+            }
             document.getElementById('docTitle').textContent = 'Viewing Document';
             const viewer = document.getElementById('docViewer');
             viewer.innerHTML = '';
-            const fileType = url.split('.').pop().toLowerCase();
-            if (fileType === 'pdf' || url.startsWith('blob:') && url.includes('pdf')) {
+            const fileType = (url.split('.').pop() || '').toLowerCase();
+            if (fileType === 'pdf' || url.includes('pdf')) {
                 pdfjsLib.getDocument(url).promise.then(pdf => {
                     pdf.getPage(1).then(page => {
                         const scale = 1.5;
@@ -1609,16 +1597,21 @@
                         viewer.appendChild(canvas);
                         page.render({ canvasContext: canvas.getContext('2d'), viewport });
                     });
-                });
-            } else if (fileType === 'png' || fileType === 'jpg') {
+                }).catch(err => viewer.innerHTML = `<p>Error loading PDF: ${err}</p>`);
+            } else if (['png', 'jpg', 'jpeg'].includes(fileType)) {
                 viewer.innerHTML = `<img src="${url}" class="preview-canvas img-fluid">`;
             } else if (fileType === 'docx') {
-                // For docx, would need to fetch and convert, but since URL is blob, assume preview already handled
-                viewer.innerHTML = `<p>DOCX viewing not fully supported in viewer.</p>`;
+                fetch(url).then(res => res.arrayBuffer()).then(buffer => {
+                    mammoth.convertToHtml({ arrayBuffer: buffer })
+                        .then(result => viewer.innerHTML = `<div class="upload-preview">${result.value}</div>`)
+                        .catch(err => viewer.innerHTML = `<p>Error loading DOCX: ${err}</p>`);
+                });
+            } else {
+                viewer.innerHTML = `<p>Unsupported file type for viewing.</p>`;
             }
-            bootstrap.Modal.getInstance(document.getElementById('docViewerModal')).show();
+            const modal = bootstrap.Modal.getInstance(document.getElementById('docViewerModal')) || new bootstrap.Modal(document.getElementById('docViewerModal'));
+            modal.show();
         }
-
         // Compliance Functions
         function saveComplianceChecklist() {
             const checklistItems = [
@@ -1636,7 +1629,6 @@
             logAudit('Checklist Saved', `${Object.values(complianceChecklist).filter(v => v).length} items checked`);
             alert('Checklist saved!');
         }
-
         function renderCompliance() {
             // Load checklist
             Object.keys(complianceChecklist).forEach(id => {
@@ -1644,7 +1636,6 @@
                 if (elem) elem.checked = complianceChecklist[id] || false;
             });
         }
-
         function handleComplianceUpload(event) {
             const file = event.target.files[0];
             if (file) {
@@ -1661,16 +1652,11 @@
                 logAudit('Compliance Document Uploaded', file.name);
             }
         }
-
         function renderComplianceDocs() {
             const table = document.getElementById('complianceDocsTable');
             if (!table) return;
-            table.innerHTML = '';
-            complianceDocs.forEach((doc, idx) => {
-                table.innerHTML += `<tr><td>${doc.type}</td><td>${doc.name}</td><td>${doc.date}</td><td>${doc.size}</td><td><button class="btn btn-sm btn-info" onclick="viewDocument('${doc.file}')">View</button> <button class="btn btn-sm btn-danger" onclick="deleteComplianceDoc(${idx})">Delete</button></td></tr>`;
-            });
+            table.innerHTML = complianceDocs.map((doc, idx) => `<tr><td>${doc.type}</td><td>${doc.name}</td><td>${doc.date}</td><td>${doc.size}</td><td><button class="btn btn-sm btn-info" onclick="viewDocument('${doc.file}')">View</button> <button class="btn btn-sm btn-danger" onclick="deleteComplianceDoc(${idx})">Delete</button></td></tr>`).join('');
         }
-
         function deleteComplianceDoc(idx) {
             if (confirm('Delete document?')) {
                 complianceDocs.splice(idx, 1);
@@ -1678,11 +1664,11 @@
                 renderComplianceDocs();
             }
         }
-
         function addCertification() {
             const empIndex = document.getElementById('certEmpId').value;
+            if (empIndex === '') return;
             const cert = {
-                empIndex,
+                empIndex: parseInt(empIndex),
                 type: document.getElementById('certType').value,
                 issueDate: document.getElementById('certIssueDate').value,
                 expiryDate: document.getElementById('certExpiryDate').value,
@@ -1690,7 +1676,8 @@
                 status: new Date(document.getElementById('certExpiryDate').value) > new Date() ? 'Active' : 'Expired'
             };
             certifications.push(cert);
-            employees[empIndex].certStatus = 'Compliant';
+            const activeCerts = certifications.filter(c => c.empIndex === parseInt(empIndex) && c.status === 'Active');
+            employees[empIndex].certStatus = activeCerts.length > 0 ? 'Compliant' : 'Pending';
             localStorage.setItem('certifications', JSON.stringify(certifications));
             localStorage.setItem('employees', JSON.stringify(employees));
             renderCertifications();
@@ -1698,57 +1685,46 @@
             bootstrap.Modal.getInstance(document.getElementById('addCertModal')).hide();
             logAudit('Certification Added', `${employees[empIndex]?.name}: ${cert.type}`);
         }
-
         function renderCertifications() {
             const table = document.getElementById('certificationsTable');
             if (!table) return;
-            table.innerHTML = '';
-            certifications.forEach((cert, idx) => {
+            table.innerHTML = certifications.map((cert, idx) => {
                 const emp = employees[cert.empIndex] || { name: 'Deleted' };
                 const statusBadge = cert.status === 'Active' ? 'bg-success' : 'bg-danger';
-                table.innerHTML += `<tr><td>${emp.name}</td><td>${cert.type}</td><td>${cert.issueDate}</td><td>${cert.expiryDate}</td><td><span class="badge ${statusBadge}">${cert.status}</span></td><td><button class="btn btn-sm btn-danger" onclick="deleteCertification(${idx})">Delete</button> ${cert.file ? `<button class="btn btn-sm btn-info" onclick="viewDocument('${cert.file}')">View</button>` : ''}</td></tr>`;
-            });
+                return `<tr><td>${emp.name}</td><td>${cert.type}</td><td>${cert.issueDate}</td><td>${cert.expiryDate}</td><td><span class="badge ${statusBadge}">${cert.status}</span></td><td><button class="btn btn-sm btn-danger" onclick="deleteCertification(${idx})">Delete</button> ${cert.file ? `<button class="btn btn-sm btn-info" onclick="viewDocument('${cert.file}')">View</button>` : ''}</td></tr>`;
+            }).join('');
             // Update expiring count
-            const expiring = certifications.filter(c => new Date(c.expiryDate) < new Date(Date.now() + 30*24*60*60*1000)).length;
+            const expiring = certifications.filter(c => new Date(c.expiryDate) < new Date(Date.now() + 30*24*60*60*1000) && new Date(c.expiryDate) > new Date()).length;
             const expiringElem = document.getElementById('expiringCerts');
             if (expiringElem) expiringElem.textContent = expiring;
         }
-
         function deleteCertification(idx) {
             if (confirm('Delete certification?')) {
                 const cert = certifications[idx];
                 certifications.splice(idx, 1);
                 // Reset employee cert status if no active certs
                 const remainingCerts = certifications.filter(c => c.empIndex === cert.empIndex && c.status === 'Active');
-                if (remainingCerts.length === 0) employees[cert.empIndex].certStatus = 'Pending';
+                if (remainingCerts.length === 0 && employees[cert.empIndex]) employees[cert.empIndex].certStatus = 'Pending';
                 localStorage.setItem('certifications', JSON.stringify(certifications));
                 localStorage.setItem('employees', JSON.stringify(employees));
                 renderCertifications();
                 updateDashboard();
             }
         }
-
         function renderAuditLog() {
             const table = document.getElementById('auditTable');
             if (!table) return;
-            table.innerHTML = '';
-            auditLog.slice(0, 50).forEach(entry => { // Last 50
-                table.innerHTML += `<tr><td>${entry.date}</td><td>${entry.user}</td><td>${entry.action}</td><td>${entry.details}</td></tr>`;
-            });
+            table.innerHTML = auditLog.slice(0, 50).map(entry => `<tr><td>${entry.date}</td><td>${entry.user}</td><td>${entry.action}</td><td>${entry.details}</td></tr>`).join('');
         }
-
         // Dashboard Rendering
         function renderDashboard() {
-            const totalEmployeesElem = document.getElementById('totalEmployees');
-            if (totalEmployeesElem) totalEmployeesElem.textContent = employees.length;
-            const openPositionsElem = document.getElementById('openPositions');
-            if (openPositionsElem) openPositionsElem.textContent = jobs.filter(j => j.status === 'Open').length;
+            document.getElementById('totalEmployees').textContent = employees.length;
+            document.getElementById('openPositions').textContent = jobs.filter(j => j.status === 'Open').length;
             const avgPerf = reviews.length > 0 ? (reviews.reduce((sum, r) => sum + r.score, 0) / reviews.length).toFixed(1) : 0;
-            const avgPerformanceElem = document.getElementById('avgPerformance');
-            if (avgPerformanceElem) avgPerformanceElem.textContent = `${avgPerf}/5`;
-            const pendingLeavesElem = document.getElementById('pendingLeaves');
-            if (pendingLeavesElem) pendingLeavesElem.textContent = leaves.filter(l => l.status === 'Pending').length;
+            document.getElementById('avgPerformance').textContent = `${avgPerf}/5`;
+            document.getElementById('pendingLeaves').textContent = leaves.filter(l => l.status === 'Pending').length;
             updateComplianceScore();
+            renderCertifications(); // To update expiringCerts
             // Chart
             const ctx = document.getElementById('dashboardChart');
             if (ctx) {
@@ -1767,11 +1743,9 @@
                 });
             }
         }
-
         function updateDashboard() {
             renderDashboard();
         }
-
         // Recruitment
         function addJob() {
             const job = {
@@ -1780,6 +1754,7 @@
                 description: document.getElementById('jobDescription').value,
                 branch: document.getElementById('jobBranch').value,
                 status: 'Open',
+                applicants: 0, // New field for Sage iRecruit simulation
                 file: document.getElementById('jobFile').files[0] ? URL.createObjectURL(document.getElementById('jobFile').files[0]) : null
             };
             jobs.push(job);
@@ -1789,29 +1764,25 @@
             bootstrap.Modal.getInstance(document.getElementById('addJobModal')).hide();
             logAudit('Job Added', job.title);
         }
-
         function renderJobs() {
             const table = document.getElementById('jobTable');
             if (!table) return;
-            table.innerHTML = '';
-            jobs.forEach((job, idx) => {
-                table.innerHTML += `
-                    <tr>
-                        <td>${job.id}</td>
-                        <td>${job.title}</td>
-                        <td>${job.description}</td>
-                        <td>${job.branch}</td>
-                        <td><span class="badge bg-${job.status === 'Open' ? 'success' : 'secondary'}">${job.status}</span></td>
-                        <td>
-                            <button class="btn btn-sm btn-primary me-1" onclick="editJob(${idx})">Edit</button>
-                            <button class="btn btn-sm btn-danger" onclick="deleteJob(${idx})">Delete</button>
-                            ${job.file ? `<button class="btn btn-sm btn-info me-1" onclick="viewDocument('${job.file}')">View</button>` : ''}
-                        </td>
-                    </tr>
-                `;
-            });
+            table.innerHTML = jobs.map((job, idx) => `
+                <tr>
+                    <td>${job.id}</td>
+                    <td>${job.title}</td>
+                    <td>${job.description}</td>
+                    <td>${job.branch}</td>
+                    <td><span class="badge bg-${job.status === 'Open' ? 'success' : 'secondary'}">${job.status}</span></td>
+                    <td>${job.applicants}</td>
+                    <td>
+                        <button class="btn btn-sm btn-primary me-1" onclick="editJob(${idx})">Edit</button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteJob(${idx})">Delete</button>
+                        ${job.file ? `<button class="btn btn-sm btn-info me-1" onclick="viewDocument('${job.file}')">View</button>` : ''}
+                    </td>
+                </tr>
+            `).join('');
         }
-
         function editJob(index) {
             const job = jobs[index];
             document.getElementById('editJobIndex').value = index;
@@ -1820,7 +1791,6 @@
             document.getElementById('editJobBranch').value = job.branch;
             bootstrap.Modal.getInstance(document.getElementById('editJobModal')).show();
         }
-
         function updateJob() {
             const index = document.getElementById('editJobIndex').value;
             const file = document.getElementById('editJobFile').files[0];
@@ -1833,7 +1803,6 @@
             bootstrap.Modal.getInstance(document.getElementById('editJobModal')).hide();
             logAudit('Job Updated', jobs[index].title);
         }
-
         function deleteJob(idx) {
             if (confirm('Delete job?')) {
                 jobs.splice(idx, 1);
@@ -1841,13 +1810,12 @@
                 renderJobs();
             }
         }
-
         // Performance
         function addReview() {
             const empIndex = document.getElementById('reviewEmpId').value;
             if (empIndex === '') return;
             const review = {
-                empIndex: empIndex,
+                empIndex: parseInt(empIndex),
                 employee: employees[empIndex].name,
                 branch: employees[empIndex].branch,
                 score: parseInt(document.getElementById('reviewScore').value),
@@ -1862,28 +1830,23 @@
             bootstrap.Modal.getInstance(document.getElementById('addReviewModal')).hide();
             logAudit('Review Added', review.employee);
         }
-
         function renderReviews() {
             const table = document.getElementById('performanceTable');
             if (!table) return;
-            table.innerHTML = '';
-            reviews.forEach((r, idx) => {
-                table.innerHTML += `
-                    <tr>
-                        <td>${r.employee}</td>
-                        <td>${r.branch}</td>
-                        <td>${r.score}/5</td>
-                        <td>${r.comments}</td>
-                        <td>${r.date}</td>
-                        <td>
-                            <button class="btn btn-sm btn-danger me-1" onclick="deleteReview(${idx})">Delete</button>
-                            ${r.file ? `<button class="btn btn-sm btn-info" onclick="viewDocument('${r.file}')">View</button>` : ''}
-                        </td>
-                    </tr>
-                `;
-            });
+            table.innerHTML = reviews.map((r, idx) => `
+                <tr>
+                    <td>${r.employee}</td>
+                    <td>${r.branch}</td>
+                    <td>${r.score}/5</td>
+                    <td>${r.comments}</td>
+                    <td>${r.date}</td>
+                    <td>
+                        <button class="btn btn-sm btn-danger me-1" onclick="deleteReview(${idx})">Delete</button>
+                        ${r.file ? `<button class="btn btn-sm btn-info" onclick="viewDocument('${r.file}')">View</button>` : ''}
+                    </td>
+                </tr>
+            `).join('');
         }
-
         function deleteReview(idx) {
             if (confirm('Delete review?')) {
                 reviews.splice(idx, 1);
@@ -1892,13 +1855,12 @@
                 updateDashboard();
             }
         }
-
         // Leaves
         function addLeave() {
             const empIndex = document.getElementById('leaveEmpId').value;
             if (empIndex === '') return;
             const leave = {
-                empIndex,
+                empIndex: parseInt(empIndex),
                 employee: employees[empIndex].name,
                 branch: employees[empIndex].branch,
                 startDate: document.getElementById('leaveStart').value,
@@ -1914,37 +1876,31 @@
             bootstrap.Modal.getInstance(document.getElementById('addLeaveModal')).hide();
             logAudit('Leave Added', leave.employee);
         }
-
         function renderLeaves() {
             const table = document.getElementById('leavesTable');
             if (!table) return;
-            table.innerHTML = '';
-            leaves.forEach((l, idx) => {
-                table.innerHTML += `
-                    <tr>
-                        <td>${l.employee}</td>
-                        <td>${l.branch}</td>
-                        <td>${l.startDate}</td>
-                        <td>${l.endDate}</td>
-                        <td>${l.reason}</td>
-                        <td><span class="badge bg-${l.status === 'Approved' ? 'success' : 'warning'}">${l.status}</span></td>
-                        <td>
-                            <button class="btn btn-sm btn-primary me-1" onclick="approveLeave(${idx})">Approve</button>
-                            <button class="btn btn-sm btn-danger me-1" onclick="deleteLeave(${idx})">Delete</button>
-                            ${l.file ? `<button class="btn btn-sm btn-info" onclick="viewDocument('${l.file}')">View</button>` : ''}
-                        </td>
-                    </tr>
-                `;
-            });
+            table.innerHTML = leaves.map((l, idx) => `
+                <tr>
+                    <td>${l.employee}</td>
+                    <td>${l.branch}</td>
+                    <td>${l.startDate}</td>
+                    <td>${l.endDate}</td>
+                    <td>${l.reason}</td>
+                    <td><span class="badge bg-${l.status === 'Approved' ? 'success' : 'warning'}">${l.status}</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-primary me-1" onclick="approveLeave(${idx})">Approve</button>
+                        <button class="btn btn-sm btn-danger me-1" onclick="deleteLeave(${idx})">Delete</button>
+                        ${l.file ? `<button class="btn btn-sm btn-info" onclick="viewDocument('${l.file}')">View</button>` : ''}
+                    </td>
+                </tr>
+            `).join('');
         }
-
         function approveLeave(idx) {
             leaves[idx].status = 'Approved';
             localStorage.setItem('leaves', JSON.stringify(leaves));
             renderLeaves();
             updateDashboard();
         }
-
         function deleteLeave(idx) {
             if (confirm('Delete leave?')) {
                 leaves.splice(idx, 1);
@@ -1952,7 +1908,6 @@
                 renderLeaves();
             }
         }
-
         // Benefits
         function addBenefit() {
             const benefit = {
@@ -1967,26 +1922,21 @@
             bootstrap.Modal.getInstance(document.getElementById('addBenefitModal')).hide();
             logAudit('Benefit Added', benefit.name);
         }
-
         function renderBenefits() {
             const table = document.getElementById('benefitsTable');
             if (!table) return;
-            table.innerHTML = '';
-            benefits.forEach((b, idx) => {
-                table.innerHTML += `
-                    <tr>
-                        <td>${b.id}</td>
-                        <td>${b.name}</td>
-                        <td>${b.description}</td>
-                        <td>
-                            <button class="btn btn-sm btn-danger me-1" onclick="deleteBenefit(${idx})">Delete</button>
-                            ${b.file ? `<button class="btn btn-sm btn-info" onclick="viewDocument('${b.file}')">View</button>` : ''}
-                        </td>
-                    </tr>
-                `;
-            });
+            table.innerHTML = benefits.map((b, idx) => `
+                <tr>
+                    <td>${b.id}</td>
+                    <td>${b.name}</td>
+                    <td>${b.description}</td>
+                    <td>
+                        <button class="btn btn-sm btn-danger me-1" onclick="deleteBenefit(${idx})">Delete</button>
+                        ${b.file ? `<button class="btn btn-sm btn-info" onclick="viewDocument('${b.file}')">View</button>` : ''}
+                    </td>
+                </tr>
+            `).join('');
         }
-
         function deleteBenefit(idx) {
             if (confirm('Delete benefit?')) {
                 benefits.splice(idx, 1);
@@ -1994,7 +1944,6 @@
                 renderBenefits();
             }
         }
-
         // Training
         function addCourse() {
             const assignedIdx = document.getElementById('courseAssigned').value;
@@ -2012,28 +1961,23 @@
             bootstrap.Modal.getInstance(document.getElementById('addCourseModal')).hide();
             logAudit('Course Added', course.title);
         }
-
         function renderCourses() {
             const table = document.getElementById('trainingTable');
             if (!table) return;
-            table.innerHTML = '';
-            courses.forEach((c, idx) => {
-                table.innerHTML += `
-                    <tr>
-                        <td>${c.id}</td>
-                        <td>${c.title}</td>
-                        <td>${c.description}</td>
-                        <td>${c.assignedTo}</td>
-                        <td>${c.branch}</td>
-                        <td>
-                            <button class="btn btn-sm btn-danger me-1" onclick="deleteCourse(${idx})">Delete</button>
-                            ${c.file ? `<button class="btn btn-sm btn-info" onclick="viewDocument('${c.file}')">View</button>` : ''}
-                        </td>
-                    </tr>
-                `;
-            });
+            table.innerHTML = courses.map((c, idx) => `
+                <tr>
+                    <td>${c.id}</td>
+                    <td>${c.title}</td>
+                    <td>${c.description}</td>
+                    <td>${c.assignedTo}</td>
+                    <td>${c.branch}</td>
+                    <td>
+                        <button class="btn btn-sm btn-danger me-1" onclick="deleteCourse(${idx})">Delete</button>
+                        ${c.file ? `<button class="btn btn-sm btn-info" onclick="viewDocument('${c.file}')">View</button>` : ''}
+                    </td>
+                </tr>
+            `).join('');
         }
-
         function deleteCourse(idx) {
             if (confirm('Delete course?')) {
                 courses.splice(idx, 1);
@@ -2041,75 +1985,76 @@
                 renderCourses();
             }
         }
-
         // Reports
         function generateEmployeeReport() {
             const report = 'Name,Position,Department,Branch,Salary,Join Date,Email\n' + employees.map(e => `${e.name},${e.position},${e.department},${e.branch},${e.salary},${e.joinDate},${e.email}`).join('\n');
             downloadReport('employee_report.csv', report);
         }
-
         function generatePayrollReport() {
-            const report = 'Employee,Branch,Gross,Net Pay,Date\n' + payrolls.map(p => `${employees[p.empIndex]?.name},${employees[p.empIndex]?.branch},${p.gross},${p.netPay},${p.date}`).join('\n');
+            const report = 'Employee,Branch,Gross,Net Pay,Date\n' + payrolls.map(p => `${employees[p.empIndex]?.name || 'Deleted'},${employees[p.empIndex]?.branch || ''},${p.gross},${p.netPay},${p.date}`).join('\n');
             downloadReport('payroll_report.csv', report);
         }
-
         function generateAttendanceReport() {
             const report = 'Employee,Branch,Date,Hours\n' + attendances.map(a => `${a.employee},${a.branch},${a.date},${a.hours}`).join('\n');
             downloadReport('attendance_report.csv', report);
         }
-
         function generateComplianceReport() {
             const report = `Compliance Score: ${document.getElementById('complianceScore').textContent}\nChecklist: ${JSON.stringify(complianceChecklist, null, 2)}`;
             downloadReport('compliance_report.txt', report);
         }
-
         function downloadReport(filename, content) {
             const blob = new Blob([content], { type: 'text/plain' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
             a.download = filename;
+            document.body.appendChild(a);
             a.click();
+            document.body.removeChild(a);
             URL.revokeObjectURL(url);
             logAudit('Report Generated', filename);
         }
-
         function renderReports() {
             const output = document.getElementById('reportOutput');
             if (output) output.innerHTML = '<p>Select a report to generate.</p>';
         }
-
         // Settings
         function loadSettings() {
             document.getElementById('companyName').value = settings.companyName;
             document.getElementById('taxRate').value = settings.taxRate;
+            document.getElementById('uifRate').value = settings.uifRate;
+            document.getElementById('sdlRate').value = settings.sdlRate;
             document.getElementById('darkMode').checked = settings.darkMode;
             applyDarkMode();
         }
-
         function saveSettings() {
             settings.companyName = document.getElementById('companyName').value;
             settings.taxRate = parseFloat(document.getElementById('taxRate').value);
+            settings.uifRate = parseFloat(document.getElementById('uifRate').value);
+            settings.sdlRate = parseFloat(document.getElementById('sdlRate').value);
             settings.darkMode = document.getElementById('darkMode').checked;
             localStorage.setItem('settings', JSON.stringify(settings));
             applyDarkMode();
             logAudit('Settings Saved', `Dark Mode: ${settings.darkMode}`);
             alert('Settings saved!');
         }
-
         function applyDarkMode() {
             document.body.classList.toggle('dark-mode', settings.darkMode);
         }
-
         // Clock In/Out
         function clockIn() {
             const empIndex = document.getElementById('attEmpId').value;
             if (empIndex !== '') {
+                const today = new Date().toLocaleDateString();
+                if (attendances.some(a => a.empIndex == empIndex && a.date === today && !a.outTime)) {
+                    alert('Already clocked in today.');
+                    return;
+                }
                 attendances.push({
-                    empIndex,
+                    empIndex: parseInt(empIndex),
                     employee: employees[empIndex].name,
                     branch: employees[empIndex].branch,
-                    date: new Date().toLocaleDateString(),
+                    date: today,
                     inTime: new Date().toLocaleTimeString(),
                     outTime: '',
                     hours: 0
@@ -2119,11 +2064,10 @@
                 logAudit('Clock In', employees[empIndex].name);
             }
         }
-
         function clockOut() {
             const empIndex = document.getElementById('attEmpId').value;
             const today = new Date().toLocaleDateString();
-            const todayAtt = attendances.find(a => a.empIndex == empIndex && a.date === today && !a.outTime);
+            const todayAtt = attendances.find(a => a.empIndex == parseInt(empIndex) && a.date === today && !a.outTime);
             if (todayAtt) {
                 todayAtt.outTime = new Date().toLocaleTimeString();
                 const inTime = new Date(`${today} ${todayAtt.inTime}`);
@@ -2136,25 +2080,20 @@
                 alert('No clock-in found for today.');
             }
         }
-
         function renderAttendance() {
             const table = document.getElementById('attendanceTable');
             if (!table) return;
-            table.innerHTML = '';
-            attendances.forEach(a => {
-                table.innerHTML += `
-                    <tr>
-                        <td>${a.employee}</td>
-                        <td>${a.branch}</td>
-                        <td>${a.date}</td>
-                        <td>${a.inTime}</td>
-                        <td>${a.outTime}</td>
-                        <td>${a.hours}</td>
-                    </tr>
-                `;
-            });
+            table.innerHTML = attendances.map(a => `
+                <tr>
+                    <td>${a.employee}</td>
+                    <td>${a.branch}</td>
+                    <td>${a.date}</td>
+                    <td>${a.inTime}</td>
+                    <td>${a.outTime}</td>
+                    <td>${a.hours}</td>
+                </tr>
+            `).join('');
         }
-
         function deletePayroll(index) {
             if (confirm('Delete payroll?')) {
                 payrolls.splice(index, 1);
@@ -2162,7 +2101,6 @@
                 renderPayrolls();
             }
         }
-
         // App Initialization
         function initApp() {
             populateBranchSelect('empBranch');
@@ -2189,7 +2127,7 @@
             } else {
                 showSection('dashboard');
             }
-            // Sample data
+            // Sample data if empty
             if (employees.length === 0) {
                 employees.push({ id: 1, name: 'John Doe', position: 'Manager', department: 'HR', branch: branches[0], salary: 50000, joinDate: '2023-01-01', email: 'john@bophelong.org', contractStatus: 'Active', certStatus: 'Compliant', contractFile: null });
                 localStorage.setItem('employees', JSON.stringify(employees));
@@ -2197,7 +2135,6 @@
                 updateDashboard();
             }
         }
-
         // Initial Load Check
         document.addEventListener('DOMContentLoaded', function() {
             const loggedIn = localStorage.getItem('loggedIn');
@@ -2211,14 +2148,12 @@
                 document.querySelector('.app-container').style.display = 'none';
             }
         });
-
         // Enter key for login
         document.addEventListener('keypress', function(event) {
             if (event.key === 'Enter' && document.getElementById('loginContainer').style.display !== 'none') {
                 login();
             }
         });
-
     </script>
 </body>
 </html>
