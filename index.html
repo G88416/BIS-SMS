@@ -39,21 +39,16 @@
         .dark-mode .table { background-color: #0d1b2a; color: #e0e0e0; border: 1px solid #add8e6; }
         .dark-mode .table-striped tbody tr:nth-of-type(odd) { background-color: #1a2b4a; }
         .dark-mode .table thead th { background-color: #4169e1; color: white; }
+        @media (max-width: 768px) {
+            .sidebar { width: 60px; }
+            .sidebar .nav-text { display: none; }
+            .content { margin-left: 60px; }
+            .btn-toggle-sidebar { left: 70px; }
+        }
     </style>
 </head>
 <body>
-    <div id="loginContainer" class="position-fixed top-0 start-0 w-100 h-100 bg-light d-flex align-items-center justify-content-center" style="z-index:2000;">
-        <div class="card shadow" style="width:380px;">
-            <div class="card-body">
-                <h3 class="text-center mb-4"><i class="fas fa-lock me-2"></i>HRMS Login</h3>
-                <input type="text" id="username" class="form-control mb-3" placeholder="Username (admin or employee username)" required>
-                <button class="btn btn-primary w-100" onclick="login()">Login</button>
-                <small class="d-block text-center mt-3 text-muted">Demo: admin | john</small>
-            </div>
-        </div>
-    </div>
-
-    <div class="app-container" style="display:none;">
+    <div class="app-container">
         <!-- Notification Bell -->
         <div id="notificationBell">
             <button class="btn btn-primary rounded-circle shadow" style="width:50px;height:50px;" data-bs-toggle="modal" data-bs-target="#notificationsModal">
@@ -67,25 +62,18 @@
             <h4 class="mb-4"><i class="fas fa-users me-2"></i><span class="nav-text">HRMS - Allos Connect</span></h4>
             <ul class="nav flex-column">
                 <li class="admin-only"><a href="#dashboard" class="nav-link active" onclick="showSection('dashboard')"><i class="fas fa-tachometer-alt me-2"></i><span class="nav-text">HR Analytics Dashboard</span></a></li>
-                <li class="employee-only"><a href="#myDashboard" class="nav-link" onclick="showSection('myDashboard')"><i class="fas fa-tachometer-alt me-2"></i><span class="nav-text">My Dashboard</span></a></li>
                 <li class="admin-only"><a href="#employees" class="nav-link" onclick="showSection('employees')"><i class="fas fa-user-friends me-2"></i><span class="nav-text">Employees (HR Core)</span></a></li>
-                <li class="employee-only"><a href="#myProfile" class="nav-link" onclick="showSection('myProfile')"><i class="fas fa-user me-2"></i><span class="nav-text">My Profile</span></a></li>
                 <li class="admin-only"><a href="#payroll" class="nav-link" onclick="showSection('payroll')"><i class="fas fa-money-check-alt me-2"></i><span class="nav-text">Payroll</span></a></li>
-                <li class="employee-only"><a href="#myPayroll" class="nav-link" onclick="showSection('myPayroll')"><i class="fas fa-money-bill-wave me-2"></i><span class="nav-text">My Payslips</span></a></li>
                 <li class="admin-only"><a href="#recruitment" class="nav-link" onclick="showSection('recruitment')"><i class="fas fa-briefcase me-2"></i><span class="nav-text">iRecruit</span></a></li>
-                <li class="employee-only"><a href="#openJobs" class="nav-link" onclick="showSection('openJobs')"><i class="fas fa-briefcase me-2"></i><span class="nav-text">Job Openings</span></a></li>
                 <li><a href="#performance" class="nav-link" onclick="showSection('performance')"><i class="fas fa-chart-line me-2"></i><span class="nav-text">Performance</span></a></li>
                 <li><a href="#attendance" class="nav-link" onclick="showSection('attendance')"><i class="fas fa-clock me-2"></i><span class="nav-text">Time & Attendance</span></a></li>
                 <li><a href="#leaves" class="nav-link" onclick="showSection('leaves')"><i class="fas fa-calendar-alt me-2"></i><span class="nav-text">Leaves</span></a></li>
                 <li class="admin-only"><a href="#benefits" class="nav-link" onclick="showSection('benefits')"><i class="fas fa-gift me-2"></i><span class="nav-text">Benefits Admin</span></a></li>
-                <li class="employee-only"><a href="#myBenefits" class="nav-link" onclick="showSection('myBenefits')"><i class="fas fa-gift me-2"></i><span class="nav-text">My Benefits</span></a></li>
                 <li class="admin-only"><a href="#training" class="nav-link" onclick="showSection('training')"><i class="fas fa-graduation-cap me-2"></i><span class="nav-text">Training Admin</span></a></li>
-                <li class="employee-only"><a href="#myTraining" class="nav-link" onclick="showSection('myTraining')"><i class="fas fa-graduation-cap me-2"></i><span class="nav-text">My Training</span></a></li>
-                <li class="admin-only"><a href="#onboarding" class="nav-link" onclick="showSection('onboarding')"><i class="fas fa-user-plus me-2"></i><span class="nav-text">Onboarding</span></a></li>
-                <li class="employee-only"><a href="#myOnboarding" class="nav-link" onclick="showSection('myOnboarding')"><i class="fas fa-user-plus me-2"></i><span class="nav-text">My Onboarding</span></a></li>
                 <li class="admin-only"><a href="#compliance" class="nav-link" onclick="showSection('compliance')"><i class="fas fa-balance-scale me-2"></i><span class="nav-text">Compliance</span></a></li>
                 <li class="admin-only"><a href="#reports" class="nav-link" onclick="showSection('reports')"><i class="fas fa-file-alt me-2"></i><span class="nav-text">My Workforce Analyzer</span></a></li>
                 <li class="admin-only"><a href="#settings" class="nav-link" onclick="showSection('settings')"><i class="fas fa-cog me-2"></i><span class="nav-text">Settings</span></a></li>
+                <li class="admin-only"><a href="#mediaApproval" class="nav-link" onclick="showSection('mediaApproval')"><i class="fas fa-check-circle me-2"></i><span class="nav-text">Media Approval</span></a></li>
                 <li><a href="#" class="nav-link text-danger" onclick="logout()"><i class="fas fa-sign-out-alt me-2"></i><span class="nav-text">Logout</span></a></li>
             </ul>
         </div>
@@ -105,16 +93,6 @@
                 <canvas id="dashboardChart" class="mt-4"></canvas>
             </section>
 
-            <!-- Employee Self-Service Dashboard -->
-            <section id="myDashboard" class="section d-none">
-                <h2>Welcome, <span id="myName"></span></h2>
-                <div class="row mt-4">
-                    <div class="col-md-4"><div class="card card-metric p-3"><h5>Pending Leaves</h5><h3 id="myPendingLeaves">0</h3></div></div>
-                    <div class="col-md-4"><div class="card card-metric p-3"><h5>My Performance</h5><h3 id="myAvgPerformance">0/5</h3></div></div>
-                    <div class="col-md-4"><div class="card card-metric p-3"><h5>Expiring Certs</h5><h3 id="myExpiringCerts">0</h3></div></div>
-                </div>
-            </section>
-
             <!-- Employees Section -->
             <section id="employees" class="section d-none">
                 <h2>Employee Management (HR Core)</h2>
@@ -123,13 +101,6 @@
                     <thead><tr><th>ID</th><th>Name</th><th>Position</th><th>Branch</th><th>Actions</th></tr></thead>
                     <tbody id="employeeTable"></tbody>
                 </table>
-            </section>
-
-            <!-- My Profile (Employee Self-Service) -->
-            <section id="myProfile" class="section d-none">
-                <h2>My Profile</h2>
-                <div id="myProfileContent" class="card p-4"></div>
-                <button class="btn btn-primary mt-3" onclick="saveMyProfile()">Save Changes</button>
             </section>
 
             <!-- Payroll Section -->
@@ -142,15 +113,6 @@
                 </table>
             </section>
 
-            <!-- My Payroll (Employee Self-Service) -->
-            <section id="myPayroll" class="section d-none">
-                <h2>My Payslips</h2>
-                <table class="table table-striped">
-                    <thead><tr><th>Month</th><th>Salary</th><th>Deductions</th><th>Net</th></tr></thead>
-                    <tbody id="myPayrollTable"></tbody>
-                </table>
-            </section>
-
             <!-- Recruitment Section -->
             <section id="recruitment" class="section d-none">
                 <h2>iRecruit</h2>
@@ -158,15 +120,6 @@
                 <table class="table table-striped mt-3">
                     <thead><tr><th>ID</th><th>Title</th><th>Branch</th><th>Applications</th><th>Actions</th></tr></thead>
                     <tbody id="jobTable"></tbody>
-                </table>
-            </section>
-
-            <!-- Open Jobs (Employee Self-Service) -->
-            <section id="openJobs" class="section d-none">
-                <h2>Job Openings</h2>
-                <table class="table table-striped">
-                    <thead><tr><th>Title</th><th>Branch</th><th>Description</th><th>Apply</th></tr></thead>
-                    <tbody id="openJobsTable"></tbody>
                 </table>
             </section>
 
@@ -210,16 +163,6 @@
                 </table>
             </section>
 
-            <!-- My Benefits (Employee Self-Service) -->
-            <section id="myBenefits" class="section d-none">
-                <h2>My Benefits Enrollment</h2>
-                <p class="alert alert-info">Changes are automatically sent to carriers via <strong>Benefits Messenger</strong></p>
-                <table class="table table-striped">
-                    <thead><tr><th>Plan</th><th>Description</th><th>Cost</th><th>Enroll</th></tr></thead>
-                    <tbody id="myBenefitsTable"></tbody>
-                </table>
-            </section>
-
             <!-- Training Admin -->
             <section id="training" class="section d-none">
                 <h2>Training Admin</h2>
@@ -227,33 +170,6 @@
                 <table class="table table-striped mt-3">
                     <thead><tr><th>ID</th><th>Name</th><th>Description</th><th>Actions</th></tr></thead>
                     <tbody id="courseTable"></tbody>
-                </table>
-            </section>
-
-            <!-- My Training (Employee Self-Service) -->
-            <section id="myTraining" class="section d-none">
-                <h2>My Training</h2>
-                <table class="table table-striped">
-                    <thead><tr><th>Name</th><th>Description</th><th>Status</th></tr></thead>
-                    <tbody id="myTrainingTable"></tbody>
-                </table>
-            </section>
-
-            <!-- Onboarding Admin -->
-            <section id="onboarding" class="section d-none">
-                <h2>Onboarding</h2>
-                <table class="table table-striped mt-3">
-                    <thead><tr><th>Employee</th><th>Tasks</th><th>Status</th><th>Actions</th></tr></thead>
-                    <tbody id="onboardingTable"></tbody>
-                </table>
-            </section>
-
-            <!-- My Onboarding (Employee Self-Service) -->
-            <section id="myOnboarding" class="section d-none">
-                <h2>My Onboarding</h2>
-                <table class="table table-striped">
-                    <thead><tr><th>Task</th><th>Completed</th><th>Actions</th></tr></thead>
-                    <tbody id="myOnboardingTable"></tbody>
                 </table>
             </section>
 
@@ -283,6 +199,16 @@
                     <input class="form-check-input" type="checkbox" id="darkModeSwitch" onchange="toggleDarkMode(this.checked)">
                     <label class="form-check-label" for="darkModeSwitch">Dark Mode</label>
                 </div>
+            </section>
+
+            <!-- Media Approval Workflow -->
+            <section id="mediaApproval" class="section d-none">
+                <h2>Media Content Approval</h2>
+                <button class="btn btn-primary" onclick="showUploadMediaModal()">Upload Media for Approval</button>
+                <table class="table table-striped mt-3">
+                    <thead><tr><th>ID</th><th>Title</th><th>Uploader</th><th>Status</th><th>Actions</th></tr></thead>
+                    <tbody id="mediaTable"></tbody>
+                </table>
             </section>
 
             <!-- Notifications Modal -->
@@ -424,6 +350,21 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Upload Media Modal -->
+            <div class="modal fade" id="uploadMediaModal">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header"><h5>Upload Media</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                        <div class="modal-body">
+                            <input id="mediaTitle" placeholder="Title" class="form-control mb-3">
+                            <textarea id="mediaDesc" placeholder="Description" class="form-control mb-3"></textarea>
+                            <input id="mediaFile" type="file" class="form-control mb-3">
+                        </div>
+                        <div class="modal-footer"><button class="btn btn-primary" onclick="uploadMedia()">Upload</button></div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -444,45 +385,15 @@
         let notifications = JSON.parse(localStorage.getItem('notifications')) || [];
         let auditLog = JSON.parse(localStorage.getItem('auditLog')) || [];
         let settings = JSON.parse(localStorage.getItem('settings')) || { darkMode: false };
-        let onboardings = JSON.parse(localStorage.getItem('onboardings')) || [];
+        let mediaContents = JSON.parse(localStorage.getItem('mediaContents')) || [];
 
         const branches = ['Marketing','Production','Sales','Content Creation','Digital Media','Administration','Creative Design'];
 
-        // === LOGIN & ROLE ===
-        function login() {
-            const user = document.getElementById('username').value;
-            if (user === 'admin') {
-                localStorage.setItem('currentUser', JSON.stringify({role: 'admin'}));
-                finishLogin();
-            } else {
-                const idx = employees.findIndex(e => e.username === user);
-                if (idx !== -1) {
-                    localStorage.setItem('currentUser', JSON.stringify({role: 'employee', index: idx}));
-                    finishLogin();
-                } else alert('Invalid username');
-            }
-        }
-
-        function finishLogin() {
-            localStorage.setItem('loggedIn', 'true');
-            document.getElementById('loginContainer').style.display = 'none';
-            document.querySelector('.app-container').style.display = 'block';
-            initApp();
-        }
-
-        function logout() {
-            if (confirm('Logout?')) {
-                localStorage.removeItem('loggedIn');
-                localStorage.removeItem('currentUser');
-                location.reload();
-            }
-        }
-
         // === ROLE VISIBILITY ===
         function applyRoleRestrictions() {
-            const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
-            document.querySelectorAll('.admin-only').forEach(el => el.style.display = user.role === 'admin' ? 'block' : 'none');
-            document.querySelectorAll('.employee-only').forEach(el => el.style.display = user.role === 'employee' ? 'block' : 'none');
+            // Default to admin role
+            document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'block');
+            document.querySelectorAll('.employee-only').forEach(el => el.style.display = 'none');
         }
 
         // === NOTIFICATIONS ===
@@ -493,19 +404,17 @@
         }
 
         function updateNotificationBadge() {
-            const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
-            const count = user.role === 'admin' 
-                ? notifications.filter(n => n.to === 'admin' && !n.read).length 
-                : notifications.filter(n => n.to === user.index && !n.read).length;
+            // Default to admin
+            const count = notifications.filter(n => n.to === 'admin' && !n.read).length;
             const badge = document.getElementById('notificationBadge');
             badge.textContent = count;
             badge.style.display = count > 0 ? 'block' : 'none';
         }
 
         function markAllRead() {
-            const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
+            // Default to admin
             notifications.forEach(n => {
-                if ((user.role === 'admin' && n.to === 'admin') || n.to === user.index) n.read = true;
+                if (n.to === 'admin') n.read = true;
             });
             localStorage.setItem('notifications', JSON.stringify(notifications));
             updateNotificationBadge();
@@ -521,10 +430,8 @@
         };
 
         function renderNotifications() {
-            const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
-            const rel = user.role === 'admin' 
-                ? notifications.filter(n => n.to === 'admin') 
-                : notifications.filter(n => n.to === user.index);
+            // Default to admin
+            const rel = notifications.filter(n => n.to === 'admin');
             document.getElementById('notificationsTable').innerHTML = rel.map(n => `<tr><td>${n.date}</td><td>${n.message}</td><td>${n.read ? '' : '<button class="btn btn-sm btn-secondary" onclick="markRead('+n.id+')">Read</button>'}</td></tr>`).join('');
         }
 
@@ -534,12 +441,9 @@
             populateSelects();
             updateNotificationBadge();
             renderDashboard();
-            if (JSON.parse(localStorage.getItem('currentUser') || '{}').role === 'employee') {
-                showSection('myDashboard');
-                renderMyDashboard();
-            } else {
-                showSection('dashboard');
-            }
+            showSection('dashboard');
+            applyDarkMode();
+            document.getElementById('darkModeSwitch').checked = settings.darkMode;
         }
 
         function populateSelects() {
@@ -583,25 +487,16 @@
 
             // Render based on section
             if (id === 'dashboard') renderDashboard();
-            if (id === 'myDashboard') renderMyDashboard();
             if (id === 'employees') renderEmployees();
-            if (id === 'myProfile') renderMyProfile();
             if (id === 'payroll') renderPayroll();
-            if (id === 'myPayroll') renderMyPayroll();
             if (id === 'recruitment') renderRecruitment();
-            if (id === 'openJobs') renderOpenJobs();
             if (id === 'performance') renderPerformance();
             if (id === 'attendance') renderAttendance();
             if (id === 'leaves') renderLeaves();
             if (id === 'benefits') renderBenefits();
-            if (id === 'myBenefits') renderMyBenefits();
             if (id === 'training') renderTraining();
-            if (id === 'myTraining') renderMyTraining();
-            if (id === 'onboarding') renderOnboarding();
-            if (id === 'myOnboarding') renderMyOnboarding();
             if (id === 'compliance') renderCompliance();
-            if (id === 'reports') {} // No dynamic render needed
-            if (id === 'settings') {} // No dynamic render needed
+            if (id === 'mediaApproval') renderMediaApproval();
         }
 
         // === DASHBOARD ===
@@ -630,21 +525,6 @@
                 },
                 options: {scales: {y: {beginAtZero: true}}}
             });
-        }
-
-        // === MY DASHBOARD ===
-        function renderMyDashboard() {
-            const user = JSON.parse(localStorage.getItem('currentUser'));
-            const emp = employees[user.index];
-            document.getElementById('myName').textContent = emp.name;
-            const myLeaves = leaves.filter(l => l.employeeIndex === user.index && l.status === 'Pending').length;
-            document.getElementById('myPendingLeaves').textContent = myLeaves;
-            const myReviews = reviews.filter(r => r.employeeIndex === user.index);
-            const avg = myReviews.length ? (myReviews.reduce((sum, r) => sum + r.score, 0) / myReviews.length).toFixed(1) : 0;
-            document.getElementById('myAvgPerformance').textContent = avg + '/5';
-            const myCerts = certifications.filter(c => c.employeeIndex === user.index);
-            const myExpiring = myCerts.filter(c => new Date(c.expiryDate) < new Date(new Date().setMonth(new Date().getMonth() + 1))).length;
-            document.getElementById('myExpiringCerts').textContent = myExpiring;
         }
 
         // === EMPLOYEES ===
@@ -695,9 +575,6 @@
             if (currentEmployeeEdit === -1) {
                 employees.push(emp);
                 addNotification('admin', `New employee added: ${emp.name}`);
-                // Automate onboarding
-                onboardings.push({employeeIndex: employees.length - 1, tasks: [{name: 'Paperwork', completed: false}, {name: 'Training Assignment', completed: false}, {name: 'System Integration', completed: false}]});
-                localStorage.setItem('onboardings', JSON.stringify(onboardings));
             } else {
                 employees[currentEmployeeEdit] = {...employees[currentEmployeeEdit], ...emp};
                 addNotification('admin', `Employee updated: ${emp.name}`);
@@ -732,33 +609,6 @@
                 renderEmployees();
                 addNotification('admin', `Employee deleted: ${name}`);
             }
-        }
-
-        // === MY PROFILE ===
-        function renderMyProfile() {
-            const user = JSON.parse(localStorage.getItem('currentUser'));
-            const emp = employees[user.index];
-            document.getElementById('myProfileContent').innerHTML = `
-                <div class="mb-3"><label>Name</label><input id="myNameInput" class="form-control" value="${emp.name}"></div>
-                <div class="mb-3"><label>Position</label><input id="myPosition" class="form-control" value="${emp.position}" disabled></div>
-                <div class="mb-3"><label>Branch</label><input id="myBranch" class="form-control" value="${emp.branch}" disabled></div>
-                <div class="mb-3"><label>Email</label><input id="myEmail" class="form-control" value="${emp.email}"></div>
-                <div class="mb-3"><label>Phone</label><input id="myPhone" class="form-control" value="${emp.phone}"></div>
-                <div class="mb-3"><label>Password</label><input id="myPassword" type="password" class="form-control" value="${emp.password}"></div>
-            `;
-        }
-
-        function saveMyProfile() {
-            const user = JSON.parse(localStorage.getItem('currentUser'));
-            const emp = employees[user.index];
-            emp.name = document.getElementById('myNameInput').value;
-            emp.email = document.getElementById('myEmail').value;
-            emp.phone = document.getElementById('myPhone').value;
-            emp.password = document.getElementById('myPassword').value;
-            localStorage.setItem('employees', JSON.stringify(employees));
-            addNotification('admin', `${emp.name} updated profile`);
-            alert('Profile saved');
-            populateSelects();
         }
 
         // === PAYROLL ===
@@ -896,20 +746,6 @@
             }
         }
 
-        // === MY PAYROLL ===
-        function renderMyPayroll() {
-            const user = JSON.parse(localStorage.getItem('currentUser'));
-            const myP = payrolls.filter(p => p.employeeIndex === user.index);
-            document.getElementById('myPayrollTable').innerHTML = myP.map(p => `
-                <tr>
-                    <td>${p.month}</td>
-                    <td>R${p.salary.toFixed(2)}</td>
-                    <td>R${p.deductions.toFixed(2)}</td>
-                    <td>R${p.net.toFixed(2)}</td>
-                </tr>
-            `).join('');
-        }
-
         // === RECRUITMENT ===
         let currentJobEdit = -1;
         function showAddJobModal() {
@@ -976,30 +812,6 @@
             }
         }
 
-        // === OPEN JOBS ===
-        function renderOpenJobs() {
-            document.getElementById('openJobsTable').innerHTML = jobs.map(j => `
-                <tr>
-                    <td>${j.title}</td>
-                    <td>${j.branch}</td>
-                    <td>${j.description}</td>
-                    <td><button class="btn btn-primary" onclick="applyJob(${j.id})">Apply</button></td>
-                </tr>
-            `).join('');
-        }
-
-        function applyJob(id) {
-            const job = jobs.find(j => j.id === id);
-            if (job) {
-                const user = JSON.parse(localStorage.getItem('currentUser'));
-                job.applications.push(user.index);
-                localStorage.setItem('jobs', JSON.stringify(jobs));
-                addNotification('admin', `New application for ${job.title} from ${employees[user.index].name}`);
-                alert('Applied successfully');
-                renderOpenJobs();
-            }
-        }
-
         // === PERFORMANCE ===
         let currentReviewEdit = -1;
         function showAddReviewModal() {
@@ -1033,7 +845,6 @@
             if (currentReviewEdit === -1) {
                 reviews.push(r);
                 addNotification('admin', `New review for ${employees[r.employeeIndex].name}`);
-                addNotification(r.employeeIndex, `You have a new performance review`);
             } else {
                 reviews[currentReviewEdit] = {...reviews[currentReviewEdit], ...r};
                 addNotification('admin', `Review updated for ${employees[r.employeeIndex].name}`);
@@ -1044,18 +855,13 @@
         }
 
         function renderPerformance() {
-            const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
-            let relReviews = reviews;
-            if (user.role !== 'admin') {
-                relReviews = reviews.filter(r => r.employeeIndex === user.index);
-            }
-            document.getElementById('performanceTable').innerHTML = relReviews.map((r, i) => `
+            document.getElementById('performanceTable').innerHTML = reviews.map((r, i) => `
                 <tr>
                     <td>${employees[r.employeeIndex]?.name || 'Unknown'}</td>
                     <td>${r.date}</td>
                     <td>${r.score}/5</td>
                     <td>${r.comments}</td>
-                    <td class="admin-only">
+                    <td>
                         <button class="btn btn-sm btn-primary" onclick="showEditReviewModal(${i})">Edit</button>
                         <button class="btn btn-sm btn-danger" onclick="deleteReview(${i})">Delete</button>
                     </td>
@@ -1073,31 +879,26 @@
 
         // === ATTENDANCE ===
         function clockIn() {
-            const user = JSON.parse(localStorage.getItem('currentUser'));
-            const employeeIndex = user.role === 'admin' ? parseInt(prompt('Employee Index')) : user.index;
+            const employeeIndex = prompt('Enter employee index to clock in:');
+            if (employeeIndex === null) return;
             const att = {
-                employeeIndex,
+                employeeIndex: parseInt(employeeIndex),
                 date: new Date().toLocaleDateString(),
                 status: 'Present'
             };
             attendances.push(att);
             localStorage.setItem('attendances', JSON.stringify(attendances));
-            addNotification('admin', `${employees[att.employeeIndex].name} clocked in`);
+            addNotification('admin', `${employees[att.employeeIndex]?.name || 'Unknown'} clocked in`);
             renderAttendance();
         }
 
         function renderAttendance() {
-            const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
-            let relAtt = attendances;
-            if (user.role !== 'admin') {
-                relAtt = attendances.filter(a => a.employeeIndex === user.index);
-            }
-            document.getElementById('attendanceTable').innerHTML = relAtt.map((a, i) => `
+            document.getElementById('attendanceTable').innerHTML = attendances.map((a, i) => `
                 <tr>
                     <td>${employees[a.employeeIndex]?.name || 'Unknown'}</td>
                     <td>${a.date}</td>
                     <td>${a.status}</td>
-                    <td class="admin-only">
+                    <td>
                         <button class="btn btn-sm btn-danger" onclick="deleteAttendance(${i})">Delete</button>
                     </td>
                 </tr>
@@ -1117,9 +918,7 @@
         function showAddLeaveModal() {
             currentLeaveEdit = -1;
             document.getElementById('addLeaveModalLabel').innerHTML = 'Request Leave';
-            const user = JSON.parse(localStorage.getItem('currentUser'));
-            document.getElementById('leaveEmployee').value = user.role === 'admin' ? '' : user.index;
-            document.getElementById('leaveEmployee').disabled = user.role !== 'admin';
+            document.getElementById('leaveEmployee').value = '';
             document.getElementById('leaveStart').value = '';
             document.getElementById('leaveEnd').value = '';
             document.getElementById('leaveType').value = '';
@@ -1160,19 +959,14 @@
         }
 
         function renderLeaves() {
-            const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
-            let relLeaves = leaves;
-            if (user.role !== 'admin') {
-                relLeaves = leaves.filter(l => l.employeeIndex === user.index);
-            }
-            document.getElementById('leavesTable').innerHTML = relLeaves.map((l, i) => `
+            document.getElementById('leavesTable').innerHTML = leaves.map((l, i) => `
                 <tr>
                     <td>${employees[l.employeeIndex]?.name || 'Unknown'}</td>
                     <td>${l.startDate}</td>
                     <td>${l.endDate}</td>
                     <td>${l.type}</td>
                     <td>${l.status}</td>
-                    <td class="admin-only">
+                    <td>
                         <button class="btn btn-sm btn-success" onclick="approveLeave(${i})">Approve</button>
                         <button class="btn btn-sm btn-danger" onclick="rejectLeave(${i})">Reject</button>
                         <button class="btn btn-sm btn-primary" onclick="showEditLeaveModal(${i})">Edit</button>
@@ -1267,34 +1061,6 @@
             }
         }
 
-        // === MY BENEFITS ===
-        function renderMyBenefits() {
-            const user = JSON.parse(localStorage.getItem('currentUser'));
-            const emp = employees[user.index];
-            document.getElementById('myBenefitsTable').innerHTML = benefitPlans.map(p => `
-                <tr>
-                    <td>${p.name}</td>
-                    <td>${p.description}</td>
-                    <td>R${p.cost}/month</td>
-                    <td><input type="checkbox" ${emp.enrolledBenefits.includes(p.id) ? 'checked' : ''} onchange="toggleMyBenefit(${p.id}, this.checked)"></td>
-                </tr>
-            `).join('');
-        }
-
-        function toggleMyBenefit(id, checked) {
-            const user = JSON.parse(localStorage.getItem('currentUser'));
-            let emp = employees[user.index];
-            if (checked) {
-                if (!emp.enrolledBenefits) emp.enrolledBenefits = [];
-                emp.enrolledBenefits.push(id);
-            } else {
-                emp.enrolledBenefits = emp.enrolledBenefits.filter(x => x !== id);
-            }
-            localStorage.setItem('employees', JSON.stringify(employees));
-            addNotification('admin', `${emp.name} changed benefits`);
-            alert('Enrollment updated - transmitted via Benefits Messenger');
-        }
-
         // === TRAINING ===
         let currentCourseEdit = -1;
         function showAddCourseModal() {
@@ -1353,65 +1119,6 @@
                 courses.splice(i, 1);
                 localStorage.setItem('courses', JSON.stringify(courses));
                 renderTraining();
-            }
-        }
-
-        // === MY TRAINING ===
-        function renderMyTraining() {
-            const user = JSON.parse(localStorage.getItem('currentUser'));
-            const emp = employees[user.index];
-            const myCourses = courses.filter(c => emp.assignedCourses?.includes(c.id) || false);
-            document.getElementById('myTrainingTable').innerHTML = myCourses.map(c => `
-                <tr>
-                    <td>${c.name}</td>
-                    <td>${c.description}</td>
-                    <td>Pending</td> <!-- Placeholder for status -->
-                </tr>
-            `).join('');
-        }
-
-        // === ONBOARDING ===
-        function renderOnboarding() {
-            document.getElementById('onboardingTable').innerHTML = onboardings.map((o, i) => `
-                <tr>
-                    <td>${employees[o.employeeIndex]?.name || 'Unknown'}</td>
-                    <td>${o.tasks.map(t => t.name).join(', ')}</td>
-                    <td>${o.tasks.filter(t => t.completed).length} / ${o.tasks.length} completed</td>
-                    <td>
-                        <button class="btn btn-sm btn-primary" onclick="showEditOnboardingModal(${i})">Edit Tasks</button>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        let currentOnboardingEdit = -1;
-        function showEditOnboardingModal(i) {
-            currentOnboardingEdit = i;
-            alert('Edit tasks for onboarding - implement modal if needed');
-            // For simplicity, assume admin edits via console or add modal
-        }
-
-        function renderMyOnboarding() {
-            const user = JSON.parse(localStorage.getItem('currentUser'));
-            const myO = onboardings.find(o => o.employeeIndex === user.index);
-            if (myO) {
-                document.getElementById('myOnboardingTable').innerHTML = myO.tasks.map((t, ti) => `
-                    <tr>
-                        <td>${t.name}</td>
-                        <td>${t.completed ? 'Yes' : 'No'}</td>
-                        <td><button class="btn btn-sm btn-success" ${t.completed ? 'disabled' : ''} onclick="markOnboardingTaskComplete(${user.index}, ${ti})">Mark Complete</button></td>
-                    </tr>
-                `).join('');
-            }
-        }
-
-        function markOnboardingTaskComplete(empIdx, taskIdx) {
-            const o = onboardings.find(o => o.employeeIndex === empIdx);
-            if (o) {
-                o.tasks[taskIdx].completed = true;
-                localStorage.setItem('onboardings', JSON.stringify(onboardings));
-                addNotification('admin', `${employees[empIdx].name} completed onboarding task: ${o.tasks[taskIdx].name}`);
-                renderMyOnboarding();
             }
         }
 
@@ -1478,6 +1185,60 @@
             }
         }
 
+        // === MEDIA APPROVAL ===
+        let currentMediaEdit = -1;
+        function showUploadMediaModal() {
+            document.getElementById('mediaTitle').value = '';
+            document.getElementById('mediaDesc').value = '';
+            document.getElementById('mediaFile').value = '';
+            const modal = new bootstrap.Modal(document.getElementById('uploadMediaModal'));
+            modal.show();
+        }
+
+        function uploadMedia() {
+            const title = document.getElementById('mediaTitle').value;
+            const desc = document.getElementById('mediaDesc').value;
+            const file = document.getElementById('mediaFile').files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    mediaContents.push({id: Date.now(), title, desc, fileData: e.target.result, status: 'Pending', uploader: 'Admin'});
+                    localStorage.setItem('mediaContents', JSON.stringify(mediaContents));
+                    addNotification('admin', `New media uploaded: ${title}`);
+                    renderMediaApproval();
+                    bootstrap.Modal.getInstance(document.getElementById('uploadMediaModal')).hide();
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function renderMediaApproval() {
+            document.getElementById('mediaTable').innerHTML = mediaContents.map((m, i) => `
+                <tr>
+                    <td>${m.id}</td>
+                    <td>${m.title}</td>
+                    <td>${m.uploader}</td>
+                    <td>${m.status}</td>
+                    <td>
+                        <button class="btn btn-sm btn-success" onclick="approveMedia(${i})">Approve</button>
+                        <button class="btn btn-sm btn-danger" onclick="rejectMedia(${i})">Reject</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function approveMedia(i) {
+            mediaContents[i].status = 'Approved';
+            localStorage.setItem('mediaContents', JSON.stringify(mediaContents));
+            renderMediaApproval();
+        }
+
+        function rejectMedia(i) {
+            mediaContents[i].status = 'Rejected';
+            localStorage.setItem('mediaContents', JSON.stringify(mediaContents));
+            renderMediaApproval();
+        }
+
         // === REPORTS ===
         function exportToExcel(data, filename) {
             const ws = XLSX.utils.json_to_sheet(data);
@@ -1488,12 +1249,7 @@
 
         // === ON LOAD ===
         document.addEventListener('DOMContentLoaded', () => {
-            if (localStorage.getItem('loggedIn') === 'true') {
-                document.getElementById('loginContainer').style.display = 'none';
-                document.querySelector('.app-container').style.display = 'block';
-                initApp();
-            }
-            applyDarkMode();
+            initApp();
         });
     </script>
 </body>
