@@ -42,19 +42,7 @@
     </style>
 </head>
 <body>
-    <div id="loginContainer" class="position-fixed top-0 start-0 w-100 h-100 bg-light d-flex align-items-center justify-content-center" style="z-index:2000;">
-        <div class="card shadow" style="width:380px;">
-            <div class="card-body">
-                <h3 class="text-center mb-4"><i class="fas fa-lock me-2"></i>HRMS Login</h3>
-                <input type="text" id="username" class="form-control mb-3" placeholder="Username (admin or john)" required>
-                <input type="password" id="password" class="form-control mb-3" placeholder="Password (password)" required>
-                <button class="btn btn-primary w-100" onclick="login()">Login</button>
-                <small class="d-block text-center mt-3 text-muted">Demo: admin/password | john/password</small>
-            </div>
-        </div>
-    </div>
-
-    <div class="app-container" style="display:none;">
+    <div class="app-container">
         <!-- Notification Bell -->
         <div id="notificationBell">
             <button class="btn btn-primary rounded-circle shadow" style="width:50px;height:50px;" data-bs-toggle="modal" data-bs-target="#notificationsModal">
@@ -429,40 +417,24 @@
 
         // === LOGIN & ROLE ===
         function login() {
-            const user = document.getElementById('username').value;
-            const pass = document.getElementById('password').value;
-            if (user === 'admin' && pass === 'password') {
-                localStorage.setItem('currentUser', JSON.stringify({role: 'admin'}));
-                finishLogin();
-            } else {
-                const idx = employees.findIndex(e => e.username === user && e.password === pass);
-                if (idx !== -1) {
-                    localStorage.setItem('currentUser', JSON.stringify({role: 'employee', index: idx}));
-                    finishLogin();
-                } else alert('Invalid credentials');
-            }
+            // Removed login functionality
         }
 
         function finishLogin() {
-            localStorage.setItem('loggedIn', 'true');
-            document.getElementById('loginContainer').style.display = 'none';
-            document.querySelector('.app-container').style.display = 'block';
-            initApp();
+            // Removed
         }
 
         function logout() {
             if (confirm('Logout?')) {
-                localStorage.removeItem('loggedIn');
-                localStorage.removeItem('currentUser');
                 location.reload();
             }
         }
 
         // === ROLE VISIBILITY ===
         function applyRoleRestrictions() {
-            const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
-            document.querySelectorAll('.admin-only').forEach(el => el.style.display = user.role === 'admin' ? 'block' : 'none');
-            document.querySelectorAll('.employee-only').forEach(el => el.style.display = user.role === 'employee' ? 'block' : 'none');
+            // Default to admin role
+            document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'block');
+            document.querySelectorAll('.employee-only').forEach(el => el.style.display = 'none');
         }
 
         // === NOTIFICATIONS ===
@@ -473,19 +445,17 @@
         }
 
         function updateNotificationBadge() {
-            const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
-            const count = user.role === 'admin' 
-                ? notifications.filter(n => n.to === 'admin' && !n.read).length 
-                : notifications.filter(n => n.to === user.index && !n.read).length;
+            // Default to admin
+            const count = notifications.filter(n => n.to === 'admin' && !n.read).length;
             const badge = document.getElementById('notificationBadge');
             badge.textContent = count;
             badge.style.display = count > 0 ? 'block' : 'none';
         }
 
         function markAllRead() {
-            const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
+            // Default to admin
             notifications.forEach(n => {
-                if ((user.role === 'admin' && n.to === 'admin') || n.to === user.index) n.read = true;
+                if (n.to === 'admin') n.read = true;
             });
             localStorage.setItem('notifications', JSON.stringify(notifications));
             updateNotificationBadge();
@@ -501,10 +471,8 @@
         };
 
         function renderNotifications() {
-            const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
-            const rel = user.role === 'admin' 
-                ? notifications.filter(n => n.to === 'admin') 
-                : notifications.filter(n => n.to === user.index);
+            // Default to admin
+            const rel = notifications.filter(n => n.to === 'admin');
             document.getElementById('notificationsTable').innerHTML = rel.map(n => `<tr><td>${n.date}</td><td>${n.message}</td><td>${n.read ? '' : '<button class="btn btn-sm btn-secondary" onclick="markRead('+n.id+')">Read</button>'}</td></tr>`).join('');
         }
 
@@ -514,12 +482,7 @@
             populateSelects();
             updateNotificationBadge();
             renderDashboard();
-            if (JSON.parse(localStorage.getItem('currentUser') || '{}').role === 'employee') {
-                showSection('myDashboard');
-                renderMyDashboard();
-            } else {
-                showSection('dashboard');
-            }
+            showSection('dashboard');
             applyDarkMode();
             document.getElementById('darkModeSwitch').checked = settings.darkMode;
         }
@@ -614,17 +577,11 @@
 
         // === MY DASHBOARD ===
         function renderMyDashboard() {
-            const user = JSON.parse(localStorage.getItem('currentUser'));
-            const emp = employees[user.index];
-            document.getElementById('myName').textContent = emp.name;
-            const myLeaves = leaves.filter(l => l.employeeIndex === user.index && l.status === 'Pending').length;
-            document.getElementById('myPendingLeaves').textContent = myLeaves;
-            const myReviews = reviews.filter(r => r.employeeIndex === user.index);
-            const avg = myReviews.length ? (myReviews.reduce((sum, r) => sum + r.score, 0) / myReviews.length).toFixed(1) : 0;
-            document.getElementById('myAvgPerformance').textContent = avg + '/5';
-            const myCerts = certifications.filter(c => c.employeeIndex === user.index);
-            const myExpiring = myCerts.filter(c => new Date(c.expiryDate) < new Date(new Date().setMonth(new Date().getMonth() + 1))).length;
-            document.getElementById('myExpiringCerts').textContent = myExpiring;
+            // Since login removed, myDashboard may not be used, but keep for compatibility
+            document.getElementById('myName').textContent = 'Admin';
+            document.getElementById('myPendingLeaves').textContent = 0;
+            document.getElementById('myAvgPerformance').textContent = '0/5';
+            document.getElementById('myExpiringCerts').textContent = 0;
         }
 
         // === EMPLOYEES ===
@@ -713,29 +670,12 @@
 
         // === MY PROFILE ===
         function renderMyProfile() {
-            const user = JSON.parse(localStorage.getItem('currentUser'));
-            const emp = employees[user.index];
-            document.getElementById('myProfileContent').innerHTML = `
-                <div class="mb-3"><label>Name</label><input id="myNameInput" class="form-control" value="${emp.name}"></div>
-                <div class="mb-3"><label>Position</label><input id="myPosition" class="form-control" value="${emp.position}" disabled></div>
-                <div class="mb-3"><label>Branch</label><input id="myBranch" class="form-control" value="${emp.branch}" disabled></div>
-                <div class="mb-3"><label>Email</label><input id="myEmail" class="form-control" value="${emp.email}"></div>
-                <div class="mb-3"><label>Phone</label><input id="myPhone" class="form-control" value="${emp.phone}"></div>
-                <div class="mb-3"><label>Password</label><input id="myPassword" type="password" class="form-control" value="${emp.password}"></div>
-            `;
+            // Since login removed, myProfile may not be used, but keep
+            document.getElementById('myProfileContent').innerHTML = `<p>Admin profile.</p>`;
         }
 
         function saveMyProfile() {
-            const user = JSON.parse(localStorage.getItem('currentUser'));
-            const emp = employees[user.index];
-            emp.name = document.getElementById('myNameInput').value;
-            emp.email = document.getElementById('myEmail').value;
-            emp.phone = document.getElementById('myPhone').value;
-            emp.password = document.getElementById('myPassword').value;
-            localStorage.setItem('employees', JSON.stringify(employees));
-            addNotification('admin', `${emp.name} updated profile`);
-            alert('Profile saved');
-            populateSelects();
+            alert('Saved');
         }
 
         // === PAYROLL ===
@@ -812,16 +752,8 @@
 
         // === MY PAYROLL ===
         function renderMyPayroll() {
-            const user = JSON.parse(localStorage.getItem('currentUser'));
-            const myP = payrolls.filter(p => p.employeeIndex === user.index);
-            document.getElementById('myPayrollTable').innerHTML = myP.map(p => `
-                <tr>
-                    <td>${p.month}</td>
-                    <td>R${p.salary}</td>
-                    <td>R${p.deductions}</td>
-                    <td>R${p.net}</td>
-                </tr>
-            `).join('');
+            // Since login removed, show all or none
+            document.getElementById('myPayrollTable').innerHTML = '';
         }
 
         // === RECRUITMENT ===
@@ -905,10 +837,9 @@
         function applyJob(id) {
             const job = jobs.find(j => j.id === id);
             if (job) {
-                const user = JSON.parse(localStorage.getItem('currentUser'));
-                job.applications.push(user.index);
+                job.applications.push(0); // Dummy since no employee
                 localStorage.setItem('jobs', JSON.stringify(jobs));
-                addNotification('admin', `New application for ${job.title} from ${employees[user.index].name}`);
+                addNotification('admin', `New application for ${job.title}`);
                 alert('Applied successfully');
                 renderOpenJobs();
             }
@@ -947,7 +878,6 @@
             if (currentReviewEdit === -1) {
                 reviews.push(r);
                 addNotification('admin', `New review for ${employees[r.employeeIndex].name}`);
-                addNotification(r.employeeIndex, `You have a new performance review`);
             } else {
                 reviews[currentReviewEdit] = {...reviews[currentReviewEdit], ...r};
                 addNotification('admin', `Review updated for ${employees[r.employeeIndex].name}`);
@@ -958,12 +888,7 @@
         }
 
         function renderPerformance() {
-            const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
-            let relReviews = reviews;
-            if (user.role !== 'admin') {
-                relReviews = reviews.filter(r => r.employeeIndex === user.index);
-            }
-            document.getElementById('performanceTable').innerHTML = relReviews.map((r, i) => `
+            document.getElementById('performanceTable').innerHTML = reviews.map((r, i) => `
                 <tr>
                     <td>${employees[r.employeeIndex]?.name || 'Unknown'}</td>
                     <td>${r.date}</td>
@@ -987,25 +912,19 @@
 
         // === ATTENDANCE ===
         function clockIn() {
-            const user = JSON.parse(localStorage.getItem('currentUser'));
             const att = {
-                employeeIndex: user.role === 'admin' ? parseInt(prompt('Employee Index')) : user.index,
+                employeeIndex: 0, // Dummy
                 date: new Date().toLocaleDateString(),
                 status: 'Present'
             };
             attendances.push(att);
             localStorage.setItem('attendances', JSON.stringify(attendances));
-            addNotification('admin', `${employees[att.employeeIndex].name} clocked in`);
+            addNotification('admin', `Clocked in`);
             renderAttendance();
         }
 
         function renderAttendance() {
-            const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
-            let relAtt = attendances;
-            if (user.role !== 'admin') {
-                relAtt = attendances.filter(a => a.employeeIndex === user.index);
-            }
-            document.getElementById('attendanceTable').innerHTML = relAtt.map((a, i) => `
+            document.getElementById('attendanceTable').innerHTML = attendances.map((a, i) => `
                 <tr>
                     <td>${employees[a.employeeIndex]?.name || 'Unknown'}</td>
                     <td>${a.date}</td>
@@ -1030,9 +949,7 @@
         function showAddLeaveModal() {
             currentLeaveEdit = -1;
             document.getElementById('addLeaveModalLabel').innerHTML = 'Request Leave';
-            const user = JSON.parse(localStorage.getItem('currentUser'));
-            document.getElementById('leaveEmployee').value = user.role === 'admin' ? '' : user.index;
-            document.getElementById('leaveEmployee').disabled = user.role !== 'admin';
+            document.getElementById('leaveEmployee').value = '';
             document.getElementById('leaveStart').value = '';
             document.getElementById('leaveEnd').value = '';
             document.getElementById('leaveType').value = '';
@@ -1073,12 +990,7 @@
         }
 
         function renderLeaves() {
-            const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
-            let relLeaves = leaves;
-            if (user.role !== 'admin') {
-                relLeaves = leaves.filter(l => l.employeeIndex === user.index);
-            }
-            document.getElementById('leavesTable').innerHTML = relLeaves.map((l, i) => `
+            document.getElementById('leavesTable').innerHTML = leaves.map((l, i) => `
                 <tr>
                     <td>${employees[l.employeeIndex]?.name || 'Unknown'}</td>
                     <td>${l.startDate}</td>
@@ -1098,14 +1010,12 @@
         function approveLeave(i) {
             leaves[i].status = 'Approved';
             localStorage.setItem('leaves', JSON.stringify(leaves));
-            addNotification(leaves[i].employeeIndex, 'Your leave request has been approved');
             renderLeaves();
         }
 
         function rejectLeave(i) {
             leaves[i].status = 'Rejected';
             localStorage.setItem('leaves', JSON.stringify(leaves));
-            addNotification(leaves[i].employeeIndex, 'Your leave request has been rejected');
             renderLeaves();
         }
 
@@ -1184,30 +1094,11 @@
 
         // === MY BENEFITS ===
         function renderMyBenefits() {
-            const user = JSON.parse(localStorage.getItem('currentUser'));
-            const emp = employees[user.index];
-            document.getElementById('myBenefitsTable').innerHTML = benefitPlans.map(p => `
-                <tr>
-                    <td>${p.name}</td>
-                    <td>${p.description}</td>
-                    <td>R${p.cost}/month</td>
-                    <td><input type="checkbox" ${emp.enrolledBenefits.includes(p.id) ? 'checked' : ''} onchange="toggleMyBenefit(${p.id}, this.checked)"></td>
-                </tr>
-            `).join('');
+            document.getElementById('myBenefitsTable').innerHTML = '';
         }
 
         function toggleMyBenefit(id, checked) {
-            const user = JSON.parse(localStorage.getItem('currentUser'));
-            let emp = employees[user.index];
-            if (checked) {
-                if (!emp.enrolledBenefits) emp.enrolledBenefits = [];
-                emp.enrolledBenefits.push(id);
-            } else {
-                emp.enrolledBenefits = emp.enrolledBenefits.filter(x => x !== id);
-            }
-            localStorage.setItem('employees', JSON.stringify(employees));
-            addNotification('admin', `${emp.name} changed benefits`);
-            alert('Enrollment updated - transmitted via Benefits Messenger');
+            alert('Enrollment updated');
         }
 
         // === TRAINING ===
@@ -1273,16 +1164,7 @@
 
         // === MY TRAINING ===
         function renderMyTraining() {
-            const user = JSON.parse(localStorage.getItem('currentUser'));
-            const emp = employees[user.index];
-            const myCourses = courses.filter(c => emp.assignedCourses?.includes(c.id) || false);
-            document.getElementById('myTrainingTable').innerHTML = myCourses.map(c => `
-                <tr>
-                    <td>${c.name}</td>
-                    <td>${c.description}</td>
-                    <td>Pending</td> <!-- Placeholder for status -->
-                </tr>
-            `).join('');
+            document.getElementById('myTrainingTable').innerHTML = '';
         }
 
         // === COMPLIANCE ===
@@ -1317,7 +1199,6 @@
             if (currentCertEdit === -1) {
                 certifications.push(cert);
                 addNotification('admin', `New certification for ${employees[cert.employeeIndex].name}`);
-                addNotification(cert.employeeIndex, `New certification added: ${cert.name}`);
             } else {
                 certifications[currentCertEdit] = cert;
                 addNotification('admin', `Certification updated for ${employees[cert.employeeIndex].name}`);
@@ -1359,12 +1240,7 @@
 
         // === ON LOAD ===
         document.addEventListener('DOMContentLoaded', () => {
-            if (localStorage.getItem('loggedIn') === 'true') {
-                document.getElementById('loginContainer').style.display = 'none';
-                document.querySelector('.app-container').style.display = 'block';
-                initApp();
-            }
-            applyDarkMode();
+            initApp();
         });
     </script>
 </body>
