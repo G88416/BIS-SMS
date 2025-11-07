@@ -56,20 +56,14 @@
             <h4 class="mb-4"><i class="fas fa-users me-2"></i><span class="nav-text">HRMS - Bophelong</span></h4>
             <ul class="nav flex-column">
                 <li class="admin-only"><a href="#dashboard" class="nav-link active" onclick="showSection('dashboard')"><i class="fas fa-tachometer-alt me-2"></i><span class="nav-text">HR Analytics Dashboard</span></a></li>
-                <li class="employee-only"><a href="#myDashboard" class="nav-link" onclick="showSection('myDashboard')"><i class="fas fa-tachometer-alt me-2"></i><span class="nav-text">My Dashboard</span></a></li>
                 <li class="admin-only"><a href="#employees" class="nav-link" onclick="showSection('employees')"><i class="fas fa-user-friends me-2"></i><span class="nav-text">Employees (HR Core)</span></a></li>
-                <li class="employee-only"><a href="#myProfile" class="nav-link" onclick="showSection('myProfile')"><i class="fas fa-user me-2"></i><span class="nav-text">My Profile</span></a></li>
                 <li class="admin-only"><a href="#payroll" class="nav-link" onclick="showSection('payroll')"><i class="fas fa-money-check-alt me-2"></i><span class="nav-text">Payroll</span></a></li>
-                <li class="employee-only"><a href="#myPayroll" class="nav-link" onclick="showSection('myPayroll')"><i class="fas fa-money-bill-wave me-2"></i><span class="nav-text">My Payslips</span></a></li>
                 <li class="admin-only"><a href="#recruitment" class="nav-link" onclick="showSection('recruitment')"><i class="fas fa-briefcase me-2"></i><span class="nav-text">iRecruit</span></a></li>
-                <li class="employee-only"><a href="#openJobs" class="nav-link" onclick="showSection('openJobs')"><i class="fas fa-briefcase me-2"></i><span class="nav-text">Job Openings</span></a></li>
                 <li><a href="#performance" class="nav-link" onclick="showSection('performance')"><i class="fas fa-chart-line me-2"></i><span class="nav-text">Performance</span></a></li>
                 <li><a href="#attendance" class="nav-link" onclick="showSection('attendance')"><i class="fas fa-clock me-2"></i><span class="nav-text">Time & Attendance</span></a></li>
                 <li><a href="#leaves" class="nav-link" onclick="showSection('leaves')"><i class="fas fa-calendar-alt me-2"></i><span class="nav-text">Leaves</span></a></li>
                 <li class="admin-only"><a href="#benefits" class="nav-link" onclick="showSection('benefits')"><i class="fas fa-gift me-2"></i><span class="nav-text">Benefits Admin</span></a></li>
-                <li class="employee-only"><a href="#myBenefits" class="nav-link" onclick="showSection('myBenefits')"><i class="fas fa-gift me-2"></i><span class="nav-text">My Benefits</span></a></li>
                 <li class="admin-only"><a href="#training" class="nav-link" onclick="showSection('training')"><i class="fas fa-graduation-cap me-2"></i><span class="nav-text">Training Admin</span></a></li>
-                <li class="employee-only"><a href="#myTraining" class="nav-link" onclick="showSection('myTraining')"><i class="fas fa-graduation-cap me-2"></i><span class="nav-text">My Training</span></a></li>
                 <li class="admin-only"><a href="#compliance" class="nav-link" onclick="showSection('compliance')"><i class="fas fa-balance-scale me-2"></i><span class="nav-text">Compliance</span></a></li>
                 <li class="admin-only"><a href="#reports" class="nav-link" onclick="showSection('reports')"><i class="fas fa-file-alt me-2"></i><span class="nav-text">My Workforce Analyzer</span></a></li>
                 <li class="admin-only"><a href="#settings" class="nav-link" onclick="showSection('settings')"><i class="fas fa-cog me-2"></i><span class="nav-text">Settings</span></a></li>
@@ -92,16 +86,6 @@
                 <canvas id="dashboardChart" class="mt-4"></canvas>
             </section>
 
-            <!-- Employee Self-Service Dashboard -->
-            <section id="myDashboard" class="section d-none">
-                <h2>Welcome, <span id="myName"></span></h2>
-                <div class="row mt-4">
-                    <div class="col-md-4"><div class="card card-metric p-3"><h5>Pending Leaves</h5><h3 id="myPendingLeaves">0</h3></div></div>
-                    <div class="col-md-4"><div class="card card-metric p-3"><h5>My Performance</h5><h3 id="myAvgPerformance">0/5</h3></div></div>
-                    <div class="col-md-4"><div class="card card-metric p-3"><h5>Expiring Certs</h5><h3 id="myExpiringCerts">0</h3></div></div>
-                </div>
-            </section>
-
             <!-- Employees Section -->
             <section id="employees" class="section d-none">
                 <h2>Employee Management (HR Core)</h2>
@@ -110,13 +94,6 @@
                     <thead><tr><th>ID</th><th>Name</th><th>Position</th><th>Branch</th><th>Actions</th></tr></thead>
                     <tbody id="employeeTable"></tbody>
                 </table>
-            </section>
-
-            <!-- My Profile -->
-            <section id="myProfile" class="section d-none">
-                <h2>My Profile</h2>
-                <div id="myProfileContent" class="card p-4"></div>
-                <button class="btn btn-primary mt-3" onclick="saveMyProfile()">Save Changes</button>
             </section>
 
             <!-- Payroll Section -->
@@ -129,15 +106,6 @@
                 </table>
             </section>
 
-            <!-- My Payroll -->
-            <section id="myPayroll" class="section d-none">
-                <h2>My Payslips</h2>
-                <table class="table table-striped">
-                    <thead><tr><th>Month</th><th>Salary</th><th>Deductions</th><th>Net</th></tr></thead>
-                    <tbody id="myPayrollTable"></tbody>
-                </table>
-            </section>
-
             <!-- Recruitment Section -->
             <section id="recruitment" class="section d-none">
                 <h2>iRecruit</h2>
@@ -145,15 +113,6 @@
                 <table class="table table-striped mt-3">
                     <thead><tr><th>ID</th><th>Title</th><th>Branch</th><th>Applications</th><th>Actions</th></tr></thead>
                     <tbody id="jobTable"></tbody>
-                </table>
-            </section>
-
-            <!-- Open Jobs -->
-            <section id="openJobs" class="section d-none">
-                <h2>Job Openings</h2>
-                <table class="table table-striped">
-                    <thead><tr><th>Title</th><th>Branch</th><th>Description</th><th>Apply</th></tr></thead>
-                    <tbody id="openJobsTable"></tbody>
                 </table>
             </section>
 
@@ -197,16 +156,6 @@
                 </table>
             </section>
 
-            <!-- My Benefits (Benefits Enrollment + Messenger) -->
-            <section id="myBenefits" class="section d-none">
-                <h2>My Benefits Enrollment</h2>
-                <p class="alert alert-info">Changes are automatically sent to carriers via <strong>Benefits Messenger</strong></p>
-                <table class="table table-striped">
-                    <thead><tr><th>Plan</th><th>Description</th><th>Cost</th><th>Enroll</th></tr></thead>
-                    <tbody id="myBenefitsTable"></tbody>
-                </table>
-            </section>
-
             <!-- Training Admin -->
             <section id="training" class="section d-none">
                 <h2>Training Admin</h2>
@@ -214,15 +163,6 @@
                 <table class="table table-striped mt-3">
                     <thead><tr><th>ID</th><th>Name</th><th>Description</th><th>Actions</th></tr></thead>
                     <tbody id="courseTable"></tbody>
-                </table>
-            </section>
-
-            <!-- My Training -->
-            <section id="myTraining" class="section d-none">
-                <h2>My Training</h2>
-                <table class="table table-striped">
-                    <thead><tr><th>Name</th><th>Description</th><th>Status</th></tr></thead>
-                    <tbody id="myTrainingTable"></tbody>
                 </table>
             </section>
 
@@ -293,10 +233,11 @@
                     <div class="modal-content">
                         <div class="modal-header"><h5 id="addPayrollModalLabel">Add Payroll</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
                         <div class="modal-body">
-                            <select id="payEmployee" class="form-control mb-3 emp-select"></select>
-                            <input id="payMonth" type="month" class="form-control mb-3">
-                            <input id="paySalary" type="number" placeholder="Salary" class="form-control mb-3">
-                            <input id="payDeductions" type="number" placeholder="Deductions" class="form-control mb-3">
+                            <select id="payEmployee" class="form-control mb-3 emp-select" onchange="calculateDeductions()"></select>
+                            <input id="payMonth" type="month" class="form-control mb-3" onchange="calculateDeductions()">
+                            <input id="paySalary" type="number" placeholder="Salary" class="form-control mb-3" onchange="updateNet()">
+                            <input id="payDeductions" type="number" placeholder="Deductions" class="form-control mb-3" onchange="updateNet()">
+                            <input id="payNet" type="number" placeholder="Net" class="form-control mb-3" readonly>
                         </div>
                         <div class="modal-footer"><button class="btn btn-primary" onclick="savePayroll()">Save</button></div>
                     </div>
@@ -415,21 +356,6 @@
 
         const branches = ['Bophelong Hospice','Bophelong Independent School Mamelodi','Bophelong Independent School Kwa-Mhlanga','Bophelong Orphan Age','Bophelong Mental and Disability Home','Bophelong Old Age Home','Charity and Faith Mission Church'];
 
-        // === LOGIN & ROLE ===
-        function login() {
-            // Removed login functionality
-        }
-
-        function finishLogin() {
-            // Removed
-        }
-
-        function logout() {
-            if (confirm('Logout?')) {
-                location.reload();
-            }
-        }
-
         // === ROLE VISIBILITY ===
         function applyRoleRestrictions() {
             // Default to admin role
@@ -528,23 +454,15 @@
 
             // Render based on section
             if (id === 'dashboard') renderDashboard();
-            if (id === 'myDashboard') renderMyDashboard();
             if (id === 'employees') renderEmployees();
-            if (id === 'myProfile') renderMyProfile();
             if (id === 'payroll') renderPayroll();
-            if (id === 'myPayroll') renderMyPayroll();
             if (id === 'recruitment') renderRecruitment();
-            if (id === 'openJobs') renderOpenJobs();
             if (id === 'performance') renderPerformance();
             if (id === 'attendance') renderAttendance();
             if (id === 'leaves') renderLeaves();
             if (id === 'benefits') renderBenefits();
-            if (id === 'myBenefits') renderMyBenefits();
             if (id === 'training') renderTraining();
-            if (id === 'myTraining') renderMyTraining();
             if (id === 'compliance') renderCompliance();
-            if (id === 'reports') {} // No dynamic render needed
-            if (id === 'settings') {} // No dynamic render needed
         }
 
         // === DASHBOARD ===
@@ -573,15 +491,6 @@
                 },
                 options: {scales: {y: {beginAtZero: true}}}
             });
-        }
-
-        // === MY DASHBOARD ===
-        function renderMyDashboard() {
-            // Since login removed, myDashboard may not be used, but keep for compatibility
-            document.getElementById('myName').textContent = 'Admin';
-            document.getElementById('myPendingLeaves').textContent = 0;
-            document.getElementById('myAvgPerformance').textContent = '0/5';
-            document.getElementById('myExpiringCerts').textContent = 0;
         }
 
         // === EMPLOYEES ===
@@ -668,16 +577,6 @@
             }
         }
 
-        // === MY PROFILE ===
-        function renderMyProfile() {
-            // Since login removed, myProfile may not be used, but keep
-            document.getElementById('myProfileContent').innerHTML = `<p>Admin profile.</p>`;
-        }
-
-        function saveMyProfile() {
-            alert('Saved');
-        }
-
         // === PAYROLL ===
         let currentPayrollEdit = -1;
         function showAddPayrollModal() {
@@ -687,6 +586,7 @@
             document.getElementById('payMonth').value = '';
             document.getElementById('paySalary').value = '';
             document.getElementById('payDeductions').value = '';
+            document.getElementById('payNet').value = '';
             const modal = new bootstrap.Modal(document.getElementById('addPayrollModal'));
             modal.show();
         }
@@ -699,19 +599,81 @@
             document.getElementById('payMonth').value = p.month;
             document.getElementById('paySalary').value = p.salary;
             document.getElementById('payDeductions').value = p.deductions;
+            document.getElementById('payNet').value = p.net;
             const modal = new bootstrap.Modal(document.getElementById('addPayrollModal'));
             modal.show();
         }
 
+        function calculateTax(annualIncome) {
+            let tax = 0;
+            if (annualIncome <= 237100) {
+                tax = annualIncome * 0.18;
+            } else if (annualIncome <= 370500) {
+                tax = 42678 + (annualIncome - 237100) * 0.26;
+            } else if (annualIncome <= 512800) {
+                tax = 77362 + (annualIncome - 370500) * 0.31;
+            } else if (annualIncome <= 673000) {
+                tax = 121475 + (annualIncome - 512800) * 0.36;
+            } else if (annualIncome <= 857900) {
+                tax = 179147 + (annualIncome - 673000) * 0.39;
+            } else if (annualIncome <= 1817000) {
+                tax = 251258 + (annualIncome - 857900) * 0.41;
+            } else {
+                tax = 596695 + (annualIncome - 1817000) * 0.45;
+            }
+            return tax;
+        }
+
+        function calculateDeductions() {
+            const employeeIndex = parseInt(document.getElementById('payEmployee').value);
+            const month = document.getElementById('payMonth').value;
+            if (isNaN(employeeIndex) || !month) return;
+            const emp = employees[employeeIndex];
+            const salary = emp.salary || 0;
+            document.getElementById('paySalary').value = salary;
+
+            // Benefits cost
+            let benefitsCost = 0;
+            if (emp.enrolledBenefits) {
+                emp.enrolledBenefits.forEach(bId => {
+                    const benefit = benefitPlans.find(b => b.id === bId);
+                    if (benefit) benefitsCost += benefit.cost;
+                });
+            }
+
+            // Tax
+            const annualIncome = salary * 12;
+            const annualTax = calculateTax(annualIncome);
+            const monthlyTax = annualTax / 12;
+
+            // Attendance adjustment
+            const workingDays = 22; // Assumption
+            const monthStr = month.substring(5) + '/';
+            const year = month.substring(0, 4);
+            const presentDays = attendances.filter(a => a.employeeIndex === employeeIndex && a.date.startsWith(monthStr) && a.date.endsWith(year)).length;
+            const absentDays = workingDays - presentDays;
+            const dailyRate = salary / workingDays;
+            const absenceDeduction = absentDays * dailyRate;
+
+            const deductions = monthlyTax + benefitsCost + absenceDeduction;
+            document.getElementById('payDeductions').value = deductions.toFixed(2);
+
+            updateNet();
+        }
+
+        function updateNet() {
+            const salary = parseFloat(document.getElementById('paySalary').value) || 0;
+            const deductions = parseFloat(document.getElementById('payDeductions').value) || 0;
+            document.getElementById('payNet').value = (salary - deductions).toFixed(2);
+        }
+
         function savePayroll() {
-            const salary = parseFloat(document.getElementById('paySalary').value);
-            const deductions = parseFloat(document.getElementById('payDeductions').value);
             const p = {
                 employeeIndex: parseInt(document.getElementById('payEmployee').value),
                 month: document.getElementById('payMonth').value,
-                salary,
-                deductions,
-                net: salary - deductions,
+                salary: parseFloat(document.getElementById('paySalary').value),
+                deductions: parseFloat(document.getElementById('payDeductions').value),
+                net: parseFloat(document.getElementById('payNet').value),
             };
             if (currentPayrollEdit === -1) {
                 payrolls.push(p);
@@ -731,9 +693,9 @@
                     <td>${i+1}</td>
                     <td>${employees[p.employeeIndex]?.name || 'Unknown'}</td>
                     <td>${p.month}</td>
-                    <td>R${p.salary}</td>
-                    <td>R${p.deductions}</td>
-                    <td>R${p.net}</td>
+                    <td>R${p.salary.toFixed(2)}</td>
+                    <td>R${p.deductions.toFixed(2)}</td>
+                    <td>R${p.net.toFixed(2)}</td>
                     <td>
                         <button class="btn btn-sm btn-primary" onclick="showEditPayrollModal(${i})">Edit</button>
                         <button class="btn btn-sm btn-danger" onclick="deletePayroll(${i})">Delete</button>
@@ -748,12 +710,6 @@
                 localStorage.setItem('payrolls', JSON.stringify(payrolls));
                 renderPayroll();
             }
-        }
-
-        // === MY PAYROLL ===
-        function renderMyPayroll() {
-            // Since login removed, show all or none
-            document.getElementById('myPayrollTable').innerHTML = '';
         }
 
         // === RECRUITMENT ===
@@ -822,29 +778,6 @@
             }
         }
 
-        // === OPEN JOBS ===
-        function renderOpenJobs() {
-            document.getElementById('openJobsTable').innerHTML = jobs.map(j => `
-                <tr>
-                    <td>${j.title}</td>
-                    <td>${j.branch}</td>
-                    <td>${j.description}</td>
-                    <td><button class="btn btn-primary" onclick="applyJob(${j.id})">Apply</button></td>
-                </tr>
-            `).join('');
-        }
-
-        function applyJob(id) {
-            const job = jobs.find(j => j.id === id);
-            if (job) {
-                job.applications.push(0); // Dummy since no employee
-                localStorage.setItem('jobs', JSON.stringify(jobs));
-                addNotification('admin', `New application for ${job.title}`);
-                alert('Applied successfully');
-                renderOpenJobs();
-            }
-        }
-
         // === PERFORMANCE ===
         let currentReviewEdit = -1;
         function showAddReviewModal() {
@@ -894,7 +827,7 @@
                     <td>${r.date}</td>
                     <td>${r.score}/5</td>
                     <td>${r.comments}</td>
-                    <td class="admin-only">
+                    <td>
                         <button class="btn btn-sm btn-primary" onclick="showEditReviewModal(${i})">Edit</button>
                         <button class="btn btn-sm btn-danger" onclick="deleteReview(${i})">Delete</button>
                     </td>
@@ -912,14 +845,16 @@
 
         // === ATTENDANCE ===
         function clockIn() {
+            const employeeIndex = prompt('Enter employee index to clock in:');
+            if (employeeIndex === null) return;
             const att = {
-                employeeIndex: 0, // Dummy
+                employeeIndex: parseInt(employeeIndex),
                 date: new Date().toLocaleDateString(),
                 status: 'Present'
             };
             attendances.push(att);
             localStorage.setItem('attendances', JSON.stringify(attendances));
-            addNotification('admin', `Clocked in`);
+            addNotification('admin', `${employees[att.employeeIndex]?.name || 'Unknown'} clocked in`);
             renderAttendance();
         }
 
@@ -929,7 +864,7 @@
                     <td>${employees[a.employeeIndex]?.name || 'Unknown'}</td>
                     <td>${a.date}</td>
                     <td>${a.status}</td>
-                    <td class="admin-only">
+                    <td>
                         <button class="btn btn-sm btn-danger" onclick="deleteAttendance(${i})">Delete</button>
                     </td>
                 </tr>
@@ -997,7 +932,7 @@
                     <td>${l.endDate}</td>
                     <td>${l.type}</td>
                     <td>${l.status}</td>
-                    <td class="admin-only">
+                    <td>
                         <button class="btn btn-sm btn-success" onclick="approveLeave(${i})">Approve</button>
                         <button class="btn btn-sm btn-danger" onclick="rejectLeave(${i})">Reject</button>
                         <button class="btn btn-sm btn-primary" onclick="showEditLeaveModal(${i})">Edit</button>
@@ -1092,15 +1027,6 @@
             }
         }
 
-        // === MY BENEFITS ===
-        function renderMyBenefits() {
-            document.getElementById('myBenefitsTable').innerHTML = '';
-        }
-
-        function toggleMyBenefit(id, checked) {
-            alert('Enrollment updated');
-        }
-
         // === TRAINING ===
         let currentCourseEdit = -1;
         function showAddCourseModal() {
@@ -1160,11 +1086,6 @@
                 localStorage.setItem('courses', JSON.stringify(courses));
                 renderTraining();
             }
-        }
-
-        // === MY TRAINING ===
-        function renderMyTraining() {
-            document.getElementById('myTrainingTable').innerHTML = '';
         }
 
         // === COMPLIANCE ===
