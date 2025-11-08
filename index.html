@@ -11,6 +11,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mammoth@1.4.2/mammoth.browser.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         body { font-family: 'Poppins', sans-serif; background-color: #f0f8ff; color: #333; box-shadow: 0 0 20px #4169E1; }
         .sidebar { background-color: #e6f3ff; border-right: 1px solid #87ceeb; height: 100vh; position: fixed; width: 250px; padding: 20px; overflow-y: auto; transition: width 0.3s ease; z-index: 1000; box-shadow: 0 0 20px #4169E1; }
@@ -50,6 +51,10 @@
         .login-card { width: 100%; max-width: 420px; padding: 2rem; border-radius: 15px; box-shadow: 0 10px 30px rgba(65,105,225,0.3); background: white; }
         .login-title { font-weight: 700; color: #4169e1; }
         .login-demo { font-size: 0.85rem; color: #666; }
+        .payslip-preview { display: none; }
+        .payslip-header { background-color: #4169e1; color: white; padding: 1rem; text-align: center; }
+        .payslip-body { padding: 1rem; }
+        .payslip-footer { border-top: 1px solid #ddd; padding: 1rem; text-align: center; font-size: 0.8rem; }
     </style>
 </head>
 <body>
@@ -133,6 +138,21 @@
                 <canvas id="dashboardChart" class="mt-4"></canvas>
             </section>
 
+            <!-- Enhanced Employee Dashboard -->
+            <section id="myDashboard" class="section d-none">
+                <h2>Welcome, <span id="myName"></span></h2>
+                <div class="row mt-4">
+                    <div class="col-md-3 col-sm-6 mb-3"><div class="card card-metric p-3"><h5>Recent Payslips</h5><p id="recentPayslips">No recent payslips</p></div></div>
+                    <div class="col-md-3 col-sm-6 mb-3"><div class="card card-metric p-3"><h5>Upcoming Leaves</h5><h3 id="upcomingLeaves">0</h3></div></div>
+                    <div class="col-md-3 col-sm-6 mb-3"><div class="card card-metric p-3"><h5>Performance Rating</h5><h3 id="myAvgPerformance">0/5</h3></div></div>
+                    <div class="col-md-3 col-sm-6 mb-3"><div class="card card-metric p-3"><h5>Pending Tasks</h5><h3 id="pendingTasks">0</h3></div></div>
+                </div>
+                <div class="row mt-4">
+                    <div class="col-md-6"><canvas id="myPerformanceChart" height="200"></canvas></div>
+                    <div class="col-md-6"><canvas id="myLeaveChart" height="200"></canvas></div>
+                </div>
+            </section>
+
             <!-- Employees Section -->
             <section id="employees" class="section d-none">
                 <h2>Employee Management (HR Core)</h2>
@@ -143,13 +163,29 @@
                 </table>
             </section>
 
-            <!-- Payroll Section -->
+            <!-- My Profile (Employee Self-Service) -->
+            <section id="myProfile" class="section d-none">
+                <h2>My Profile</h2>
+                <div id="myProfileContent" class="card p-4"></div>
+                <button class="btn btn-primary mt-3" onclick="saveMyProfile()">Save Changes</button>
+            </section>
+
+            <!-- Payroll Section with Payslip Generation -->
             <section id="payroll" class="section d-none">
                 <h2>Payroll</h2>
                 <button class="btn btn-primary" onclick="showAddPayrollModal()">Add Payroll Entry</button>
                 <table class="table table-striped mt-3">
-                    <thead><tr><th>ID</th><th>Employee</th><th>Month</th><th>Salary</th><th>Deductions</th><th>Net</th><th>Actions</th></tr></thead>
+                    <thead><tr><th>ID</th><th>Employee</th><th>Month</th><th>Salary</th><th>Bonus</th><th>Overtime</th><th>Allowances</th><th>UIF</th><th>Tax</th><th>Deductions</th><th>Net</th><th>Tax Number</th><th>Actions</th></tr></thead>
                     <tbody id="payrollTable"></tbody>
+                </table>
+            </section>
+
+            <!-- My Payroll (Employee Self-Service) -->
+            <section id="myPayroll" class="section d-none">
+                <h2>My Payslips</h2>
+                <table class="table table-striped">
+                    <thead><tr><th>Month</th><th>Salary</th><th>Deductions</th><th>Net</th><th>Actions</th></tr></thead>
+                    <tbody id="myPayrollTable"></tbody>
                 </table>
             </section>
 
@@ -160,6 +196,15 @@
                 <table class="table table-striped mt-3">
                     <thead><tr><th>ID</th><th>Title</th><th>Branch</th><th>Applications</th><th>Actions</th></tr></thead>
                     <tbody id="jobTable"></tbody>
+                </table>
+            </section>
+
+            <!-- Open Jobs (Employee Self-Service) -->
+            <section id="openJobs" class="section d-none">
+                <h2>Job Openings</h2>
+                <table class="table table-striped">
+                    <thead><tr><th>Title</th><th>Branch</th><th>Description</th><th>Apply</th></tr></thead>
+                    <tbody id="openJobsTable"></tbody>
                 </table>
             </section>
 
@@ -203,6 +248,16 @@
                 </table>
             </section>
 
+            <!-- My Benefits (Employee Self-Service) -->
+            <section id="myBenefits" class="section d-none">
+                <h2>My Benefits Enrollment</h2>
+                <p class="alert alert-info">Changes are automatically sent to carriers via <strong>Benefits Messenger</strong></p>
+                <table class="table table-striped">
+                    <thead><tr><th>Plan</th><th>Description</th><th>Cost</th><th>Enroll</th></tr></thead>
+                    <tbody id="myBenefitsTable"></tbody>
+                </table>
+            </section>
+
             <!-- Training Admin -->
             <section id="training" class="section d-none">
                 <h2>Training Admin</h2>
@@ -210,6 +265,15 @@
                 <table class="table table-striped mt-3">
                     <thead><tr><th>ID</th><th>Name</th><th>Description</th><th>Actions</th></tr></thead>
                     <tbody id="courseTable"></tbody>
+                </table>
+            </section>
+
+            <!-- My Training (Employee Self-Service) -->
+            <section id="myTraining" class="section d-none">
+                <h2>My Training</h2>
+                <table class="table table-striped">
+                    <thead><tr><th>Name</th><th>Description</th><th>Status</th></tr></thead>
+                    <tbody id="myTrainingTable"></tbody>
                 </table>
             </section>
 
@@ -278,6 +342,8 @@
                             <input id="empSalary" type="number" placeholder="Salary" class="form-control mb-3">
                             <input id="empUsername" placeholder="Username" class="form-control mb-3">
                             <input id="empPassword" type="password" placeholder="Password" class="form-control mb-3">
+                            <input id="empTaxNumber" placeholder="Tax Number" class="form-control mb-3">
+                            <input id="empUIF" placeholder="UIF Number" class="form-control mb-3">
                         </div>
                         <div class="modal-footer"><button class="btn btn-primary" onclick="saveEmployee()">Save</button></div>
                     </div>
@@ -293,7 +359,12 @@
                             <select id="payEmployee" class="form-control mb-3 emp-select" onchange="calculateDeductions()"></select>
                             <input id="payMonth" type="month" class="form-control mb-3" onchange="calculateDeductions()">
                             <input id="paySalary" type="number" placeholder="Salary" class="form-control mb-3" onchange="updateNet()">
-                            <input id="payDeductions" type="number" placeholder="Deductions" class="form-control mb-3" onchange="updateNet()">
+                            <input id="payBonus" type="number" placeholder="Bonus" class="form-control mb-3" onchange="updateNet()" readonly>
+                            <input id="payOvertime" type="number" placeholder="Overtime Hours" class="form-control mb-3" onchange="updateNet()">
+                            <input id="payAllowances" type="number" placeholder="Allowances" class="form-control mb-3" onchange="updateNet()">
+                            <input id="payUIF" type="number" placeholder="UIF" class="form-control mb-3" readonly>
+                            <input id="payTax" type="number" placeholder="Tax" class="form-control mb-3" readonly>
+                            <input id="payDeductions" type="number" placeholder="Other Deductions" class="form-control mb-3" onchange="updateNet()">
                             <input id="payNet" type="number" placeholder="Net" class="form-control mb-3" readonly>
                         </div>
                         <div class="modal-footer"><button class="btn btn-primary" onclick="savePayroll()">Save</button></div>
@@ -579,15 +650,23 @@
 
             // Render based on section
             if (id === 'dashboard') renderDashboard();
+            if (id === 'myDashboard') renderMyDashboard();
             if (id === 'employees') renderEmployees();
+            if (id === 'myProfile') renderMyProfile();
             if (id === 'payroll') renderPayroll();
+            if (id === 'myPayroll') renderMyPayroll();
             if (id === 'recruitment') renderRecruitment();
+            if (id === 'openJobs') renderOpenJobs();
             if (id === 'performance') renderPerformance();
             if (id === 'attendance') renderAttendance();
             if (id === 'leaves') renderLeaves();
             if (id === 'benefits') renderBenefits();
+            if (id === 'myBenefits') renderMyBenefits();
             if (id === 'training') renderTraining();
+            if (id === 'myTraining') renderMyTraining();
             if (id === 'compliance') renderCompliance();
+            if (id === 'reports') {} // No dynamic render needed
+            if (id === 'settings') {} // No dynamic render needed
             if (id === 'mediaApproval') renderMediaApproval();
         }
 
@@ -619,6 +698,48 @@
             });
         }
 
+        // === MY DASHBOARD ===
+        function renderMyDashboard() {
+            const user = JSON.parse(localStorage.getItem('currentUser'));
+            const emp = employees[user.index];
+            document.getElementById('myName').textContent = emp.name;
+
+            // Recent Payslips
+            const recentPayslips = payrolls.filter(p => p.employeeIndex === user.index).slice(-3).reverse();
+            document.getElementById('recentPayslips').innerHTML = recentPayslips.length > 0 ? recentPayslips.map(p => `<small>${p.month}: R${p.net.toFixed(2)}</small><br>`).join('') : 'No recent payslips';
+
+            // Upcoming Leaves
+            const upcomingLeaves = leaves.filter(l => l.employeeIndex === user.index && l.status === 'Approved' && new Date(l.startDate) > new Date()).length;
+            document.getElementById('upcomingLeaves').textContent = upcomingLeaves;
+
+            // Performance
+            const myReviews = reviews.filter(r => r.employeeIndex === user.index);
+            const avg = myReviews.length ? (myReviews.reduce((sum, r) => sum + r.score, 0) / myReviews.length).toFixed(1) : 0;
+            document.getElementById('myAvgPerformance').textContent = avg + '/5';
+
+            // Pending Tasks (placeholder)
+            document.getElementById('pendingTasks').textContent = 2; // Example
+
+            // Charts
+            const reviewCtx = document.getElementById('myPerformanceChart').getContext('2d');
+            new Chart(reviewCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Completed', 'Pending'],
+                    datasets: [{data: [avg * 20, (5 - avg) * 20], backgroundColor: ['#28a745', '#ffc107']}]
+                }
+            });
+
+            const leaveCtx = document.getElementById('myLeaveChart').getContext('2d');
+            new Chart(leaveCtx, {
+                type: 'pie',
+                data: {
+                    labels: ['Approved', 'Pending'],
+                    datasets: [{data: [upcomingLeaves, leaves.filter(l => l.employeeIndex === user.index && l.status === 'Pending').length], backgroundColor: ['#28a745', '#ffc107']}]
+                }
+            });
+        }
+
         // === EMPLOYEES ===
         let currentEmployeeEdit = -1;
         function showAddEmployeeModal() {
@@ -632,6 +753,8 @@
             document.getElementById('empSalary').value = '';
             document.getElementById('empUsername').value = '';
             document.getElementById('empPassword').value = '';
+            document.getElementById('empTaxNumber').value = '';
+            document.getElementById('empUIF').value = '';
             const modal = new bootstrap.Modal(document.getElementById('addEmployeeModal'));
             modal.show();
         }
@@ -648,6 +771,8 @@
             document.getElementById('empSalary').value = e.salary;
             document.getElementById('empUsername').value = e.username;
             document.getElementById('empPassword').value = e.password;
+            document.getElementById('empTaxNumber').value = e.taxNumber || '';
+            document.getElementById('empUIF').value = e.uifNumber || '';
             const modal = new bootstrap.Modal(document.getElementById('addEmployeeModal'));
             modal.show();
         }
@@ -662,6 +787,8 @@
                 salary: parseFloat(document.getElementById('empSalary').value),
                 username: document.getElementById('empUsername').value,
                 password: document.getElementById('empPassword').value,
+                taxNumber: document.getElementById('empTaxNumber').value,
+                uifNumber: document.getElementById('empUIF').value,
                 enrolledBenefits: currentEmployeeEdit !== -1 ? employees[currentEmployeeEdit].enrolledBenefits || [] : [],
             };
             if (currentEmployeeEdit === -1) {
@@ -703,139 +830,37 @@
             }
         }
 
-        // === PAYROLL ===
-        let currentPayrollEdit = -1;
-        function showAddPayrollModal() {
-            currentPayrollEdit = -1;
-            document.getElementById('addPayrollModalLabel').innerHTML = 'Add Payroll';
-            document.getElementById('payEmployee').value = '';
-            document.getElementById('payMonth').value = '';
-            document.getElementById('paySalary').value = '';
-            document.getElementById('payDeductions').value = '';
-            document.getElementById('payNet').value = '';
-            const modal = new bootstrap.Modal(document.getElementById('addPayrollModal'));
-            modal.show();
+        // === MY PROFILE ===
+        function renderMyProfile() {
+            const user = JSON.parse(localStorage.getItem('currentUser'));
+            const emp = employees[user.index];
+            document.getElementById('myProfileContent').innerHTML = `
+                <div class="mb-3"><label>Name</label><input id="myNameInput" class="form-control" value="${emp.name}"></div>
+                <div class="mb-3"><label>Position</label><input id="myPosition" class="form-control" value="${emp.position}" disabled></div>
+                <div class="mb-3"><label>Branch</label><input id="myBranch" class="form-control" value="${emp.branch}" disabled></div>
+                <div class="mb-3"><label>Email</label><input id="myEmail" class="form-control" value="${emp.email}"></div>
+                <div class="mb-3"><label>Phone</label><input id="myPhone" class="form-control" value="${emp.phone}"></div>
+                <div class="mb-3"><label>Password</label><input id="myPassword" type="password" class="form-control" value="${emp.password}"></div>
+            `;
         }
 
-        function showEditPayrollModal(i) {
-            currentPayrollEdit = i;
-            document.getElementById('addPayrollModalLabel').innerHTML = 'Edit Payroll';
-            const p = payrolls[i];
-            document.getElementById('payEmployee').value = p.employeeIndex;
-            document.getElementById('payMonth').value = p.month;
-            document.getElementById('paySalary').value = p.salary;
-            document.getElementById('payDeductions').value = p.deductions;
-            document.getElementById('payNet').value = p.net;
-            const modal = new bootstrap.Modal(document.getElementById('addPayrollModal'));
-            modal.show();
+        function saveMyProfile() {
+            const user = JSON.parse(localStorage.getItem('currentUser'));
+            const emp = employees[user.index];
+            emp.name = document.getElementById('myNameInput').value;
+            emp.email = document.getElementById('myEmail').value;
+            emp.phone = document.getElementById('myPhone').value;
+            emp.password = document.getElementById('myPassword').value;
+            localStorage.setItem('employees', JSON.stringify(employees));
+            addNotification('admin', `${emp.name} updated profile`);
+            alert('Profile saved');
+            populateSelects();
         }
 
-        function calculateTax(annualIncome) {
-            let tax = 0;
-            if (annualIncome <= 237100) {
-                tax = annualIncome * 0.18;
-            } else if (annualIncome <= 370500) {
-                tax = 42678 + (annualIncome - 237100) * 0.26;
-            } else if (annualIncome <= 512800) {
-                tax = 77362 + (annualIncome - 370500) * 0.31;
-            } else if (annualIncome <= 673000) {
-                tax = 121475 + (annualIncome - 512800) * 0.36;
-            } else if (annualIncome <= 857900) {
-                tax = 179147 + (annualIncome - 673000) * 0.39;
-            } else if (annualIncome <= 1817000) {
-                tax = 251258 + (annualIncome - 857900) * 0.41;
-            } else {
-                tax = 596695 + (annualIncome - 1817000) * 0.45;
-            }
-            return tax;
-        }
-
-        function calculateDeductions() {
-            const employeeIndex = parseInt(document.getElementById('payEmployee').value);
-            const month = document.getElementById('payMonth').value;
-            if (isNaN(employeeIndex) || !month) return;
-            const emp = employees[employeeIndex];
-            const salary = emp.salary || 0;
-            document.getElementById('paySalary').value = salary;
-
-            // Benefits cost
-            let benefitsCost = 0;
-            if (emp.enrolledBenefits) {
-                emp.enrolledBenefits.forEach(bId => {
-                    const benefit = benefitPlans.find(b => b.id === bId);
-                    if (benefit) benefitsCost += benefit.cost;
-                });
-            }
-
-            // Tax
-            const annualIncome = salary * 12;
-            const annualTax = calculateTax(annualIncome);
-            const monthlyTax = annualTax / 12;
-
-            // Attendance adjustment
-            const workingDays = 22;
-            const monthStr = month.substring(5) + '/';
-            const year = month.substring(0, 4);
-            const presentDays = attendances.filter(a => a.employeeIndex === employeeIndex && a.date.startsWith(monthStr) && a.date.endsWith(year)).length;
-            const absentDays = workingDays - presentDays;
-            const dailyRate = salary / workingDays;
-            const absenceDeduction = absentDays * dailyRate;
-
-            const deductions = monthlyTax + benefitsCost + absenceDeduction;
-            document.getElementById('payDeductions').value = deductions.toFixed(2);
-
-            updateNet();
-        }
-
-        function updateNet() {
-            const salary = parseFloat(document.getElementById('paySalary').value) || 0;
-            const deductions = parseFloat(document.getElementById('payDeductions').value) || 0;
-            document.getElementById('payNet').value = (salary - deductions).toFixed(2);
-        }
-
-        function savePayroll() {
-            const p = {
-                employeeIndex: parseInt(document.getElementById('payEmployee').value),
-                month: document.getElementById('payMonth').value,
-                salary: parseFloat(document.getElementById('paySalary').value),
-                deductions: parseFloat(document.getElementById('payDeductions').value),
-                net: parseFloat(document.getElementById('payNet').value),
-            };
-            if (currentPayrollEdit === -1) {
-                payrolls.push(p);
-                addNotification('admin', `New payroll for ${employees[p.employeeIndex].name}`);
-            } else {
-                payrolls[currentPayrollEdit] = p;
-                addNotification('admin', `Payroll updated for ${employees[p.employeeIndex].name}`);
-            }
-            localStorage.setItem('payrolls', JSON.stringify(payrolls));
-            renderPayroll();
-            bootstrap.Modal.getInstance(document.getElementById('addPayrollModal')).hide();
-        }
-
-        function renderPayroll() {
-            document.getElementById('payrollTable').innerHTML = payrolls.map((p, i) => `
-                <tr>
-                    <td>${i+1}</td>
-                    <td>${employees[p.employeeIndex]?.name || 'Unknown'}</td>
-                    <td>${p.month}</td>
-                    <td>R${p.salary.toFixed(2)}</td>
-                    <td>R${p.deductions.toFixed(2)}</td>
-                    <td>R${p.net.toFixed(2)}</td>
-                    <td>
-                        <button class="btn btn-sm btn-primary" onclick="showEditPayrollModal(${i})">Edit</button>
-                        <button class="btn btn-sm btn-danger" onclick="deletePayroll(${i})">Delete</button>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        function deletePayroll(i) {
-            if (confirm('Delete?')) {
-                payrolls.splice(i, 1);
-                localStorage.setItem('payrolls', JSON.stringify(payrolls));
-                renderPayroll();
-            }
+        // === PAYROLL AUDIT TRAIL ===
+        function logAudit(action, details) {
+            auditLog.push({id: Date.now(), action, details, date: new Date().toLocaleString()});
+            localStorage.setItem('auditLog', JSON.stringify(auditLog));
         }
 
         // === RECRUITMENT ===
