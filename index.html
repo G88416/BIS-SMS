@@ -55,6 +55,8 @@
         .payslip-header { background-color: #4169e1; color: white; padding: 1rem; text-align: center; }
         .payslip-body { padding: 1rem; }
         .payslip-footer { border-top: 1px solid #ddd; padding: 1rem; text-align: center; font-size: 0.8rem; }
+        /* make audit table scrollable on small screens */
+        #audit .table { max-height: 60vh; overflow-y: auto; display: block; }
     </style>
 </head>
 <body>
@@ -118,6 +120,7 @@
                 <li class="admin-only"><a href="#compliance" class="nav-link" onclick="showSection('compliance')"><i class="fas fa-balance-scale me-2"></i><span class="nav-text">Compliance</span></a></li>
                 <li class="admin-only"><a href="#reports" class="nav-link" onclick="showSection('reports')"><i class="fas fa-file-alt me-2"></i><span class="nav-text">My Workforce Analyzer</span></a></li>
                 <li class="admin-only"><a href="#settings" class="nav-link" onclick="showSection('settings')"><i class="fas fa-cog me-2"></i><span class="nav-text">Settings</span></a></li>
+                <li class="admin-only"><a href="#audit" class="nav-link" onclick="showSection('audit')"><i class="fas fa-history me-2"></i><span class="nav-text">Payroll Audit Trail</span></a></li>
                 <li class="admin-only"><a href="#mediaApproval" class="nav-link" onclick="showSection('mediaApproval')"><i class="fas fa-check-circle me-2"></i><span class="nav-text">Media Approval</span></a></li>
                 <li><a href="#" class="nav-link text-danger" onclick="logout()"><i class="fas fa-sign-out-alt me-2"></i><span class="nav-text">Logout</span></a></li>
             </ul>
@@ -158,7 +161,7 @@
                 <h2>Employee Management (HR Core)</h2>
                 <button class="btn btn-primary" onclick="showAddEmployeeModal()">Add Employee</button>
                 <table class="table table-striped mt-3">
-                    <thead><tr><th>ID</th><th>Name</th><th>Position</th><th>Branch</th><th>Actions</th></tr></thead>
+                    <thead><tr><th>ID</th><th>Name</th><th>Position</th><th>Branch</th><th>Salary</th><th>Tax #</th><th>UIF #</th><th>Actions</th></tr></thead>
                     <tbody id="employeeTable"></tbody>
                 </table>
             </section>
@@ -268,6 +271,45 @@
                 <table class="table table-striped mt-3">
                     <thead><tr><th>ID</th><th>Title</th><th>Uploader</th><th>Status</th><th>Actions</th></tr></thead>
                     <tbody id="mediaTable"></tbody>
+                </table>
+            </section>
+
+            <!-- ==== AUDIT TRAIL SECTION (Admin only) ==== -->
+            <section id="audit" class="section d-none">
+                <h2>Payroll Audit Trail</h2>
+                <table class="table table-striped mt-3">
+                    <thead><tr><th>Time</th><th>User</th><th>Action</th><th>Details</th></tr></thead>
+                    <tbody id="auditTable"></tbody>
+                </table>
+            </section>
+
+            <!-- ==== MY PROFILE (Employee) ==== -->
+            <section id="myProfile" class="section d-none">
+                <h2>My Profile – <span id="profileName"></span></h2>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card p-3 mb-3"><strong>Email:</strong> <span id="profileEmail"></span></div>
+                        <div class="card p-3 mb-3"><strong>Phone:</strong> <span id="profilePhone"></span></div>
+                        <div class="card p-3 mb-3"><strong>Salary:</strong> <span id="profileSalary"></span></div>
+                        <div class="card p-3 mb-3"><strong>Tax #:</strong> <span id="profileTax"></span></div>
+                        <div class="card p-3 mb-3"><strong>UIF #:</strong> <span id="profileUIF"></span></div>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>Enrolled Benefits</h5>
+                        <ul id="profileBenefits" class="list-group"></ul>
+                        <h5 class="mt-3">Compliance Certificates</h5>
+                        <ul id="profileCerts" class="list-group"></ul>
+                    </div>
+                </div>
+                <button class="btn btn-primary mt-3" onclick="showEditMyProfile()">Edit Profile</button>
+            </section>
+
+            <!-- ==== MY PAYSLIPS (Employee) ==== -->
+            <section id="myPayroll" class="section d-none">
+                <h2>My Payslips</h2>
+                <table class="table table-striped mt-3">
+                    <thead><tr><th>Month</th><th>Gross</th><th>Deductions</th><th>Bonus</th><th>Net</th><th>Action</th></tr></thead>
+                    <tbody id="myPayrollTable"></tbody>
                 </table>
             </section>
 
@@ -383,6 +425,7 @@
                             <input id="payMonth" type="month" class="form-control mb-3" onchange="calculateDeductions()">
                             <input id="paySalary" type="number" placeholder="Salary" class="form-control mb-3" onchange="updateNet()">
                             <input id="payDeductions" type="number" placeholder="Deductions" class="form-control mb-3" onchange="updateNet()">
+                            <input id="payBonus" type="number" placeholder="Bonus (auto-filled)" class="form-control mb-3" readonly>
                             <input id="payNet" type="number" placeholder="Net" class="form-control mb-3" readonly>
                         </div>
                         <div class="modal-footer"><button class="btn btn-primary" onclick="savePayroll()">Save</button></div>
@@ -491,6 +534,22 @@
                             <input id="mediaFile" type="file" class="form-control mb-3">
                         </div>
                         <div class="modal-footer"><button class="btn btn-primary" onclick="uploadMedia()">Upload</button></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==== EDIT MY PROFILE MODAL ==== -->
+            <div class="modal fade" id="editMyProfileModal">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header"><h5>Edit My Profile</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                        <div class="modal-body">
+                            <input id="editName" placeholder="Name" class="form-control mb-3">
+                            <input id="editEmail" placeholder="Email" class="form-control mb-3">
+                            <input id="editPhone" placeholder="Phone" class="form-control mb-3">
+                            <input id="editPassword" type="password" placeholder="New Password (optional)" class="form-control mb-3">
+                        </div>
+                        <div class="modal-footer"><button class="btn btn-primary" onclick="saveMyProfile()">Save</button></div>
                     </div>
                 </div>
             </div>
@@ -644,6 +703,7 @@
             }
             applyDarkMode();
             document.getElementById('darkModeSwitch').checked = settings.darkMode;
+            if (user.role === 'admin') renderAudit();
         }
 
         function populateSelects() {
@@ -704,6 +764,7 @@
             if (id === 'compliance') renderCompliance();
             if (id === 'reports') {} // No dynamic render needed
             if (id === 'settings') {} // No dynamic render needed
+            if (id === 'audit') renderAudit();
             if (id === 'mediaApproval') renderMediaApproval();
         }
 
@@ -848,6 +909,9 @@
                     <td>${e.name}</td>
                     <td>${e.position}</td>
                     <td>${e.branch}</td>
+                    <td>R${e.salary.toFixed(2)}</td>
+                    <td>${e.taxNumber || '-'}</td>
+                    <td>${e.uifNumber || '-'}</td>
                     <td>
                         <button class="btn btn-sm btn-primary" onclick="showEditEmployeeModal(${i})">Edit</button>
                         <button class="btn btn-sm btn-danger" onclick="deleteEmployee(${i})">Delete</button>
@@ -869,6 +933,8 @@
 
         // === PAYROLL ===
         let currentPayrollEdit = -1;
+        const BONUS_RATE = 5000; // R5 000 per performance point (customise)
+
         function showAddPayrollModal() {
             currentPayrollEdit = -1;
             document.getElementById('addPayrollModalLabel').innerHTML = 'Add Payroll';
@@ -876,6 +942,7 @@
             document.getElementById('payMonth').value = '';
             document.getElementById('paySalary').value = '';
             document.getElementById('payDeductions').value = '';
+            document.getElementById('payBonus').value = '0';
             document.getElementById('payNet').value = '';
             const modal = new bootstrap.Modal(document.getElementById('addPayrollModal'));
             modal.show();
@@ -889,6 +956,7 @@
             document.getElementById('payMonth').value = p.month;
             document.getElementById('paySalary').value = p.salary;
             document.getElementById('payDeductions').value = p.deductions;
+            document.getElementById('payBonus').value = p.bonus;
             document.getElementById('payNet').value = p.net;
             const modal = new bootstrap.Modal(document.getElementById('addPayrollModal'));
             modal.show();
@@ -922,7 +990,7 @@
             const salary = emp.salary || 0;
             document.getElementById('paySalary').value = salary;
 
-            // Benefits cost
+            // ----- BENEFITS -----
             let benefitsCost = 0;
             if (emp.enrolledBenefits) {
                 emp.enrolledBenefits.forEach(bId => {
@@ -931,28 +999,32 @@
                 });
             }
 
-            // UIF (1% of salary)
+            // ----- UIF (1 %) -----
             const uif = salary * 0.01;
 
-            // Tax
+            // ----- TAX (SARS 2024/25) -----
             const annualIncome = salary * 12;
             const annualTax = calculateTax(annualIncome);
             const monthlyTax = annualTax / 12;
 
-            // Other deductions
-            const otherDeductions = benefitsCost;
+            // ----- PERFORMANCE BONUS -----
+            const latestReview = reviews
+                .filter(r => r.employeeIndex === employeeIndex)
+                .sort((a, b) => new Date(b.date) - new Date(a.date))[0];
+            const bonus = latestReview ? latestReview.score * BONUS_RATE : 0;
 
-            // Total deductions
-            const deductions = uif + monthlyTax + otherDeductions;
+            // ----- TOTAL DEDUCTIONS -----
+            const deductions = uif + monthlyTax + benefitsCost;
             document.getElementById('payDeductions').value = deductions.toFixed(2);
-
+            document.getElementById('payBonus').value = bonus.toFixed(2);
             updateNet();
         }
 
         function updateNet() {
             const salary = parseFloat(document.getElementById('paySalary').value) || 0;
             const deductions = parseFloat(document.getElementById('payDeductions').value) || 0;
-            document.getElementById('payNet').value = (salary - deductions).toFixed(2);
+            const bonus = parseFloat(document.getElementById('payBonus').value) || 0;
+            document.getElementById('payNet').value = (salary - deductions + bonus).toFixed(2);
         }
 
         function savePayroll() {
@@ -961,17 +1033,21 @@
                 month: document.getElementById('payMonth').value,
                 salary: parseFloat(document.getElementById('paySalary').value),
                 deductions: parseFloat(document.getElementById('payDeductions').value),
+                bonus: parseFloat(document.getElementById('payBonus').value || 0),
                 net: parseFloat(document.getElementById('payNet').value),
                 uif: parseFloat(document.getElementById('paySalary').value) * 0.01,
                 tax: calculateTax(parseFloat(document.getElementById('paySalary').value) * 12) / 12,
                 taxNumber: employees[parseInt(document.getElementById('payEmployee').value)].taxNumber
             };
+            const action = currentPayrollEdit === -1 ? 'CREATE' : 'UPDATE';
             if (currentPayrollEdit === -1) {
                 payrolls.push(p);
                 addNotification('admin', `New payroll for ${employees[p.employeeIndex].name}`);
+                logAudit('PAYROLL_CREATE', `${employees[p.employeeIndex].name} – ${p.month}`);
             } else {
                 payrolls[currentPayrollEdit] = p;
                 addNotification('admin', `Payroll updated for ${employees[p.employeeIndex].name}`);
+                logAudit('PAYROLL_UPDATE', `${employees[p.employeeIndex].name} – ${p.month}`);
             }
             localStorage.setItem('payrolls', JSON.stringify(payrolls));
             renderPayroll();
@@ -999,9 +1075,11 @@
         }
 
         function deletePayroll(i) {
-            if (confirm('Delete?')) {
+            if (confirm('Delete payroll entry?')) {
+                const p = payrolls[i];
                 payrolls.splice(i, 1);
                 localStorage.setItem('payrolls', JSON.stringify(payrolls));
+                logAudit('PAYROLL_DELETE', `${employees[p.employeeIndex].name} – ${p.month}`);
                 renderPayroll();
             }
         }
@@ -1015,9 +1093,16 @@
             document.getElementById('payslipSalary').textContent = `R${p.salary.toFixed(2)}`;
             document.getElementById('payslipUIF').textContent = `R${p.uif.toFixed(2)}`;
             document.getElementById('payslipTax').textContent = `R${p.tax.toFixed(2)}`;
-            document.getElementById('payslipOther').textContent = `R${(p.deductions - p.uif - p.tax).toFixed(2)}`;
+            const other = p.deductions - p.uif - p.tax;
+            document.getElementById('payslipOther').textContent = `R${other.toFixed(2)}`;
             document.getElementById('payslipTotalDeductions').textContent = `R${p.deductions.toFixed(2)}`;
             document.getElementById('payslipNet').textContent = `R${p.net.toFixed(2)}`;
+
+            // bonus line
+            const bonusRow = `<tr><th>Performance Bonus</th><td>R${p.bonus.toFixed(2)}</td></tr>`;
+            const table = document.querySelector('#payslipPreview .table');
+            table.insertAdjacentHTML('beforeend', bonusRow);
+
             document.getElementById('payslipTaxNumber').innerHTML = `<strong>Tax Number:</strong> ${p.taxNumber}`;
             document.getElementById('payslipTaxNumFooter').textContent = p.taxNumber;
             document.getElementById('payslipPreview').style.display = 'block';
@@ -1076,19 +1161,17 @@
         function renderMyPayroll() {
             const user = JSON.parse(localStorage.getItem('currentUser'));
             const myP = payrolls.filter(p => p.employeeIndex === user.index);
-            document.getElementById('myPayrollTable').innerHTML = myP.map(p => `
+            const tbody = document.getElementById('myPayrollTable');
+            tbody.innerHTML = myP.map((p, i) => `
                 <tr>
                     <td>${p.month}</td>
                     <td>R${p.salary.toFixed(2)}</td>
                     <td>R${p.deductions.toFixed(2)}</td>
+                    <td>R${p.bonus.toFixed(2)}</td>
                     <td>R${p.net.toFixed(2)}</td>
-                    <td><button class="btn btn-sm btn-primary" onclick="generatePayslipForEmployee(${myP.indexOf(p)})">Download Payslip</button></td>
+                    <td><button class="btn btn-sm btn-primary" onclick="generatePayslip(${payrolls.indexOf(p)})">PDF</button></td>
                 </tr>
             `).join('');
-        }
-
-        function generatePayslipForEmployee(i) {
-            generatePayslip(i);
         }
 
         // === RECRUITMENT ===
@@ -1590,6 +1673,98 @@
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
             XLSX.writeFile(wb, filename + '.xlsx');
+        }
+
+        // === AUDIT TRAIL ===
+        function logAudit(action, details) {
+            const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
+            const entry = {
+                time: new Date().toLocaleString(),
+                user: user.role === 'admin' ? 'admin' : employees[user.index]?.name || 'unknown',
+                action,
+                details
+            };
+            auditLog.push(entry);
+            localStorage.setItem('auditLog', JSON.stringify(auditLog));
+        }
+
+        function renderAudit() {
+            const tbody = document.getElementById('auditTable');
+            tbody.innerHTML = auditLog.map(a => `
+                <tr>
+                    <td>${a.time}</td>
+                    <td>${a.user}</td>
+                    <td>${a.action}</td>
+                    <td>${a.details}</td>
+                </tr>
+            `).join('');
+        }
+
+        // === MY PROFILE ===
+        function renderMyProfile() {
+            const user = JSON.parse(localStorage.getItem('currentUser'));
+            const emp = employees[user.index];
+            document.getElementById('profileName').textContent = emp.name;
+            document.getElementById('profileEmail').textContent = emp.email;
+            document.getElementById('profilePhone').textContent = emp.phone;
+            document.getElementById('profileSalary').textContent = `R${emp.salary.toFixed(2)}`;
+            document.getElementById('profileTax').textContent = emp.taxNumber || '-';
+            document.getElementById('profileUIF').textContent = emp.uifNumber || '-';
+
+            // benefits
+            const benList = document.getElementById('profileBenefits');
+            benList.innerHTML = '';
+            if (emp.enrolledBenefits) {
+                emp.enrolledBenefits.forEach(bId => {
+                    const b = benefitPlans.find(x => x.id === bId);
+                    if (b) {
+                        const li = document.createElement('li');
+                        li.className = 'list-group-item';
+                        li.textContent = `${b.name} – R${b.cost.toFixed(2)}/month`;
+                        benList.appendChild(li);
+                    }
+                });
+            } else {
+                benList.innerHTML = '<li class="list-group-item">None</li>';
+            }
+
+            // certs
+            const certList = document.getElementById('profileCerts');
+            certList.innerHTML = '';
+            const myCerts = certifications.filter(c => c.employeeIndex === user.index);
+            if (myCerts.length) {
+                myCerts.forEach(c => {
+                    const li = document.createElement('li');
+                    li.className = 'list-group-item';
+                    li.innerHTML = `<strong>${c.name}</strong> – expires ${c.expiryDate}`;
+                    certList.appendChild(li);
+                });
+            } else {
+                certList.innerHTML = '<li class="list-group-item">None</li>';
+            }
+        }
+
+        function showEditMyProfile() {
+            const user = JSON.parse(localStorage.getItem('currentUser'));
+            const emp = employees[user.index];
+            document.getElementById('editName').value = emp.name;
+            document.getElementById('editEmail').value = emp.email;
+            document.getElementById('editPhone').value = emp.phone;
+            const modal = new bootstrap.Modal(document.getElementById('editMyProfileModal'));
+            modal.show();
+        }
+
+        function saveMyProfile() {
+            const user = JSON.parse(localStorage.getItem('currentUser'));
+            const idx = user.index;
+            employees[idx].name = document.getElementById('editName').value;
+            employees[idx].email = document.getElementById('editEmail').value;
+            employees[idx].phone = document.getElementById('editPhone').value;
+            const pwd = document.getElementById('editPassword').value;
+            if (pwd) employees[idx].password = pwd;
+            localStorage.setItem('employees', JSON.stringify(employees));
+            renderMyProfile();
+            bootstrap.Modal.getInstance(document.getElementById('editMyProfileModal')).hide();
         }
 
         // === ON LOAD ===
