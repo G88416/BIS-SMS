@@ -286,6 +286,9 @@
             <!-- ==== MY PROFILE (Employee) ==== -->
             <section id="myProfile" class="section d-none">
                 <h2>My Profile – <span id="profileName"></span></h2>
+                <div class="col-md-12 text-center mb-4">
+                    <img id="profilePic" src="https://www.shutterstock.com/image-photo/happy-mid-aged-older-business-600nw-2322385015.jpg" class="rounded-circle img-thumbnail" style="width:150px; height:150px; object-fit:cover;">
+                </div>
                 <div class="row">
                     <div class="col-md-6">
                         <div class="card p-3 mb-3"><strong>Email:</strong> <span id="profileEmail"></span></div>
@@ -310,6 +313,33 @@
                 <table class="table table-striped mt-3">
                     <thead><tr><th>Month</th><th>Gross</th><th>Deductions</th><th>Bonus</th><th>Net</th><th>Action</th></tr></thead>
                     <tbody id="myPayrollTable"></tbody>
+                </table>
+            </section>
+
+            <!-- ==== MY BENEFITS (Employee) ==== -->
+            <section id="myBenefits" class="section d-none">
+                <h2>My Benefits</h2>
+                <table class="table table-striped mt-3">
+                    <thead><tr><th>Name</th><th>Description</th><th>Cost</th><th>Status</th><th>Action</th></tr></thead>
+                    <tbody id="myBenefitTable"></tbody>
+                </table>
+            </section>
+
+            <!-- ==== MY TRAINING (Employee) ==== -->
+            <section id="myTraining" class="section d-none">
+                <h2>My Training</h2>
+                <table class="table table-striped mt-3">
+                    <thead><tr><th>Name</th><th>Description</th><th>Status</th><th>Action</th></tr></thead>
+                    <tbody id="myCourseTable"></tbody>
+                </table>
+            </section>
+
+            <!-- ==== JOB OPENINGS (Employee) ==== -->
+            <section id="openJobs" class="section d-none">
+                <h2>Job Openings</h2>
+                <table class="table table-striped mt-3">
+                    <thead><tr><th>Title</th><th>Branch</th><th>Description</th><th>Status</th><th>Action</th></tr></thead>
+                    <tbody id="openJobTable"></tbody>
                 </table>
             </section>
 
@@ -574,7 +604,8 @@
                     password: 'john123',
                     taxNumber: '1234567890123',
                     uifNumber: 'UIF123456',
-                    enrolledBenefits: []
+                    enrolledBenefits: [],
+                    enrolledCourses: []
                 }
             ]));
         }
@@ -888,6 +919,7 @@
                 taxNumber: document.getElementById('empTaxNumber').value,
                 uifNumber: document.getElementById('empUIF').value,
                 enrolledBenefits: currentEmployeeEdit !== -1 ? employees[currentEmployeeEdit].enrolledBenefits || [] : [],
+                enrolledCourses: currentEmployeeEdit !== -1 ? employees[currentEmployeeEdit].enrolledCourses || [] : []
             };
             if (currentEmployeeEdit === -1) {
                 employees.push(emp);
@@ -1387,14 +1419,19 @@
         }
 
         function renderLeaves() {
-            document.getElementById('leavesTable').innerHTML = leaves.map((l, i) => `
+            const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
+            let filteredLeaves = leaves;
+            if (user.role === 'employee') {
+                filteredLeaves = leaves.filter(l => l.employeeIndex === user.index);
+            }
+            document.getElementById('leavesTable').innerHTML = filteredLeaves.map((l, i) => `
                 <tr>
                     <td>${employees[l.employeeIndex]?.name || 'Unknown'}</td>
                     <td>${l.startDate}</td>
                     <td>${l.endDate}</td>
                     <td>${l.type}</td>
                     <td>${l.status}</td>
-                    <td>
+                    <td class="admin-only">
                         <button class="btn btn-sm btn-success" onclick="approveLeave(${i})">Approve</button>
                         <button class="btn btn-sm btn-danger" onclick="rejectLeave(${i})">Reject</button>
                         <button class="btn btn-sm btn-primary" onclick="showEditLeaveModal(${i})">Edit</button>
@@ -1765,6 +1802,115 @@
             localStorage.setItem('employees', JSON.stringify(employees));
             renderMyProfile();
             bootstrap.Modal.getInstance(document.getElementById('editMyProfileModal')).hide();
+        }
+
+        // === MY BENEFITS ===
+        function renderMyBenefits() {
+            const user = JSON.parse(localStorage.getItem('currentUser'));
+            const emp = employees[user.index];
+            document.getElementById('myBenefitTable').innerHTML = benefitPlans.map(b => {
+                const enrolled = emp.enrolledBenefits.includes(b.id);
+                return `
+                    <tr>
+                        <td>${b.name}</td>
+                        <td>${b.description}</td>
+                        <td>R${b.cost.toFixed(2)}</td>
+                        <td>${enrolled ? 'Enrolled' : 'Available'}</td>
+                        <td>
+                            <button class="btn btn-sm ${enrolled ? 'btn-danger' : 'btn-success'}" onclick="${enrolled ? 'unenrollBenefit' : 'enrollBenefit'}(${b.id})">${enrolled ? 'Unenroll' : 'Enroll'}</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function enrollBenefit(id) {
+            const user = JSON.parse(localStorage.getItem('currentUser'));
+            const emp = employees[user.index];
+            if (!emp.enrolledBenefits.includes(id)) {
+                emp.enrolledBenefits.push(id);
+                localStorage.setItem('employees', JSON.stringify(employees));
+                addNotification('admin', `${emp.name} enrolled in benefit ${id}`);
+                renderMyBenefits();
+            }
+        }
+
+        function unenrollBenefit(id) {
+            const user = JSON.parse(localStorage.getItem('currentUser'));
+            const emp = employees[user.index];
+            emp.enrolledBenefits = emp.enrolledBenefits.filter(b => b !== id);
+            localStorage.setItem('employees', JSON.stringify(employees));
+            addNotification('admin', `${emp.name} unenrolled from benefit ${id}`);
+            renderMyBenefits();
+        }
+
+        // === MY TRAINING ===
+        function renderMyTraining() {
+            const user = JSON.parse(localStorage.getItem('currentUser'));
+            const emp = employees[user.index];
+            document.getElementById('myCourseTable').innerHTML = courses.map(c => {
+                const enrolled = emp.enrolledCourses.includes(c.id);
+                return `
+                    <tr>
+                        <td>${c.name}</td>
+                        <td>${c.description}</td>
+                        <td>${enrolled ? 'Enrolled' : 'Available'}</td>
+                        <td>
+                            <button class="btn btn-sm ${enrolled ? 'btn-danger' : 'btn-success'}" onclick="${enrolled ? 'unenrollCourse' : 'enrollCourse'}(${c.id})">${enrolled ? 'Unenroll' : 'Enroll'}</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function enrollCourse(id) {
+            const user = JSON.parse(localStorage.getItem('currentUser'));
+            const emp = employees[user.index];
+            if (!emp.enrolledCourses.includes(id)) {
+                emp.enrolledCourses.push(id);
+                localStorage.setItem('employees', JSON.stringify(employees));
+                addNotification('admin', `${emp.name} enrolled in course ${id}`);
+                renderMyTraining();
+            }
+        }
+
+        function unenrollCourse(id) {
+            const user = JSON.parse(localStorage.getItem('currentUser'));
+            const emp = employees[user.index];
+            emp.enrolledCourses = emp.enrolledCourses.filter(c => c !== id);
+            localStorage.setItem('employees', JSON.stringify(employees));
+            addNotification('admin', `${emp.name} unenrolled from course ${id}`);
+            renderMyTraining();
+        }
+
+        // === OPEN JOBS ===
+        function renderOpenJobs() {
+            const user = JSON.parse(localStorage.getItem('currentUser'));
+            document.getElementById('openJobTable').innerHTML = jobs.map(j => {
+                const applied = j.applications.includes(user.index);
+                return `
+                    <tr>
+                        <td>${j.title}</td>
+                        <td>${j.branch}</td>
+                        <td>${j.description}</td>
+                        <td>${applied ? 'Applied' : 'Open'}</td>
+                        <td>
+                            <button class="btn btn-sm ${applied ? 'btn-secondary disabled' : 'btn-primary'}" onclick="applyJob(${j.id})" ${applied ? 'disabled' : ''}>${applied ? 'Applied' : 'Apply'}</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function applyJob(id) {
+            const user = JSON.parse(localStorage.getItem('currentUser'));
+            const job = jobs.find(j => j.id === id);
+            if (job && !job.applications.includes(user.index)) {
+                job.applications.push(user.index);
+                localStorage.setItem('jobs', JSON.stringify(jobs));
+                addNotification('admin', `${employees[user.index].name} applied for job ${job.title}`);
+                renderOpenJobs();
+            }
         }
 
         // === ON LOAD ===
