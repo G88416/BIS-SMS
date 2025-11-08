@@ -45,27 +45,49 @@
             .content { margin-left: 60px; }
             .btn-toggle-sidebar { left: 70px; }
         }
+        /* Login Page Styles */
+        .login-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #4169e1, #87ceeb); }
+        .login-card { width: 100%; max-width: 420px; padding: 2rem; border-radius: 15px; box-shadow: 0 10px 30px rgba(65,105,225,0.3); background: white; }
+        .login-title { font-weight: 700; color: #4169e1; }
+        .login-demo { font-size: 0.85rem; color: #666; }
     </style>
 </head>
 <body>
-    <div id="loginContainer" class="position-fixed top-0 start-0 w-100 h-100 bg-light d-flex align-items-center justify-content-center" style="z-index:2000;">
-        <div class="card shadow" style="width:380px;">
-            <div class="card-body">
-                <h3 class="text-center mb-4"><i class="fas fa-lock me-2"></i>HRMS Login</h3>
-                <input type="text" id="username" class="form-control mb-3" placeholder="Username" required>
-                <input type="password" id="password" class="form-control mb-3" placeholder="Password" required>
-                <button class="btn btn-primary w-100" onclick="login()">Login</button>
-                <small class="d-block text-center mt-3 text-muted">Demo: admin/admin123 | john/john123</small>
+    <!-- Login Page -->
+    <div id="loginPage" class="login-page">
+        <div class="login-card">
+            <div class="text-center mb-4">
+                <i class="fas fa-users fa-3x text-primary mb-3"></i>
+                <h3 class="login-title">HRMS - Allos Connect</h3>
+                <p class="text-muted">Sign in to access your dashboard</p>
             </div>
+            <form id="loginForm" onsubmit="event.preventDefault(); login();">
+                <div class="mb-3">
+                    <label class="form-label">Username</label>
+                    <input type="text" id="username" class="form-control" placeholder="Enter username" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Password</label>
+                    <input type="password" id="password" class="form-control" placeholder="Enter password" required>
+                </div>
+                <button type="submit" class="btn btn-primary w-100 mb-3">
+                    <i class="fas fa-sign-in-alt me-2"></i>Login
+                </button>
+                <div class="login-demo">
+                    <p class="mb-1"><strong>Admin:</strong> admin / admin123</p>
+                    <p class="mb-0"><strong>Employee:</strong> john / john123</p>
+                </div>
+            </form>
         </div>
     </div>
 
-    <div class="app-container" style="display:none;">
+    <!-- Main App (Hidden until login) -->
+    <div class="app-container" id="appContainer" style="display:none;">
         <!-- Notification Bell -->
         <div id="notificationBell">
             <button class="btn btn-primary rounded-circle shadow" style="width:50px;height:50px;" data-bs-toggle="modal" data-bs-target="#notificationsModal">
                 <i class="fas fa-bell fa-lg"></i>
-                <span classJ="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notificationBadge" style="display:none;">0</span>
+                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notificationBadge" style="display:none;">0</span>
             </button>
         </div>
 
@@ -412,30 +434,40 @@
             const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value;
 
+            if (!username || !password) {
+                alert('Please enter both username and password');
+                return;
+            }
+
+            // Admin Login
             if (username === 'admin' && password === 'admin123') {
                 localStorage.setItem('currentUser', JSON.stringify({role: 'admin'}));
-                finishLogin();
+                completeLogin();
+                return;
+            }
+
+            // Employee Login
+            const idx = employees.findIndex(e => e.username === username && e.password === password);
+            if (idx !== -1) {
+                localStorage.setItem('currentUser', JSON.stringify({role: 'employee', index: idx}));
+                completeLogin();
             } else {
-                const idx = employees.findIndex(e => e.username === username && e.password === password);
-                if (idx !== -1) {
-                    localStorage.setItem('currentUser', JSON.stringify({role: 'employee', index: idx}));
-                    finishLogin();
-                } else {
-                    alert('Invalid username or password');
-                }
+                alert('Invalid username or password. Please try again.');
             }
         }
 
-        function finishLogin() {
-            document.getElementById('loginContainer').style.display = 'none';
-            document.querySelector('.app-container').style.display = 'block';
+        function completeLogin() {
+            document.getElementById('loginPage').style.display = 'none';
+            document.getElementById('appContainer').style.display = 'block';
             initApp();
         }
 
         function logout() {
-            if (confirm('Logout?')) {
+            if (confirm('Are you sure you want to logout?')) {
                 localStorage.removeItem('currentUser');
-                location.reload();
+                document.getElementById('appContainer').style.display = 'none';
+                document.getElementById('loginPage').style.display = 'flex';
+                document.getElementById('loginForm').reset();
             }
         }
 
@@ -495,7 +527,8 @@
             populateSelects();
             updateNotificationBadge();
             renderDashboard();
-            if (JSON.parse(localStorage.getItem('currentUser') || '{}').role === 'employee') {
+            const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
+            if (user.role === 'employee') {
                 showSection('myDashboard');
                 renderMyDashboard();
             } else {
@@ -740,7 +773,7 @@
             const monthlyTax = annualTax / 12;
 
             // Attendance adjustment
-            const workingDays = 22; // Assumption
+            const workingDays = 22;
             const monthStr = month.substring(5) + '/';
             const year = month.substring(0, 4);
             const presentDays = attendances.filter(a => a.employeeIndex === employeeIndex && a.date.startsWith(monthStr) && a.date.endsWith(year)).length;
@@ -1309,8 +1342,8 @@
         // === ON LOAD ===
         document.addEventListener('DOMContentLoaded', () => {
             if (localStorage.getItem('currentUser')) {
-                document.getElementById('loginContainer').style.display = 'none';
-                document.querySelector('.app-container').style.display = 'block';
+                document.getElementById('loginPage').style.display = 'none';
+                document.getElementById('appContainer').style.display = 'block';
                 initApp();
             }
         });
