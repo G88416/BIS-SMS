@@ -286,8 +286,10 @@
             <!-- ==== MY PROFILE (Employee) ==== -->
             <section id="myProfile" class="section d-none">
                 <h2>My Profile – <span id="profileName"></span></h2>
-                <div class="col-md-12 text-center mb-4">
-                    <img id="profilePic" src="https://www.shutterstock.com/image-photo/happy-mid-aged-older-business-600nw-2322385015.jpg" class="rounded-circle img-thumbnail" style="width:150px; height:150px; object-fit:cover;">
+                <div class="text-center mb-4">
+                    <img id="profilePic" src="" alt="Profile Picture" class="rounded-circle img-thumbnail" style="width:150px; height:150px; object-fit:cover;">
+                    <input type="file" id="profilePicUpload" accept="image/*" class="d-none">
+                    <button class="btn btn-primary mt-2" onclick="document.getElementById('profilePicUpload').click()">Upload Picture</button>
                 </div>
                 <div class="row">
                     <div class="col-md-6">
@@ -319,6 +321,11 @@
             <!-- ==== MY BENEFITS (Employee) ==== -->
             <section id="myBenefits" class="section d-none">
                 <h2>My Benefits</h2>
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h5>Total Benefits Cost: <span id="totalBenefitsCost">R0.00</span></h5>
+                    </div>
+                </div>
                 <table class="table table-striped mt-3">
                     <thead><tr><th>Name</th><th>Description</th><th>Cost</th><th>Status</th><th>Action</th></tr></thead>
                     <tbody id="myBenefitTable"></tbody>
@@ -532,6 +539,7 @@
                         <div class="modal-body">
                             <input id="courseName" placeholder="Name" class="form-control mb-3">
                             <textarea id="courseDesc" placeholder="Description" class="form-control mb-3"></textarea>
+                            <textarea id="courseQuestions" placeholder="Quiz Questions (JSON format)" class="form-control mb-3"></textarea>
                         </div>
                         <div class="modal-footer"><button class="btn btn-primary" onclick="saveCourse()">Save</button></div>
                     </div>
@@ -583,6 +591,17 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Quiz Modal -->
+            <div class="modal fade" id="quizModal">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header"><h5 id="quizTitle">Quiz</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                        <div class="modal-body" id="quizBody"></div>
+                        <div class="modal-footer"><button class="btn btn-primary" onclick="submitQuiz()">Submit</button></div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -605,7 +624,8 @@
                     taxNumber: '1234567890123',
                     uifNumber: 'UIF123456',
                     enrolledBenefits: [],
-                    enrolledCourses: []
+                    enrolledCourses: [],
+                    profilePic: ''
                 }
             ]));
         }
@@ -735,6 +755,7 @@
             applyDarkMode();
             document.getElementById('darkModeSwitch').checked = settings.darkMode;
             if (user.role === 'admin') renderAudit();
+            document.getElementById('profilePicUpload').addEventListener('change', uploadProfilePic);
         }
 
         function populateSelects() {
@@ -919,7 +940,8 @@
                 taxNumber: document.getElementById('empTaxNumber').value,
                 uifNumber: document.getElementById('empUIF').value,
                 enrolledBenefits: currentEmployeeEdit !== -1 ? employees[currentEmployeeEdit].enrolledBenefits || [] : [],
-                enrolledCourses: currentEmployeeEdit !== -1 ? employees[currentEmployeeEdit].enrolledCourses || [] : []
+                enrolledCourses: currentEmployeeEdit !== -1 ? employees[currentEmployeeEdit].enrolledCourses || [] : [],
+                profilePic: currentEmployeeEdit !== -1 ? employees[currentEmployeeEdit].profilePic || '' : ''
             };
             if (currentEmployeeEdit === -1) {
                 employees.push(emp);
@@ -1533,6 +1555,7 @@
             document.getElementById('addCourseModalLabel').innerHTML = 'Add Course';
             document.getElementById('courseName').value = '';
             document.getElementById('courseDesc').value = '';
+            document.getElementById('courseQuestions').value = '';
             const modal = new bootstrap.Modal(document.getElementById('addCourseModal'));
             modal.show();
         }
@@ -1543,6 +1566,7 @@
             const c = courses[i];
             document.getElementById('courseName').value = c.name;
             document.getElementById('courseDesc').value = c.description;
+            document.getElementById('courseQuestions').value = JSON.stringify(c.questions, null, 2);
             const modal = new bootstrap.Modal(document.getElementById('addCourseModal'));
             modal.show();
         }
@@ -1552,6 +1576,7 @@
                 id: currentCourseEdit === -1 ? Date.now() : courses[currentCourseEdit].id,
                 name: document.getElementById('courseName').value,
                 description: document.getElementById('courseDesc').value,
+                questions: JSON.parse(document.getElementById('courseQuestions').value || '[]')
             };
             if (currentCourseEdit === -1) {
                 courses.push(c);
@@ -1747,6 +1772,7 @@
             document.getElementById('profileSalary').textContent = `R${emp.salary.toFixed(2)}`;
             document.getElementById('profileTax').textContent = emp.taxNumber || '-';
             document.getElementById('profileUIF').textContent = emp.uifNumber || '-';
+            document.getElementById('profilePic').src = emp.profilePic || 'https://placehold.co/150x150';
 
             // benefits
             const benList = document.getElementById('profileBenefits');
@@ -1781,6 +1807,20 @@
             }
         }
 
+        function uploadProfilePic(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const user = JSON.parse(localStorage.getItem('currentUser'));
+                    employees[user.index].profilePic = e.target.result;
+                    localStorage.setItem('employees', JSON.stringify(employees));
+                    renderMyProfile();
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
         function showEditMyProfile() {
             const user = JSON.parse(localStorage.getItem('currentUser'));
             const emp = employees[user.index];
@@ -1808,8 +1848,11 @@
         function renderMyBenefits() {
             const user = JSON.parse(localStorage.getItem('currentUser'));
             const emp = employees[user.index];
-            document.getElementById('myBenefitTable').innerHTML = benefitPlans.map(b => {
+            let totalCost = 0;
+            const tbody = document.getElementById('myBenefitTable');
+            tbody.innerHTML = benefitPlans.map(b => {
                 const enrolled = emp.enrolledBenefits.includes(b.id);
+                if (enrolled) totalCost += b.cost;
                 return `
                     <tr>
                         <td>${b.name}</td>
@@ -1822,6 +1865,7 @@
                     </tr>
                 `;
             }).join('');
+            document.getElementById('totalBenefitsCost').textContent = `R${totalCost.toFixed(2)}`;
         }
 
         function enrollBenefit(id) {
@@ -1857,6 +1901,7 @@
                         <td>${enrolled ? 'Enrolled' : 'Available'}</td>
                         <td>
                             <button class="btn btn-sm ${enrolled ? 'btn-danger' : 'btn-success'}" onclick="${enrolled ? 'unenrollCourse' : 'enrollCourse'}(${c.id})">${enrolled ? 'Unenroll' : 'Enroll'}</button>
+                            ${enrolled && c.questions.length > 0 ? '<button class="btn btn-sm btn-info" onclick="startQuiz('+c.id+')">Take Quiz</button>' : ''}
                         </td>
                     </tr>
                 `;
@@ -1881,6 +1926,38 @@
             localStorage.setItem('employees', JSON.stringify(employees));
             addNotification('admin', `${emp.name} unenrolled from course ${id}`);
             renderMyTraining();
+        }
+
+        let currentQuizCourseId = null;
+        function startQuiz(courseId) {
+            currentQuizCourseId = courseId;
+            const course = courses.find(c => c.id === courseId);
+            document.getElementById('quizTitle').textContent = `Quiz for ${course.name}`;
+            const quizBody = document.getElementById('quizBody');
+            quizBody.innerHTML = course.questions.map((q, idx) => `
+                <div class="mb-3">
+                    <label class="form-label">${q.question}</label>
+                    ${q.options.map((opt, oIdx) => `
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="q${idx}" value="${oIdx}">
+                            <label class="form-check-label">${opt}</label>
+                        </div>
+                    `).join('')}
+                </div>
+            `).join('');
+            const modal = new bootstrap.Modal(document.getElementById('quizModal'));
+            modal.show();
+        }
+
+        function submitQuiz() {
+            const course = courses.find(c => c.id === currentQuizCourseId);
+            let score = 0;
+            course.questions.forEach((q, idx) => {
+                const selected = document.querySelector(`input[name="q${idx}"]:checked`);
+                if (selected && parseInt(selected.value) === q.correct) score++;
+            });
+            alert(`Your score: ${score} / ${course.questions.length}`);
+            bootstrap.Modal.getInstance(document.getElementById('quizModal')).hide();
         }
 
         // === OPEN JOBS ===
