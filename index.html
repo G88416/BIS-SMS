@@ -48,7 +48,19 @@
     </style>
 </head>
 <body>
-    <div class="app-container">
+    <div id="loginContainer" class="position-fixed top-0 start-0 w-100 h-100 bg-light d-flex align-items-center justify-content-center" style="z-index:2000;">
+        <div class="card shadow" style="width:380px;">
+            <div class="card-body">
+                <h3 class="text-center mb-4"><i class="fas fa-lock me-2"></i>HRMS Login</h3>
+                <input type="text" id="username" class="form-control mb-3" placeholder="Username (admin or employee username)" required>
+                <input type="password" id="password" class="form-control mb-3" placeholder="Password" required>
+                <button class="btn btn-primary w-100" onclick="login()">Login</button>
+                <small class="d-block text-center mt-3 text-muted">Demo: admin/password | john/password</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="app-container" style="display:none;">
         <!-- Notification Bell -->
         <div id="notificationBell">
             <button class="btn btn-primary rounded-circle shadow" style="width:50px;height:50px;" data-bs-toggle="modal" data-bs-target="#notificationsModal">
@@ -62,14 +74,20 @@
             <h4 class="mb-4"><i class="fas fa-users me-2"></i><span class="nav-text">HRMS - Allos Connect</span></h4>
             <ul class="nav flex-column">
                 <li class="admin-only"><a href="#dashboard" class="nav-link active" onclick="showSection('dashboard')"><i class="fas fa-tachometer-alt me-2"></i><span class="nav-text">HR Analytics Dashboard</span></a></li>
+                <li class="employee-only"><a href="#myDashboard" class="nav-link" onclick="showSection('myDashboard')"><i class="fas fa-tachometer-alt me-2"></i><span class="nav-text">My Dashboard</span></a></li>
                 <li class="admin-only"><a href="#employees" class="nav-link" onclick="showSection('employees')"><i class="fas fa-user-friends me-2"></i><span class="nav-text">Employees (HR Core)</span></a></li>
+                <li class="employee-only"><a href="#myProfile" class="nav-link" onclick="showSection('myProfile')"><i class="fas fa-user me-2"></i><span class="nav-text">My Profile</span></a></li>
                 <li class="admin-only"><a href="#payroll" class="nav-link" onclick="showSection('payroll')"><i class="fas fa-money-check-alt me-2"></i><span class="nav-text">Payroll</span></a></li>
+                <li class="employee-only"><a href="#myPayroll" class="nav-link" onclick="showSection('myPayroll')"><i class="fas fa-money-bill-wave me-2"></i><span class="nav-text">My Payslips</span></a></li>
                 <li class="admin-only"><a href="#recruitment" class="nav-link" onclick="showSection('recruitment')"><i class="fas fa-briefcase me-2"></i><span class="nav-text">iRecruit</span></a></li>
+                <li class="employee-only"><a href="#openJobs" class="nav-link" onclick="showSection('openJobs')"><i class="fas fa-briefcase me-2"></i><span class="nav-text">Job Openings</span></a></li>
                 <li><a href="#performance" class="nav-link" onclick="showSection('performance')"><i class="fas fa-chart-line me-2"></i><span class="nav-text">Performance</span></a></li>
                 <li><a href="#attendance" class="nav-link" onclick="showSection('attendance')"><i class="fas fa-clock me-2"></i><span class="nav-text">Time & Attendance</span></a></li>
                 <li><a href="#leaves" class="nav-link" onclick="showSection('leaves')"><i class="fas fa-calendar-alt me-2"></i><span class="nav-text">Leaves</span></a></li>
                 <li class="admin-only"><a href="#benefits" class="nav-link" onclick="showSection('benefits')"><i class="fas fa-gift me-2"></i><span class="nav-text">Benefits Admin</span></a></li>
+                <li class="employee-only"><a href="#myBenefits" class="nav-link" onclick="showSection('myBenefits')"><i class="fas fa-gift me-2"></i><span class="nav-text">My Benefits</span></a></li>
                 <li class="admin-only"><a href="#training" class="nav-link" onclick="showSection('training')"><i class="fas fa-graduation-cap me-2"></i><span class="nav-text">Training Admin</span></a></li>
+                <li class="employee-only"><a href="#myTraining" class="nav-link" onclick="showSection('myTraining')"><i class="fas fa-graduation-cap me-2"></i><span class="nav-text">My Training</span></a></li>
                 <li class="admin-only"><a href="#compliance" class="nav-link" onclick="showSection('compliance')"><i class="fas fa-balance-scale me-2"></i><span class="nav-text">Compliance</span></a></li>
                 <li class="admin-only"><a href="#reports" class="nav-link" onclick="showSection('reports')"><i class="fas fa-file-alt me-2"></i><span class="nav-text">My Workforce Analyzer</span></a></li>
                 <li class="admin-only"><a href="#settings" class="nav-link" onclick="showSection('settings')"><i class="fas fa-cog me-2"></i><span class="nav-text">Settings</span></a></li>
