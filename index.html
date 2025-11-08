@@ -52,10 +52,10 @@
         <div class="card shadow" style="width:380px;">
             <div class="card-body">
                 <h3 class="text-center mb-4"><i class="fas fa-lock me-2"></i>HRMS Login</h3>
-                <input type="text" id="username" class="form-control mb-3" placeholder="Username (admin or employee username)" required>
+                <input type="text" id="username" class="form-control mb-3" placeholder="Username" required>
                 <input type="password" id="password" class="form-control mb-3" placeholder="Password" required>
                 <button class="btn btn-primary w-100" onclick="login()">Login</button>
-                <small class="d-block text-center mt-3 text-muted">Demo: admin/password | john/password</small>
+                <small class="d-block text-center mt-3 text-muted">Demo: admin/admin123 | john/john123</small>
             </div>
         </div>
     </div>
@@ -65,7 +65,7 @@
         <div id="notificationBell">
             <button class="btn btn-primary rounded-circle shadow" style="width:50px;height:50px;" data-bs-toggle="modal" data-bs-target="#notificationsModal">
                 <i class="fas fa-bell fa-lg"></i>
-                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notificationBadge" style="display:none;">0</span>
+                <span classJ="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notificationBadge" style="display:none;">0</span>
             </button>
         </div>
 
@@ -407,11 +407,43 @@
 
         const branches = ['Marketing','Production','Sales','Content Creation','Digital Media','Administration','Creative Design'];
 
+        // === LOGIN & ROLE ===
+        function login() {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+
+            if (username === 'admin' && password === 'admin123') {
+                localStorage.setItem('currentUser', JSON.stringify({role: 'admin'}));
+                finishLogin();
+            } else {
+                const idx = employees.findIndex(e => e.username === username && e.password === password);
+                if (idx !== -1) {
+                    localStorage.setItem('currentUser', JSON.stringify({role: 'employee', index: idx}));
+                    finishLogin();
+                } else {
+                    alert('Invalid username or password');
+                }
+            }
+        }
+
+        function finishLogin() {
+            document.getElementById('loginContainer').style.display = 'none';
+            document.querySelector('.app-container').style.display = 'block';
+            initApp();
+        }
+
+        function logout() {
+            if (confirm('Logout?')) {
+                localStorage.removeItem('currentUser');
+                location.reload();
+            }
+        }
+
         // === ROLE VISIBILITY ===
         function applyRoleRestrictions() {
-            // Default to admin role
-            document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'block');
-            document.querySelectorAll('.employee-only').forEach(el => el.style.display = 'none');
+            const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
+            document.querySelectorAll('.admin-only').forEach(el => el.style.display = user.role === 'admin' ? 'block' : 'none');
+            document.querySelectorAll('.employee-only').forEach(el => el.style.display = user.role === 'employee' ? 'block' : 'none');
         }
 
         // === NOTIFICATIONS ===
@@ -422,17 +454,19 @@
         }
 
         function updateNotificationBadge() {
-            // Default to admin
-            const count = notifications.filter(n => n.to === 'admin' && !n.read).length;
+            const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
+            const count = user.role === 'admin' 
+                ? notifications.filter(n => n.to === 'admin' && !n.read).length 
+                : notifications.filter(n => n.to === user.index && !n.read).length;
             const badge = document.getElementById('notificationBadge');
             badge.textContent = count;
             badge.style.display = count > 0 ? 'block' : 'none';
         }
 
         function markAllRead() {
-            // Default to admin
+            const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
             notifications.forEach(n => {
-                if (n.to === 'admin') n.read = true;
+                if ((user.role === 'admin' && n.to === 'admin') || n.to === user.index) n.read = true;
             });
             localStorage.setItem('notifications', JSON.stringify(notifications));
             updateNotificationBadge();
@@ -448,8 +482,10 @@
         };
 
         function renderNotifications() {
-            // Default to admin
-            const rel = notifications.filter(n => n.to === 'admin');
+            const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
+            const rel = user.role === 'admin' 
+                ? notifications.filter(n => n.to === 'admin') 
+                : notifications.filter(n => n.to === user.index);
             document.getElementById('notificationsTable').innerHTML = rel.map(n => `<tr><td>${n.date}</td><td>${n.message}</td><td>${n.read ? '' : '<button class="btn btn-sm btn-secondary" onclick="markRead('+n.id+')">Read</button>'}</td></tr>`).join('');
         }
 
@@ -459,7 +495,12 @@
             populateSelects();
             updateNotificationBadge();
             renderDashboard();
-            showSection('dashboard');
+            if (JSON.parse(localStorage.getItem('currentUser') || '{}').role === 'employee') {
+                showSection('myDashboard');
+                renderMyDashboard();
+            } else {
+                showSection('dashboard');
+            }
             applyDarkMode();
             document.getElementById('darkModeSwitch').checked = settings.darkMode;
         }
@@ -1267,7 +1308,11 @@
 
         // === ON LOAD ===
         document.addEventListener('DOMContentLoaded', () => {
-            initApp();
+            if (localStorage.getItem('currentUser')) {
+                document.getElementById('loginContainer').style.display = 'none';
+                document.querySelector('.app-container').style.display = 'block';
+                initApp();
+            }
         });
     </script>
 </body>
