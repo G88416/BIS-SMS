@@ -163,29 +163,13 @@
                 </table>
             </section>
 
-            <!-- My Profile (Employee Self-Service) -->
-            <section id="myProfile" class="section d-none">
-                <h2>My Profile</h2>
-                <div id="myProfileContent" class="card p-4"></div>
-                <button class="btn btn-primary mt-3" onclick="saveMyProfile()">Save Changes</button>
-            </section>
-
             <!-- Payroll Section with Payslip Generation -->
             <section id="payroll" class="section d-none">
                 <h2>Payroll</h2>
                 <button class="btn btn-primary" onclick="showAddPayrollModal()">Add Payroll Entry</button>
                 <table class="table table-striped mt-3">
-                    <thead><tr><th>ID</th><th>Employee</th><th>Month</th><th>Salary</th><th>Bonus</th><th>Overtime</th><th>Allowances</th><th>UIF</th><th>Tax</th><th>Deductions</th><th>Net</th><th>Tax Number</th><th>Actions</th></tr></thead>
+                    <thead><tr><th>ID</th><th>Employee</th><th>Month</th><th>Salary</th><th>Deductions</th><th>Net</th><th>Tax Number</th><th>Actions</th></tr></thead>
                     <tbody id="payrollTable"></tbody>
-                </table>
-            </section>
-
-            <!-- My Payroll (Employee Self-Service) -->
-            <section id="myPayroll" class="section d-none">
-                <h2>My Payslips</h2>
-                <table class="table table-striped">
-                    <thead><tr><th>Month</th><th>Salary</th><th>Deductions</th><th>Net</th><th>Actions</th></tr></thead>
-                    <tbody id="myPayrollTable"></tbody>
                 </table>
             </section>
 
@@ -196,15 +180,6 @@
                 <table class="table table-striped mt-3">
                     <thead><tr><th>ID</th><th>Title</th><th>Branch</th><th>Applications</th><th>Actions</th></tr></thead>
                     <tbody id="jobTable"></tbody>
-                </table>
-            </section>
-
-            <!-- Open Jobs (Employee Self-Service) -->
-            <section id="openJobs" class="section d-none">
-                <h2>Job Openings</h2>
-                <table class="table table-striped">
-                    <thead><tr><th>Title</th><th>Branch</th><th>Description</th><th>Apply</th></tr></thead>
-                    <tbody id="openJobsTable"></tbody>
                 </table>
             </section>
 
@@ -248,16 +223,6 @@
                 </table>
             </section>
 
-            <!-- My Benefits (Employee Self-Service) -->
-            <section id="myBenefits" class="section d-none">
-                <h2>My Benefits Enrollment</h2>
-                <p class="alert alert-info">Changes are automatically sent to carriers via <strong>Benefits Messenger</strong></p>
-                <table class="table table-striped">
-                    <thead><tr><th>Plan</th><th>Description</th><th>Cost</th><th>Enroll</th></tr></thead>
-                    <tbody id="myBenefitsTable"></tbody>
-                </table>
-            </section>
-
             <!-- Training Admin -->
             <section id="training" class="section d-none">
                 <h2>Training Admin</h2>
@@ -265,15 +230,6 @@
                 <table class="table table-striped mt-3">
                     <thead><tr><th>ID</th><th>Name</th><th>Description</th><th>Actions</th></tr></thead>
                     <tbody id="courseTable"></tbody>
-                </table>
-            </section>
-
-            <!-- My Training (Employee Self-Service) -->
-            <section id="myTraining" class="section d-none">
-                <h2>My Training</h2>
-                <table class="table table-striped">
-                    <thead><tr><th>Name</th><th>Description</th><th>Status</th></tr></thead>
-                    <tbody id="myTrainingTable"></tbody>
                 </table>
             </section>
 
@@ -314,6 +270,73 @@
                     <tbody id="mediaTable"></tbody>
                 </table>
             </section>
+
+            <!-- Payslip Preview Modal -->
+            <div class="modal fade" id="payslipModal">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Payslip Preview</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div id="payslipPreview" class="payslip-preview">
+                                <div class="payslip-header">
+                                    <h4>Allos Connect - Payslip</h4>
+                                    <p id="payslipEmployee"></p>
+                                    <p id="payslipPeriod"></p>
+                                </div>
+                                <div class="payslip-body">
+                                    <table class="table table-borderless">
+                                        <tr><th>Basic Salary</th><td id="payslipSalary">R0.00</td></tr>
+                                        <tr><th>UIF Contribution</th><td id="payslipUIF">R0.00</td></tr>
+                                        <tr><th>Tax Liability</th><td id="payslipTax">R0.00</td></tr>
+                                        <tr><th>Other Deductions</th><td id="payslipOther">R0.00</td></tr>
+                                        <tr><th>Total Deductions</th><td id="payslipTotalDeductions">R0.00</td></tr>
+                                        <tr><th><strong>Net Pay</strong></th><td><strong id="payslipNet">R0.00</strong></td></tr>
+                                    </table>
+                                    <div id="payslipTaxNumber"></div>
+                                </div>
+                                <div class="payslip-footer">
+                                    <p>Tax Number: <span id="payslipTaxNumFooter"></span></p>
+                                    <p>This is a computer-generated payslip</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button class="btn btn-primary" onclick="downloadPayslip()">Download PDF</button>
+                            <button class="btn btn-info" onclick="printPayslip()">Print</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tax Liability Download Modal -->
+            <div class="modal fade" id="taxLiabilityModal">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Tax Liability Summary</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div id="taxLiabilityContent">
+                                <p id="taxLiabilityEmployee"></p>
+                                <table class="table">
+                                    <thead><tr><th>Month</th><th>Tax Amount</th></tr></thead>
+                                    <tbody id="taxLiabilityTable"></tbody>
+                                </table>
+                                <p>Total Tax Liability: <span id="totalTaxLiability">R0.00</span></p>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button class="btn btn-primary" onclick="downloadTaxLiability()">Download Report</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <!-- Notifications Modal -->
             <div class="modal fade" id="notificationsModal">
@@ -359,12 +382,7 @@
                             <select id="payEmployee" class="form-control mb-3 emp-select" onchange="calculateDeductions()"></select>
                             <input id="payMonth" type="month" class="form-control mb-3" onchange="calculateDeductions()">
                             <input id="paySalary" type="number" placeholder="Salary" class="form-control mb-3" onchange="updateNet()">
-                            <input id="payBonus" type="number" placeholder="Bonus" class="form-control mb-3" onchange="updateNet()" readonly>
-                            <input id="payOvertime" type="number" placeholder="Overtime Hours" class="form-control mb-3" onchange="updateNet()">
-                            <input id="payAllowances" type="number" placeholder="Allowances" class="form-control mb-3" onchange="updateNet()">
-                            <input id="payUIF" type="number" placeholder="UIF" class="form-control mb-3" readonly>
-                            <input id="payTax" type="number" placeholder="Tax" class="form-control mb-3" readonly>
-                            <input id="payDeductions" type="number" placeholder="Other Deductions" class="form-control mb-3" onchange="updateNet()">
+                            <input id="payDeductions" type="number" placeholder="Deductions" class="form-control mb-3" onchange="updateNet()">
                             <input id="payNet" type="number" placeholder="Net" class="form-control mb-3" readonly>
                         </div>
                         <div class="modal-footer"><button class="btn btn-primary" onclick="savePayroll()">Save</button></div>
@@ -482,6 +500,25 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+        // Initialize sample data if not present
+        if (localStorage.getItem('employees') === null) {
+            localStorage.setItem('employees', JSON.stringify([
+                {
+                    name: 'John Doe',
+                    position: 'Producer',
+                    branch: 'Production',
+                    email: 'john@allosconnect.com',
+                    phone: '0123456789',
+                    salary: 50000,
+                    username: 'john',
+                    password: 'john123',
+                    taxNumber: '1234567890123',
+                    uifNumber: 'UIF123456',
+                    enrolledBenefits: []
+                }
+            ]));
+        }
 
         // === DATA ===
         let employees = JSON.parse(localStorage.getItem('employees')) || [];
@@ -717,7 +754,7 @@
             const avg = myReviews.length ? (myReviews.reduce((sum, r) => sum + r.score, 0) / myReviews.length).toFixed(1) : 0;
             document.getElementById('myAvgPerformance').textContent = avg + '/5';
 
-            // Pending Tasks (placeholder)
+            // Pending Tasks (placeholder for onboarding/tasks)
             document.getElementById('pendingTasks').textContent = 2; // Example
 
             // Charts
@@ -830,37 +867,228 @@
             }
         }
 
-        // === MY PROFILE ===
-        function renderMyProfile() {
-            const user = JSON.parse(localStorage.getItem('currentUser'));
-            const emp = employees[user.index];
-            document.getElementById('myProfileContent').innerHTML = `
-                <div class="mb-3"><label>Name</label><input id="myNameInput" class="form-control" value="${emp.name}"></div>
-                <div class="mb-3"><label>Position</label><input id="myPosition" class="form-control" value="${emp.position}" disabled></div>
-                <div class="mb-3"><label>Branch</label><input id="myBranch" class="form-control" value="${emp.branch}" disabled></div>
-                <div class="mb-3"><label>Email</label><input id="myEmail" class="form-control" value="${emp.email}"></div>
-                <div class="mb-3"><label>Phone</label><input id="myPhone" class="form-control" value="${emp.phone}"></div>
-                <div class="mb-3"><label>Password</label><input id="myPassword" type="password" class="form-control" value="${emp.password}"></div>
-            `;
+        // === PAYROLL ===
+        let currentPayrollEdit = -1;
+        function showAddPayrollModal() {
+            currentPayrollEdit = -1;
+            document.getElementById('addPayrollModalLabel').innerHTML = 'Add Payroll';
+            document.getElementById('payEmployee').value = '';
+            document.getElementById('payMonth').value = '';
+            document.getElementById('paySalary').value = '';
+            document.getElementById('payDeductions').value = '';
+            document.getElementById('payNet').value = '';
+            const modal = new bootstrap.Modal(document.getElementById('addPayrollModal'));
+            modal.show();
         }
 
-        function saveMyProfile() {
-            const user = JSON.parse(localStorage.getItem('currentUser'));
-            const emp = employees[user.index];
-            emp.name = document.getElementById('myNameInput').value;
-            emp.email = document.getElementById('myEmail').value;
-            emp.phone = document.getElementById('myPhone').value;
-            emp.password = document.getElementById('myPassword').value;
-            localStorage.setItem('employees', JSON.stringify(employees));
-            addNotification('admin', `${emp.name} updated profile`);
-            alert('Profile saved');
-            populateSelects();
+        function showEditPayrollModal(i) {
+            currentPayrollEdit = i;
+            document.getElementById('addPayrollModalLabel').innerHTML = 'Edit Payroll';
+            const p = payrolls[i];
+            document.getElementById('payEmployee').value = p.employeeIndex;
+            document.getElementById('payMonth').value = p.month;
+            document.getElementById('paySalary').value = p.salary;
+            document.getElementById('payDeductions').value = p.deductions;
+            document.getElementById('payNet').value = p.net;
+            const modal = new bootstrap.Modal(document.getElementById('addPayrollModal'));
+            modal.show();
         }
 
-        // === PAYROLL AUDIT TRAIL ===
-        function logAudit(action, details) {
-            auditLog.push({id: Date.now(), action, details, date: new Date().toLocaleString()});
-            localStorage.setItem('auditLog', JSON.stringify(auditLog));
+        function calculateTax(annualIncome) {
+            let tax = 0;
+            if (annualIncome <= 237100) {
+                tax = annualIncome * 0.18;
+            } else if (annualIncome <= 370500) {
+                tax = 42678 + (annualIncome - 237100) * 0.26;
+            } else if (annualIncome <= 512800) {
+                tax = 77362 + (annualIncome - 370500) * 0.31;
+            } else if (annualIncome <= 673000) {
+                tax = 121475 + (annualIncome - 512800) * 0.36;
+            } else if (annualIncome <= 857900) {
+                tax = 179147 + (annualIncome - 673000) * 0.39;
+            } else if (annualIncome <= 1817000) {
+                tax = 251258 + (annualIncome - 857900) * 0.41;
+            } else {
+                tax = 596695 + (annualIncome - 1817000) * 0.45;
+            }
+            return tax;
+        }
+
+        function calculateDeductions() {
+            const employeeIndex = parseInt(document.getElementById('payEmployee').value);
+            const month = document.getElementById('payMonth').value;
+            if (isNaN(employeeIndex) || !month) return;
+            const emp = employees[employeeIndex];
+            const salary = emp.salary || 0;
+            document.getElementById('paySalary').value = salary;
+
+            // Benefits cost
+            let benefitsCost = 0;
+            if (emp.enrolledBenefits) {
+                emp.enrolledBenefits.forEach(bId => {
+                    const benefit = benefitPlans.find(b => b.id === bId);
+                    if (benefit) benefitsCost += benefit.cost;
+                });
+            }
+
+            // UIF (1% of salary)
+            const uif = salary * 0.01;
+
+            // Tax
+            const annualIncome = salary * 12;
+            const annualTax = calculateTax(annualIncome);
+            const monthlyTax = annualTax / 12;
+
+            // Other deductions
+            const otherDeductions = benefitsCost;
+
+            // Total deductions
+            const deductions = uif + monthlyTax + otherDeductions;
+            document.getElementById('payDeductions').value = deductions.toFixed(2);
+
+            updateNet();
+        }
+
+        function updateNet() {
+            const salary = parseFloat(document.getElementById('paySalary').value) || 0;
+            const deductions = parseFloat(document.getElementById('payDeductions').value) || 0;
+            document.getElementById('payNet').value = (salary - deductions).toFixed(2);
+        }
+
+        function savePayroll() {
+            const p = {
+                employeeIndex: parseInt(document.getElementById('payEmployee').value),
+                month: document.getElementById('payMonth').value,
+                salary: parseFloat(document.getElementById('paySalary').value),
+                deductions: parseFloat(document.getElementById('payDeductions').value),
+                net: parseFloat(document.getElementById('payNet').value),
+                uif: parseFloat(document.getElementById('paySalary').value) * 0.01,
+                tax: calculateTax(parseFloat(document.getElementById('paySalary').value) * 12) / 12,
+                taxNumber: employees[parseInt(document.getElementById('payEmployee').value)].taxNumber
+            };
+            if (currentPayrollEdit === -1) {
+                payrolls.push(p);
+                addNotification('admin', `New payroll for ${employees[p.employeeIndex].name}`);
+            } else {
+                payrolls[currentPayrollEdit] = p;
+                addNotification('admin', `Payroll updated for ${employees[p.employeeIndex].name}`);
+            }
+            localStorage.setItem('payrolls', JSON.stringify(payrolls));
+            renderPayroll();
+            bootstrap.Modal.getInstance(document.getElementById('addPayrollModal')).hide();
+        }
+
+        function renderPayroll() {
+            document.getElementById('payrollTable').innerHTML = payrolls.map((p, i) => `
+                <tr>
+                    <td>${i+1}</td>
+                    <td>${employees[p.employeeIndex]?.name || 'Unknown'}</td>
+                    <td>${p.month}</td>
+                    <td>R${p.salary.toFixed(2)}</td>
+                    <td>R${p.deductions.toFixed(2)}</td>
+                    <td>R${p.net.toFixed(2)}</td>
+                    <td>${p.taxNumber}</td>
+                    <td>
+                        <button class="btn btn-sm btn-primary" onclick="generatePayslip(${i})">Payslip</button>
+                        <button class="btn btn-sm btn-info" onclick="showTaxLiability(${p.employeeIndex})">Tax Report</button>
+                        <button class="btn btn-sm btn-secondary" onclick="showEditPayrollModal(${i})">Edit</button>
+                        <button class="btn btn-sm btn-danger" onclick="deletePayroll(${i})">Delete</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function deletePayroll(i) {
+            if (confirm('Delete?')) {
+                payrolls.splice(i, 1);
+                localStorage.setItem('payrolls', JSON.stringify(payrolls));
+                renderPayroll();
+            }
+        }
+
+        // === PAYS LIP GENERATION ===
+        function generatePayslip(i) {
+            const p = payrolls[i];
+            const emp = employees[p.employeeIndex];
+            document.getElementById('payslipEmployee').innerHTML = `Employee: ${emp.name}<br>Email: ${emp.email}`;
+            document.getElementById('payslipPeriod').innerHTML = `Period: ${p.month}`;
+            document.getElementById('payslipSalary').textContent = `R${p.salary.toFixed(2)}`;
+            document.getElementById('payslipUIF').textContent = `R${p.uif.toFixed(2)}`;
+            document.getElementById('payslipTax').textContent = `R${p.tax.toFixed(2)}`;
+            document.getElementById('payslipOther').textContent = `R${(p.deductions - p.uif - p.tax).toFixed(2)}`;
+            document.getElementById('payslipTotalDeductions').textContent = `R${p.deductions.toFixed(2)}`;
+            document.getElementById('payslipNet').textContent = `R${p.net.toFixed(2)}`;
+            document.getElementById('payslipTaxNumber').innerHTML = `<strong>Tax Number:</strong> ${p.taxNumber}`;
+            document.getElementById('payslipTaxNumFooter').textContent = p.taxNumber;
+            document.getElementById('payslipPreview').style.display = 'block';
+            const modal = new bootstrap.Modal(document.getElementById('payslipModal'));
+            modal.show();
+        }
+
+        function printPayslip() {
+            const printContent = document.getElementById('payslipPreview').innerHTML;
+            const originalContent = document.body.innerHTML;
+            document.body.innerHTML = printContent;
+            window.print();
+            document.body.innerHTML = originalContent;
+            location.reload();
+        }
+
+        function downloadPayslip() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.html(document.getElementById('payslipPreview'), {
+                callback: function (doc) {
+                    doc.save('payslip.pdf');
+                },
+                x: 10,
+                y: 10
+            });
+        }
+
+        // === TAX LIABILITY ===
+        function showTaxLiability(employeeIndex) {
+            const emp = employees[employeeIndex];
+            const empPayslips = payrolls.filter(p => p.employeeIndex === employeeIndex);
+            document.getElementById('taxLiabilityEmployee').innerHTML = `Tax Summary for ${emp.name}`;
+            document.getElementById('taxLiabilityTable').innerHTML = empPayslips.map(p => `
+                <tr><td>${p.month}</td><td>R${p.tax.toFixed(2)}</td></tr>
+            `).join('');
+            const totalTax = empPayslips.reduce((sum, p) => sum + p.tax, 0);
+            document.getElementById('totalTaxLiability').textContent = `R${totalTax.toFixed(2)}`;
+            const modal = new bootstrap.Modal(document.getElementById('taxLiabilityModal'));
+            modal.show();
+        }
+
+        function downloadTaxLiability() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.html(document.getElementById('taxLiabilityContent'), {
+                callback: function (doc) {
+                    doc.save('tax-liability-report.pdf');
+                },
+                x: 10,
+                y: 10
+            });
+        }
+
+        // === MY PAYROLL ===
+        function renderMyPayroll() {
+            const user = JSON.parse(localStorage.getItem('currentUser'));
+            const myP = payrolls.filter(p => p.employeeIndex === user.index);
+            document.getElementById('myPayrollTable').innerHTML = myP.map(p => `
+                <tr>
+                    <td>${p.month}</td>
+                    <td>R${p.salary.toFixed(2)}</td>
+                    <td>R${p.deductions.toFixed(2)}</td>
+                    <td>R${p.net.toFixed(2)}</td>
+                    <td><button class="btn btn-sm btn-primary" onclick="generatePayslipForEmployee(${myP.indexOf(p)})">Download Payslip</button></td>
+                </tr>
+            `).join('');
+        }
+
+        function generatePayslipForEmployee(i) {
+            generatePayslip(i);
         }
 
         // === RECRUITMENT ===
