@@ -2670,6 +2670,37 @@
             alert('Onboarding complete! Login with your credentials. HR will set salary.');
         }
 
+        function downloadTaxLiability() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.html(document.getElementById('taxLiabilityContent'), {
+                callback: function (doc) {
+                    doc.save('tax_liability.pdf');
+                },
+                x: 10,
+                y: 10,
+                html2canvas: { scale: 0.19 }
+            });
+        }
+
+        function showTaxLiability(empIndex) {
+            const myPayrolls = payrolls.filter(p => p.employeeIndex === empIndex);
+            document.getElementById('taxLiabilityEmployee').textContent = employees[empIndex].name;
+            document.getElementById('taxLiabilityTable').innerHTML = myPayrolls.map(p => `
+                <tr>
+                    <td>${p.period}</td>
+                    <td>R${calculateTax(p.gross * 12).toFixed(2)}</td>
+                    <td>R${calculateUIF(p.gross).toFixed(2)}</td>
+                    <td>R${calculateSDL(p.gross).toFixed(2)}</td>
+                    <td>R${(calculateTax(p.gross * 12) + calculateUIF(p.gross) + calculateSDL(p.gross)).toFixed(2)}</td>
+                </tr>
+            `).join('');
+            const total = myPayrolls.reduce((sum, p) => sum + calculateTax(p.gross * 12) + calculateUIF(p.gross) + calculateSDL(p.gross), 0);
+            document.getElementById('totalTaxLiability').textContent = `R${total.toFixed(2)}`;
+            const modal = new bootstrap.Modal(document.getElementById('taxLiabilityModal'));
+            modal.show();
+        }
+
         // On Load
         document.addEventListener('DOMContentLoaded', () => {
             populateOnboardingSelects();
