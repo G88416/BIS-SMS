@@ -738,7 +738,7 @@
                         <div class="modal-header"><h5 id="addCertificationModalLabel">Add Certification</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
                         <div class="modal-body">
                             <select id="certEmployee" class="form-control mb-3 emp-select" required></select>
-                            <input id="certName" placeholder="Name" class="form-control mb-3" required>
+                            <input id="certName" placeholder="Certification Name" class="form-control mb-3" required>
                             <input id="certExpiry" type="date" class="form-control mb-3" required>
                         </div>
                         <div class="modal-footer"><button class="btn btn-primary" onclick="saveCertification()">Save</button></div>
@@ -753,147 +753,133 @@
                         <div class="modal-body">
                             <input id="mediaTitle" placeholder="Title" class="form-control mb-3" required>
                             <textarea id="mediaDesc" placeholder="Description" class="form-control mb-3" required></textarea>
-                            <input id="mediaFile" type="file" class="form-control mb-3" required>
+                            <input type="file" id="mediaFile" class="form-control" required>
                         </div>
                         <div class="modal-footer"><button class="btn btn-primary" onclick="uploadMedia()">Upload</button></div>
                     </div>
                 </div>
             </div>
-            <!-- ==== EDIT MY PROFILE MODAL ==== -->
-            <div class="modal fade" id="editMyProfileModal">
+            <!-- Crop Profile Picture Modal -->
+            <div class="modal fade" id="cropModal">
                 <div class="modal-dialog modal-lg">
                     <div class="modal-content">
-                        <div class="modal-header"><h5>Edit My Profile</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                        <div class="modal-header"><h5>Crop Profile Picture</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
                         <div class="modal-body">
-                            <input id="editName" placeholder="Name" class="form-control mb-3" required>
-                            <input id="editEmail" type="email" placeholder="Email" class="form-control mb-3" required>
-                            <input id="editPhone" placeholder="Phone" class="form-control mb-3" required>
+                            <img id="cropImage" style="max-width:100%;">
+                        </div>
+                        <div class="modal-footer">
+                            <button id="cropCancel" class="btn btn-secondary">Cancel</button>
+                            <button id="cropConfirm" class="btn btn-primary">Crop & Save</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Edit My Profile Modal -->
+            <div class="modal fade" id="editMyProfileModal">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header"><h5>Edit Profile</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                        <div class="modal-body">
+                            <input id="editName" placeholder="Name" class="form-control mb-3">
+                            <input id="editEmail" type="email" placeholder="Email" class="form-control mb-3">
+                            <input id="editPhone" placeholder="Phone" class="form-control mb-3">
                             <input id="editPassword" type="password" placeholder="New Password (optional)" class="form-control mb-3">
                         </div>
                         <div class="modal-footer"><button class="btn btn-primary" onclick="saveMyProfile()">Save</button></div>
                     </div>
                 </div>
             </div>
-            <!-- Image Crop Modal -->
-            <div class="modal fade" id="cropModal">
-                <div class="modal-dialog modal-lg">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5>Crop Profile Picture</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                        </div>
-                        <div class="modal-body">
-                            <img id="cropImage" src="" style="max-width:100%;">
-                            <div class="mt-3">
-                                <button id="cropConfirm" class="btn btn-primary">Crop & Upload</button>
-                                <button id="cropCancel" class="btn btn-secondary">Cancel</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
             <!-- Quiz Modal -->
             <div class="modal fade" id="quizModal">
-                <div class="modal-dialog">
+                <div class="modal-dialog modal-lg">
                     <div class="modal-content">
                         <div class="modal-header"><h5 id="quizTitle">Quiz</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-                        <div class="modal-body" id="quizBody"></div>
-                        <div class="modal-footer"><button class="btn btn-primary" onclick="submitQuiz()">Submit</button></div>
+                        <div class="modal-body" id="quizBody">
+                        </div>
+                        <div class="modal-footer"><button class="btn btn-primary" onclick="submitQuiz()">Submit Quiz</button></div>
                     </div>
                 </div>
             </div>
-            <!-- New Wellness Survey Modal -->
+            <!-- Survey Modal -->
             <div class="modal fade" id="surveyModal">
-                <div class="modal-dialog modal-lg">
+                <div class="modal-dialog">
                     <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 id="surveyTitle">Wellness Survey</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                        </div>
+                        <div class="modal-header"><h5 id="surveyTitle">Wellness Survey</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
                         <div class="modal-body">
-                            <form id="surveyForm">
+                            <form id="surveyForm" oninput="updateSurveyPreview()">
                                 <div id="surveyQuestions"></div>
                             </form>
                         </div>
-                        <div class="modal-footer">
-                            <button class="btn btn-primary" onclick="submitSurvey()">Submit Survey</button>
-                        </div>
+                        <div class="modal-footer"><button class="btn btn-primary" onclick="submitSurvey()">Submit</button></div>
                     </div>
                 </div>
             </div>
-            <!-- New Add Wellness Resource Modal -->
+            <!-- Add Resource Modal -->
             <div class="modal fade" id="addResourceModal">
                 <div class="modal-dialog">
                     <div class="modal-content">
                         <div class="modal-header"><h5>Add Wellness Resource</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
                         <div class="modal-body">
-                            <input id="resourceTitle" placeholder="Title" class="form-control mb-3" required>
-                            <textarea id="resourceDesc" placeholder="Description" class="form-control mb-3" required></textarea>
+                            <input id="resourceTitle" placeholder="Title" class="form-control mb-3">
+                            <textarea id="resourceDesc" placeholder="Description" class="form-control mb-3"></textarea>
                             <input id="resourceLink" placeholder="Link (optional)" class="form-control mb-3">
-                            <select id="resourceCategory" class="form-control mb-3" required>
-                                <option>Mental Health</option>
-                                <option>Physical Fitness</option>
-                                <option>Nutrition</option>
-                                <option>Stress Management</option>
+                            <select id="resourceCategory" class="form-control">
+                                <option>Mental Health</option><option>Physical Fitness</option><option>Nutrition</option>
                             </select>
                         </div>
                         <div class="modal-footer"><button class="btn btn-primary" onclick="saveResource()">Save</button></div>
                     </div>
                 </div>
             </div>
-            <!-- New Wellness Resources Modal -->
+            <!-- Add Survey Modal -->
+            <div class="modal fade" id="addSurveyModal">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header"><h5>Create New Survey</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                        <div class="modal-body">
+                            <input id="surveyName" placeholder="Survey Name" class="form-control mb-3">
+                            <textarea id="surveyDesc" placeholder="Description" class="form-control mb-3"></textarea>
+                            <div id="surveyQuestionInputs"></div>
+                            <button type="button" class="btn btn-secondary" onclick="addSurveyQuestion()">Add Question</button>
+                        </div>
+                        <div class="modal-footer"><button class="btn btn-primary" onclick="saveSurvey()">Save Survey</button></div>
+                    </div>
+                </div>
+            </div>
+            <!-- Resources Modal -->
             <div class="modal fade" id="resourcesModal">
                 <div class="modal-dialog modal-lg">
                     <div class="modal-content">
                         <div class="modal-header"><h5>Wellness Resources</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-                        <div class="modal-body">
-                            <div id="resourcesList"></div>
+                        <div class="modal-body" id="resourcesList">
                         </div>
                     </div>
                 </div>
             </div>
-            <!-- New Add Goal Modal -->
+            <!-- Add Goal Modal -->
             <div class="modal fade" id="addGoalModal">
                 <div class="modal-dialog">
                     <div class="modal-content">
-                        <div class="modal-header"><h5>Add Wellness Goal</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                        <div class="modal-header"><h5>Add Personal Goal</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
                         <div class="modal-body">
-                            <input id="goalTitle" placeholder="Goal Title" class="form-control mb-3" required>
-                            <textarea id="goalDesc" placeholder="Description" class="form-control mb-3" required></textarea>
-                            <input id="goalTargetDate" type="date" class="form-control mb-3" required>
-                            <select id="goalCategory" class="form-control mb-3" required>
-                                <option>Mental Health</option>
-                                <option>Physical Fitness</option>
-                                <option>Nutrition</option>
-                                <option>Work-Life Balance</option>
+                            <input id="goalTitle" placeholder="Goal Title" class="form-control mb-3">
+                            <textarea id="goalDesc" placeholder="Description" class="form-control mb-3"></textarea>
+                            <input id="goalTargetDate" type="date" class="form-control mb-3">
+                            <select id="goalCategory" class="form-control">
+                                <option>Fitness</option><option>Learning</option><option>Mindfulness</option>
                             </select>
                         </div>
                         <div class="modal-footer"><button class="btn btn-primary" onclick="saveGoal()">Save Goal</button></div>
                     </div>
                 </div>
             </div>
-            <!-- New Add Survey Modal (Admin) -->
-            <div class="modal fade" id="addSurveyModal">
-                <div class="modal-dialog modal-lg">
-                    <div class="modal-content">
-                        <div class="modal-header"><h5>Create New Survey</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-                        <div class="modal-body">
-                            <input id="surveyName" placeholder="Survey Name" class="form-control mb-3" required>
-                            <textarea id="surveyDesc" placeholder="Description" class="form-control mb-3" required></textarea>
-                            <div id="surveyQuestionInputs"></div>
-                            <button type="button" class="btn btn-sm btn-secondary mt-2" onclick="addSurveyQuestion()">Add Question</button>
-                        </div>
-                        <div class="modal-footer"><button class="btn btn-primary" onclick="saveSurvey()">Save Survey</button></div>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
-
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
     <script>
         // Global Data Structures
         let employees = JSON.parse(localStorage.getItem('employees')) || [
-            { id: 1, name: 'John Doe', position: 'Producer', branch: 'Johannesburg', email: 'john@allos.com', phone: '0821234567', salary: 25000, username: 'john', password: 'john123', taxNumber: '1234567890123', uifNumber: 'UIF123', enrolledBenefits: [], enrolledCourses: [], wellness: { score: 0, surveys: [], goals: [], metrics: { stress: 5, energy: 5, mood: 5 } }, index: 0 },
+            { id: 1, name: 'John Doe', position: 'Producer', branch: 'Johannesburg', email: 'john@allos.com', phone: '0821234567', salary: 25000, username: 'john', password: 'john123', taxNumber: '1234567897890', uifNumber: 'UIF123', enrolledBenefits: [], enrolledCourses: [], wellness: { score: 0, surveys: [], goals: [], metrics: { stress: 5, energy: 5, mood: 5 } }, index: 0 },
             { id: 2, name: 'Admin User', position: 'Admin', branch: 'Cape Town', email: 'admin@allos.com', phone: '0827654321', salary: 30000, username: 'admin', password: 'admin123', taxNumber: '9876543210987', uifNumber: 'UIF456', enrolledBenefits: [], enrolledCourses: [], wellness: { score: 0, surveys: [], goals: [], metrics: { stress: 5, energy: 5, mood: 5 } }, index: 1 }
         ];
         let payrolls = JSON.parse(localStorage.getItem('payrolls')) || [];
@@ -1189,10 +1175,7 @@
                 </tr>
             `).join('');
             // Populate selects
-            populateEmployeeSelect('payEmployee');
-            populateEmployeeSelect('reviewEmployee');
-            populateEmployeeSelect('leaveEmployee');
-            populateEmployeeSelect('certEmployee');
+            ['payEmployee', 'reviewEmployee', 'leaveEmployee', 'certEmployee'].forEach(id => populateEmployeeSelect(id));
         }
         function deleteEmployee(i) {
             if (confirm('Delete employee? All related data will be lost.')) {
@@ -1395,17 +1378,6 @@
                 alert(`Batch payroll run for ${period}. Total cost: R${totalCost.toFixed(2)}. All compliant.`);
             }
         }
-        function showAddPayrollModal() {
-            currentPayrollEdit = -1;
-            document.getElementById('addPayrollModalLabel').innerHTML = 'Add Payroll Entry';
-            populateEmployeeSelect('payEmployee');
-            document.getElementById('payPeriod').value = new Date().toISOString().slice(0, 7); // Current month
-            document.getElementById('payComplianceNote').style.display = 'none';
-            const modal = new bootstrap.Modal(document.getElementById('addPayrollModal'));
-            modal.show();
-            loadEmployeePayData();
-            calculatePayroll();
-        }
         function showEditPayrollModal(i) {
             currentPayrollEdit = i;
             document.getElementById('addPayrollModalLabel').innerHTML = 'Edit Payroll Entry';
@@ -1420,110 +1392,6 @@
             modal.show();
             loadEmployeePayData();
             calculatePayroll();
-        }
-        function savePayroll() {
-            const empIndex = parseInt(document.getElementById('payEmployee').value);
-            const period = document.getElementById('payPeriod').value;
-            const emp = employees[empIndex];
-            if (!validateTaxNumber(emp.taxNumber)) {
-                alert('Cannot process payroll: Invalid Tax Number. Update employee profile.');
-                return;
-            }
-            const basicPay = parseFloat(document.getElementById('payBasic').textContent.replace('R', ''));
-            const overtimePay = parseFloat(document.getElementById('payOvertime').textContent.replace('R', ''));
-            const commission = parseFloat(document.getElementById('payComm').textContent.replace('R', ''));
-            const gross = parseFloat(document.getElementById('payGross').textContent.replace('R', ''));
-            const paye = parseFloat(document.getElementById('payPAYE').textContent.replace('R', ''));
-            const uif = parseFloat(document.getElementById('payUIF').textContent.replace('R', ''));
-            const sdl = parseFloat(document.getElementById('paySDL').textContent.replace('R', ''));
-            const benefits = parseFloat(document.getElementById('payBenefits').textContent.replace('R', ''));
-            const totalDeductions = parseFloat(document.getElementById('payTotalDeductions').textContent.replace('R', ''));
-            const net = parseFloat(document.getElementById('payNet').textContent.replace('R', ''));
-            const p = {
-                id: currentPayrollEdit === -1 ? Date.now() : payrolls[currentPayrollEdit].id,
-                employeeIndex: empIndex,
-                period,
-                basicPay,
-                overtimePay,
-                commission,
-                gross,
-                paye,
-                uif,
-                sdl,
-                benefits,
-                totalDeductions,
-                net,
-                status: currentPayrollEdit === -1 ? 'Processed' : payrolls[currentPayrollEdit].status,
-                taxNumber: emp.taxNumber,
-                dateProcessed: new Date().toISOString(),
-                compliant: true
-            };
-            if (currentPayrollEdit === -1) {
-                payrolls.push(p);
-                addNotification('admin', `New payroll entry for ${emp.name} - ${period}`);
-            } else {
-                payrolls[currentPayrollEdit] = p;
-                addNotification('admin', `Payroll updated for ${emp.name} - ${period}`);
-            }
-            localStorage.setItem('payrolls', JSON.stringify(payrolls));
-            renderPayroll();
-            bootstrap.Modal.getInstance(document.getElementById('addPayrollModal')).hide();
-            logAudit('PAYROLL_UPDATE', `${emp.name} – ${period} (Compliant: ${p.compliant})`);
-        }
-        function renderPayroll() {
-            const filteredPayrolls = currentUser.role === 'admin' ? payrolls : payrolls.filter(p => p.employeeIndex === currentUser.index);
-            document.getElementById('payrollTable').innerHTML = filteredPayrolls.map((p, globalIndex) => {
-                const localIndex = payrolls.indexOf(p);
-                const emp = employees[p.employeeIndex];
-                const complianceBadge = p.compliant ? '<span class="badge bg-success">Compliant</span>' : '<span class="badge bg-warning">Pending Review</span>';
-                return `
-                    <tr>
-                        <td>${p.id}</td>
-                        <td>${emp?.name || 'Unknown'}</td>
-                        <td>${p.period}</td>
-                        <td>R${p.gross.toFixed(2)}</td>
-                        <td>R${p.totalDeductions.toFixed(2)}</td>
-                        <td>R${p.net.toFixed(2)}</td>
-                        <td><span class="badge bg-${p.status === 'Processed' ? 'success' : 'warning'}">${p.status}</span></td>
-                        <td>${complianceBadge}</td>
-                        <td>
-                            <button class="btn btn-sm btn-primary" onclick="generatePayslip(${localIndex})">Payslip</button>
-                            <button class="btn btn-sm btn-info" onclick="showTaxLiability(${p.employeeIndex}, '${p.period}')">Tax Report</button>
-                            ${currentUser.role === 'admin' ? `
-                                <button class="btn btn-sm btn-secondary" onclick="showEditPayrollModal(${localIndex})">Edit</button>
-                                <button class="btn btn-sm btn-danger" onclick="deletePayroll(${localIndex})">Delete</button>
-                            ` : ''}
-                        </td>
-                    </tr>
-                `;
-            }).join('');
-            // Summary
-            const totalGross = filteredPayrolls.reduce((sum, p) => sum + p.gross, 0);
-            const totalNet = filteredPayrolls.reduce((sum, p) => sum + p.net, 0);
-            document.getElementById('payrollSummary').innerHTML = `<strong>Summary: Gross R${totalGross.toFixed(2)} | Net R${totalNet.toFixed(2)} | Compliance: ${filteredPayrolls.filter(p => p.compliant).length}/${filteredPayrolls.length}</strong>`;
-            // Metrics
-            document.getElementById('pendingPayrollRuns').textContent = payrolls.filter(p => p.status === 'Draft').length;
-            const ytdStart = new Date('2025-03-01');
-            const ytdGross = payrolls.filter(p => new Date(`${p.period}-01`) >= ytdStart).reduce((sum, p) => sum + p.gross, 0);
-            document.getElementById('ytdPayroll').textContent = `R${ytdGross.toFixed(2)}`;
-            // Trend Chart
-            const trendCtx = document.getElementById('payrollTrendChart').getContext('2d');
-            const periods = [...new Set(payrolls.map(p => p.period))].sort();
-            const grossData = periods.map(period => payrolls.filter(p => p.period === period).reduce((sum, p) => sum + p.gross, 0));
-            new Chart(trendCtx, {
-                type: 'line',
-                data: { labels: periods, datasets: [{ label: 'Monthly Gross Payroll', data: grossData, borderColor: '#4169e1' }] },
-                options: { responsive: true, scales: { y: { beginAtZero: true } } }
-            });
-            // Global compliance alert
-            const nonCompliant = payrolls.filter(p => !p.compliant).length;
-            const alertDiv = document.getElementById('taxComplianceAlert');
-            if (nonCompliant > 0) {
-                alertDiv.innerHTML = `<strong>Tax Compliance Alert:</strong> ${nonCompliant} payroll entries non-compliant. Review tax numbers.`;
-                alertDiv.style.display = 'block';
-            } else {
-                alertDiv.style.display = 'none';
-            }
         }
         function deletePayroll(i) {
             if (confirm('Delete payroll entry? This action is auditable.')) {
