@@ -731,7 +731,7 @@
                     </div>
                 </div>
             </div>
-            <!-- Add/Edit Certification Modal (Fixed: Added missing modal) -->
+            <!-- Add/Edit Certification Modal -->
             <div class="modal fade" id="addCertificationModal">
                 <div class="modal-dialog">
                     <div class="modal-content">
@@ -750,7 +750,7 @@
                     </div>
                 </div>
             </div>
-            <!-- Edit My Profile Modal (Fixed: Added missing modal) -->
+            <!-- Edit My Profile Modal -->
             <div class="modal fade" id="editMyProfileModal">
                 <div class="modal-dialog">
                     <div class="modal-content">
@@ -770,7 +770,7 @@
                     </div>
                 </div>
             </div>
-            <!-- Crop Profile Picture Modal (Fixed: Added missing modal) -->
+            <!-- Crop Profile Picture Modal -->
             <div class="modal fade" id="cropModal">
                 <div class="modal-dialog modal-lg">
                     <div class="modal-content">
@@ -788,7 +788,7 @@
                     </div>
                 </div>
             </div>
-            <!-- Quiz Modal (Fixed: Added missing modal) -->
+            <!-- Quiz Modal -->
             <div class="modal fade" id="quizModal">
                 <div class="modal-dialog modal-lg">
                     <div class="modal-content">
@@ -805,7 +805,7 @@
                     </div>
                 </div>
             </div>
-            <!-- Add Wellness Resource Modal (Fixed: Added missing modal) -->
+            <!-- Add Wellness Resource Modal -->
             <div class="modal fade" id="addResourceModal">
                 <div class="modal-dialog">
                     <div class="modal-content">
@@ -831,7 +831,7 @@
                     </div>
                 </div>
             </div>
-            <!-- Survey Modal (Fixed: Added missing modal) -->
+            <!-- Survey Modal -->
             <div class="modal fade" id="surveyModal">
                 <div class="modal-dialog modal-lg">
                     <div class="modal-content">
@@ -852,7 +852,7 @@
                     </div>
                 </div>
             </div>
-            <!-- Add Survey Modal (Fixed: Added missing modal) -->
+            <!-- Add Survey Modal -->
             <div class="modal fade" id="addSurveyModal">
                 <div class="modal-dialog modal-lg">
                     <div class="modal-content">
@@ -874,7 +874,7 @@
                     </div>
                 </div>
             </div>
-            <!-- Resources Modal (Fixed: Added missing modal) -->
+            <!-- Resources Modal -->
             <div class="modal fade" id="resourcesModal">
                 <div class="modal-dialog modal-xl">
                     <div class="modal-content">
@@ -890,7 +890,7 @@
                     </div>
                 </div>
             </div>
-            <!-- Add Goal Modal (Fixed: Added missing modal) -->
+            <!-- Add Goal Modal -->
             <div class="modal fade" id="addGoalModal">
                 <div class="modal-dialog">
                     <div class="modal-content">
@@ -916,16 +916,30 @@
                     </div>
                 </div>
             </div>
+            <!-- Upload Media Modal -->
+            <div class="modal fade" id="uploadMediaModal">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5>Upload Media</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <input id="mediaTitle" placeholder="Title" class="form-control mb-3" required>
+                            <textarea id="mediaDesc" placeholder="Description" class="form-control mb-3" required></textarea>
+                            <input type="file" id="mediaFile" class="form-control">
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn-primary" onclick="uploadMedia()">Upload</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
     <script>
-        // Full JavaScript code (reconstructed and fixed from provided snippets)
-        // Note: I have reconstructed the full JS based on the provided truncated parts, fixing logical flows, adding missing variables, and ensuring all functions are defined without errors.
-        // Added initializations, fixed potential undefined variables, and ensured localStorage handling is robust.
-        // Also added missing global variables like currentReviewEdit, etc., initialized to -1 or appropriate defaults.
-        // Ensured all referenced elements exist and functions are called correctly.
-
+        // Full JavaScript code with all functions defined and bugs fixed
         let employees = JSON.parse(localStorage.getItem('employees')) || [];
         let payrolls = JSON.parse(localStorage.getItem('payrolls')) || [];
         let jobs = JSON.parse(localStorage.getItem('jobs')) || [];
@@ -1077,6 +1091,7 @@
         function addNotification(user, message) {
             const time = new Date().toLocaleString();
             if (user === 'admin') {
+                if (!notifications.admin) notifications.admin = [];
                 notifications.admin.push({ message, time, read: false });
             } else {
                 const empId = typeof user === 'number' ? employees[user].username : user;
@@ -1246,11 +1261,8 @@
             const viewer = document.getElementById('handbookViewer');
             viewer.innerHTML = '';
             if (handbookData) {
-                const pdf = new jsPDF();
-                pdf.fromHTML(handbookData, 15, 15);
-                const pdfUrl = pdf.output('datauristring');
                 const iframe = document.createElement('iframe');
-                iframe.src = pdfUrl;
+                iframe.src = handbookData;
                 iframe.style.width = '100%';
                 iframe.style.height = '600px';
                 viewer.appendChild(iframe);
@@ -1659,7 +1671,6 @@
             }
         }
 
-        // Attendance (unchanged)
         function clockIn() {
             const empIndex = currentUser.role === 'admin' ? parseInt(prompt('Enter employee index:')) : currentUser.index;
             if (isNaN(empIndex)) return;
@@ -1697,11 +1708,12 @@
             }
         }
 
-        // Leaves (unchanged)
         function showAddLeaveModal() {
             currentLeaveEdit = -1;
             document.getElementById('addLeaveModalLabel').innerHTML = 'Request Leave';
             populateEmployeeSelect('leaveEmployee');
+            if (currentUser.role === 'employee') document.getElementById('leaveEmployee').value = currentUser.index;
+            document.getElementById('leaveEmployee').disabled = currentUser.role === 'employee';
             document.getElementById('leaveStart').value = '';
             document.getElementById('leaveEnd').value = '';
             document.getElementById('leaveType').value = '';
@@ -1785,7 +1797,6 @@
             }
         }
 
-        // Benefits (unchanged)
         function showAddBenefitModal() {
             currentBenefitEdit = -1;
             document.getElementById('addBenefitModalLabel').innerHTML = 'Add Benefit Plan';
@@ -1845,7 +1856,6 @@
             }
         }
 
-        // Training (unchanged)
         function showAddCourseModal() {
             currentCourseEdit = -1;
             document.getElementById('addCourseModalLabel').innerHTML = 'Add Course';
@@ -1911,7 +1921,6 @@
             }
         }
 
-        // Compliance (unchanged)
         function showAddCertificationModal() {
             currentCertEdit = -1;
             document.getElementById('addCertificationModalLabel').innerHTML = 'Add Certification';
@@ -1954,7 +1963,6 @@
                     </td>
                 </tr>
             `).join('');
-            // Compliance score (percentage of non-expiring certs)
             const totalCerts = certifications.length;
             const compliantCerts = totalCerts - expiring;
             const score = totalCerts > 0 ? Math.round((compliantCerts / totalCerts) * 100) : 0;
@@ -1980,7 +1988,6 @@
             }
         }
 
-        // Media Approval (unchanged)
         function showUploadMediaModal() {
             document.getElementById('mediaTitle').value = '';
             document.getElementById('mediaDesc').value = '';
@@ -2042,7 +2049,6 @@
             renderMediaApproval();
         }
 
-        // Reports (unchanged)
         function exportToExcel(data, filename) {
             const ws = XLSX.utils.json_to_sheet(data);
             const wb = XLSX.utils.book_new();
@@ -2053,7 +2059,6 @@
             // Exports only, no render needed
         }
 
-        // Audit Trail (unchanged)
         function logAudit(action, details) {
             const user = currentUser || { role: 'unknown' };
             const entry = {
@@ -2077,7 +2082,6 @@
             `).join('');
         }
 
-        // My Profile (unchanged)
         function renderMyProfile() {
             const userIndex = currentUser.index;
             const emp = employees[userIndex];
@@ -2088,7 +2092,6 @@
             document.getElementById('profileTax').textContent = validateTaxNumber(emp.taxNumber) ? emp.taxNumber : 'Invalid - Update';
             document.getElementById('profileUIF').textContent = emp.uifNumber || '-';
             document.getElementById('profilePic').src = emp.profilePic || 'https://placehold.co/150x150';
-            // Benefits
             const benList = document.getElementById('profileBenefits');
             benList.innerHTML = '';
             if (emp.enrolledBenefits && emp.enrolledBenefits.length) {
@@ -2104,7 +2107,6 @@
             } else {
                 benList.innerHTML = '<li class="list-group-item">None enrolled</li>';
             }
-            // Certs
             const certList = document.getElementById('profileCerts');
             certList.innerHTML = '';
             const myCerts = certifications.filter(c => c.employeeIndex === userIndex);
@@ -2166,6 +2168,7 @@
             document.getElementById('editName').value = emp.name;
             document.getElementById('editEmail').value = emp.email;
             document.getElementById('editPhone').value = emp.phone;
+            document.getElementById('editPassword').value = '';
             const modal = new bootstrap.Modal(document.getElementById('editMyProfileModal'));
             modal.show();
         }
@@ -2182,7 +2185,25 @@
             addNotification('admin', `${employees[userIndex].name} updated profile`);
         }
 
-        // My Benefits (unchanged)
+        function renderMyPayroll() {
+            const userIndex = currentUser.index;
+            const myPayrolls = payrolls.filter(p => p.employeeIndex === userIndex);
+            const ytdEarnings = myPayrolls.reduce((sum, p) => sum + p.gross, 0);
+            const ytdTax = myPayrolls.reduce((sum, p) => sum + calculateTax(p.gross * 12), 0);
+            document.getElementById('myYTDEarnings').textContent = `R${ytdEarnings.toFixed(2)}`;
+            document.getElementById('myYTDTax').textContent = `R${ytdTax.toFixed(2)}`;
+            document.getElementById('myPayrollTable').innerHTML = myPayrolls.map((p, i) => `
+                <tr>
+                    <td>${p.period}</td>
+                    <td>R${p.gross.toFixed(2)}</td>
+                    <td>R${p.deductions.toFixed(2)}</td>
+                    <td>R0.00</td>
+                    <td>R${p.net.toFixed(2)}</td>
+                    <td><button class="btn btn-sm btn-info" onclick="showPayslip(${payrolls.indexOf(p)})">View</button></td>
+                </tr>
+            `).join('');
+        }
+
         function renderMyBenefits() {
             const userIndex = currentUser.index;
             const emp = employees[userIndex];
@@ -2223,7 +2244,6 @@
             renderMyBenefits();
         }
 
-        // My Training (unchanged)
         function renderMyTraining() {
             const userIndex = currentUser.index;
             const emp = employees[userIndex];
@@ -2289,7 +2309,6 @@
             bootstrap.Modal.getInstance(document.getElementById('quizModal')).hide();
         }
 
-        // Open Jobs (unchanged)
         function renderOpenJobs() {
             const userIndex = currentUser.index;
             document.getElementById('openJobTable').innerHTML = jobs.map(j => {
@@ -2318,7 +2337,6 @@
             }
         }
 
-        // Dashboard Renders (enhanced with payroll metrics)
         function renderDashboard() {
             document.getElementById('totalEmployees').textContent = employees.length;
             const totalPayroll = payrolls.reduce((sum, p) => sum + p.net, 0);
@@ -2355,9 +2373,11 @@
             document.getElementById('myAvgPerformance').textContent = `${myAvg}/5`;
             const myRecentP = payrolls.filter(p => p.employeeIndex === userIndex).slice(-1)[0];
             document.getElementById('recentPayslips').textContent = myRecentP ? `Last: ${myRecentP.period} - R${myRecentP.net.toFixed(2)}` : 'No recent payslips';
+            document.getElementById('upcomingLeaves').textContent = leaves.filter(l => l.employeeIndex === userIndex && new Date(l.startDate) > new Date() && l.status === 'Approved').length;
+            document.getElementById('pendingTasks').textContent = 0; // Placeholder for tasks
             // Charts
             const perfCtx = document.getElementById('myPerformanceChart').getContext('2d');
-            new Chart(perfCtx, { type: 'doughnut', data: { labels: ['Performance'], datasets: [{ data: [myAvg * 20], backgroundColor: ['#4169e1'] }] } });
+            new Chart(perfCtx, { type: 'doughnut', data: { labels: ['Performance'], datasets: [{ data: [myAvg * 20, 100 - myAvg * 20], backgroundColor: ['#4169e1', '#e6f3ff'] }] } });
             const leaveCtx = document.getElementById('myLeaveChart').getContext('2d');
             const myLeaves = leaves.filter(l => l.employeeIndex === userIndex);
             const approved = myLeaves.filter(l => l.status === 'Approved').length;
@@ -2365,7 +2385,6 @@
             new Chart(leaveCtx, { type: 'pie', data: { labels: ['Approved', 'Pending'], datasets: [{ data: [approved, pending], backgroundColor: ['#28a745', '#ffc107'] }] } });
         }
 
-        // Wellness Module (unchanged)
         function renderWellnessAdmin() {
             const avgScore = employees.length ? (employees.reduce((sum, e) => sum + (e.wellness?.score || 0), 0) / employees.length).toFixed(1) : 0;
             document.getElementById('avgWellnessScore').textContent = `${avgScore}/10`;
@@ -2434,7 +2453,6 @@
             modal.show();
         }
         function updateSurveyPreview() {
-            // Real-time score preview (interactive)
             const form = document.getElementById('surveyForm');
             const formData = new FormData(form);
             let totalScore = 0;
@@ -2446,7 +2464,6 @@
                 }
             }
             const avgScore = questionCount > 0 ? (totalScore / questionCount).toFixed(1) : 0;
-            // Add preview div if not exists
             let preview = document.querySelector('#surveyModal .modal-footer .preview');
             if (!preview) {
                 preview = document.createElement('div');
@@ -2485,6 +2502,10 @@
             renderWellnessAdmin();
         }
         function showAddResourceModal() {
+            document.getElementById('resourceTitle').value = '';
+            document.getElementById('resourceDesc').value = '';
+            document.getElementById('resourceLink').value = '';
+            document.getElementById('resourceCategory').value = '';
             const modal = new bootstrap.Modal(document.getElementById('addResourceModal'));
             modal.show();
         }
@@ -2520,6 +2541,10 @@
             `).join('');
         }
         function showAddGoalModal() {
+            document.getElementById('goalTitle').value = '';
+            document.getElementById('goalDesc').value = '';
+            document.getElementById('goalTargetDate').value = '';
+            document.getElementById('goalCategory').value = '';
             const modal = new bootstrap.Modal(document.getElementById('addGoalModal'));
             modal.show();
         }
@@ -2607,10 +2632,8 @@
         function viewEmployeeWellness(index) {
             const emp = employees[index];
             alert(`Wellness details for ${emp.name}:\nScore: ${emp.wellness?.score || 0}/10\nMetrics: Stress ${emp.wellness?.metrics?.stress || 5}, Energy ${emp.wellness?.metrics?.energy || 5}, Mood ${emp.wellness?.metrics?.mood || 5}`);
-            // Could open modal for full view
         }
 
-        // Onboarding (enhanced with tax validation)
         function saveOnboardingEmployee() {
             const password = document.getElementById('onbPassword').value;
             const confirm = document.getElementById('onbConfirmPassword').value;
