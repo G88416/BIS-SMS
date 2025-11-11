@@ -184,7 +184,8 @@
             <!-- Payroll Section with Payslip Generation -->
             <section id="payroll" class="section d-none">
                 <h2>Payroll</h2>
-                <button class="btn btn-primary" onclick="showAddPayrollModal()">Add Payroll Entry</button>
+                <button class="btn btn-primary me-2" onclick="showAddPayrollModal()">Add Payroll Entry</button>
+                <button class="btn btn-primary" onclick="runBatchPayroll()">Run Batch Payroll</button>
                 <table class="table table-striped mt-3">
                     <thead><tr><th>ID</th><th>Employee</th><th>Month</th><th>Salary</th><th>Deductions</th><th>Net</th><th>Tax Number</th><th>Actions</th></tr></thead>
                     <tbody id="payrollTable"></tbody>
@@ -564,6 +565,19 @@
                             <input id="payNet" type="number" placeholder="Net" class="form-control mb-3" readonly>
                         </div>
                         <div class="modal-footer"><button class="btn btn-primary" onclick="savePayroll()">Save</button></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Batch Payroll Modal -->
+            <div class="modal fade" id="batchPayrollModal">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header"><h5>Run Batch Payroll</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                        <div class="modal-body">
+                            <input id="batchMonth" type="month" class="form-control mb-3" placeholder="Select Month">
+                        </div>
+                        <div class="modal-footer"><button class="btn btn-primary" onclick="processBatchPayroll()">Run</button></div>
                     </div>
                 </div>
             </div>
@@ -1257,6 +1271,7 @@
         let currentPayrollEdit = -1;
         const BONUS_RATE = 5000; // R5 000 per performance point (customise)
         const WELLNESS_BONUS_RATE = 100; // R100 per wellness point
+        const TAX_REBATE_UNDER_65 = 17235; // Annual rebate for under 65
 
         function showAddPayrollModal() {
             currentPayrollEdit = -1;
@@ -1293,6 +1308,89 @@
             modal.show();
         }
 
+        function runBatchPayroll() {
+            document.getElementById('batchMonth').value = '';
+            const modal = new bootstrap.Modal(document.getElementById('batchPayrollModal'));
+            modal.show();
+        }
+
+        function processBatchPayroll() {
+            const month = document.getElementById('batchMonth').value;
+            if (!month) {
+                alert('Please select a month.');
+                return;
+            }
+            employees.forEach((emp, idx) => {
+                if (payrolls.some(p => p.employeeIndex === idx && p.month === month)) return; // Skip if exists
+                const payroll = createPayrollEntry(idx, month);
+                payrolls.push(payroll);
+                addNotification('admin', `Batch payroll created for ${emp.name} - ${month}`);
+                logAudit('PAYROLL_BATCH_CREATE', `${emp.name} – ${month}`);
+            });
+            localStorage.setItem('payrolls', JSON.stringify(payrolls));
+            renderPayroll();
+            bootstrap.Modal.getInstance(document.getElementById('batchPayrollModal')).hide();
+        }
+
+        function createPayrollEntry(employeeIndex, month) {
+            const emp = employees[employeeIndex];
+            const salary = emp.salary || 0;
+
+            // Benefits cost
+            let benefitsCost = 0;
+            if (emp.enrolledBenefits) {
+                emp.enrolledBenefits.forEach(bId => {
+                    const benefit = benefitPlans.find(b => b.id === bId);
+                    if (benefit) benefitsCost += benefit.cost;
+                });
+            }
+
+            // UIF
+            const uif = salary * 0.01;
+
+            // Tax
+            const annualIncome = salary * 12;
+            let annualTax = calculateTax(annualIncome);
+            annualTax = Math.max(0, annualTax - TAX_REBATE_UNDER_65);
+            const monthlyTax = annualTax / 12;
+
+            // Performance bonus
+            const latestReview = reviews.filter(r => r.employeeIndex === employeeIndex).sort((a, b) => new Date(b.date) - new Date(a.date))[0];
+            const bonus = latestReview ? latestReview.score * BONUS_RATE : 0;
+
+            // Wellness bonus
+            const wellnessPoints = wellnessLogs.filter(l => l.employeeIndex === employeeIndex).length * 10;
+            const wellnessBonus = wellnessPoints * WELLNESS_BONUS_RATE;
+
+            // Assume default for others
+            const otHours = 0;
+            const hourlyRate = salary / 160;
+            const otPay = otHours * hourlyRate * 1.5;
+            const pensionPercent = 5;
+            const pension = salary * (pensionPercent / 100);
+            const medical = 1000;
+            const otherDeductions = 0;
+
+            const deductions = uif + monthlyTax + benefitsCost + pension + medical + otherDeductions;
+            const net = salary + otPay + bonus + wellnessBonus - deductions;
+
+            return {
+                employeeIndex,
+                month,
+                salary,
+                overtimeHours: otHours,
+                pension: pensionPercent,
+                medical,
+                deductions,
+                bonus,
+                wellnessBonus,
+                net,
+                uif,
+                tax: monthlyTax,
+                taxNumber: emp.taxNumber
+            };
+        }
+
         function calculateTax(annualIncome) {
             let tax = 0;
             if (annualIncome <= 237100) {
@@ -1308,7 +1406,7 @@
             } else if (annualIncome <= 1817000) {
                 tax = 251258 + (annualIncome - 857900) * 0.41;
             } else {
-                tax = 596695 + (annualIncome - 1817000) * 0.45;
+                tax = 644489 + (annualIncome - 1817000) * 0.45;
             }
             return tax;
         }
@@ -1332,9 +1430,10 @@
             // ----- UIF (1 %) -----
             const uif = salary * 0.01;
 
-            // ----- TAX (SARS 2024/25) -----
+            // ----- TAX (SARS 2025/26) -----
             const annualIncome = salary * 12;
-            const annualTax = calculateTax(annualIncome);
+            let annualTax = calculateTax(annualIncome);
+            annualTax = Math.max(0, annualTax - TAX_REBATE_UNDER_65);
             const monthlyTax = annualTax / 12;
 
             // ----- PERFORMANCE BONUS -----
@@ -1378,9 +1477,20 @@
         }
 
         function savePayroll() {
+            const employeeIndex = parseInt(document.getElementById('payEmployee').value);
+            const month = document.getElementById('payMonth').value;
+            if (isNaN(employeeIndex) || !month) {
+                alert('Please select employee and month.');
+                return;
+            }
+            if (currentPayrollEdit === -1 && payrolls.some(p => p.employeeIndex === employeeIndex && p.month === month)) {
+                alert('Payroll for this employee and month already exists.');
+                return;
+            }
+
             const p = {
-                employeeIndex: parseInt(document.getElementById('payEmployee').value),
-                month: document.getElementById('payMonth').value,
+                employeeIndex,
+                month,
                 salary: parseFloat(document.getElementById('paySalary').value),
                 overtimeHours: parseFloat(document.getElementById('payOvertimeHours').value),
                 pension: parseFloat(document.getElementById('payPension').value),
@@ -1391,7 +1501,7 @@
                 net: parseFloat(document.getElementById('payNet').value),
                 uif: parseFloat(document.getElementById('paySalary').value) * 0.01,
                 tax: calculateTax(parseFloat(document.getElementById('paySalary').value) * 12) / 12,
-                taxNumber: employees[parseInt(document.getElementById('payEmployee').value)].taxNumber
+                taxNumber: employees[employeeIndex].taxNumber
             };
             const action = currentPayrollEdit === -1 ? 'CREATE' : 'UPDATE';
             if (currentPayrollEdit === -1) {
