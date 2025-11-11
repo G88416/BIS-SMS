@@ -3,78 +3,144 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Advanced Comprehensive HRMS - Allos Connect (Sage-inspired)</title>
+    <title>Advanced School Management System (ASMS) - Bophelong Independent School</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/mammoth@1.4.2/mammoth.browser.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
     <style>
-        body { font-family: 'Poppins', sans-serif; background-color: #f0f8ff; color: #333; box-shadow: 0 0 20px #4169E1; }
-        .sidebar { background-color: #e6f3ff; border-right: 1px solid #87ceeb; height: 100vh; position: fixed; width: 250px; padding: 20px; overflow-y: auto; transition: width 0.3s ease; z-index: 1000; box-shadow: 0 0 20px #4169E1; }
-        .sidebar.collapsed { width: 60px; }
-        .sidebar.collapsed .nav-text { display: none; }
-        .sidebar .nav-link { color: #001f3f; font-weight: 500; margin-bottom: 10px; padding: 10px; transition: all 0.2s; }
-        .sidebar .nav-link:hover { color: #4169e1; background-color: #add8e6; border-radius: 5px; }
-        .sidebar .nav-link.active { color: #4169e1; background-color: #b0e0e6; border-radius: 5px; }
-        .content { margin-left: 250px; padding: 40px; transition: margin-left 0.3s ease; background-color: #f8fbff; box-shadow: 0 0 20px #4169E1; }
-        .content.expanded { margin-left: 60px; }
-        .card-metric { background-color: #ffffff; border: 1px solid #add8e6; box-shadow: 0 4px 15px rgba(135,206,235,0.2), 0 0 10px #4169E1; border-radius: 10px; transition: transform 0.2s; }
-        .card-metric:hover { transform: translateY(-5px); }
-        .table { background-color: #ffffff; box-shadow: 0 2px 10px rgba(135,206,235,0.1), 0 0 10px #4169E1; border-radius: 10px; overflow: hidden; border: 1px solid #e6f3ff; }
-        .modal-content { border-radius: 15px; box-shadow: 0 5px 20px rgba(65,105,225,0.2), 0 0 10px #4169E1; border: 1px solid #add8e6; }
-        .btn-toggle-sidebar { position: fixed; top: 20px; left: 260px; z-index: 1001; transition: left 0.3s ease; background-color: #4169e1; border-color: #4169e1; }
-        .btn-toggle-sidebar.expanded { left: 70px; }
-        #notificationBell { position: fixed; top: 20px; right: 20px; z-index: 1100; }
-        .admin-only { display: block; }
-        .employee-only { display: none; }
-        .dark-mode { background-color: #001f3f; color: #e0e0e0; }
-        .dark-mode .sidebar { background-color: #0d1b2a; border-right: 1px solid #4169e1; }
-        .dark-mode .nav-link { color: #add8e6; }
-        .dark-mode .nav-link:hover { color: #ffffff; background-color: #4169e1; }
-        .dark-mode .content { background-color: #001f3f; }
-        .dark-mode .card-metric { background-color: #0d1b2a; border: 1px solid #4169e1; }
-        .dark-mode .table { background-color: #0d1b2a; color: #e0e0e0; border: 1px solid #add8e6; }
-        .dark-mode .table-striped tbody tr:nth-of-type(odd) { background-color: #1a2b4a; }
-        .dark-mode .table thead th { background-color: #4169e1; color: white; }
-        @media (max-width: 768px) {
-            .sidebar { width: 60px; }
-            .sidebar .nav-text { display: none; }
-            .content { margin-left: 60px; }
-            .btn-toggle-sidebar { left: 70px; }
+        body { 
+            font-family: 'Poppins', sans-serif; 
+            background: linear-gradient(135deg, #1e3c72, #2a5298); 
+            color: #fff; 
+            min-height: 100vh;
         }
-        /* Login Page Styles */
-        .login-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #4169e1, #87ceeb); }
-        .login-card { width: 100%; max-width: 420px; padding: 2rem; border-radius: 15px; box-shadow: 0 10px 30px rgba(65,105,225,0.3); background: white; }
-        .login-title { font-weight: 700; color: #4169e1; }
-        .login-demo { font-size: 0.85rem; color: #666; }
-        .payslip-preview { display: none; }
-        .payslip-header { background-color: #4169e1; color: white; padding: 1rem; text-align: center; }
-        .payslip-body { padding: 1rem; }
-        .payslip-footer { border-top: 1px solid #ddd; padding: 1rem; text-align: center; font-size: 0.8rem; }
-        /* make audit table scrollable on small screens */
-        #audit .table { max-height: 60vh; overflow-y: auto; display: block; }
-        #pdfCanvas { max-width: 100%; height: auto; }
-        /* Wellness Module Styles */
-        .wellness-progress { background-color: #e9ecef; border-radius: 10px; height: 20px; overflow: hidden; }
-        .wellness-progress-bar { height: 100%; background: linear-gradient(90deg, #28a745, #ffc107, #fd7e14); transition: width 0.3s ease; }
-        .wellness-card { border-left: 4px solid #28a745; }
-        .survey-question { margin-bottom: 1rem; }
-        .resource-card { transition: transform 0.2s; }
-        .resource-card:hover { transform: translateY(-2px); }
-        /* Advanced Payroll Styles */
-        .payroll-run-card { background: linear-gradient(135deg, #4169e1, #87ceeb); color: white; }
-        .earnings-breakdown { background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin-top: 10px; }
-        .deduction-item { display: flex; justify-content: space-between; margin-bottom: 5px; }
-        .payroll-summary { font-size: 1.1em; font-weight: bold; }
-        .tax-compliance-alert { background-color: #fff3cd; border: 1px solid #ffeaa7; padding: 10px; border-radius: 5px; margin-top: 10px; }
-        .interactive-payroll { transition: all 0.3s ease; }
-        .interactive-payroll:hover { box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        .sidebar { 
+            background: rgba(255, 255, 255, 0.1); 
+            backdrop-filter: blur(10px); 
+            border-right: 1px solid rgba(255, 255, 255, 0.2); 
+            height: 100vh; 
+            position: fixed; 
+            width: 260px; 
+            padding: 20px; 
+            overflow-y: auto; 
+            transition: width 0.3s ease; 
+            z-index: 1000; 
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.3);
+        }
+        .sidebar.collapsed { width: 70px; }
+        .sidebar.collapsed .nav-text { display: none; }
+        .sidebar .nav-link { 
+            color: #fff; 
+            font-weight: 500; 
+            margin-bottom: 10px; 
+            padding: 12px; 
+            border-radius: 10px; 
+            transition: all 0.3s; 
+            backdrop-filter: blur(5px);
+        }
+        .sidebar .nav-link:hover { 
+            background: rgba(255, 255, 255, 0.2); 
+            transform: translateX(5px); 
+        }
+        .sidebar .nav-link.active { 
+            background: rgba(255, 255, 255, 0.3); 
+            font-weight: 600;
+        }
+        .content { 
+            margin-left: 260px; 
+            padding: 40px; 
+            transition: margin-left 0.3s ease; 
+            min-height: 100vh;
+        }
+        .content.expanded { margin-left: 70px; }
+        .card-metric { 
+            background: rgba(255, 255, 255, 0.15); 
+            border: none; 
+            border-radius: 15px; 
+            backdrop-filter: blur(10px); 
+            transition: transform 0.3s; 
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+        .card-metric:hover { transform: translateY(-8px); }
+        .table { 
+            background: rgba(255, 255, 255, 0.1); 
+            border-radius: 15px; 
+            overflow: hidden; 
+            backdrop-filter: blur(10px);
+        }
+        .table th { background: rgba(255, 255, 255, 0.2); color: #fff; }
+        .modal-content { 
+            background: rgba(255, 255, 255, 0.95); 
+            border-radius: 20px; 
+            backdrop-filter: blur(15px); 
+            color: #333;
+        }
+        .btn-toggle-sidebar { 
+            position: fixed; 
+            top: 20px; 
+            left: 270px; 
+            z-index: 1001; 
+            background: rgba(255, 255, 255, 0.2); 
+            border: none; 
+            color: #fff;
+        }
+        .btn-toggle-sidebar.expanded { left: 80px; }
+        #notificationBell { 
+            position: fixed; 
+            top: 20px; 
+            right: 20px; 
+            z-index: 1100; 
+        }
+        .admin-only { display: block; }
+        .teacher-only { display: none; }
+        .parent-only { display: none; }
+        .student-only { display: none; }
+        .dark-mode { filter: brightness(0.8); }
+        .login-page { 
+            min-height: 100vh; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+        }
+        .login-card { 
+            width: 100%; 
+            max-width: 450px; 
+            padding: 2.5rem; 
+            border-radius: 20px; 
+            background: rgba(255, 255, 255, 0.95); 
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3); 
+            backdrop-filter: blur(15px);
+        }
+        .login-title { 
+            font-weight: 700; 
+            color: #1e3c72; 
+            text-align: center;
+        }
+        .report-card { 
+            background: rgba(255, 255, 255, 0.1); 
+            border-radius: 15px; 
+            padding: 20px; 
+            margin: 10px 0; 
+            backdrop-filter: blur(10px);
+        }
+        .timetable-cell { 
+            padding: 10px; 
+            text-align: center; 
+            border: 1px solid rgba(255, 255, 255, 0.3); 
+            border-radius: 8px; 
+            margin: 2px; 
+            background: rgba(255, 255, 255, 0.1);
+        }
+        @media (max-width: 768px) {
+            .sidebar { width: 70px; }
+            .sidebar .nav-text { display: none; }
+            .content { margin-left: 70px; }
+            .btn-toggle-sidebar { left: 80px; }
+        }
     </style>
 </head>
 <body>
@@ -82,9 +148,9 @@
     <div id="loginPage" class="login-page">
         <div class="login-card">
             <div class="text-center mb-4">
-                <i class="fas fa-users fa-3x text-primary mb-3"></i>
-                <h3 class="login-title">HRMS - Allos Connect</h3>
-                <p class="text-muted">Sign in to access your dashboard</p>
+                <i class="fas fa-school fa-3x text-primary mb-3"></i>
+                <h3 class="login-title">ASMS - Bophelong Independent School</h3>
+                <p class="text-muted">Advanced School Management System</p>
             </div>
             <form id="loginForm" onsubmit="event.preventDefault(); login();">
                 <div class="mb-3">
@@ -100,1004 +166,251 @@
                 </button>
                 <div class="login-demo">
                     <p class="mb-1"><strong>Admin:</strong> admin / admin123</p>
-                    <p class="mb-0"><strong>Employee:</strong> john / john123</p>
+                    <p class="mb-1"><strong>Teacher:</strong> teacher / teacher123</p>
+                    <p class="mb-1"><strong>Parent:</strong> parent / parent123</p>
+                    <p class="mb-0"><strong>Student:</strong> student / student123</p>
                 </div>
             </form>
-            <button type="button" class="btn btn-outline-primary w-100" data-bs-toggle="modal" data-bs-target="#onboardingModal">
-                New Employee? Start Onboarding
-            </button>
         </div>
     </div>
-    <!-- Main App (Hidden until login) -->
+
+    <!-- Main App -->
     <div class="app-container" id="appContainer" style="display:none;">
         <!-- Notification Bell -->
         <div id="notificationBell">
-            <button class="btn btn-primary rounded-circle shadow" style="width:50px;height:50px;" data-bs-toggle="modal" data-bs-target="#notificationsModal">
+            <button class="btn btn-warning rounded-circle shadow" style="width:50px;height:50px;" data-bs-toggle="modal" data-bs-target="#notificationsModal">
                 <i class="fas fa-bell fa-lg"></i>
                 <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notificationBadge" style="display:none;">0</span>
             </button>
         </div>
-        <button class="btn btn-sm btn-primary btn-toggle-sidebar" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+
+        <button class="btn btn-sm btn-light btn-toggle-sidebar" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+
         <div class="sidebar">
-            <h4 class="mb-4"><i class="fas fa-users me-2"></i><span class="nav-text">HRMS - Allos Connect</span></h4>
+            <h4 class="mb-4 text-center"><i class="fas fa-school me-2"></i><span class="nav-text">ASMS</span></h4>
             <ul class="nav flex-column">
-                <li class="admin-only"><a href="#dashboard" class="nav-link active" onclick="showSection('dashboard')"><i class="fas fa-tachometer-alt me-2"></i><span class="nav-text">HR Analytics Dashboard</span></a></li>
-                <li class="employee-only"><a href="#myDashboard" class="nav-link" onclick="showSection('myDashboard')"><i class="fas fa-tachometer-alt me-2"></i><span class="nav-text">My Dashboard</span></a></li>
-                <li class="admin-only"><a href="#employees" class="nav-link" onclick="showSection('employees')"><i class="fas fa-user-friends me-2"></i><span class="nav-text">Employees (HR Core)</span></a></li>
-                <li class="employee-only"><a href="#myProfile" class="nav-link" onclick="showSection('myProfile')"><i class="fas fa-user me-2"></i><span class="nav-text">My Profile</span></a></li>
-                <li class="employee-only"><a href="#handbook" class="nav-link" onclick="showSection('handbook')"><i class="fas fa-book me-2"></i><span class="nav-text">Employee Handbook</span></a></li>
-                <li class="admin-only"><a href="#payroll" class="nav-link" onclick="showSection('payroll')"><i class="fas fa-money-check-alt me-2"></i><span class="nav-text">Advanced Payroll</span></a></li>
-                <li class="employee-only"><a href="#myPayroll" class="nav-link" onclick="showSection('myPayroll')"><i class="fas fa-money-bill-wave me-2"></i><span class="nav-text">My Payslips</span></a></li>
-                <li class="admin-only"><a href="#recruitment" class="nav-link" onclick="showSection('recruitment')"><i class="fas fa-briefcase me-2"></i><span class="nav-text">iRecruit</span></a></li>
-                <li class="employee-only"><a href="#openJobs" class="nav-link" onclick="showSection('openJobs')"><i class="fas fa-briefcase me-2"></i><span class="nav-text">Job Openings</span></a></li>
-                <li><a href="#performance" class="nav-link" onclick="showSection('performance')"><i class="fas fa-chart-line me-2"></i><span class="nav-text">Performance</span></a></li>
-                <li><a href="#attendance" class="nav-link" onclick="showSection('attendance')"><i class="fas fa-clock me-2"></i><span class="nav-text">Time & Attendance</span></a></li>
-                <li><a href="#leaves" class="nav-link" onclick="showSection('leaves')"><i class="fas fa-calendar-alt me-2"></i><span class="nav-text">Leaves</span></a></li>
-                <li class="admin-only"><a href="#benefits" class="nav-link" onclick="showSection('benefits')"><i class="fas fa-gift me-2"></i><span class="nav-text">Benefits Admin</span></a></li>
-                <li class="employee-only"><a href="#myBenefits" class="nav-link" onclick="showSection('myBenefits')"><i class="fas fa-gift me-2"></i><span class="nav-text">My Benefits</span></a></li>
-                <li class="admin-only"><a href="#training" class="nav-link" onclick="showSection('training')"><i class="fas fa-graduation-cap me-2"></i><span class="nav-text">Training Admin</span></a></li>
-                <li class="employee-only"><a href="#myTraining" class="nav-link" onclick="showSection('myTraining')"><i class="fas fa-graduation-cap me-2"></i><span class="nav-text">My Training</span></a></li>
-                <li class="admin-only"><a href="#compliance" class="nav-link" onclick="showSection('compliance')"><i class="fas fa-balance-scale me-2"></i><span class="nav-text">Compliance</span></a></li>
-                <li class="admin-only"><a href="#reports" class="nav-link" onclick="showSection('reports')"><i class="fas fa-file-alt me-2"></i><span class="nav-text">My Workforce Analyzer</span></a></li>
+                <li class="admin-only"><a href="#dashboard" class="nav-link active" onclick="showSection('dashboard')"><i class="fas fa-tachometer-alt me-2"></i><span class="nav-text">Dashboard</span></a></li>
+                <li><a href="#admission" class="nav-link" onclick="showSection('admission')"><i class="fas fa-user-plus me-2"></i><span class="nav-text">Admission</span></a></li>
+                <li><a href="#students" class="nav-link" onclick="showSection('students')"><i class="fas fa-users me-2"></i><span class="nav-text">Student Info</span></a></li>
+                <li><a href="#attendance" class="nav-link" onclick="showSection('attendance')"><i class="fas fa-clock me-2"></i><span class="nav-text">Attendance</span></a></li>
+                <li><a href="#fees" class="nav-link" onclick="showSection('fees')"><i class="fas fa-money-bill-wave me-2"></i><span class="nav-text">Fee Management</span></a></li>
+                <li><a href="#timetable" class="nav-link" onclick="showSection('timetable')"><i class="fas fa-calendar-alt me-2"></i><span class="nav-text">Timetable</span></a></li>
+                <li><a href="#exams" class="nav-link" onclick="showSection('exams')"><i class="fas fa-file-alt me-2"></i><span class="nav-text">Examinations</span></a></li>
+                <li class="admin-only"><a href="#hr" class="nav-link" onclick="showSection('hr')"><i class="fas fa-user-tie me-2"></i><span class="nav-text">HR Management</span></a></li>
+                <li><a href="#communication" class="nav-link" onclick="showSection('communication')"><i class="fas fa-comments me-2"></i><span class="nav-text">Communication</span></a></li>
+                <li class="admin-only"><a href="#reports" class="nav-link" onclick="showSection('reports')"><i class="fas fa-chart-bar me-2"></i><span class="nav-text">Reports</span></a></li>
                 <li class="admin-only"><a href="#settings" class="nav-link" onclick="showSection('settings')"><i class="fas fa-cog me-2"></i><span class="nav-text">Settings</span></a></li>
-                <li class="admin-only"><a href="#audit" class="nav-link" onclick="showSection('audit')"><i class="fas fa-history me-2"></i><span class="nav-text">Payroll Audit Trail</span></a></li>
-                <li class="admin-only"><a href="#mediaApproval" class="nav-link" onclick="showSection('mediaApproval')"><i class="fas fa-check-circle me-2"></i><span class="nav-text">Media Approval</span></a></li>
-                <!-- New Wellness Links -->
-                <li class="admin-only"><a href="#wellnessAdmin" class="nav-link" onclick="showSection('wellnessAdmin')"><i class="fas fa-heartbeat me-2"></i><span class="nav-text">Wellness Admin</span></a></li>
-                <li class="employee-only"><a href="#myWellness" class="nav-link" onclick="showSection('myWellness')"><i class="fas fa-heartbeat me-2"></i><span class="nav-text">My Wellness</span></a></li>
-                <!-- New Sage-inspired Employee Features -->
-                <li class="employee-only"><a href="#myClaims" class="nav-link" onclick="showSection('myClaims')"><i class="fas fa-file-invoice me-2"></i><span class="nav-text">My Claims</span></a></li>
-                <li class="employee-only"><a href="#myTimeEntry" class="nav-link" onclick="showSection('myTimeEntry')"><i class="fas fa-clock me-2"></i><span class="nav-text">My Time Entry</span></a></li>
-                <li class="employee-only"><a href="#inbox" class="nav-link" onclick="showSection('inbox')"><i class="fas fa-inbox me-2"></i><span class="nav-text">Inbox</span></a></li>
                 <li><a href="#" class="nav-link text-danger" onclick="logout()"><i class="fas fa-sign-out-alt me-2"></i><span class="nav-text">Logout</span></a></li>
             </ul>
         </div>
+
         <div class="content">
-            <!-- Dashboard (HR Analytics) -->
+            <!-- Dashboard -->
             <section id="dashboard" class="section">
-                <h2>HR Analytics Dashboard</h2>
+                <h2>School Dashboard</h2>
                 <div class="row mt-4">
-                    <div class="col-md-3"><div class="card card-metric p-3"><h5>Total Employees</h5><h3 id="totalEmployees">0</h3></div></div>
-                    <div class="col-md-3"><div class="card card-metric p-3"><h5>Open Positions</h5><h3 id="openPositions">0</h3></div></div>
-                    <div class="col-md-3"><div class="card card-metric p-3"><h5>Avg Performance</h5><h3 id="avgPerformance">0/5</h3></div></div>
-                    <div class="col-md-3"><div class="card card-metric p-3"><h5>Pending Leaves</h5><h3 id="pendingLeaves">0</h3></div></div>
-                    <div class="col-md-3"><div class="card card-metric p-3 bg-primary text-white"><h5>Compliance Score</h5><h3 id="complianceScore">0%</h3></div></div>
-                    <div class="col-md-3"><div class="card card-metric p-3"><h5>Expiring Certs</h5><h3 id="expiringCerts">0</h3></div></div>
-                    <div class="col-md-3"><div class="card card-metric p-3"><h5>Total Payroll Cost</h5><h3 id="totalPayrollCost">R0</h3></div></div>
-                    <div class="col-md-3"><div class="card card-metric p-3"><h5>Avg Salary</h5><h3 id="avgSalary">R0</h3></div></div>
+                    <div class="col-md-3"><div class="card card-metric p-3"><h5>Total Students</h5><h3 id="totalStudents">0</h3></div></div>
+                    <div class="col-md-3"><div class="card card-metric p-3"><h5>Today's Attendance</h5><h3 id="todayAttendance">0%</h3></div></div>
+                    <div class="col-md-3"><div class="card card-metric p-3"><h5>Pending Fees</h5><h3 id="pendingFees">R0</h3></div></div>
+                    <div class="col-md-3"><div class="card card-metric p-3"><h5>Upcoming Exams</h5><h3 id="upcomingExams">0</h3></div></div>
                 </div>
                 <canvas id="dashboardChart" class="mt-4"></canvas>
             </section>
-            <!-- Enhanced Employee Dashboard -->
-            <section id="myDashboard" class="section d-none">
-                <h2>Welcome, <span id="myName"></span></h2>
-                <div class="row mt-4">
-                    <div class="col-md-3 col-sm-6 mb-3"><div class="card card-metric p-3"><h5>Recent Payslips</h5><p id="recentPayslips">No recent payslips</p></div></div>
-                    <div class="col-md-3 col-sm-6 mb-3"><div class="card card-metric p-3"><h5>Upcoming Leaves</h5><h3 id="upcomingLeaves">0</h3></div></div>
-                    <div class="col-md-3 col-sm-6 mb-3"><div class="card card-metric p-3"><h5>Performance Rating</h5><h3 id="myAvgPerformance">0/5</h3></div></div>
-                    <div class="col-md-3 col-sm-6 mb-3"><div class="card card-metric p-3"><h5>Pending Tasks</h5><h3 id="pendingTasks">0</h3></div></div>
+
+            <!-- Admission Management -->
+            <section id="admission" class="section d-none">
+                <h2>Admission Management</h2>
+                <button class="btn btn-primary mb-3" onclick="showAddAdmissionModal()">New Application</button>
+                <table class="table table-striped">
+                    <thead><tr><th>ID</th><th>Name</th><th>Grade</th><th>Status</th><th>Actions</th></tr></thead>
+                    <tbody id="admissionTable"></tbody>
+                </table>
+            </section>
+
+            <!-- Student Information System -->
+            <section id="students" class="section d-none">
+                <h2>Student Information System</h2>
+                <button class="btn btn-primary mb-3" onclick="showAddStudentModal()">Add Student</button>
+                <div class="input-group mb-3 w-50">
+                    <input type="text" class="form-control" placeholder="Search student..." id="studentSearch">
+                    <button class="btn btn-outline-secondary" onclick="searchStudents()">Search</button>
                 </div>
-                <div class="row mt-4">
-                    <div class="col-md-6"><canvas id="myPerformanceChart" height="200"></canvas></div>
-                    <div class="col-md-6"><canvas id="myLeaveChart" height="200"></canvas></div>
-                </div>
-            </section>
-            <!-- Employees Section -->
-            <section id="employees" class="section d-none">
-                <h2>Employee Management (HR Core)</h2>
-                <button class="btn btn-primary" onclick="showAddEmployeeModal()">Add Employee</button>
-                <table class="table table-striped mt-3">
-                    <thead><tr><th>ID</th><th>Name</th><th>Position</th><th>Branch</th><th>Salary</th><th>Tax #</th><th>UIF #</th><th>Actions</th></tr></thead>
-                    <tbody id="employeeTable"></tbody>
+                <table class="table table-striped">
+                    <thead><tr><th>ID</th><th>Name</th><th>Grade</th><th>Parent</th><th>Status</th><th>Actions</th></tr></thead>
+                    <tbody id="studentTable"></tbody>
                 </table>
             </section>
-            <!-- Handbook Section -->
-            <section id="handbook" class="section d-none">
-                <h2>Employee Handbook</h2>
-                <div id="handbookViewer" class="mb-3"></div>
-                <button class="btn btn-primary admin-only" onclick="showUploadHandbookModal()">Upload New Handbook</button>
-            </section>
-            <!-- Advanced Payroll Section -->
-            <section id="payroll" class="section d-none">
-                <h2>Advanced Payroll Management (Tax Compliant)</h2>
-                <div class="row mb-4">
-                    <div class="col-md-4">
-                        <div class="card payroll-run-card p-3 interactive-payroll">
-                            <h5>Run Payroll</h5>
-                            <select id="batchPeriod" class="form-control mb-2" onchange="previewBatchPayroll()">
-                                <option value="">Select Period</option>
-                                <option value="2025-11">November 2025</option>
-                            </select>
-                            <button class="btn btn-light" onclick="runBatchPayroll()">Process Batch Payroll</button>
-                            <div id="batchPreview" class="mt-2" style="display:none;"></div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="card card-metric p-3">
-                            <h5>Pending Runs</h5>
-                            <h3 id="pendingPayrollRuns">0</h3>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="card card-metric p-3">
-                            <h5>Total YTD Payroll</h5>
-                            <h3 id="ytdPayroll">R0</h3>
-                        </div>
-                    </div>
-                </div>
-                <button class="btn btn-primary me-2" onclick="showAddPayrollModal()">Add Individual Entry</button>
-                <button class="btn btn-secondary me-2" onclick="generatePayrollReport()">Generate Report</button>
-                <button class="btn btn-info" onclick="exportPayrollToSARS()">Export to SARS (EMP201)</button>
-                <div id="taxComplianceAlert" class="tax-compliance-alert" style="display:none;"></div>
-                <table class="table table-striped mt-3">
-                    <thead><tr><th>ID</th><th>Employee</th><th>Period</th><th>Gross Earnings</th><th>Total Deductions</th><th>Net Pay</th><th>Status</th><th>Tax Compliance</th><th>Actions</th></tr></thead>
-                    <tbody id="payrollTable"></tbody>
-                </table>
-                <div id="payrollSummary" class="payroll-summary mt-3"></div>
-                <canvas id="payrollTrendChart" class="mt-4" style="max-height: 300px;"></canvas>
-            </section>
-            <!-- Recruitment Section -->
-            <section id="recruitment" class="section d-none">
-                <h2>iRecruit</h2>
-                <button class="btn btn-primary" onclick="showAddJobModal()">Add Job</button>
-                <table class="table table-striped mt-3">
-                    <thead><tr><th>ID</th><th>Title</th><th>Branch</th><th>Applications</th><th>Actions</th></tr></thead>
-                    <tbody id="jobTable"></tbody>
-                </table>
-            </section>
-            <!-- Performance Section -->
-            <section id="performance" class="section d-none">
-                <h2>Performance</h2>
-                <button class="btn btn-primary admin-only" onclick="showAddReviewModal()">Add Review</button>
-                <table class="table table-striped mt-3">
-                    <thead><tr><th>Employee</th><th>Date</th><th>Score</th><th>Comments</th><th class="admin-only">Actions</th></tr></thead>
-                    <tbody id="performanceTable"></tbody>
-                </table>
-            </section>
-            <!-- Attendance Section -->
+
+            <!-- Attendance Management -->
             <section id="attendance" class="section d-none">
-                <h2>Time & Attendance</h2>
-                <button class="btn btn-primary" onclick="clockIn()">Clock In</button>
-                <table class="table table-striped mt-3">
-                    <thead><tr><th>Employee</th><th>Date</th><th>Hours</th><th>Overtime</th><th>Status</th><th class="admin-only">Actions</th></tr></thead>
+                <h2>Attendance Management</h2>
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <input type="date" id="attendanceDate" class="form-control" onchange="loadAttendance()">
+                    </div>
+                    <div class="col-md-4">
+                        <select id="attendanceClass" class="form-control" onchange="loadAttendance()">
+                            <option value="">All Classes</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="btn btn-success mb-3" onclick="markAllPresent()">Mark All Present</button>
+                <table class="table table-striped">
+                    <thead><tr><th>ID</th><th>Name</th><th>Status</th><th>Actions</th></tr></thead>
                     <tbody id="attendanceTable"></tbody>
                 </table>
             </section>
-            <!-- Leaves Section -->
-            <section id="leaves" class="section d-none">
-                <h2>Leaves</h2>
-                <button class="btn btn-primary" onclick="showAddLeaveModal()">Request Leave</button>
-                <table class="table table-striped mt-3">
-                    <thead><tr><th>Employee</th><th>Start Date</th><th>End Date</th><th>Type</th><th>Status</th><th>Actions</th></tr></thead>
-                    <tbody id="leavesTable"></tbody>
+
+            <!-- Fee Management -->
+            <section id="fees" class="section d-none">
+                <h2>Fee Management</h2>
+                <button class="btn btn-primary mb-3" onclick="generateFeeInvoice()">Generate Invoice</button>
+                <div class="row mb-3">
+                    <div class="col-md-3"><div class="card card-metric p-3"><h5>Total Collected</h5><h3 id="totalCollected">R0</h3></div></div>
+                    <div class="col-md-3"><div class="card card-metric p-3"><h5>Outstanding</h5><h3 id="outstandingFees">R0</h3></div></div>
+                </div>
+                <table class="table table-striped">
+                    <thead><tr><th>Student</th><th>Amount</th><th>Due Date</th><th>Status</th><th>Actions</th></tr></thead>
+                    <tbody id="feeTable"></tbody>
                 </table>
             </section>
-            <!-- Benefits Admin -->
-            <section id="benefits" class="section d-none">
-                <h2>Benefits Admin</h2>
-                <button class="btn btn-primary" onclick="showAddBenefitModal()">Add Benefit Plan</button>
-                <table class="table table-striped mt-3">
-                    <thead><tr><th>ID</th><th>Name</th><th>Description</th><th>Cost</th><th>Actions</th></tr></thead>
-                    <tbody id="benefitTable"></tbody>
+
+            <!-- Timetable Management -->
+            <section id="timetable" class="section d-none">
+                <h2>Timetable Management</h2>
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <select id="timetableGrade" class="form-control" onchange="loadTimetable()">
+                            <option value="">Select Grade</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="timetableContainer"></div>
+            </section>
+
+            <!-- Examination Management -->
+            <section id="exams" class="section d-none">
+                <h2>Examination Management</h2>
+                <button class="btn btn-primary mb-3" onclick="showAddExamModal()">Schedule Exam</button>
+                <button class="btn btn-info mb-3" onclick="generateReportCard()">Generate Report Card</button>
+                <table class="table table-striped">
+                    <thead><tr><th>Exam</th><th>Date</th><th>Subject</th><th>Status</th><th>Actions</th></tr></thead>
+                    <tbody id="examTable"></tbody>
                 </table>
             </section>
-            <!-- Training Admin -->
-            <section id="training" class="section d-none">
-                <h2>Training Admin</h2>
-                <button class="btn btn-primary" onclick="showAddCourseModal()">Add Course</button>
-                <table class="table table-striped mt-3">
-                    <thead><tr><th>ID</th><th>Name</th><th>Description</th><th>Actions</th></tr></thead>
-                    <tbody id="courseTable"></tbody>
+
+            <!-- HR Management -->
+            <section id="hr" class="section d-none admin-only">
+                <h2>Human Resource Management</h2>
+                <button class="btn btn-primary mb-3" onclick="showAddStaffModal()">Add Staff</button>
+                <table class="table table-striped">
+                    <thead><tr><th>ID</th><th>Name</th><th>Role</th><th>Department</th><th>Status</th><th>Actions</th></tr></thead>
+                    <tbody id="staffTable"></tbody>
                 </table>
             </section>
-            <!-- Compliance Section -->
-            <section id="compliance" class="section d-none">
-                <h2>Compliance</h2>
-                <button class="btn btn-primary" onclick="showAddCertificationModal()">Add Certification</button>
-                <table class="table table-striped mt-3">
-                    <thead><tr><th>Employee</th><th>Name</th><th>Expiry Date</th><th>Actions</th></tr></thead>
-                    <tbody id="certificationTable"></tbody>
-                </table>
+
+            <!-- Communication Module -->
+            <section id="communication" class="section d-none">
+                <h2>Communication Hub</h2>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <textarea id="messageText" class="form-control" rows="3" placeholder="Type message..."></textarea>
+                    </div>
+                    <div class="col-md-3">
+                        <select id="messageRecipient" class="form-control">
+                            <option value="all">All</option>
+                            <option value="parents">Parents</option>
+                            <option value="students">Students</option>
+                            <option value="staff">Staff</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <button class="btn btn-success w-100" onclick="sendMessage()">Send Message</button>
+                    </div>
+                </div>
+                <div id="messageHistory" class="mt-3"></div>
             </section>
-            <!-- Reports (My Workforce Analyzer) -->
-            <section id="reports" class="section d-none">
-                <h2>My Workforce Analyzer</h2>
-                <button class="btn btn-primary me-2" onclick="exportToExcel(employees, 'employees')">Export Employees</button>
-                <button class="btn btn-primary me-2" onclick="exportToExcel(payrolls, 'payrolls')">Export Payrolls</button>
-                <button class="btn btn-primary me-2" onclick="exportToExcel(leaves, 'leaves')">Export Leaves</button>
-                <button class="btn btn-primary" onclick="exportToExcel(reviews, 'performance')">Export Performance</button>
-                <button class="btn btn-success" onclick="exportWellnessReport()">Export Wellness</button>
+
+            <!-- Reports -->
+            <section id="reports" class="section d-none admin-only">
+                <h2>Reports & Analytics</h2>
+                <div class="row">
+                    <div class="col-md-4"><button class="btn btn-primary w-100 mb-3" onclick="exportToExcel(students, 'students')">Export Students</button></div>
+                    <div class="col-md-4"><button class="btn btn-success w-100 mb-3" onclick="exportToExcel(fees, 'fees')">Export Fees</button></div>
+                    <div class="col-md-4"><button class="btn btn-info w-100 mb-3" onclick="exportToExcel(attendanceRecords, 'attendance')">Export Attendance</button></div>
+                </div>
             </section>
+
             <!-- Settings -->
-            <section id="settings" class="section d-none">
-                <h2>Settings</h2>
-                <div class="form-check form-switch">
+            <section id="settings" class="section d-none admin-only">
+                <h2>System Settings</h2>
+                <div class="form-check form-switch mb-3">
                     <input class="form-check-input" type="checkbox" id="darkModeSwitch" onchange="toggleDarkMode(this.checked)">
                     <label class="form-check-label" for="darkModeSwitch">Dark Mode</label>
                 </div>
-                <div class="mt-3">
-                    <h5>Payroll Settings</h5>
-                    <label class="form-label">Pay Frequency</label>
-                    <select id="payFrequency" class="form-control" onchange="saveSettings()">
-                        <option value="monthly">Monthly</option>
-                        <option value="biweekly">Bi-weekly</option>
+                <h5>School Year</h5>
+                <input type="text" id="schoolYear" class="form-control w-50" value="2025">
+            </section>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div class="modal fade" id="addAdmissionModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header"><h5>Add Admission Application</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <input id="appName" placeholder="Student Name" class="form-control mb-3">
+                    <input id="appParent" placeholder="Parent Name" class="form-control mb-3">
+                    <select id="appGrade" class="form-control mb-3">
+                        <option value="">Select Grade</option>
+                        <option>Grade R</option><option>Grade 1</option><option>Grade 12</option>
                     </select>
-                    <label class="form-label mt-3">Tax Year Start</label>
-                    <input type="date" id="taxYearStart" class="form-control" value="2025-03-01" onchange="saveSettings()">
                 </div>
-            </section>
-            <!-- Media Approval Workflow -->
-            <section id="mediaApproval" class="section d-none">
-                <h2>Media Content Approval</h2>
-                <button class="btn btn-primary" onclick="showUploadMediaModal()">Upload Media for Approval</button>
-                <table class="table table-striped mt-3">
-                    <thead><tr><th>ID</th><th>Title</th><th>Uploader</th><th>Status</th><th>Actions</th></tr></thead>
-                    <tbody id="mediaTable"></tbody>
-                </table>
-            </section>
-            <!-- ==== AUDIT TRAIL SECTION (Admin only) ==== -->
-            <section id="audit" class="section d-none">
-                <h2>Payroll Audit Trail</h2>
-                <table class="table table-striped mt-3">
-                    <thead><tr><th>Time</th><th>User</th><th>Action</th><th>Details</th></tr></thead>
-                    <tbody id="auditTable"></tbody>
-                </table>
-            </section>
-            <!-- ==== MY PROFILE (Employee) ==== -->
-            <section id="myProfile" class="section d-none">
-                <h2>My Profile – <span id="profileName"></span></h2>
-                <div class="text-center mb-4">
-                    <img id="profilePic" src="" alt="Profile Picture" class="rounded-circle img-thumbnail" style="width:150px; height:150px; object-fit:cover;">
-                    <input type="file" id="profilePicUpload" accept="image/*" class="d-none">
-                    <button class="btn btn-primary mt-2" onclick="document.getElementById('profilePicUpload').click()">Upload Picture</button>
-                </div>
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="card p-3 mb-3"><strong>Email:</strong> <span id="profileEmail"></span></div>
-                        <div class="card p-3 mb-3"><strong>Phone:</strong> <span id="profilePhone"></span></div>
-                        <div class="card p-3 mb-3"><strong>Salary:</strong> <span id="profileSalary"></span></div>
-                        <div class="card p-3 mb-3"><strong>Tax #:</strong> <span id="profileTax"></span></div>
-                        <div class="card p-3 mb-3"><strong>UIF #:</strong> <span id="profileUIF"></span></div>
-                        <div class="card p-3 mb-3"><strong>Address:</strong> <span id="profileAddress"></span></div>
-                        <div class="card p-3 mb-3"><strong>Bank Details:</strong> <span id="profileBank"></span></div>
-                        <div class="card p-3 mb-3"><strong>Emergency Contact:</strong> <span id="profileEmergency"></span></div>
-                    </div>
-                    <div class="col-md-6">
-                        <h5>Enrolled Benefits</h5>
-                        <ul id="profileBenefits" class="list-group"></ul>
-                        <h5 class="mt-3">Compliance Certificates</h5>
-                        <ul id="profileCerts" class="list-group"></ul>
-                    </div>
-                </div>
-                <button class="btn btn-primary mt-3" onclick="showEditMyProfile()">Edit Profile</button>
-            </section>
-            <!-- ==== MY PAYSLIPS (Employee) ==== -->
-            <section id="myPayroll" class="section d-none">
-                <h2>My Payslips & Earnings</h2>
-                <div class="card mb-3">
-                    <div class="card-body">
-                        <h5>YTD Earnings: <span id="myYTDEarnings">R0</span> | YTD Tax: <span id="myYTDTax">R0</span></h5>
-                    </div>
-                </div>
-                <button class="btn btn-primary mb-3" onclick="previewSelfPayroll()">Preview Current Month Payslip</button>
-                <div id="selfPayrollPreview" class="card p-3 mb-3" style="display: none;">
-                    <h5>Preview for Current Month</h5>
-                    <div class="earnings-breakdown">
-                        <!-- Preview content will be populated here -->
-                    </div>
-                </div>
-                <table class="table table-striped mt-3">
-                    <thead><tr><th>Period</th><th>Gross</th><th>Deductions</th><th>Bonus</th><th>Net</th><th>Action</th></tr></thead>
-                    <tbody id="myPayrollTable"></tbody>
-                </table>
-                <button class="btn btn-info mt-3" onclick="viewTaxLiability(currentUser.index)">View Tax Liability</button>
-            </section>
-            <!-- ==== MY BENEFITS (Employee) ==== -->
-            <section id="myBenefits" class="section d-none">
-                <h2>My Benefits</h2>
-                <div class="card mb-3">
-                    <div class="card-body">
-                        <h5>Total Benefits Cost: <span id="totalBenefitsCost">R0.00</span></h5>
-                    </div>
-                </div>
-                <table class="table table-striped mt-3">
-                    <thead><tr><th>Name</th><th>Description</th><th>Cost</th><th>Status</th><th>Action</th></tr></thead>
-                    <tbody id="myBenefitTable"></tbody>
-                </table>
-            </section>
-            <!-- ==== MY TRAINING (Employee) ==== -->
-            <section id="myTraining" class="section d-none">
-                <h2>My Training</h2>
-                <table class="table table-striped mt-3">
-                    <thead><tr><th>Name</th><th>Description</th><th>Status</th><th>Action</th></tr></thead>
-                    <tbody id="myCourseTable"></tbody>
-                </table>
-            </section>
-            <!-- ==== JOB OPENINGS (Employee) ==== -->
-            <section id="openJobs" class="section d-none">
-                <h2>Job Openings</h2>
-                <table class="table table-striped mt-3">
-                    <thead><tr><th>Title</th><th>Branch</th><th>Description</th><th>Status</th><th>Action</th></tr></thead>
-                    <tbody id="openJobTable"></tbody>
-                </table>
-            </section>
-            <!-- New Wellness Admin Section (Admin Only) -->
-            <section id="wellnessAdmin" class="section d-none admin-only">
-                <h2>Wellness Admin</h2>
-                <div class="row mb-4">
-                    <div class="col-md-3"><div class="card card-metric p-3 wellness-card"><h5>Avg Wellness Score</h5><h3 id="avgWellnessScore">0/10</h3></div></div>
-                    <div class="col-md-3"><div class="card card-metric p-3"><h5>Active Goals</h5><h3 id="activeGoals">0</h3></div></div>
-                    <div class="col-md-3"><div class="card card-metric p-3"><h5>Completed Surveys</h5><h3 id="completedSurveys">0</h3></div></div>
-                    <div class="col-md-3"><div class="card card-metric p-3"><h5>High-Risk Alerts</h5><h3 id="highRiskAlerts">0</h3></div></div>
-                </div>
-                <button class="btn btn-primary me-2" onclick="showAddResourceModal()">Add Wellness Resource</button>
-                <button class="btn btn-primary me-2" onclick="showAddSurveyModal()">Create New Survey</button>
-                <button class="btn btn-secondary" onclick="exportWellnessReport()">Export Wellness Report</button>
-                <table class="table table-striped mt-3">
-                    <thead><tr><th>Employee</th><th>Wellness Score</th><th>Last Survey</th><th>Goals Progress</th><th>Alerts</th><th>Actions</th></tr></thead>
-                    <tbody id="wellnessAdminTable"></tbody>
-                </table>
-                <canvas id="wellnessAdminChart" class="mt-4"></canvas>
-            </section>
-            <!-- New My Wellness Section (Employee Only) -->
-            <section id="myWellness" class="section d-none employee-only">
-                <h2>My Wellness Dashboard</h2>
-                <div class="row mt-4">
-                    <div class="col-md-4 mb-3">
-                        <div class="card wellness-card p-3">
-                            <h5>Overall Wellness Score</h5>
-                            <h3 id="myWellnessScore">0/10</h3>
-                            <div class="wellness-progress mt-2">
-                                <div class="wellness-progress-bar" id="myWellnessProgress" style="width: 0%;"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <div class="card p-3">
-                            <h5>Active Goals</h5>
-                            <ul id="myActiveGoals" class="list-unstyled"></ul>
-                            <button class="btn btn-sm btn-success mt-2" onclick="showAddGoalModal()">Add Goal</button>
-                        </div>
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <div class="card p-3">
-                            <h5>Quick Actions</h5>
-                            <button class="btn btn-outline-primary btn-sm w-100 mb-2" onclick="showSurveyModal()">Take Survey</button>
-                            <button class="btn btn-outline-info btn-sm w-100 mb-2" onclick="showResourcesModal()">View Resources</button>
-                            <button class="btn btn-outline-warning btn-sm w-100" onclick="requestCounseling()">Request Counseling</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="row mt-4">
-                    <div class="col-md-6"><canvas id="myWellnessChart" height="200"></canvas></div>
-                    <div class="col-md-6">
-                        <h5>Recent Activity</h5>
-                        <ul id="myWellnessActivity" class="list-group"></ul>
-                    </div>
-                </div>
-            </section>
-            <!-- New My Claims Section (Employee Only) -->
-            <section id="myClaims" class="section d-none employee-only">
-                <h2>My Claims</h2>
-                <button class="btn btn-primary mb-3" onclick="showSubmitClaimModal()">Submit New Claim</button>
-                <table class="table table-striped">
-                    <thead><tr><th>ID</th><th>Type</th><th>Amount</th><th>Status</th><th>Submitted Date</th><th>Actions</th></tr></thead>
-                    <tbody id="claimsTable"></tbody>
-                </table>
-            </section>
-            <!-- New My Time Entry Section (Employee Only) -->
-            <section id="myTimeEntry" class="section d-none employee-only">
-                <h2>My Time Entry</h2>
-                <button class="btn btn-primary mb-3" onclick="submitTimeEntry()">Submit Time Entry</button>
-                <table class="table table-striped">
-                    <thead><tr><th>Date</th><th>Hours Worked</th><th>Overtime</th><th>Status</th><th>Actions</th></tr></thead>
-                    <tbody id="timeEntryTable"></tbody>
-                </table>
-            </section>
-            <!-- New Inbox Section (Employee Only) -->
-            <section id="inbox" class="section d-none employee-only">
-                <h2>Inbox</h2>
-                <table class="table table-striped">
-                    <thead><tr><th>From</th><th>Message</th><th>Date</th></tr></thead>
-                    <tbody id="inboxTable"></tbody>
-                </table>
-            </section>
-            <!-- Payslip Preview Modal -->
-            <div class="modal fade" id="payslipModal">
-                <div class="modal-dialog modal-lg">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title">Advanced Payslip Preview (SARS Compliant)</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                        </div>
-                        <div class="modal-body">
-                            <div id="payslipPreview" class="payslip-preview">
-                                <div class="payslip-header">
-                                    <h4>Allos Connect - Payslip</h4>
-                                    <p id="payslipEmployee"></p>
-                                    <p id="payslipPeriod"></p>
-                                </div>
-                                <div class="payslip-body">
-                                    <h6>Earnings Breakdown</h6>
-                                    <div class="earnings-breakdown">
-                                        <div class="deduction-item"><span>Basic Salary</span><span id="payslipBasic">R0.00</span></div>
-                                        <div class="deduction-item"><span>Overtime</span><span id="payslipOvertime">R0.00</span></div>
-                                        <div class="deduction-item"><span>Bonus/Commission</span><span id="payslipBonus">R0.00</span></div>
-                                        <div class="deduction-item"><span><strong>Total Earnings</strong></span><strong id="payslipGross">R0.00</strong></div>
-                                    </div>
-                                    <h6 class="mt-3">Deductions</h6>
-                                    <div class="earnings-breakdown">
-                                        <div class="deduction-item"><span>PAYE Tax (18-45%)</span><span id="payslipTax">R0.00</span></div>
-                                        <div class="deduction-item"><span>UIF Contribution (1%)</span><span id="payslipUIF">R0.00</span></div>
-                                        <div class="deduction-item"><span>Benefits/Pension</span><span id="payslipBenefits">R0.00</span></div>
-                                        <div class="deduction-item"><span>Other</span><span id="payslipOther">R0.00</span></div>
-                                        <div class="deduction-item"><span><strong>Total Deductions</strong></span><strong id="payslipTotalDeductions">R0.00</strong></div>
-                                    </div>
-                                    <div class="payroll-summary mt-3"><strong>Net Pay: <span id="payslipNet">R0.00</span></strong></div>
-                                    <div id="payslipTaxNumber" class="mt-3"></div>
-                                </div>
-                                <div class="payslip-footer">
-                                    <p>Tax Number: <span id="payslipTaxNumFooter"></span></p>
-                                    <p>This is a computer-generated payslip. Compliant with SARS regulations for 2025 tax year.</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                            <button class="btn btn-primary" onclick="downloadPayslip()">Download PDF</button>
-                            <button class="btn btn-info" onclick="printPayslip()">Print</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- Tax Liability Download Modal -->
-            <div class="modal fade" id="taxLiabilityModal">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title">Advanced Tax Liability Summary (2025 Rates)</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                        </div>
-                        <div class="modal-body">
-                            <div id="taxLiabilityContent">
-                                <p id="taxLiabilityEmployee"></p>
-                                <table class="table">
-                                    <thead><tr><th>Period</th><th>PAYE</th><th>UIF</th><th>Total Tax</th></tr></thead>
-                                    <tbody id="taxLiabilityTable"></tbody>
-                                </table>
-                                <p>YTD Total Tax Liability: <span id="totalTaxLiability">R0.00</span></p>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                            <button class="btn btn-primary" onclick="downloadTaxLiability()">Download Report</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- Notifications Modal -->
-            <div class="modal fade" id="notificationsModal">
-                <div class="modal-dialog modal-lg">
-                    <div class="modal-content">
-                        <div class="modal-header"><h5>Alerts & Workflow</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-                        <div class="modal-body">
-                            <table class="table"><tbody id="notificationsTable"></tbody></table>
-                        </div>
-                        <div class="modal-footer"><button class="btn btn-primary" onclick="markAllRead()">Mark All Read</button></div>
-                    </div>
-                </div>
-            </div>
-            <!-- Onboarding Modal -->
-            <div class="modal fade" id="onboardingModal">
-                <div class="modal-dialog modal-lg">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title">Employee Self-Onboarding</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                        </div>
-                        <div class="modal-body">
-                            <p>Welcome! Please complete your onboarding details below. Once submitted, you can log in with your chosen credentials. Note: Salary will be set by HR.</p>
-                            <input id="onbName" placeholder="Full Name" class="form-control mb-3" required>
-                            <select id="onbPosition" class="form-control mb-3" required>
-                                <option value="">Select Position</option>
-                                <option>Producer</option><option>Editor</option><option>Marketer</option><option>Admin</option>
-                            </select>
-                            <select id="onbBranch" class="form-control mb-3 branch-select" required></select>
-                            <input id="onbEmail" type="email" placeholder="Email" class="form-control mb-3" required>
-                            <input id="onbPhone" placeholder="Phone" class="form-control mb-3" required>
-                            <input id="onbTaxNumber" placeholder="Tax Number" class="form-control mb-3" required>
-                            <input id="onbUIF" placeholder="UIF Number" class="form-control mb-3" required>
-                            <input id="onbUsername" placeholder="Choose Username" class="form-control mb-3" required>
-                            <input id="onbPassword" type="password" placeholder="Choose Password" class="form-control mb-3" required>
-                            <input id="onbConfirmPassword" type="password" placeholder="Confirm Password" class="form-control mb-3" required>
-                            <textarea id="onbAddress" placeholder="Address" class="form-control mb-3" required></textarea>
-                            <input id="onbBank" placeholder="Bank Details" class="form-control mb-3" required>
-                            <input id="onbEmergency" placeholder="Emergency Contact" class="form-control mb-3" required>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button type="button" class="btn btn-primary" onclick="saveOnboardingEmployee()">Complete Onboarding</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- Upload Handbook Modal -->
-            <div class="modal fade" id="uploadHandbookModal">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title">Upload Employee Handbook</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                        </div>
-                        <div class="modal-body">
-                            <input type="file" id="handbookFile" accept=".pdf" class="form-control">
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button type="button" class="btn btn-primary" onclick="uploadHandbook()">Upload</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- Add/Edit Employee Modal -->
-            <div class="modal fade" id="addEmployeeModal">
-                <div class="modal-dialog modal-lg">
-                    <div class="modal-content">
-                        <div class="modal-header"><h5 id="addEmployeeModalLabel">Add Employee</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-                        <div class="modal-body">
-                            <input id="empName" placeholder="Name" class="form-control mb-3" required>
-                            <select id="empPosition" class="form-control mb-3" required><option>Producer</option><option>Editor</option><option>Marketer</option><option>Admin</option></select>
-                            <select id="empBranch" class="form-control mb-3 branch-select" required></select>
-                            <input id="empEmail" type="email" placeholder="Email" class="form-control mb-3" required>
-                            <input id="empPhone" placeholder="Phone" class="form-control mb-3" required>
-                            <input id="empSalary" type="number" placeholder="Salary" class="form-control mb-3" required>
-                            <input id="empUsername" placeholder="Username" class="form-control mb-3" required>
-                            <input id="empPassword" type="password" placeholder="Password" class="form-control mb-3" required>
-                            <input id="empTaxNumber" placeholder="Tax Number" class="form-control mb-3" required>
-                            <input id="empUIF" placeholder="UIF Number" class="form-control mb-3" required>
-                            <textarea id="empAddress" placeholder="Address" class="form-control mb-3" required></textarea>
-                            <input id="empBank" placeholder="Bank Details" class="form-control mb-3" required>
-                            <input id="empEmergency" placeholder="Emergency Contact" class="form-control mb-3" required>
-                        </div>
-                        <div class="modal-footer"><button class="btn btn-primary" onclick="saveEmployee()">Save</button></div>
-                    </div>
-                </div>
-            </div>
-            <!-- Advanced Add/Edit Payroll Modal -->
-            <div class="modal fade" id="addPayrollModal">
-                <div class="modal-dialog modal-xl">
-                    <div class="modal-content">
-                        <div class="modal-header"><h5 id="addPayrollModalLabel">Add Payroll Entry</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-                        <div class="modal-body">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <label class="form-label">Employee</label>
-                                    <select id="payEmployee" class="form-control mb-3 emp-select" onchange="loadEmployeePayData(); calculatePayroll()"></select>
-                                    <label class="form-label">Pay Period</label>
-                                    <input id="payPeriod" type="month" class="form-control mb-3" onchange="calculatePayroll()" required>
-                                    <label class="form-label">Regular Hours</label>
-                                    <input id="payHoursWorked" type="number" placeholder="e.g., 160" class="form-control mb-2" onchange="calculatePayroll()">
-                                    <label class="form-label">Overtime Hours</label>
-                                    <input id="payOvertimeHours" type="number" placeholder="e.g., 5" class="form-control mb-2" onchange="calculatePayroll()">
-                                    <label class="form-label">Commission/Bonus</label>
-                                    <input id="payCommission" type="number" placeholder="R0.00" class="form-control mb-3" onchange="calculatePayroll()">
-                                </div>
-                                <div class="col-md-6 interactive-payroll">
-                                    <h6>Earnings Preview</h6>
-                                    <div class="earnings-breakdown">
-                                        <div class="deduction-item"><span>Basic Pay</span><span id="payBasic">R0.00</span></div>
-                                        <div class="deduction-item"><span>Overtime Pay (1.5x)</span><span id="payOvertime">R0.00</span></div>
-                                        <div class="deduction-item"><span>Commission</span><span id="payComm">R0.00</span></div>
-                                        <div class="deduction-item"><span><strong>Gross Earnings</strong></span><strong id="payGross">R0.00</strong></div>
-                                    </div>
-                                    <h6 class="mt-3">Deductions (2025 Rates)</h6>
-                                    <div class="earnings-breakdown">
-                                        <div class="deduction-item"><span>PAYE Tax</span><span id="payPAYE">R0.00</span></div>
-                                        <div class="deduction-item"><span>UIF (1% capped)</span><span id="payUIF">R0.00</span></div>
-                                        <div class="deduction-item"><span>Benefits Deduction</span><span id="payBenefits">R0.00</span></div>
-                                        <div class="deduction-item"><span><strong>Total Deductions</strong></span><strong id="payTotalDeductions">R0.00</strong></div>
-                                    </div>
-                                    <div class="payroll-summary mt-3"><strong>Net Pay: <span id="payNet">R0.00</span></strong></div>
-                                    <div class="tax-compliance-alert" id="payComplianceNote"></div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="modal-footer"><button class="btn btn-primary" onclick="savePayroll()">Save & Process</button></div>
-                    </div>
-                </div>
-            </div>
-            <!-- Add/Edit Job Modal -->
-            <div class="modal fade" id="addJobModal">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header"><h5 id="addJobModalLabel">Add Job</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-                        <div class="modal-body">
-                            <input id="jobTitle" placeholder="Title" class="form-control mb-3" required>
-                            <select id="jobBranch" class="form-control mb-3 branch-select" required></select>
-                            <textarea id="jobDesc" placeholder="Description" class="form-control mb-3" required></textarea>
-                        </div>
-                        <div class="modal-footer"><button class="btn btn-primary" onclick="saveJob()">Save</button></div>
-                    </div>
-                </div>
-            </div>
-            <!-- Add/Edit Review Modal -->
-            <div class="modal fade" id="addReviewModal">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header"><h5 id="addReviewModalLabel">Add Review</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-                        <div class="modal-body">
-                            <select id="reviewEmployee" class="form-control mb-3 emp-select" required></select>
-                            <input id="reviewScore" type="number" min="0" max="5" placeholder="Score (0-5)" class="form-control mb-3" required>
-                            <textarea id="reviewComments" placeholder="Comments" class="form-control mb-3" required></textarea>
-                        </div>
-                        <div class="modal-footer"><button class="btn btn-primary" onclick="saveReview()">Save</button></div>
-                    </div>
-                </div>
-            </div>
-            <!-- Add/Edit Leave Modal -->
-            <div class="modal fade" id="addLeaveModal">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header"><h5 id="addLeaveModalLabel">Request Leave</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-                        <div class="modal-body">
-                            <select id="leaveEmployee" class="form-control mb-3 emp-select" required></select>
-                            <input id="leaveStart" type="date" class="form-control mb-3" required>
-                            <input id="leaveEnd" type="date" class="form-control mb-3" required>
-                            <select id="leaveType" class="form-control mb-3" required><option>Sick</option><option>Annual</option><option>Maternity</option></select>
-                        </div>
-                        <div class="modal-footer"><button class="btn btn-primary" onclick="saveLeave()">Save</button></div>
-                    </div>
-                </div>
-            </div>
-            <!-- Add/Edit Benefit Modal -->
-            <div class="modal fade" id="addBenefitModal">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header"><h5 id="addBenefitModalLabel">Add Benefit Plan</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-                        <div class="modal-body">
-                            <input id="benefitName" placeholder="Name" class="form-control mb-3" required>
-                            <textarea id="benefitDesc" placeholder="Description" class="form-control mb-3" required></textarea>
-                            <input id="benefitCost" type="number" placeholder="Cost" class="form-control mb-3" required>
-                        </div>
-                        <div class="modal-footer"><button class="btn btn-primary" onclick="saveBenefit()">Save</button></div>
-                    </div>
-                </div>
-            </div>
-            <!-- Add/Edit Course Modal -->
-            <div class="modal fade" id="addCourseModal">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header"><h5 id="addCourseModalLabel">Add Course</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-                        <div class="modal-body">
-                            <input id="courseName" placeholder="Name" class="form-control mb-3" required>
-                            <textarea id="courseDesc" placeholder="Description" class="form-control mb-3" required></textarea>
-                            <textarea id="courseQuestions" placeholder='Questions JSON [{"question":"Q?","options":["A","B"],"correct":0}]' class="form-control mb-3" required></textarea>
-                        </div>
-                        <div class="modal-footer"><button class="btn btn-primary" onclick="saveCourse()">Save</button></div>
-                    </div>
-                </div>
-            </div>
-            <!-- Add/Edit Certification Modal -->
-            <div class="modal fade" id="addCertificationModal">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header"><h5 id="addCertificationModalLabel">Add Certification</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-                        <div class="modal-body">
-                            <select id="certEmployee" class="form-control mb-3 emp-select" required></select>
-                            <input id="certName" placeholder="Certification Name" class="form-control mb-3" required>
-                            <input id="certExpiry" type="date" class="form-control mb-3" required>
-                        </div>
-                        <div class="modal-footer"><button class="btn btn-primary" onclick="saveCertification()">Save</button></div>
-                    </div>
-                </div>
-            </div>
-            <!-- Upload Media Modal -->
-            <div class="modal fade" id="uploadMediaModal">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header"><h5>Upload Media</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-                        <div class="modal-body">
-                            <input id="mediaTitle" placeholder="Title" class="form-control mb-3" required>
-                            <textarea id="mediaDesc" placeholder="Description" class="form-control mb-3" required></textarea>
-                            <input id="mediaFile" type="file" class="form-control" required>
-                        </div>
-                        <div class="modal-footer"><button class="btn btn-primary" onclick="uploadMedia()">Upload</button></div>
-                    </div>
-                </div>
-            </div>
-            <!-- Crop Profile Pic Modal -->
-            <div class="modal fade" id="cropModal">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header"><h5>Crop Profile Picture</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-                        <div class="modal-body">
-                            <img id="cropImage" style="max-width:100%;">
-                        </div>
-                        <div class="modal-footer">
-                            <button id="cropCancel" class="btn btn-secondary">Cancel</button>
-                            <button id="cropConfirm" class="btn btn-primary">Confirm</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- Edit My Profile Modal -->
-            <div class="modal fade" id="editMyProfileModal">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header"><h5>Edit Profile</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-                        <div class="modal-body">
-                            <input id="editName" placeholder="Name" class="form-control mb-3" required>
-                            <input id="editEmail" type="email" placeholder="Email" class="form-control mb-3" required>
-                            <input id="editPhone" placeholder="Phone" class="form-control mb-3" required>
-                            <input id="editPassword" type="password" placeholder="New Password (optional)" class="form-control mb-3">
-                            <textarea id="editAddress" placeholder="Address" class="form-control mb-3"></textarea>
-                            <input id="editBank" placeholder="Bank Details" class="form-control mb-3">
-                            <input id="editEmergency" placeholder="Emergency Contact" class="form-control mb-3">
-                        </div>
-                        <div class="modal-footer"><button class="btn btn-primary" onclick="saveMyProfile()">Submit for Approval</button></div>
-                    </div>
-                </div>
-            </div>
-            <!-- Quiz Modal -->
-            <div class="modal fade" id="quizModal">
-                <div class="modal-dialog modal-lg">
-                    <div class="modal-content">
-                        <div class="modal-header"><h5 id="quizTitle">Quiz</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-                        <div class="modal-body" id="quizBody">
-                        </div>
-                        <div class="modal-footer"><button class="btn btn-primary" onclick="submitQuiz()">Submit</button></div>
-                    </div>
-                </div>
-            </div>
-            <!-- Add Resource Modal -->
-            <div class="modal fade" id="addResourceModal">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header"><h5>Add Wellness Resource</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-                        <div class="modal-body">
-                            <input id="resourceTitle" placeholder="Title" class="form-control mb-3" required>
-                            <textarea id="resourceDesc" placeholder="Description" class="form-control mb-3" required></textarea>
-                            <input id="resourceLink" placeholder="Link" class="form-control mb-3">
-                            <select id="resourceCategory" class="form-control mb-3">
-                                <option>Mental Health</option><option>Physical Fitness</option><option>Nutrition</option>
-                            </select>
-                        </div>
-                        <div class="modal-footer"><button class="btn btn-primary" onclick="saveResource()">Save</button></div>
-                    </div>
-                </div>
-            </div>
-            <!-- Resources Modal -->
-            <div class="modal fade" id="resourcesModal">
-                <div class="modal-dialog modal-lg">
-                    <div class="modal-content">
-                        <div class="modal-header"><h5>Wellness Resources</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-                        <div class="modal-body" id="resourcesList">
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- Add Goal Modal -->
-            <div class="modal fade" id="addGoalModal">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header"><h5>Add Personal Goal</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-                        <div class="modal-body">
-                            <input id="goalTitle" placeholder="Title" class="form-control mb-3" required>
-                            <textarea id="goalDesc" placeholder="Description" class="form-control mb-3" required></textarea>
-                            <input id="goalTargetDate" type="date" class="form-control mb-3" required>
-                            <select id="goalCategory" class="form-control mb-3">
-                                <option>Exercise</option><option>Meditation</option><option>Diet</option>
-                            </select>
-                        </div>
-                        <div class="modal-footer"><button class="btn btn-primary" onclick="saveGoal()">Save</button></div>
-                    </div>
-                </div>
-            </div>
-            <!-- Survey Modal -->
-            <div class="modal fade" id="surveyModal">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header"><h5 id="surveyTitle">Wellness Survey</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-                        <div class="modal-body">
-                            <form id="surveyForm" oninput="updateSurveyPreview()">
-                                <div id="surveyQuestions"></div>
-                            </form>
-                        </div>
-                        <div class="modal-footer"><button class="btn btn-primary" onclick="submitSurvey()">Submit</button></div>
-                    </div>
-                </div>
-            </div>
-            <!-- Add Survey Modal -->
-            <div class="modal fade" id="addSurveyModal">
-                <div class="modal-dialog modal-lg">
-                    <div class="modal-content">
-                        <div class="modal-header"><h5>Add New Survey</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-                        <div class="modal-body">
-                            <input id="surveyName" placeholder="Survey Name" class="form-control mb-3" required>
-                            <textarea id="surveyDesc" placeholder="Description" class="form-control mb-3" required></textarea>
-                            <div id="surveyQuestionInputs"></div>
-                            <button type="button" class="btn btn-secondary" onclick="addSurveyQuestion()">Add Question</button>
-                        </div>
-                        <div class="modal-footer"><button class="btn btn-primary" onclick="saveSurvey()">Save Survey</button></div>
-                    </div>
-                </div>
-            </div>
-            <!-- Submit Claim Modal -->
-            <div class="modal fade" id="submitClaimModal">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header"><h5>Submit Claim</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-                        <div class="modal-body">
-                            <select id="claimType" class="form-control mb-3" required>
-                                <option value="">Select Claim Type</option>
-                                <option>Medical</option><option>Travel</option><option>Other</option>
-                            </select>
-                            <input id="claimAmount" type="number" placeholder="Amount" class="form-control mb-3" required>
-                            <textarea id="claimDesc" placeholder="Description" class="form-control mb-3" required></textarea>
-                            <input id="claimFile" type="file" class="form-control mb-3">
-                        </div>
-                        <div class="modal-footer"><button class="btn btn-primary" onclick="saveClaim()">Submit</button></div>
-                    </div>
-                </div>
-            </div>
-            <!-- Send Message Modal -->
-            <div class="modal fade" id="sendMessageModal">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header"><h5>Send Message</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-                        <div class="modal-body">
-                            <textarea id="messageText" placeholder="Message" class="form-control" required></textarea>
-                        </div>
-                        <div class="modal-footer"><button class="btn btn-primary" onclick="sendMessage()">Send</button></div>
-                    </div>
-                </div>
+                <div class="modal-footer"><button class="btn btn-primary" onclick="saveAdmission()">Submit</button></div>
             </div>
         </div>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
+
     <script>
-        let currentUser = null;
-        let employees = JSON.parse(localStorage.getItem('employees')) || [];
-        let payrolls = JSON.parse(localStorage.getItem('payrolls')) || [];
-        let jobs = JSON.parse(localStorage.getItem('jobs')) || [];
-        let reviews = JSON.parse(localStorage.getItem('reviews')) || [];
-        let attendances = JSON.parse(localStorage.getItem('attendances')) || [];
-        let leaves = JSON.parse(localStorage.getItem('leaves')) || [];
-        let benefitPlans = JSON.parse(localStorage.getItem('benefitPlans')) || [];
-        let courses = JSON.parse(localStorage.getItem('courses')) || [];
-        let certifications = JSON.parse(localStorage.getItem('certifications')) || [];
-        let mediaContents = JSON.parse(localStorage.getItem('mediaContents')) || [];
-        let auditLog = JSON.parse(localStorage.getItem('auditLog')) || [];
-        let notifications = JSON.parse(localStorage.getItem('notifications')) || { admin: [], employees: [] };
-        let wellnessResources = JSON.parse(localStorage.getItem('wellnessResources')) || [];
-        let wellnessSurveys = JSON.parse(localStorage.getItem('wellnessSurveys')) || [{ name: 'Default Survey', questions: [{question: 'Stress Level?', type: 'scale'}, {question: 'Energy Level?', type: 'scale'}, {question: 'Mood?', type: 'scale'}] }];
-        let settings = JSON.parse(localStorage.getItem('settings')) || { payFrequency: 'monthly', taxYearStart: '2025-03-01', darkMode: false };
-        let currentEmployeeEdit = -1;
-        let currentPayrollEdit = -1;
-        let currentJobEdit = -1;
-        let currentReviewEdit = -1;
-        let currentLeaveEdit = -1;
-        let currentBenefitEdit = -1;
-        let currentCourseEdit = -1;
-        let currentCertEdit = -1;
-        let currentQuizCourseId = -1;
-        let surveyQuestionCounter = 0;
-        let dashboardChart = null;
-        let myPerformanceChart = null;
-        let myLeaveChart = null;
-        let payrollTrendChart = null;
-        let wellnessAdminChart = null;
-        let myWellnessChart = null;
-        let handbookData = localStorage.getItem('handbookData') || null;
-        let claims = JSON.parse(localStorage.getItem('claims')) || [];
-        let timeEntries = JSON.parse(localStorage.getItem('timeEntries')) || [];
-        let currentClaimEdit = -1;
+        // Global Data
+        let students = JSON.parse(localStorage.getItem('students')) || [];
+        let admissions = JSON.parse(localStorage.getItem('admissions')) || [];
+        let attendanceRecords = JSON.parse(localStorage.getItem('attendance')) || [];
+        let fees = JSON.parse(localStorage.getItem('fees')) || [];
+        let exams = JSON.parse(localStorage.getItem('exams')) || [];
+        let staff = JSON.parse(localStorage.getItem('staff')) || [];
         let messages = JSON.parse(localStorage.getItem('messages')) || [];
-        let currentMessageEmpIndex = -1;
+        let currentUser = null;
 
-        function hashPassword(pwd) {
-            return CryptoJS.SHA256(pwd).toString();
-        }
-
-        function calculateAnnualPAYE(annualGross) {
-            let tax = 0;
-            if (annualGross > 1817000) {
-                tax = 644489 + (annualGross - 1817000) * 0.45;
-            } else if (annualGross > 857900) {
-                tax = 251258 + (annualGross - 857900) * 0.41;
-            } else if (annualGross > 673000) {
-                tax = 179147 + (annualGross - 673000) * 0.39;
-            } else if (annualGross > 512800) {
-                tax = 121475 + (annualGross - 512800) * 0.36;
-            } else if (annualGross > 370500) {
-                tax = 77362 + (annualGross - 370500) * 0.31;
-            } else if (annualGross > 237100) {
-                tax = 42678 + (annualGross - 237100) * 0.26;
-            } else {
-                tax = annualGross * 0.18;
-            }
-            const rebate = 17235; // Primary rebate for under 65
-            tax -= rebate;
-            return tax > 0 ? tax : 0;
-        }
-
-        function initApp() {
-            employees.forEach(e => {
-                if (e.password && e.password.length < 64) {
-                    e.password = hashPassword(e.password);
-                }
-            });
-            localStorage.setItem('employees', JSON.stringify(employees));
-            renderDashboard();
-            renderMyDashboard();
-            renderEmployees();
-            renderHandbook();
-            renderPayroll();
-            renderRecruitment();
-            renderPerformance();
-            renderAttendance();
-            renderLeaves();
-            renderBenefits();
-            renderTraining();
-            renderCompliance();
-            renderReports();
-            renderSettings();
-            renderMediaApproval();
-            renderAudit();
-            renderMyProfile();
-            renderMyPayroll();
-            renderMyBenefits();
-            renderMyTraining();
-            renderOpenJobs();
-            renderWellnessAdmin();
-            renderMyWellness();
-            renderMyClaims();
-            renderMyTimeEntry();
-            renderInbox();
-            updateNotifications();
-            if (settings.darkMode) toggleDarkMode(true);
-            if (currentUser.role === 'employee') {
-                document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
-                document.querySelectorAll('.employee-only').forEach(el => el.style.display = 'block');
-            } else {
-                document.querySelectorAll('.employee-only').forEach(el => el.style.display = 'none');
-                document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'block');
-            }
-            showSection(currentUser.role === 'admin' ? 'dashboard' : 'myDashboard');
-        }
-
+        // Login
         function login() {
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
-            const hashedPassword = hashPassword(password);
-            if (username === 'admin' && hashedPassword === hashPassword('admin123')) {
-                currentUser = { role: 'admin' };
+            if ((username === 'admin' && password === 'admin123') ||
+                (username === 'teacher' && password === 'teacher123') ||
+                (username === 'parent' && password === 'parent123') ||
+                (username === 'student' && password === 'student123')) {
+                currentUser = { username, role: username };
+                document.getElementById('loginPage').style.display = 'none';
+                document.getElementById('appContainer').style.display = 'block';
+                initApp();
             } else {
-                const userIndex = employees.findIndex(e => e.username === username && e.password === hashedPassword);
-                if (userIndex !== -1) {
-                    currentUser = { role: 'employee', index: userIndex };
-                } else {
-                    alert('Invalid credentials');
-                    return;
-                }
+                alert('Invalid credentials');
             }
-            localStorage.setItem('currentUser', JSON.stringify(currentUser));
-            document.getElementById('loginPage').style.display = 'none';
-            document.getElementById('appContainer').style.display = 'block';
-            initApp();
         }
 
-        function logout() {
-            localStorage.removeItem('currentUser');
-            location.reload();
+        function initApp() {
+            updateRoleVisibility();
+            renderDashboard();
+            renderAll();
         }
 
-        function toggleSidebar() {
-            const sidebar = document.querySelector('.sidebar');
-            sidebar.classList.toggle('collapsed');
-            document.querySelector('.content').classList.toggle('expanded');
-            document.querySelector('.btn-toggle-sidebar').classList.toggle('expanded');
+        function updateRoleVisibility() {
+            document.querySelectorAll('.admin-only').forEach(el => el.style.display = currentUser.role === 'admin' ? 'block' : 'none');
+            document.querySelectorAll('.teacher-only').forEach(el => el.style.display = currentUser.role === 'teacher' ? 'block' : 'none');
+            document.querySelectorAll('.parent-only').forEach(el => el.style.display = currentUser.role === 'parent' ? 'block' : 'none');
+            document.querySelectorAll('.student-only').forEach(el => el.style.display = currentUser.role === 'student' ? 'block' : 'none');
         }
 
         function showSection(id) {
@@ -1107,1725 +420,266 @@
             document.querySelector(`a[href="#${id}"]`).classList.add('active');
         }
 
-        function populateEmployeeSelect(id) {
-            document.getElementById(id).innerHTML = employees.map((e, i) => `<option value="${i}">${e.name}</option>`).join('');
-        }
-
-        function populateBranchSelect(id) {
-            const branches = ['Branch1', 'Branch2']; // Define your branches
-            document.getElementById(id).innerHTML = branches.map(b => `<option>${b}</option>`).join('');
-        }
-
-        function populateOnboardingSelects() {
-            populateBranchSelect('onbBranch');
-        }
-
-        function saveOnboardingEmployee() {
-            const password = document.getElementById('onbPassword').value;
-            const confirm = document.getElementById('onbConfirmPassword').value;
-            if (password !== confirm) {
-                alert('Passwords do not match');
-                return;
-            }
-            const newEmp = {
-                id: Date.now(),
-                name: document.getElementById('onbName').value,
-                position: document.getElementById('onbPosition').value,
-                branch: document.getElementById('onbBranch').value,
-                email: document.getElementById('onbEmail').value,
-                phone: document.getElementById('onbPhone').value,
-                salary: 0,
-                username: document.getElementById('onbUsername').value,
-                password: hashPassword(password),
-                taxNumber: document.getElementById('onbTaxNumber').value,
-                uifNumber: document.getElementById('onbUIF').value,
-                address: document.getElementById('onbAddress').value,
-                bankDetails: document.getElementById('onbBank').value,
-                emergencyContact: document.getElementById('onbEmergency').value,
-                enrolledBenefits: [],
-                enrolledCourses: [],
-                wellness: { score: 0, surveys: [], goals: [], metrics: { stress: 5, energy: 5, mood: 5 } },
-                profilePic: ''
-            };
-            employees.push(newEmp);
-            localStorage.setItem('employees', JSON.stringify(employees));
-            addNotification('admin', `New onboarding: ${newEmp.name}`);
-            bootstrap.Modal.getInstance(document.getElementById('onboardingModal')).hide();
-            alert('Onboarding complete! Login with your credentials. HR will set salary.');
-        }
-
-        function showAddEmployeeModal(editIndex = -1) {
-            currentEmployeeEdit = editIndex;
-            document.getElementById('addEmployeeModalLabel').innerHTML = editIndex === -1 ? 'Add Employee' : 'Edit Employee';
-            populateBranchSelect('empBranch');
-            populateEmployeeSelect('payEmployee');
-            const e = editIndex === -1 ? {} : employees[editIndex];
-            document.getElementById('empName').value = e.name || '';
-            document.getElementById('empPosition').value = e.position || '';
-            document.getElementById('empBranch').value = e.branch || '';
-            document.getElementById('empEmail').value = e.email || '';
-            document.getElementById('empPhone').value = e.phone || '';
-            document.getElementById('empSalary').value = e.salary || '';
-            document.getElementById('empUsername').value = e.username || '';
-            document.getElementById('empPassword').value = '';
-            document.getElementById('empTaxNumber').value = e.taxNumber || '';
-            document.getElementById('empUIF').value = e.uifNumber || '';
-            document.getElementById('empAddress').value = e.address || '';
-            document.getElementById('empBank').value = e.bankDetails || '';
-            document.getElementById('empEmergency').value = e.emergencyContact || '';
-            const modal = new bootstrap.Modal(document.getElementById('addEmployeeModal'));
-            modal.show();
-        }
-
-        function saveEmployee() {
-            const pwd = document.getElementById('empPassword').value;
-            const e = {
-                id: currentEmployeeEdit === -1 ? Date.now() : employees[currentEmployeeEdit].id,
-                name: document.getElementById('empName').value,
-                position: document.getElementById('empPosition').value,
-                branch: document.getElementById('empBranch').value,
-                email: document.getElementById('empEmail').value,
-                phone: document.getElementById('empPhone').value,
-                salary: parseFloat(document.getElementById('empSalary').value),
-                username: document.getElementById('empUsername').value,
-                password: pwd ? hashPassword(pwd) : (currentEmployeeEdit !== -1 ? employees[currentEmployeeEdit].password : hashPassword('default123')),
-                taxNumber: document.getElementById('empTaxNumber').value,
-                uifNumber: document.getElementById('empUIF').value,
-                address: document.getElementById('empAddress').value,
-                bankDetails: document.getElementById('empBank').value,
-                emergencyContact: document.getElementById('empEmergency').value,
-                enrolledBenefits: currentEmployeeEdit === -1 ? [] : employees[currentEmployeeEdit].enrolledBenefits || [],
-                enrolledCourses: currentEmployeeEdit === -1 ? [] : employees[currentEmployeeEdit].enrolledCourses || [],
-                wellness: currentEmployeeEdit === -1 ? { score: 0, surveys: [], goals: [], metrics: { stress: 5, energy: 5, mood: 5 } } : employees[currentEmployeeEdit].wellness,
-                profilePic: currentEmployeeEdit === -1 ? '' : employees[currentEmployeeEdit].profilePic || ''
-            };
-            if (currentEmployeeEdit === -1) {
-                employees.push(e);
-                addNotification('admin', `New employee added: ${e.name}`);
-            } else {
-                employees[currentEmployeeEdit] = e;
-                addNotification('admin', `Employee updated: ${e.name}`);
-            }
-            localStorage.setItem('employees', JSON.stringify(employees));
-            renderEmployees();
-            renderDashboard();
-            bootstrap.Modal.getInstance(document.getElementById('addEmployeeModal')).hide();
-        }
-
-        function renderEmployees() {
-            document.getElementById('employeeTable').innerHTML = employees.map((e, i) => `
-                <tr>
-                    <td>${e.id}</td>
-                    <td>${e.name}</td>
-                    <td>${e.position}</td>
-                    <td>${e.branch}</td>
-                    <td>R${e.salary.toFixed(2)}</td>
-                    <td>${e.taxNumber}</td>
-                    <td>${e.uifNumber}</td>
-                    <td>
-                        <button class="btn btn-sm btn-primary" onclick="showAddEmployeeModal(${i})">Edit</button>
-                        <button class="btn btn-sm btn-danger" onclick="deleteEmployee(${i})">Delete</button>
-                        <button class="btn btn-sm btn-info" onclick="showSendMessageModal(${i})">Send Message</button>
-                    </td>
-                </tr>
-            `).join('');
-            document.getElementById('totalEmployees').textContent = employees.length;
-        }
-
-        function deleteEmployee(i) {
-            if (confirm('Delete employee?')) {
-                employees.splice(i, 1);
-                localStorage.setItem('employees', JSON.stringify(employees));
-                renderEmployees();
-                renderDashboard();
-            }
-        }
-
-        function showUploadHandbookModal() {
-            const modal = new bootstrap.Modal(document.getElementById('uploadHandbookModal'));
-            modal.show();
-        }
-
-        function uploadHandbook() {
-            const file = document.getElementById('handbookFile').files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                handbookData = e.target.result;
-                localStorage.setItem('handbookData', handbookData);
-                renderHandbook();
-                bootstrap.Modal.getInstance(document.getElementById('uploadHandbookModal')).hide();
-            };
-            reader.readAsDataURL(file);
-        }
-
-        function renderHandbook() {
-            const viewer = document.getElementById('handbookViewer');
-            viewer.innerHTML = '';
-            if (handbookData) {
-                const pdf = document.createElement('object');
-                pdf.type = 'application/pdf';
-                pdf.data = handbookData;
-                pdf.style.width = '100%';
-                pdf.style.height = '500px';
-                viewer.appendChild(pdf);
-            } else {
-                viewer.innerHTML = '<p>No handbook uploaded.</p>';
-            }
-        }
-
-        function loadEmployeePayData() {
-            // Placeholder for loading previous data if needed
-        }
-
-        function calculatePayroll() {
-            const empIndex = parseInt(document.getElementById('payEmployee').value);
-            if (isNaN(empIndex)) return;
-            const emp = employees[empIndex];
-            const hours = parseFloat(document.getElementById('payHoursWorked').value) || 160;
-            const otHours = parseFloat(document.getElementById('payOvertimeHours').value) || 0;
-            const commission = parseFloat(document.getElementById('payCommission').value) || 0;
-            const hourly = emp.salary / 160;
-            const basic = hourly * hours;
-            const ot = hourly * 1.5 * otHours;
-            const gross = basic + ot + commission;
-            const annualGross = gross * 12;
-            const annualPAYE = calculateAnnualPAYE(annualGross);
-            const paye = annualPAYE / 12;
-            const uif = Math.min(gross * 0.01, 177.12);
-            const benefits = emp.enrolledBenefits?.reduce((sum, bId) => sum + (benefitPlans.find(b => b.id === bId)?.cost || 0), 0) || 0;
-            const totalDed = paye + uif + benefits;
-            const net = gross - totalDed;
-            document.getElementById('payBasic').textContent = `R${basic.toFixed(2)}`;
-            document.getElementById('payOvertime').textContent = `R${ot.toFixed(2)}`;
-            document.getElementById('payComm').textContent = `R${commission.toFixed(2)}`;
-            document.getElementById('payGross').textContent = `R${gross.toFixed(2)}`;
-            document.getElementById('payPAYE').textContent = `R${paye.toFixed(2)}`;
-            document.getElementById('payUIF').textContent = `R${uif.toFixed(2)}`;
-            document.getElementById('payBenefits').textContent = `R${benefits.toFixed(2)}`;
-            document.getElementById('payTotalDeductions').textContent = `R${totalDed.toFixed(2)}`;
-            document.getElementById('payNet').textContent = `R${net.toFixed(2)}`;
-            document.getElementById('payComplianceNote').innerHTML = 'Compliant';
-            return { basic, ot, commission, gross, paye, uif, benefits, totalDed, net };
-        }
-
-        function showAddPayrollModal(editIndex = -1) {
-            currentPayrollEdit = editIndex;
-            document.getElementById('addPayrollModalLabel').innerHTML = editIndex === -1 ? 'Add Payroll Entry' : 'Edit Payroll Entry';
-            populateEmployeeSelect('payEmployee');
-            const p = editIndex === -1 ? {} : payrolls[editIndex];
-            document.getElementById('payEmployee').value = p.employeeIndex || '';
-            document.getElementById('payPeriod').value = p.period || '';
-            document.getElementById('payHoursWorked').value = p.hours || '';
-            document.getElementById('payOvertimeHours').value = p.otHours || '';
-            document.getElementById('payCommission').value = p.commission || '';
-            calculatePayroll();
-            const modal = new bootstrap.Modal(document.getElementById('addPayrollModal'));
-            modal.show();
-        }
-
-        function savePayroll() {
-            const calc = calculatePayroll();
-            if (!calc) return;
-            const p = {
-                id: currentPayrollEdit === -1 ? Date.now() : payrolls[currentPayrollEdit].id,
-                employeeIndex: parseInt(document.getElementById('payEmployee').value),
-                period: document.getElementById('payPeriod').value,
-                hours: parseFloat(document.getElementById('payHoursWorked').value) || 160,
-                otHours: parseFloat(document.getElementById('payOvertimeHours').value) || 0,
-                commission: parseFloat(document.getElementById('payCommission').value) || 0,
-                gross: calc.gross,
-                paye: calc.paye,
-                uif: calc.uif,
-                benefits: calc.benefits,
-                totalDeductions: calc.totalDed,
-                net: calc.net,
-                status: 'Processed',
-                compliance: document.getElementById('payComplianceNote').innerHTML
-            };
-            if (currentPayrollEdit === -1) {
-                payrolls.push(p);
-                addNotification('admin', `New payroll processed for ${employees[p.employeeIndex].name}`);
-                logAudit('Payroll Added', `Employee: ${employees[p.employeeIndex].name}, Period: ${p.period}`);
-            } else {
-                payrolls[currentPayrollEdit] = p;
-                addNotification('admin', `Payroll updated for ${employees[p.employeeIndex].name}`);
-                logAudit('Payroll Updated', `Employee: ${employees[p.employeeIndex].name}, Period: ${p.period}`);
-            }
-            localStorage.setItem('payrolls', JSON.stringify(payrolls));
-            renderPayroll();
-            renderDashboard();
-            bootstrap.Modal.getInstance(document.getElementById('addPayrollModal')).hide();
-        }
-
-        function previewBatchPayroll() {
-            const period = document.getElementById('batchPeriod').value;
-            if (!period) return;
-            let preview = 'Batch Preview for ' + period + '<br>';
-            employees.forEach(e => {
-                const hourly = e.salary / 160;
-                const basic = hourly * 160; // Assume full hours
-                const ot = 0;
-                const commission = 0;
-                const gross = basic + ot + commission;
-                const annualGross = gross * 12;
-                const annualPAYE = calculateAnnualPAYE(annualGross);
-                const paye = annualPAYE / 12;
-                const uif = Math.min(gross * 0.01, 177.12);
-                const benefits = e.enrolledBenefits?.reduce((sum, bId) => sum + (benefitPlans.find(b => b.id === bId)?.cost || 0), 0) || 0;
-                const totalDed = paye + uif + benefits;
-                const net = gross - totalDed;
-                preview += `${e.name}: Gross R${gross.toFixed(2)}, Net R${net.toFixed(2)}<br>`;
-            });
-            document.getElementById('batchPreview').innerHTML = preview;
-            document.getElementById('batchPreview').style.display = 'block';
-        }
-
-        function runBatchPayroll() {
-            const period = document.getElementById('batchPeriod').value;
-            if (!period) return;
-            employees.forEach(e => {
-                const hourly = e.salary / 160;
-                const basic = hourly * 160;
-                const ot = 0;
-                const commission = 0;
-                const gross = basic + ot + commission;
-                const annualGross = gross * 12;
-                const annualPAYE = calculateAnnualPAYE(annualGross);
-                const paye = annualPAYE / 12;
-                const uif = Math.min(gross * 0.01, 177.12);
-                const benefits = e.enrolledBenefits?.reduce((sum, bId) => sum + (benefitPlans.find(b => b.id === bId)?.cost || 0), 0) || 0;
-                const totalDed = paye + uif + benefits;
-                const net = gross - totalDed;
-                const p = {
-                    id: Date.now() + Math.random(),
-                    employeeIndex: employees.indexOf(e),
-                    period,
-                    hours: 160,
-                    otHours: 0,
-                    commission: 0,
-                    gross,
-                    paye,
-                    uif,
-                    benefits,
-                    totalDeductions: totalDed,
-                    net,
-                    status: 'Processed',
-                    compliance: 'Compliant'
-                };
-                payrolls.push(p);
-                addNotification('admin', `Batch payroll processed for ${e.name}`);
-                logAudit('Batch Payroll', `Employee: ${e.name}, Period: ${period}`);
-            });
-            localStorage.setItem('payrolls', JSON.stringify(payrolls));
-            renderPayroll();
-            renderDashboard();
-            document.getElementById('batchPreview').style.display = 'none';
-        }
-
-        function renderPayroll() {
-            document.getElementById('payrollTable').innerHTML = payrolls.map((p, i) => `
-                <tr>
-                    <td>${p.id}</td>
-                    <td>${employees[p.employeeIndex]?.name || 'Unknown'}</td>
-                    <td>${p.period}</td>
-                    <td>R${p.gross.toFixed(2)}</td>
-                    <td>R${p.totalDeductions.toFixed(2)}</td>
-                    <td>R${p.net.toFixed(2)}</td>
-                    <td>${p.status}</td>
-                    <td>${p.compliance}</td>
-                    <td>
-                        <button class="btn btn-sm btn-primary" onclick="showAddPayrollModal(${i})">Edit</button>
-                        <button class="btn btn-sm btn-danger" onclick="deletePayroll(${i})">Delete</button>
-                        <button class="btn btn-sm btn-info" onclick="previewPayslip(${i})">Preview</button>
-                    </td>
-                </tr>
-            `).join('');
-            const totalYTD = payrolls.reduce((sum, p) => sum + p.net, 0);
-            document.getElementById('ytdPayroll').textContent = `R${totalYTD.toFixed(2)}`;
-            document.getElementById('totalPayrollCost').textContent = `R${totalYTD.toFixed(2)}`;
-            const ctx = document.getElementById('payrollTrendChart').getContext('2d');
-            if (payrollTrendChart) payrollTrendChart.destroy();
-            payrollTrendChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: [...new Set(payrolls.map(p => p.period))],
-                    datasets: [{ label: 'Net Pay Trend', data: payrolls.reduce((acc, p) => {
-                        const idx = acc.labels.indexOf(p.period);
-                        acc.data[idx] = (acc.data[idx] || 0) + p.net;
-                        return acc;
-                    }, { labels: [...new Set(payrolls.map(p => p.period))], data: [] }).data, borderColor: '#4169e1' }]
-                },
-                options: { responsive: true }
-            });
-        }
-
-        function deletePayroll(i) {
-            if (confirm('Delete payroll?')) {
-                payrolls.splice(i, 1);
-                localStorage.setItem('payrolls', JSON.stringify(payrolls));
-                renderPayroll();
-            }
-        }
-
-        function previewPayslip(i) {
-            const p = payrolls[i];
-            const emp = employees[p.employeeIndex];
-            document.getElementById('payslipEmployee').textContent = `Employee: ${emp.name}`;
-            document.getElementById('payslipPeriod').textContent = `Period: ${p.period}`;
-            document.getElementById('payslipBasic').textContent = `R${(p.gross - p.ot - p.commission).toFixed(2)}`;
-            document.getElementById('payslipOvertime').textContent = `R${p.ot.toFixed(2)}`;
-            document.getElementById('payslipBonus').textContent = `R${p.commission.toFixed(2)}`;
-            document.getElementById('payslipGross').textContent = `R${p.gross.toFixed(2)}`;
-            document.getElementById('payslipTax').textContent = `R${p.paye.toFixed(2)}`;
-            document.getElementById('payslipUIF').textContent = `R${p.uif.toFixed(2)}`;
-            document.getElementById('payslipBenefits').textContent = `R${p.benefits.toFixed(2)}`;
-            document.getElementById('payslipOther').textContent = `R0.00`;
-            document.getElementById('payslipTotalDeductions').textContent = `R${p.totalDeductions.toFixed(2)}`;
-            document.getElementById('payslipNet').textContent = `R${p.net.toFixed(2)}`;
-            document.getElementById('payslipTaxNumFooter').textContent = emp.taxNumber;
-            const modal = new bootstrap.Modal(document.getElementById('payslipModal'));
-            modal.show();
-        }
-
-        function downloadPayslip() {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            doc.text(document.getElementById('payslipPreview').innerText, 10, 10);
-            doc.save('payslip.pdf');
-        }
-
-        function printPayslip() {
-            const printContent = document.getElementById('payslipPreview').innerHTML;
-            const iframe = document.createElement('iframe');
-            iframe.style.display = 'none';
-            document.body.appendChild(iframe);
-            const doc = iframe.contentWindow.document;
-            doc.open();
-            doc.write('<html><head><title>Print Payslip</title>');
-            doc.write('</head><body>');
-            doc.write(printContent);
-            doc.write('</body></html>');
-            doc.close();
-            iframe.contentWindow.focus();
-            iframe.contentWindow.print();
-            document.body.removeChild(iframe);
-        }
-
-        function generatePayrollReport() {
-            exportToExcel(payrolls, 'payroll-report');
-        }
-
-        function exportPayrollToSARS() {
-            alert('Exporting to SARS EMP201 format... (simulation)');
-        }
-
-        function showAddJobModal(editIndex = -1) {
-            currentJobEdit = editIndex;
-            document.getElementById('addJobModalLabel').innerHTML = editIndex === -1 ? 'Add Job' : 'Edit Job';
-            populateBranchSelect('jobBranch');
-            const j = editIndex === -1 ? { applications: [] } : jobs[editIndex];
-            document.getElementById('jobTitle').value = j.title || '';
-            document.getElementById('jobBranch').value = j.branch || '';
-            document.getElementById('jobDesc').value = j.description || '';
-            const modal = new bootstrap.Modal(document.getElementById('addJobModal'));
-            modal.show();
-        }
-
-        function saveJob() {
-            const j = {
-                id: currentJobEdit === -1 ? Date.now() : jobs[currentJobEdit].id,
-                title: document.getElementById('jobTitle').value,
-                branch: document.getElementById('jobBranch').value,
-                description: document.getElementById('jobDesc').value,
-                applications: currentJobEdit === -1 ? [] : jobs[currentJobEdit].applications
-            };
-            if (currentJobEdit === -1) {
-                jobs.push(j);
-                addNotification('admin', `New job added: ${j.title}`);
-            } else {
-                jobs[currentJobEdit] = j;
-                addNotification('admin', `Job updated: ${j.title}`);
-            }
-            localStorage.setItem('jobs', JSON.stringify(jobs));
-            renderRecruitment();
-            bootstrap.Modal.getInstance(document.getElementById('addJobModal')).hide();
-        }
-
-        function renderRecruitment() {
-            document.getElementById('jobTable').innerHTML = jobs.map((j, i) => `
-                <tr>
-                    <td>${j.id}</td>
-                    <td>${j.title}</td>
-                    <td>${j.branch}</td>
-                    <td>${j.applications.length}</td>
-                    <td>
-                        <button class="btn btn-sm btn-primary" onclick="showAddJobModal(${i})">Edit</button>
-                        <button class="btn btn-sm btn-danger" onclick="deleteJob(${i})">Delete</button>
-                    </td>
-                </tr>
-            `).join('');
-            document.getElementById('openPositions').textContent = jobs.length;
-        }
-
-        function deleteJob(i) {
-            if (confirm('Delete job?')) {
-                jobs.splice(i, 1);
-                localStorage.setItem('jobs', JSON.stringify(jobs));
-                renderRecruitment();
-            }
-        }
-
-        function showAddReviewModal(editIndex = -1) {
-            currentReviewEdit = editIndex;
-            document.getElementById('addReviewModalLabel').innerHTML = editIndex === -1 ? 'Add Review' : 'Edit Review';
-            populateEmployeeSelect('reviewEmployee');
-            const r = editIndex === -1 ? {} : reviews[editIndex];
-            document.getElementById('reviewEmployee').value = r.employeeIndex || '';
-            document.getElementById('reviewScore').value = r.score || '';
-            document.getElementById('reviewComments').value = r.comments || '';
-            const modal = new bootstrap.Modal(document.getElementById('addReviewModal'));
-            modal.show();
-        }
-
-        function saveReview() {
-            const r = {
-                employeeIndex: parseInt(document.getElementById('reviewEmployee').value),
-                date: new Date().toLocaleDateString(),
-                score: parseInt(document.getElementById('reviewScore').value),
-                comments: document.getElementById('reviewComments').value,
-            };
-            if (currentReviewEdit === -1) {
-                reviews.push(r);
-                addNotification('admin', `New review for ${employees[r.employeeIndex].name}`);
-            } else {
-                reviews[currentReviewEdit] = {...reviews[currentReviewEdit], ...r};
-                addNotification('admin', `Review updated for ${employees[r.employeeIndex].name}`);
-            }
-            localStorage.setItem('reviews', JSON.stringify(reviews));
-            renderPerformance();
-            renderDashboard();
-            bootstrap.Modal.getInstance(document.getElementById('addReviewModal')).hide();
-        }
-
-        function renderPerformance() {
-            document.getElementById('performanceTable').innerHTML = reviews.map((r, i) => `
-                <tr>
-                    <td>${employees[r.employeeIndex]?.name || 'Unknown'}</td>
-                    <td>${r.date}</td>
-                    <td>${r.score}/5</td>
-                    <td>${r.comments}</td>
-                    <td class="admin-only">
-                        <button class="btn btn-sm btn-primary" onclick="showAddReviewModal(${i})">Edit</button>
-                        <button class="btn btn-sm btn-danger" onclick="deleteReview(${i})">Delete</button>
-                    </td>
-                </tr>
-            `).join('');
-            const avgScore = reviews.length ? (reviews.reduce((sum, r) => sum + r.score, 0) / reviews.length).toFixed(1) : 0;
-            document.getElementById('avgPerformance').textContent = `${avgScore}/5`;
-        }
-
-        function deleteReview(i) {
-            if (confirm('Delete review?')) {
-                reviews.splice(i, 1);
-                localStorage.setItem('reviews', JSON.stringify(reviews));
-                renderPerformance();
-                renderDashboard();
-            }
-        }
-
-        function clockIn() {
-            const empIndex = currentUser.role === 'admin' ? parseInt(prompt('Enter employee index:')) : currentUser.index;
-            if (isNaN(empIndex)) return;
-            const att = {
-                employeeIndex: empIndex,
-                date: new Date().toLocaleDateString(),
-                hours: 8,
-                overtime: 0,
-                status: 'Present'
-            };
-            attendances.push(att);
-            localStorage.setItem('attendances', JSON.stringify(attendances));
-            addNotification('admin', `${employees[empIndex]?.name || 'Unknown'} clocked in`);
-            renderAttendance();
-        }
-
-        function renderAttendance() {
-            document.getElementById('attendanceTable').innerHTML = attendances.map((a, i) => `
-                <tr>
-                    <td>${employees[a.employeeIndex]?.name || 'Unknown'}</td>
-                    <td>${a.date}</td>
-                    <td>${a.hours}</td>
-                    <td>${a.overtime}</td>
-                    <td>${a.status}</td>
-                    <td class="admin-only">
-                        <button class="btn btn-sm btn-danger" onclick="deleteAttendance(${i})">Delete</button>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        function deleteAttendance(i) {
-            if (confirm('Delete?')) {
-                attendances.splice(i, 1);
-                localStorage.setItem('attendances', JSON.stringify(attendances));
-                renderAttendance();
-            }
-        }
-
-        function showAddLeaveModal(editIndex = -1) {
-            currentLeaveEdit = editIndex;
-            document.getElementById('addLeaveModalLabel').innerHTML = editIndex === -1 ? 'Request Leave' : 'Edit Leave';
-            populateEmployeeSelect('leaveEmployee');
-            const l = editIndex === -1 ? {} : leaves[editIndex];
-            document.getElementById('leaveEmployee').value = l.employeeIndex || (currentUser.role === 'employee' ? currentUser.index : '');
-            document.getElementById('leaveStart').value = l.startDate || '';
-            document.getElementById('leaveEnd').value = l.endDate || '';
-            document.getElementById('leaveType').value = l.type || '';
-            const modal = new bootstrap.Modal(document.getElementById('addLeaveModal'));
-            modal.show();
-        }
-
-        function saveLeave() {
-            const l = {
-                employeeIndex: parseInt(document.getElementById('leaveEmployee').value),
-                startDate: document.getElementById('leaveStart').value,
-                endDate: document.getElementById('leaveEnd').value,
-                type: document.getElementById('leaveType').value,
-                status: currentLeaveEdit === -1 ? 'Pending' : leaves[currentLeaveEdit].status,
-            };
-            if (currentLeaveEdit === -1) {
-                leaves.push(l);
-                addNotification('admin', `New leave request from ${employees[l.employeeIndex].name}`);
-            } else {
-                leaves[currentLeaveEdit] = l;
-                addNotification('admin', `Leave updated for ${employees[l.employeeIndex].name}`);
-            }
-            localStorage.setItem('leaves', JSON.stringify(leaves));
-            renderLeaves();
-            bootstrap.Modal.getInstance(document.getElementById('addLeaveModal')).hide();
-        }
-
-        function renderLeaves() {
-            const user = currentUser;
-            let filteredLeaves = leaves;
-            if (user.role === 'employee') {
-                filteredLeaves = leaves.filter(l => l.employeeIndex === user.index);
-            }
-            document.getElementById('leavesTable').innerHTML = filteredLeaves.map((l, i) => `
-                <tr>
-                    <td>${employees[l.employeeIndex]?.name || 'Unknown'}</td>
-                    <td>${l.startDate}</td>
-                    <td>${l.endDate}</td>
-                    <td>${l.type}</td>
-                    <td>${l.status}</td>
-                    <td>
-                        ${user.role === 'admin' ? `
-                            <button class="btn btn-sm btn-success" onclick="approveLeave(${i})">Approve</button>
-                            <button class="btn btn-sm btn-danger" onclick="rejectLeave(${i})">Reject</button>
-                        ` : ''}
-                        <button class="btn btn-sm btn-primary" onclick="showAddLeaveModal(${i})">Edit</button>
-                        <button class="btn btn-sm btn-danger" onclick="deleteLeave(${i})">Delete</button>
-                    </td>
-                </tr>
-            `).join('');
-            const pending = leaves.filter(l => l.status === 'Pending').length;
-            document.getElementById('pendingLeaves').textContent = pending;
-        }
-
-        function approveLeave(i) {
-            leaves[i].status = 'Approved';
-            localStorage.setItem('leaves', JSON.stringify(leaves));
-            renderLeaves();
-            addNotification('admin', `Leave approved for ${employees[leaves[i].employeeIndex].name}`);
-        }
-
-        function rejectLeave(i) {
-            leaves[i].status = 'Rejected';
-            localStorage.setItem('leaves', JSON.stringify(leaves));
-            renderLeaves();
-            addNotification(leaves[i].employeeIndex, `Your leave request was rejected`);
-        }
-
-        function deleteLeave(i) {
-            if (confirm('Delete?')) {
-                leaves.splice(i, 1);
-                localStorage.setItem('leaves', JSON.stringify(leaves));
-                renderLeaves();
-            }
-        }
-
-        function showAddBenefitModal(editIndex = -1) {
-            currentBenefitEdit = editIndex;
-            document.getElementById('addBenefitModalLabel').innerHTML = editIndex === -1 ? 'Add Benefit Plan' : 'Edit Benefit Plan';
-            const b = editIndex === -1 ? {} : benefitPlans[editIndex];
-            document.getElementById('benefitName').value = b.name || '';
-            document.getElementById('benefitDesc').value = b.description || '';
-            document.getElementById('benefitCost').value = b.cost || '';
-            const modal = new bootstrap.Modal(document.getElementById('addBenefitModal'));
-            modal.show();
-        }
-
-        function saveBenefit() {
-            const b = {
-                id: currentBenefitEdit === -1 ? Date.now() : benefitPlans[currentBenefitEdit].id,
-                name: document.getElementById('benefitName').value,
-                description: document.getElementById('benefitDesc').value,
-                cost: parseFloat(document.getElementById('benefitCost').value),
-            };
-            if (currentBenefitEdit === -1) {
-                benefitPlans.push(b);
-                addNotification('admin', `New benefit plan added: ${b.name}`);
-            } else {
-                benefitPlans[currentBenefitEdit] = b;
-                addNotification('admin', `Benefit plan updated: ${b.name}`);
-            }
-            localStorage.setItem('benefitPlans', JSON.stringify(benefitPlans));
-            renderBenefits();
-            bootstrap.Modal.getInstance(document.getElementById('addBenefitModal')).hide();
-        }
-
-        function renderBenefits() {
-            document.getElementById('benefitTable').innerHTML = benefitPlans.map((b, i) => `
-                <tr>
-                    <td>${b.id}</td>
-                    <td>${b.name}</td>
-                    <td>${b.description}</td>
-                    <td>R${b.cost.toFixed(2)}</td>
-                    <td>
-                        <button class="btn btn-sm btn-primary" onclick="showAddBenefitModal(${i})">Edit</button>
-                        <button class="btn btn-sm btn-danger" onclick="deleteBenefit(${i})">Delete</button>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        function deleteBenefit(i) {
-            if (confirm('Delete?')) {
-                benefitPlans.splice(i, 1);
-                localStorage.setItem('benefitPlans', JSON.stringify(benefitPlans));
-                renderBenefits();
-            }
-        }
-
-        function showAddCourseModal(editIndex = -1) {
-            currentCourseEdit = editIndex;
-            document.getElementById('addCourseModalLabel').innerHTML = editIndex === -1 ? 'Add Course' : 'Edit Course';
-            const c = editIndex === -1 ? {} : courses[editIndex];
-            document.getElementById('courseName').value = c.name || '';
-            document.getElementById('courseDesc').value = c.description || '';
-            document.getElementById('courseQuestions').value = JSON.stringify(c.questions || [], null, 2);
-            const modal = new bootstrap.Modal(document.getElementById('addCourseModal'));
-            modal.show();
-        }
-
-        function saveCourse() {
-            let questions = [];
-            try {
-                questions = JSON.parse(document.getElementById('courseQuestions').value || '[]');
-            } catch (e) {
-                alert('Invalid JSON for questions. Use format: [{"question":"Q?","options":["A","B"],"correct":0}]');
-                return;
-            }
-            const c = {
-                id: currentCourseEdit === -1 ? Date.now() : courses[currentCourseEdit].id,
-                name: document.getElementById('courseName').value,
-                description: document.getElementById('courseDesc').value,
-                questions
-            };
-            if (currentCourseEdit === -1) {
-                courses.push(c);
-                addNotification('admin', `New course added: ${c.name}`);
-            } else {
-                courses[currentCourseEdit] = c;
-                addNotification('admin', `Course updated: ${c.name}`);
-            }
-            localStorage.setItem('courses', JSON.stringify(courses));
-            renderTraining();
-            bootstrap.Modal.getInstance(document.getElementById('addCourseModal')).hide();
-        }
-
-        function renderTraining() {
-            document.getElementById('courseTable').innerHTML = courses.map((c, i) => `
-                <tr>
-                    <td>${c.id}</td>
-                    <td>${c.name}</td>
-                    <td>${c.description}</td>
-                    <td>
-                        <button class="btn btn-sm btn-primary" onclick="showAddCourseModal(${i})">Edit</button>
-                        <button class="btn btn-sm btn-danger" onclick="deleteCourse(${i})">Delete</button>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        function deleteCourse(i) {
-            if (confirm('Delete?')) {
-                courses.splice(i, 1);
-                localStorage.setItem('courses', JSON.stringify(courses));
-                renderTraining();
-            }
-        }
-
-        function showAddCertificationModal(editIndex = -1) {
-            currentCertEdit = editIndex;
-            document.getElementById('addCertificationModalLabel').innerHTML = editIndex === -1 ? 'Add Certification' : 'Edit Certification';
-            populateEmployeeSelect('certEmployee');
-            const cert = editIndex === -1 ? {} : certifications[editIndex];
-            document.getElementById('certEmployee').value = cert.employeeIndex || '';
-            document.getElementById('certName').value = cert.name || '';
-            document.getElementById('certExpiry').value = cert.expiryDate || '';
-            const modal = new bootstrap.Modal(document.getElementById('addCertificationModal'));
-            modal.show();
-        }
-
-        function saveCertification() {
-            const cert = {
-                employeeIndex: parseInt(document.getElementById('certEmployee').value),
-                name: document.getElementById('certName').value,
-                expiryDate: document.getElementById('certExpiry').value,
-            };
-            if (currentCertEdit === -1) {
-                certifications.push(cert);
-                addNotification('admin', `New certification for ${employees[cert.employeeIndex].name}`);
-            } else {
-                certifications[currentCertEdit] = cert;
-                addNotification('admin', `Certification updated for ${employees[cert.employeeIndex].name}`);
-            }
-            localStorage.setItem('certifications', JSON.stringify(certifications));
-            renderCompliance();
-            renderDashboard();
-            bootstrap.Modal.getInstance(document.getElementById('addCertificationModal')).hide();
-        }
-
-        function renderCompliance() {
-            const now = new Date();
-            const expiring = certifications.filter(c => new Date(c.expiryDate) < new Date(now.getFullYear(), now.getMonth() + 3)).length;
-            document.getElementById('expiringCerts').textContent = expiring;
-            document.getElementById('certificationTable').innerHTML = certifications.map((c, i) => `
-                <tr>
-                    <td>${employees[c.employeeIndex]?.name || 'Unknown'}</td>
-                    <td>${c.name}</td>
-                    <td>${c.expiryDate}</td>
-                    <td>
-                        <button class="btn btn-sm btn-primary" onclick="showAddCertificationModal(${i})">Edit</button>
-                        <button class="btn btn-sm btn-danger" onclick="deleteCertification(${i})">Delete</button>
-                    </td>
-                </tr>
-            `).join('');
-            const totalCerts = certifications.length;
-            const compliantCerts = totalCerts - expiring;
-            const score = totalCerts > 0 ? Math.round((compliantCerts / totalCerts) * 100) : 0;
-            document.getElementById('complianceScore').textContent = `${score}%`;
-        }
-
-        function deleteCertification(i) {
-            if (confirm('Delete?')) {
-                certifications.splice(i, 1);
-                localStorage.setItem('certifications', JSON.stringify(certifications));
-                renderCompliance();
-                renderDashboard();
-            }
-        }
-
-        function exportToExcel(data, filename) {
-            const ws = XLSX.utils.json_to_sheet(data);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
-            XLSX.writeFile(wb, `${filename}.xlsx`);
-        }
-
-        function renderReports() {
-            // Buttons are already there
-        }
-
-        function renderSettings() {
-            document.getElementById('payFrequency').value = settings.payFrequency;
-            document.getElementById('taxYearStart').value = settings.taxYearStart;
-            document.getElementById('darkModeSwitch').checked = settings.darkMode;
-        }
-
-        function saveSettings() {
-            settings.payFrequency = document.getElementById('payFrequency').value;
-            settings.taxYearStart = document.getElementById('taxYearStart').value;
-            localStorage.setItem('settings', JSON.stringify(settings));
-        }
-
-        function toggleDarkMode(checked) {
-            document.body.classList.toggle('dark-mode', checked);
-            settings.darkMode = checked;
-            localStorage.setItem('settings', JSON.stringify(settings));
-        }
-
-        function showUploadMediaModal() {
-            document.getElementById('mediaTitle').value = '';
-            document.getElementById('mediaDesc').value = '';
-            document.getElementById('mediaFile').value = '';
-            const modal = new bootstrap.Modal(document.getElementById('uploadMediaModal'));
-            modal.show();
-        }
-
-        function uploadMedia() {
-            const title = document.getElementById('mediaTitle').value;
-            const desc = document.getElementById('mediaDesc').value;
-            const file = document.getElementById('mediaFile').files[0];
-            if (!title || !desc || !file) {
-                alert('All fields required');
-                return;
-            }
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                mediaContents.push({
-                    id: Date.now(), 
-                    title, 
-                    desc, 
-                    fileData: e.target.result, 
-                    status: 'Pending', 
-                    uploader: currentUser.role === 'admin' ? 'Admin' : employees[currentUser.index].name
-                });
-                localStorage.setItem('mediaContents', JSON.stringify(mediaContents));
-                addNotification('admin', `New media uploaded: ${title} by ${mediaContents[mediaContents.length-1].uploader}`);
-                renderMediaApproval();
-                bootstrap.Modal.getInstance(document.getElementById('uploadMediaModal')).hide();
-            };
-            reader.readAsDataURL(file);
-        }
-
-        function renderMediaApproval() {
-            document.getElementById('mediaTable').innerHTML = mediaContents.map((m, i) => `
-                <tr>
-                    <td>${m.id}</td>
-                    <td>${m.title}</td>
-                    <td>${m.uploader}</td>
-                    <td>${m.status}</td>
-                    <td>
-                        ${currentUser.role === 'admin' ? `
-                            <button class="btn btn-sm btn-success" onclick="approveMedia(${i})">Approve</button>
-                            <button class="btn btn-sm btn-danger" onclick="rejectMedia(${i})">Reject</button>
-                        ` : ''}
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        function approveMedia(i) {
-            mediaContents[i].status = 'Approved';
-            localStorage.setItem('mediaContents', JSON.stringify(mediaContents));
-            addNotification(mediaContents[i].uploader === 'Admin' ? 'admin' : employees.findIndex(e => e.name === mediaContents[i].uploader), 'Your media was approved');
-            renderMediaApproval();
-        }
-
-        function rejectMedia(i) {
-            mediaContents[i].status = 'Rejected';
-            localStorage.setItem('mediaContents', JSON.stringify(mediaContents));
-            addNotification(mediaContents[i].uploader === 'Admin' ? 'admin' : employees.findIndex(e => e.name === mediaContents[i].uploader), 'Your media was rejected');
-            renderMediaApproval();
-        }
-
-        function logAudit(action, details) {
-            const user = currentUser || { role: 'unknown' };
-            const entry = {
-                time: new Date().toLocaleString(),
-                user: user.role === 'admin' ? 'admin' : employees[user.index]?.name || 'unknown',
-                action,
-                details
-            };
-            auditLog.push(entry);
-            localStorage.setItem('auditLog', JSON.stringify(auditLog));
-        }
-
-        function renderAudit() {
-            document.getElementById('auditTable').innerHTML = auditLog.slice(-50).reverse().map(a => `
-                <tr>
-                    <td>${a.time}</td>
-                    <td>${a.user}</td>
-                    <td>${a.action}</td>
-                    <td>${a.details}</td>
-                </tr>
-            `).join('');
-        }
-
-        function addNotification(target, message) {
-            if (target === 'admin') {
-                notifications.admin.push({ message, read: false });
-            } else {
-                if (!notifications.employees[target]) notifications.employees[target] = [];
-                notifications.employees[target].push({ message, read: false });
-            }
-            localStorage.setItem('notifications', JSON.stringify(notifications));
-            updateNotifications();
-        }
-
-        function updateNotifications() {
-            let unread = 0;
-            if (currentUser.role === 'admin') {
-                unread = notifications.admin.filter(n => !n.read).length;
-                document.getElementById('notificationsTable').innerHTML = notifications.admin.map(n => `<tr><td>${n.message}</td></tr>`).join('');
-            } else {
-                unread = (notifications.employees[currentUser.index] || []).filter(n => !n.read).length;
-                document.getElementById('notificationsTable').innerHTML = (notifications.employees[currentUser.index] || []).map(n => `<tr><td>${n.message}</td></tr>`).join('');
-            }
-            const badge = document.getElementById('notificationBadge');
-            badge.textContent = unread;
-            badge.style.display = unread > 0 ? 'block' : 'none';
-        }
-
-        function markAllRead() {
-            if (currentUser.role === 'admin') {
-                notifications.admin.forEach(n => n.read = true);
-            } else {
-                (notifications.employees[currentUser.index] || []).forEach(n => n.read = true);
-            }
-            localStorage.setItem('notifications', JSON.stringify(notifications));
-            updateNotifications();
-        }
-
-        function renderMyProfile() {
-            const userIndex = currentUser.index;
-            const emp = employees[userIndex];
-            document.getElementById('profileName').textContent = emp.name;
-            document.getElementById('profileEmail').textContent = emp.email;
-            document.getElementById('profilePhone').textContent = emp.phone;
-            document.getElementById('profileSalary').textContent = `R${emp.salary.toFixed(2)}`;
-            document.getElementById('profileTax').textContent = emp.taxNumber;
-            document.getElementById('profileUIF').textContent = emp.uifNumber || '-';
-            document.getElementById('profileAddress').textContent = emp.address || '-';
-            document.getElementById('profileBank').textContent = emp.bankDetails || '-';
-            document.getElementById('profileEmergency').textContent = emp.emergencyContact || '-';
-            document.getElementById('profilePic').src = emp.profilePic || 'https://placehold.co/150x150';
-            const benList = document.getElementById('profileBenefits');
-            benList.innerHTML = emp.enrolledBenefits?.map(bId => {
-                const b = benefitPlans.find(x => x.id === bId);
-                return b ? `<li class="list-group-item">${b.name} – R${b.cost.toFixed(2)}/month</li>` : '';
-            }).join('') || '<li class="list-group-item">None enrolled</li>';
-            const certList = document.getElementById('profileCerts');
-            certList.innerHTML = certifications.filter(c => c.employeeIndex === userIndex).map(c => `
-                <li class="list-group-item"><strong>${c.name}</strong> – expires ${c.expiryDate}</li>
-            `).join('') || '<li class="list-group-item">No certificates</li>';
-        }
-
-        document.getElementById('profilePicUpload').addEventListener('change', uploadProfilePic);
-
-        function uploadProfilePic(event) {
-            const file = event.target.files[0];
-            if (!file || !file.type.startsWith('image/')) {
-                alert('Please upload a valid image file.');
-                event.target.value = '';
-                return;
-            }
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                document.getElementById('cropImage').src = e.target.result;
-                const modal = new bootstrap.Modal(document.getElementById('cropModal'));
-                modal.show();
-                const image = document.getElementById('cropImage');
-                let cropper = new Cropper(image, {
-                    aspectRatio: 1,
-                    viewMode: 1,
-                    autoCropArea: 0.8
-                });
-                document.getElementById('cropConfirm').onclick = function() {
-                    const canvas = cropper.getCroppedCanvas({ width: 150, height: 150 });
-                    const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
-                    const userIndex = currentUser.index;
-                    employees[userIndex].profilePic = dataUrl;
-                    localStorage.setItem('employees', JSON.stringify(employees));
-                    renderMyProfile();
-                    modal.hide();
-                    cropper.destroy();
-                    event.target.value = '';
-                    addNotification('admin', `${employees[userIndex].name} updated profile picture`);
-                };
-                document.getElementById('cropCancel').onclick = function() {
-                    modal.hide();
-                    cropper.destroy();
-                    event.target.value = '';
-                };
-            };
-            reader.readAsDataURL(file);
-        }
-
-        function showEditMyProfile() {
-            const userIndex = currentUser.index;
-            const emp = employees[userIndex];
-            document.getElementById('editName').value = emp.name;
-            document.getElementById('editEmail').value = emp.email;
-            document.getElementById('editPhone').value = emp.phone;
-            document.getElementById('editPassword').value = '';
-            document.getElementById('editAddress').value = emp.address || '';
-            document.getElementById('editBank').value = emp.bankDetails || '';
-            document.getElementById('editEmergency').value = emp.emergencyContact || '';
-            const modal = new bootstrap.Modal(document.getElementById('editMyProfileModal'));
-            modal.show();
-        }
-
-        function saveMyProfile() {
-            const userIndex = currentUser.index;
-            employees[userIndex].name = document.getElementById('editName').value;
-            employees[userIndex].email = document.getElementById('editEmail').value;
-            employees[userIndex].phone = document.getElementById('editPhone').value;
-            const pwd = document.getElementById('editPassword').value;
-            if (pwd) employees[userIndex].password = hashPassword(pwd);
-            employees[userIndex].address = document.getElementById('editAddress').value;
-            employees[userIndex].bankDetails = document.getElementById('editBank').value;
-            employees[userIndex].emergencyContact = document.getElementById('editEmergency').value;
-            localStorage.setItem('employees', JSON.stringify(employees));
-            addNotification('admin', `${employees[userIndex].name} submitted profile update for approval`);
-            renderMyProfile();
-            bootstrap.Modal.getInstance(document.getElementById('editMyProfileModal')).hide();
-        }
-
-        function renderMyPayroll() {
-            const userIndex = currentUser.index;
-            const myPayrolls = payrolls.filter(p => p.employeeIndex === userIndex);
-            let ytdEarnings = 0;
-            let ytdTax = 0;
-            document.getElementById('myPayrollTable').innerHTML = myPayrolls.map(p => {
-                ytdEarnings += p.gross;
-                ytdTax += p.paye;
-                return `
-                    <tr>
-                        <td>${p.period}</td>
-                        <td>R${p.gross.toFixed(2)}</td>
-                        <td>R${p.totalDeductions.toFixed(2)}</td>
-                        <td>R${p.commission.toFixed(2)}</td>
-                        <td>R${p.net.toFixed(2)}</td>
-                        <td><button class="btn btn-sm btn-info" onclick="previewPayslip(${payrolls.indexOf(p)})">View</button></td>
-                    </tr>
-                `;
-            }).join('');
-            document.getElementById('myYTDEarnings').textContent = `R${ytdEarnings.toFixed(2)}`;
-            document.getElementById('myYTDTax').textContent = `R${ytdTax.toFixed(2)}`;
-            document.getElementById('recentPayslips').textContent = myPayrolls.length ? `Last: ${myPayrolls[myPayrolls.length-1].period} - R${myPayrolls[myPayrolls.length-1].net.toFixed(2)}` : 'No recent payslips';
-        }
-
-        function previewSelfPayroll() {
-            const userIndex = currentUser.index;
-            const emp = employees[userIndex];
-            const period = new Date().toISOString().slice(0, 7);
-            const hours = 160;
-            const otHours = 0;
-            const commission = 0;
-            const hourly = emp.salary / 160;
-            const basic = hourly * hours;
-            const ot = hourly * 1.5 * otHours;
-            const gross = basic + ot + commission;
-            const annualGross = gross * 12;
-            const annualPAYE = calculateAnnualPAYE(annualGross);
-            const paye = annualPAYE / 12;
-            const uif = Math.min(gross * 0.01, 177.12);
-            const benefits = emp.enrolledBenefits?.reduce((sum, bId) => sum + (benefitPlans.find(b => b.id === bId)?.cost || 0), 0) || 0;
-            const totalDed = paye + uif + benefits;
-            const net = gross - totalDed;
-            const previewDiv = document.getElementById('selfPayrollPreview');
-            previewDiv.querySelector('.earnings-breakdown').innerHTML = `
-                <div class="deduction-item"><span>Basic Salary</span><span>R${basic.toFixed(2)}</span></div>
-                <div class="deduction-item"><span>Overtime</span><span>R${ot.toFixed(2)}</span></div>
-                <div class="deduction-item"><span>Bonus/Commission</span><span>R${commission.toFixed(2)}</span></div>
-                <div class="deduction-item"><span><strong>Total Earnings</strong></span><strong>R${gross.toFixed(2)}</strong></div>
-                <div class="deduction-item"><span>PAYE Tax</span><span>R${paye.toFixed(2)}</span></div>
-                <div class="deduction-item"><span>UIF</span><span>R${uif.toFixed(2)}</span></div>
-                <div class="deduction-item"><span>Benefits</span><span>R${benefits.toFixed(2)}</span></div>
-                <div class="deduction-item"><span><strong>Total Deductions</strong></span><strong>R${totalDed.toFixed(2)}</strong></div>
-                <strong>Net Pay: R${net.toFixed(2)}</strong>
-            `;
-            previewDiv.style.display = 'block';
-        }
-
-        function renderMyBenefits() {
-            const userIndex = currentUser.index;
-            const emp = employees[userIndex];
-            let totalCost = 0;
-            document.getElementById('myBenefitTable').innerHTML = benefitPlans.map(b => {
-                const enrolled = emp.enrolledBenefits?.includes(b.id) || false;
-                if (enrolled) totalCost += b.cost;
-                return `
-                    <tr>
-                        <td>${b.name}</td>
-                        <td>${b.description}</td>
-                        <td>R${b.cost.toFixed(2)}</td>
-                        <td>${enrolled ? 'Enrolled' : 'Available'}</td>
-                        <td>
-                            <button class="btn btn-sm ${enrolled ? 'btn-danger' : 'btn-success'}" onclick="${enrolled ? 'unenrollBenefit' : 'enrollBenefit'}(${b.id}, ${userIndex})">${enrolled ? 'Unenroll' : 'Enroll'}</button>
-                        </td>
-                    </tr>
-                `;
-            }).join('');
-            document.getElementById('totalBenefitsCost').textContent = `R${totalCost.toFixed(2)}`;
-        }
-
-        function enrollBenefit(id, userIndex) {
-            const emp = employees[userIndex];
-            if (!emp.enrolledBenefits) emp.enrolledBenefits = [];
-            if (!emp.enrolledBenefits.includes(id)) {
-                emp.enrolledBenefits.push(id);
-                localStorage.setItem('employees', JSON.stringify(employees));
-                addNotification('admin', `${emp.name} enrolled in benefit ${id}`);
-                renderMyBenefits();
-                renderMyProfile();
-            }
-        }
-
-        function unenrollBenefit(id, userIndex) {
-            const emp = employees[userIndex];
-            emp.enrolledBenefits = emp.enrolledBenefits.filter(b => b !== id);
-            localStorage.setItem('employees', JSON.stringify(employees));
-            addNotification('admin', `${emp.name} unenrolled from benefit ${id}`);
-            renderMyBenefits();
-            renderMyProfile();
-        }
-
-        function renderMyTraining() {
-            const userIndex = currentUser.index;
-            const emp = employees[userIndex];
-            document.getElementById('myCourseTable').innerHTML = courses.map(c => {
-                const enrolled = emp.enrolledCourses?.includes(c.id) || false;
-                return `
-                    <tr>
-                        <td>${c.name}</td>
-                        <td>${c.description}</td>
-                        <td>${enrolled ? 'Enrolled' : 'Available'}</td>
-                        <td>
-                            <button class="btn btn-sm ${enrolled ? 'btn-danger' : 'btn-success'}" onclick="${enrolled ? 'unenrollCourse' : 'enrollCourse'}(${c.id}, ${userIndex})">${enrolled ? 'Unenroll' : 'Enroll'}</button>
-                            ${enrolled && c.questions.length > 0 ? `<button class="btn btn-sm btn-info" onclick="startQuiz(${c.id})">Take Quiz</button>` : ''}
-                        </td>
-                    </tr>
-                `;
-            }).join('');
-        }
-
-        function enrollCourse(id, userIndex) {
-            const emp = employees[userIndex];
-            if (!emp.enrolledCourses) emp.enrolledCourses = [];
-            if (!emp.enrolledCourses.includes(id)) {
-                emp.enrolledCourses.push(id);
-                localStorage.setItem('employees', JSON.stringify(employees));
-                addNotification('admin', `${emp.name} enrolled in course ${id}`);
-                renderMyTraining();
-            }
-        }
-
-        function unenrollCourse(id, userIndex) {
-            const emp = employees[userIndex];
-            emp.enrolledCourses = emp.enrolledCourses.filter(c => c !== id);
-            localStorage.setItem('employees', JSON.stringify(employees));
-            addNotification('admin', `${emp.name} unenrolled from course ${id}`);
-            renderMyTraining();
-        }
-
-        function startQuiz(courseId) {
-            currentQuizCourseId = courseId;
-            const course = courses.find(c => c.id === courseId);
-            document.getElementById('quizTitle').textContent = `Quiz for ${course.name}`;
-            document.getElementById('quizBody').innerHTML = course.questions.map((q, idx) => `
-                <div class="mb-3">
-                    <label class="form-label">${q.question}</label>
-                    ${q.options.map((opt, oIdx) => `
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="q${idx}" value="${oIdx}">
-                            <label class="form-check-label">${opt}</label>
-                        </div>
-                    `).join('')}
-                </div>
-            `).join('');
-            const modal = new bootstrap.Modal(document.getElementById('quizModal'));
-            modal.show();
-        }
-
-        function submitQuiz() {
-            const course = courses.find(c => c.id === currentQuizCourseId);
-            let score = 0;
-            course.questions.forEach((q, idx) => {
-                const selected = document.querySelector(`input[name="q${idx}"]:checked`);
-                if (selected && parseInt(selected.value) === q.correct) score++;
-            });
-            alert(`Your score: ${score} / ${course.questions.length} (${Math.round((score / course.questions.length) * 100)}%)`);
-            bootstrap.Modal.getInstance(document.getElementById('quizModal')).hide();
-        }
-
-        function renderOpenJobs() {
-            const userIndex = currentUser.index;
-            document.getElementById('openJobTable').innerHTML = jobs.map(j => {
-                const applied = j.applications.includes(userIndex);
-                return `
-                    <tr>
-                        <td>${j.title}</td>
-                        <td>${j.branch}</td>
-                        <td>${j.description}</td>
-                        <td>${applied ? 'Applied' : 'Open'}</td>
-                        <td>
-                            <button class="btn btn-sm ${applied ? 'btn-secondary disabled' : 'btn-primary'}" onclick="applyJob(${j.id})" ${applied ? 'disabled' : ''}>${applied ? 'Applied' : 'Apply'}</button>
-                        </td>
-                    </tr>
-                `;
-            }).join('');
-        }
-
-        function applyJob(id) {
-            const userIndex = currentUser.index;
-            const job = jobs.find(j => j.id === id);
-            if (job && !job.applications.includes(userIndex)) {
-                job.applications.push(userIndex);
-                localStorage.setItem('jobs', JSON.stringify(jobs));
-                addNotification('admin', `${employees[userIndex].name} applied for ${job.title}`);
-                renderOpenJobs();
-            }
+        function toggleSidebar() {
+            document.querySelector('.sidebar').classList.toggle('collapsed');
+            document.querySelector('.content').classList.toggle('expanded');
+            document.querySelector('.btn-toggle-sidebar').classList.toggle('expanded');
         }
 
         function renderDashboard() {
-            document.getElementById('totalEmployees').textContent = employees.length;
-            const totalPayroll = payrolls.reduce((sum, p) => sum + p.net, 0);
-            document.getElementById('totalPayrollCost').textContent = `R${totalPayroll.toFixed(2)}`;
-            const avgSalary = employees.length ? (employees.reduce((sum, e) => sum + e.salary, 0) / employees.length).toFixed(0) : 0;
-            document.getElementById('avgSalary').textContent = `R${avgSalary}`;
+            document.getElementById('totalStudents').textContent = students.length;
+            const today = new Date().toISOString().split('T')[0];
+            const todayAtt = attendanceRecords.filter(a => a.date === today);
+            const attRate = students.length ? Math.round((todayAtt.filter(a => a.status === 'Present').length / students.length) * 100) : 0;
+            document.getElementById('todayAttendance').textContent = attRate + '%';
+            document.getElementById('pendingFees').textContent = 'R' + fees.filter(f => f.status === 'Pending').reduce((s, f) => s + f.amount, 0);
+            document.getElementById('upcomingExams').textContent = exams.filter(e => new Date(e.date) > new Date()).length;
+
             const ctx = document.getElementById('dashboardChart').getContext('2d');
-            if (dashboardChart) dashboardChart.destroy();
-            dashboardChart = new Chart(ctx, {
-                type: 'bar',
+            new Chart(ctx, {
+                type: 'doughnut',
                 data: {
-                    labels: ['Employees', 'Open Positions', 'Avg Performance', 'Pending Leaves', 'Compliance %'],
-                    datasets: [{ 
-                        label: 'HR Metrics', 
-                        data: [
-                            employees.length, 
-                            jobs.length, 
-                            parseFloat(document.getElementById('avgPerformance').textContent) || 0, 
-                            parseInt(document.getElementById('pendingLeaves').textContent) || 0,
-                            parseInt(document.getElementById('complianceScore').textContent) || 0
-                        ], 
-                        backgroundColor: ['#4169e1', '#87ceeb', '#add8e6', '#b0e0e6', '#e6f3ff']
+                    labels: ['Present', 'Absent'],
+                    datasets: [{
+                        data: [attRate, 100 - attRate],
+                        backgroundColor: ['#28a745', '#dc3545']
                     }]
-                },
-                options: { responsive: true }
+                }
             });
         }
 
-        function renderMyDashboard() {
-            const userIndex = currentUser.index;
-            const emp = employees[userIndex];
-            document.getElementById('myName').textContent = emp.name;
-            const myReviews = reviews.filter(r => r.employeeIndex === userIndex);
-            const myAvg = myReviews.length ? (myReviews.reduce((sum, r) => sum + r.score, 0) / myReviews.length).toFixed(1) : 0;
-            document.getElementById('myAvgPerformance').textContent = `${myAvg}/5`;
-            const myRecentP = payrolls.filter(p => p.employeeIndex === userIndex).slice(-1)[0];
-            document.getElementById('recentPayslips').textContent = myRecentP ? `Last: ${myRecentP.period} - R${myRecentP.net.toFixed(2)}` : 'No recent payslips';
-            const perfCtx = document.getElementById('myPerformanceChart').getContext('2d');
-            if (myPerformanceChart) myPerformanceChart.destroy();
-            myPerformanceChart = new Chart(perfCtx, { type: 'doughnut', data: { labels: ['Performance'], datasets: [{ data: [myAvg * 20], backgroundColor: ['#4169e1'] }] } });
-            const leaveCtx = document.getElementById('myLeaveChart').getContext('2d');
-            const myLeaves = leaves.filter(l => l.employeeIndex === userIndex);
-            const approved = myLeaves.filter(l => l.status === 'Approved').length;
-            const pending = myLeaves.filter(l => l.status === 'Pending').length;
-            if (myLeaveChart) myLeaveChart.destroy();
-            myLeaveChart = new Chart(leaveCtx, { type: 'pie', data: { labels: ['Approved', 'Pending'], datasets: [{ data: [approved, pending], backgroundColor: ['#28a745', '#ffc107'] }] } });
+        function renderAll() {
+            renderAdmissions();
+            renderStudents();
+            renderAttendance();
+            renderFees();
+            renderTimetable();
+            renderExams();
+            renderHR();
+            renderCommunication();
         }
 
-        function renderWellnessAdmin() {
-            const avgScore = employees.length ? (employees.reduce((sum, e) => sum + (e.wellness?.score || 0), 0) / employees.length).toFixed(1) : 0;
-            document.getElementById('avgWellnessScore').textContent = `${avgScore}/10`;
-            document.getElementById('activeGoals').textContent = employees.reduce((sum, e) => sum + (e.wellness?.goals?.filter(g => !g.completed).length || 0), 0);
-            document.getElementById('completedSurveys').textContent = employees.reduce((sum, e) => sum + (e.wellness?.surveys?.length || 0), 0);
-            document.getElementById('highRiskAlerts').textContent = employees.filter(e => (e.wellness?.metrics?.stress || 0) > 8).length;
-            document.getElementById('wellnessAdminTable').innerHTML = employees.map((e, i) => {
-                const score = e.wellness?.score || 0;
-                const goalsProgress = e.wellness?.goals?.filter(g => g.completed).length || 0;
-                const totalGoals = e.wellness?.goals?.length || 0;
-                const alerts = (e.wellness?.metrics?.stress || 0) > 8 ? 'High Stress' : 'None';
-                const lastSurvey = e.wellness?.surveys?.slice(-1)[0]?.date || 'N/A';
+        // Admission
+        function showAddAdmissionModal() {
+            const modal = new bootstrap.Modal(document.getElementById('addAdmissionModal'));
+            modal.show();
+        }
+        function saveAdmission() {
+            const app = {
+                id: Date.now(),
+                name: document.getElementById('appName').value,
+                parent: document.getElementById('appParent').value,
+                grade: document.getElementById('appGrade').value,
+                status: 'Pending'
+            };
+            admissions.push(app);
+            localStorage.setItem('admissions', JSON.stringify(admissions));
+            renderAdmissions();
+            bootstrap.Modal.getInstance(document.getElementById('addAdmissionModal')).hide();
+        }
+        function renderAdmissions() {
+            document.getElementById('admissionTable').innerHTML = admissions.map(a => `
+                <tr>
+                    <td>${a.id}</td>
+                    <td>${a.name}</td>
+                    <td>${a.grade}</td>
+                    <td>${a.status}</td>
+                    <td>
+                        <button class="btn btn-sm btn-success" onclick="approveAdmission(${a.id})">Approve</button>
+                        <button class="btn btn-sm btn-danger" onclick="rejectAdmission(${a.id})">Reject</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        function approveAdmission(id) {
+            const app = admissions.find(a => a.id === id);
+            students.push({
+                id: Date.now(),
+                name: app.name,
+                grade: app.grade,
+                parent: app.parent,
+                status: 'Active'
+            });
+            admissions = admissions.filter(a => a.id !== id);
+            localStorage.setItem('students', JSON.stringify(students));
+            localStorage.setItem('admissions', JSON.stringify(admissions));
+            renderAdmissions();
+            renderStudents();
+        }
+
+        // Students
+        function showAddStudentModal() {
+            alert('Use Admission module to add students');
+        }
+        function renderStudents() {
+            document.getElementById('studentTable').innerHTML = students.map(s => `
+                <tr>
+                    <td>${s.id}</td>
+                    <td>${s.name}</td>
+                    <td>${s.grade}</td>
+                    <td>${s.parent}</td>
+                    <td>${s.status}</td>
+                    <td><button class="btn btn-sm btn-info" onclick="viewStudent(${s.id})">View</button></td>
+                </tr>
+            `).join('');
+        }
+
+        // Attendance
+        function loadAttendance() {
+            const date = document.getElementById('attendanceDate').value || new Date().toISOString().split('T')[0];
+            const records = attendanceRecords.filter(a => a.date === date);
+            document.getElementById('attendanceTable').innerHTML = students.map(s => {
+                const rec = records.find(r => r.studentId === s.id);
                 return `
                     <tr>
-                        <td>${e.name}</td>
-                        <td>${score}/10</td>
-                        <td>${lastSurvey}</td>
-                        <td>${goalsProgress}/${totalGoals}</td>
-                        <td>${alerts}</td>
-                        <td><button class="btn btn-sm btn-info" onclick="viewEmployeeWellness(${i})">View Details</button></td>
+                        <td>${s.id}</td>
+                        <td>${s.name}</td>
+                        <td>${rec ? rec.status : 'Absent'}</td>
+                        <td>
+                            <button class="btn btn-sm btn-success" onclick="markPresent(${s.id}, '${date}')">Present</button>
+                            <button class="btn btn-sm btn-warning" onclick="markAbsent(${s.id}, '${date}')">Absent</button>
+                        </td>
                     </tr>
                 `;
             }).join('');
-            const adminCtx = document.getElementById('wellnessAdminChart').getContext('2d');
-            if (wellnessAdminChart) wellnessAdminChart.destroy();
-            wellnessAdminChart = new Chart(adminCtx, { 
-                type: 'line', 
-                data: { 
-                    labels: employees.map(e => e.name), 
-                    datasets: [{ label: 'Wellness Score', data: employees.map(e => e.wellness?.score || 0), borderColor: '#28a745' }] 
-                },
-                options: { responsive: true }
-            });
+        }
+        function markPresent(id, date) {
+            const existing = attendanceRecords.find(a => a.studentId === id && a.date === date);
+            if (existing) existing.status = 'Present';
+            else attendanceRecords.push({ studentId: id, date, status: 'Present' });
+            localStorage.setItem('attendance', JSON.stringify(attendanceRecords));
+            loadAttendance();
         }
 
-        function renderMyWellness() {
-            const userIndex = currentUser.index;
-            const emp = employees[userIndex];
-            const wellness = emp.wellness || { score: 0, surveys: [], goals: [], metrics: { stress: 5, energy: 5, mood: 5 } };
-            document.getElementById('myWellnessScore').textContent = `${wellness.score}/10`;
-            document.getElementById('myWellnessProgress').style.width = `${(wellness.score / 10) * 100}%`;
-            document.getElementById('myActiveGoals').innerHTML = wellness.goals.filter(g => !g.completed).map(g => `<li>${g.title} <small>Due: ${g.targetDate}</small></li>`).join('') || '<li>No active goals</li>';
-            document.getElementById('myWellnessActivity').innerHTML = wellness.surveys.slice(-3).map(s => `<li class="list-group-item">${s.date}: Survey Completed (Score: ${s.score}/10)</li>`).join('') || '<li class="list-group-item">No recent activity</li>';
-            const myCtx = document.getElementById('myWellnessChart').getContext('2d');
-            if (myWellnessChart) myWellnessChart.destroy();
-            myWellnessChart = new Chart(myCtx, { 
-                type: 'radar', 
-                data: { 
-                    labels: ['Stress', 'Energy', 'Mood'], 
-                    datasets: [{ data: [wellness.metrics.stress, wellness.metrics.energy, wellness.metrics.mood], borderColor: '#4169e1' }] 
-                },
-                options: { responsive: true }
-            });
-        }
-
-        function showSurveyModal() {
-            const survey = wellnessSurveys[0]; // Default survey
-            document.getElementById('surveyTitle').textContent = survey.name;
-            document.getElementById('surveyQuestions').innerHTML = survey.questions.map((q, idx) => `
-                <div class="survey-question">
-                    <label class="form-label">${q.question}</label>
-                    <input type="range" class="form-range" min="1" max="10" name="q${idx}" required onchange="updateSurveyPreview()">
-                    <small>1 (Low) - 10 (High)</small>
-                </div>
-            `).join('');
-            const modal = new bootstrap.Modal(document.getElementById('surveyModal'));
-            modal.show();
-        }
-
-        function updateSurveyPreview() {
-            const formData = new FormData(document.getElementById('surveyForm'));
-            let total = 0, count = 0;
-            for (let [key, value] of formData) if (key.startsWith('q')) { total += parseInt(value); count++; }
-            const avg = count > 0 ? (total / count).toFixed(1) : 0;
-            let preview = document.querySelector('#surveyModal .modal-footer .preview');
-            if (!preview) {
-                preview = document.createElement('div');
-                preview.className = 'preview alert alert-info mt-2';
-                document.querySelector('#surveyModal .modal-footer').prepend(preview);
-            }
-            preview.innerHTML = `<strong>Preview Score: ${avg}/10</strong>`;
-        }
-
-        function submitSurvey() {
-            const formData = new FormData(document.getElementById('surveyForm'));
-            let total = 0, count = 0;
-            for (let [key, value] of formData) if (key.startsWith('q')) { total += parseInt(value); count++; }
-            const avg = count > 0 ? total / count : 0;
-            const userIndex = currentUser.index;
-            const emp = employees[userIndex];
-            if (!emp.wellness) emp.wellness = { score: 0, surveys: [], goals: [], metrics: {} };
-            emp.wellness.score = avg;
-            emp.wellness.surveys.push({ date: new Date().toLocaleDateString(), score: avg });
-            emp.wellness.metrics = { 
-                stress: parseInt(formData.get('q0') || 5), 
-                energy: parseInt(formData.get('q1') || 5), 
-                mood: parseInt(formData.get('q2') || 5) 
-            };
-            localStorage.setItem('employees', JSON.stringify(employees));
-            addNotification(userIndex, 'Wellness survey submitted! Score: ' + avg.toFixed(1));
-            if (avg < 4) addNotification('admin', `${emp.name} has low wellness score (${avg.toFixed(1)}/10)`);
-            bootstrap.Modal.getInstance(document.getElementById('surveyModal')).hide();
-            renderMyWellness();
-            renderWellnessAdmin();
-        }
-
-        function showAddResourceModal() {
-            document.getElementById('resourceTitle').value = '';
-            document.getElementById('resourceDesc').value = '';
-            document.getElementById('resourceLink').value = '';
-            document.getElementById('resourceCategory').value = 'Mental Health';
-            const modal = new bootstrap.Modal(document.getElementById('addResourceModal'));
-            modal.show();
-        }
-
-        function saveResource() {
-            const resource = {
+        // Fees
+        function generateFeeInvoice() {
+            const student = students[0];
+            if (!student) return alert('No students');
+            fees.push({
                 id: Date.now(),
-                title: document.getElementById('resourceTitle').value,
-                desc: document.getElementById('resourceDesc').value,
-                link: document.getElementById('resourceLink').value,
-                category: document.getElementById('resourceCategory').value
-            };
-            wellnessResources.push(resource);
-            localStorage.setItem('wellnessResources', JSON.stringify(wellnessResources));
-            addNotification('admin', `New wellness resource added: ${resource.title}`);
-            bootstrap.Modal.getInstance(document.getElementById('addResourceModal')).hide();
-            renderResourcesList();
-        }
-
-        function showResourcesModal() {
-            renderResourcesList();
-            const modal = new bootstrap.Modal(document.getElementById('resourcesModal'));
-            modal.show();
-        }
-
-        function renderResourcesList() {
-            document.getElementById('resourcesList').innerHTML = wellnessResources.map(r => `
-                <div class="card resource-card mb-3">
-                    <div class="card-body">
-                        <h6>${r.title}</h6>
-                        <p class="card-text">${r.desc}</p>
-                        ${r.link ? `<a href="${r.link}" target="_blank" class="btn btn-sm btn-primary">Access Resource</a>` : ''}
-                        <span class="badge bg-secondary float-end">${r.category}</span>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function showAddGoalModal() {
-            document.getElementById('goalTitle').value = '';
-            document.getElementById('goalDesc').value = '';
-            document.getElementById('goalTargetDate').value = '';
-            document.getElementById('goalCategory').value = 'Exercise';
-            const modal = new bootstrap.Modal(document.getElementById('addGoalModal'));
-            modal.show();
-        }
-
-        function saveGoal() {
-            const userIndex = currentUser.index;
-            const emp = employees[userIndex];
-            const goal = {
-                id: Date.now(),
-                title: document.getElementById('goalTitle').value,
-                desc: document.getElementById('goalDesc').value,
-                targetDate: document.getElementById('goalTargetDate').value,
-                category: document.getElementById('goalCategory').value,
-                completed: false,
-                progress: 0
-            };
-            if (!emp.wellness) emp.wellness = { score: 0, surveys: [], goals: [], metrics: {} };
-            emp.wellness.goals.push(goal);
-            localStorage.setItem('employees', JSON.stringify(employees));
-            addNotification(userIndex, `New wellness goal added: ${goal.title}`);
-            bootstrap.Modal.getInstance(document.getElementById('addGoalModal')).hide();
-            renderMyWellness();
-        }
-
-        function requestCounseling() {
-            const userIndex = currentUser.index;
-            addNotification('admin', `Counseling request from ${employees[userIndex].name}`);
-            alert('Counseling request submitted. HR will contact you within 48 hours.');
-        }
-
-        function showAddSurveyModal() {
-            document.getElementById('surveyName').value = '';
-            document.getElementById('surveyDesc').value = '';
-            document.getElementById('surveyQuestionInputs').innerHTML = '';
-            surveyQuestionCounter = 0;
-            addSurveyQuestion();
-            const modal = new bootstrap.Modal(document.getElementById('addSurveyModal'));
-            modal.show();
-        }
-
-        function addSurveyQuestion() {
-            const inputsDiv = document.getElementById('surveyQuestionInputs');
-            const idx = surveyQuestionCounter++;
-            inputsDiv.innerHTML += `
-                <div class="question-input mb-3 border p-3 rounded">
-                    <input type="text" placeholder="Question ${idx + 1}" class="form-control mb-2" name="q${idx}" required>
-                    <select class="form-control mb-2" name="type${idx}">
-                        <option value="scale">Scale (1-10)</option>
-                        <option value="multiple">Multiple Choice</option>
-                    </select>
-                    <textarea placeholder="Options (comma-separated for multiple choice)" class="form-control" name="opts${idx}"></textarea>
-                    <button type="button" class="btn btn-sm btn-danger mt-2" onclick="this.parentElement.remove()">Remove</button>
-                </div>
-            `;
-        }
-
-        function saveSurvey() {
-            const name = document.getElementById('surveyName').value;
-            const desc = document.getElementById('surveyDesc').value;
-            const questions = [];
-            document.querySelectorAll('.question-input').forEach(qDiv => {
-                const question = qDiv.querySelector('input[name^=q]').value;
-                const type = qDiv.querySelector('select[name^=type]').value;
-                const optsInput = qDiv.querySelector('textarea[name^=opts]').value;
-                const options = optsInput ? optsInput.split(',').map(o => o.trim()) : [];
-                if (question) questions.push({ question, type, options });
+                studentId: student.id,
+                amount: 2500,
+                dueDate: '2025-12-01',
+                status: 'Pending'
             });
-            if (questions.length === 0) {
-                alert('Add at least one question');
-                return;
-            }
-            const survey = { id: Date.now(), name, desc, questions };
-            wellnessSurveys.push(survey);
-            localStorage.setItem('wellnessSurveys', JSON.stringify(wellnessSurveys));
-            addNotification('admin', `New survey created: ${name}`);
-            bootstrap.Modal.getInstance(document.getElementById('addSurveyModal')).hide();
+            localStorage.setItem('fees', JSON.stringify(fees));
+            renderFees();
+        }
+        function renderFees() {
+            document.getElementById('feeTable').innerHTML = fees.map(f => {
+                const s = students.find(st => st.id === f.studentId);
+                return `
+                    <tr>
+                        <td>${s?.name || 'Unknown'}</td>
+                        <td>R${f.amount}</td>
+                        <td>${f.dueDate}</td>
+                        <td>${f.status}</td>
+                        <td><button class="btn btn-sm btn-success" onclick="payFee(${f.id})">Pay</button></td>
+                    </tr>
+                `;
+            }).join('');
         }
 
-        function exportWellnessReport() {
-            const reportData = employees.map(e => ({
-                name: e.name,
-                wellnessScore: e.wellness?.score || 0,
-                goalsCompleted: e.wellness?.goals?.filter(g => g.completed).length || 0,
-                lastSurvey: e.wellness?.surveys?.slice(-1)[0]?.date || 'N/A'
-            }));
-            exportToExcel(reportData, 'wellness-report');
+        // Timetable
+        function loadTimetable() {
+            const container = document.getElementById('timetableContainer');
+            container.innerHTML = '<table class="table"><thead><tr><th>Time</th><th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th><th>Fri</th></tr></thead><tbody>' +
+                Array(8).fill().map((_, i) => `<tr><td>0${i + 8}:00</td><td class="timetable-cell">Math</td><td class="timetable-cell">English</td><td class="timetable-cell">Science</td><td class="timetable-cell">History</td><td class="timetable-cell">Art</td></tr>`).join('') +
+                '</tbody></table>';
         }
 
-        function viewEmployeeWellness(index) {
-            const emp = employees[index];
-            alert(`Wellness details for ${emp.name}:\nScore: ${emp.wellness?.score || 0}/10\nMetrics: Stress ${emp.wellness?.metrics?.stress || 5}, Energy ${emp.wellness?.metrics?.energy || 5}, Mood ${emp.wellness?.metrics?.mood || 5}`);
+        // Exams
+        function showAddExamModal() {
+            exams.push({
+                id: Date.now(),
+                name: 'Term 4 Exams',
+                date: '2025-12-10',
+                subject: 'Mathematics',
+                status: 'Scheduled'
+            });
+            localStorage.setItem('exams', JSON.stringify(exams));
+            renderExams();
         }
-
-        function viewTaxLiability(empIndex) {
-            const myPayrolls = payrolls.filter(p => p.employeeIndex === empIndex);
-            const emp = employees[empIndex];
-            document.getElementById('taxLiabilityEmployee').textContent = `Employee: ${emp.name}`;
-            document.getElementById('taxLiabilityTable').innerHTML = myPayrolls.map(p => `
+        function renderExams() {
+            document.getElementById('examTable').innerHTML = exams.map(e => `
                 <tr>
-                    <td>${p.period}</td>
-                    <td>R${p.paye.toFixed(2)}</td>
-                    <td>R${p.uif.toFixed(2)}</td>
-                    <td>R${(p.paye + p.uif).toFixed(2)}</td>
-                </tr>
-            `).join('');
-            const total = myPayrolls.reduce((sum, p) => sum + p.paye + p.uif, 0);
-            document.getElementById('totalTaxLiability').textContent = `R${total.toFixed(2)}`;
-            const modal = new bootstrap.Modal(document.getElementById('taxLiabilityModal'));
-            modal.show();
-        }
-
-        function downloadTaxLiability() {
-            const data = Array.from(document.getElementById('taxLiabilityTable').rows).map(row => Array.from(row.cells).map(cell => cell.textContent));
-            exportToExcel(data, 'tax-liability');
-        }
-
-        function showSubmitClaimModal(editIndex = -1) {
-            currentClaimEdit = editIndex;
-            const claim = editIndex === -1 ? {} : claims[editIndex];
-            document.getElementById('claimType').value = claim.type || '';
-            document.getElementById('claimAmount').value = claim.amount || '';
-            document.getElementById('claimDesc').value = claim.desc || '';
-            document.getElementById('claimFile').value = '';
-            const modal = new bootstrap.Modal(document.getElementById('submitClaimModal'));
-            modal.show();
-        }
-
-        function saveClaim() {
-            const claim = {
-                id: currentClaimEdit === -1 ? Date.now() : claims[currentClaimEdit].id,
-                employeeIndex: currentUser.index,
-                type: document.getElementById('claimType').value,
-                amount: parseFloat(document.getElementById('claimAmount').value),
-                desc: document.getElementById('claimDesc').value,
-                status: 'Pending',
-                submittedDate: new Date().toLocaleDateString(),
-                file: document.getElementById('claimFile').files[0] ? document.getElementById('claimFile').files[0].name : ''
-            };
-            if (currentClaimEdit === -1) {
-                claims.push(claim);
-                addNotification('admin', `New claim submitted by ${employees[claim.employeeIndex].name}`);
-            } else {
-                claims[currentClaimEdit] = claim;
-                addNotification('admin', `Claim updated by ${employees[claim.employeeIndex].name}`);
-            }
-            localStorage.setItem('claims', JSON.stringify(claims));
-            renderMyClaims();
-            bootstrap.Modal.getInstance(document.getElementById('submitClaimModal')).hide();
-        }
-
-        function renderMyClaims() {
-            const userIndex = currentUser.index;
-            document.getElementById('claimsTable').innerHTML = claims.filter(c => c.employeeIndex === userIndex).map((c, i) => `
-                <tr>
-                    <td>${c.id}</td>
-                    <td>${c.type}</td>
-                    <td>R${c.amount.toFixed(2)}</td>
-                    <td>${c.status}</td>
-                    <td>${c.submittedDate}</td>
-                    <td>
-                        <button class="btn btn-sm btn-primary" onclick="showSubmitClaimModal(${i})">Edit</button>
-                        <button class="btn btn-sm btn-danger" onclick="deleteClaim(${i})">Delete</button>
-                    </td>
+                    <td>${e.name}</td>
+                    <td>${e.date}</td>
+                    <td>${e.subject}</td>
+                    <td>${e.status}</td>
+                    <td><button class="btn btn-sm btn-primary" onclick="generateReportCard()">Report</button></td>
                 </tr>
             `).join('');
         }
 
-        function deleteClaim(i) {
-            if (confirm('Delete claim?')) {
-                claims.splice(i, 1);
-                localStorage.setItem('claims', JSON.stringify(claims));
-                renderMyClaims();
-            }
-        }
-
-        function submitTimeEntry() {
-            const entry = {
+        // HR
+        function showAddStaffModal() {
+            staff.push({
                 id: Date.now(),
-                employeeIndex: currentUser.index,
-                date: new Date().toLocaleDateString(),
-                hoursWorked: parseFloat(prompt('Enter hours worked:')) || 8,
-                overtime: parseFloat(prompt('Enter overtime hours:')) || 0,
-                status: 'Submitted'
-            };
-            timeEntries.push(entry);
-            localStorage.setItem('timeEntries', JSON.stringify(timeEntries));
-            addNotification('admin', `New time entry submitted by ${employees[entry.employeeIndex].name}`);
-            renderMyTimeEntry();
+                name: 'New Teacher',
+                role: 'Teacher',
+                department: 'Academics',
+                status: 'Active'
+            });
+            localStorage.setItem('staff', JSON.stringify(staff));
+            renderHR();
         }
-
-        function renderMyTimeEntry() {
-            const userIndex = currentUser.index;
-            document.getElementById('timeEntryTable').innerHTML = timeEntries.filter(t => t.employeeIndex === userIndex).map((t, i) => `
+        function renderHR() {
+            document.getElementById('staffTable').innerHTML = staff.map(s => `
                 <tr>
-                    <td>${t.date}</td>
-                    <td>${t.hoursWorked}</td>
-                    <td>${t.overtime}</td>
-                    <td>${t.status}</td>
-                    <td>
-                        <button class="btn btn-sm btn-danger" onclick="deleteTimeEntry(${i})">Delete</button>
-                    </td>
+                    <td>${s.id}</td>
+                    <td>${s.name}</td>
+                    <td>${s.role}</td>
+                    <td>${s.department}</td>
+                    <td>${s.status}</td>
+                    <td><button class="btn btn-sm btn-info">Edit</button></td>
                 </tr>
             `).join('');
         }
 
-        function deleteTimeEntry(i) {
-            if (confirm('Delete time entry?')) {
-                timeEntries.splice(i, 1);
-                localStorage.setItem('timeEntries', JSON.stringify(timeEntries));
-                renderMyTimeEntry();
-            }
-        }
-
-        function showSendMessageModal(empIndex) {
-            currentMessageEmpIndex = empIndex;
-            document.getElementById('messageText').value = '';
-            const modal = new bootstrap.Modal(document.getElementById('sendMessageModal'));
-            modal.show();
-        }
-
+        // Communication
         function sendMessage() {
-            const message = {
-                to: currentMessageEmpIndex,
-                from: 'admin',
-                message: document.getElementById('messageText').value,
-                date: new Date().toLocaleString()
-            };
-            messages.push(message);
+            const text = document.getElementById('messageText').value;
+            if (!text) return;
+            messages.push({
+                id: Date.now(),
+                text,
+                recipient: document.getElementById('messageRecipient').value,
+                timestamp: new Date().toLocaleString()
+            });
             localStorage.setItem('messages', JSON.stringify(messages));
-            addNotification(currentMessageEmpIndex, 'New message from HR');
-            bootstrap.Modal.getInstance(document.getElementById('sendMessageModal')).hide();
+            document.getElementById('messageText').value = '';
+            renderCommunication();
         }
-
-        function renderInbox() {
-            const userIndex = currentUser.index;
-            document.getElementById('inboxTable').innerHTML = messages.filter(m => m.to === userIndex).map(m => `
-                <tr>
-                    <td>${m.from}</td>
-                    <td>${m.message}</td>
-                    <td>${m.date}</td>
-                </tr>
+        function renderCommunication() {
+            document.getElementById('messageHistory').innerHTML = messages.map(m => `
+                <div class="alert alert-info">
+                    <small>${m.timestamp} - To: ${m.recipient}</small>
+                    <p>${m.text}</p>
+                </div>
             `).join('');
         }
 
+        // Reports
+        function exportToExcel(data, filename) {
+            const ws = XLSX.utils.json_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Data');
+            XLSX.writeFile(wb, `${filename}-2025.xlsx`);
+        }
+
+        function logout() {
+            localStorage.removeItem('currentUser');
+            location.reload();
+        }
+
+        // Initialize
         document.addEventListener('DOMContentLoaded', () => {
             if (localStorage.getItem('currentUser')) {
                 currentUser = JSON.parse(localStorage.getItem('currentUser'));
                 document.getElementById('loginPage').style.display = 'none';
                 document.getElementById('appContainer').style.display = 'block';
                 initApp();
-            } else {
-                populateOnboardingSelects();
             }
         });
     </script>
