@@ -458,7 +458,7 @@
                 <div class="modal-header"><h5>Student Details</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
                 <div class="modal-body" id="studentDetails"></div>
                 <input type="file" id="studentDocuments" class="form-control mb-3" multiple>
-                <button class="btn btn-primary" onclick="uploadStudentDocuments()">Upload Documents</button>
+                <button class="btn btn-primary" onclick="uploadStudentDocuments(currentStudentId)">Upload Documents</button>
             </div>
         </div>
     </div>
@@ -518,6 +518,7 @@
         let chatHistory = [];
         let editingCell = null;
         let editingFee = null;
+        let currentStudentId = null;
 
         // Utility: Debounce for performance
         function debounce(func, delay) {
@@ -664,11 +665,13 @@
                 documents: []
             };
             const files = document.getElementById('appDocuments').files;
+            let loaded = 0;
             for (let file of files) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     app.documents.push({name: file.name, data: e.target.result});
-                    if (app.documents.length === files.length) {
+                    loaded++;
+                    if (loaded === files.length) {
                         admissions.push(app);
                         localStorage.setItem('admissions', JSON.stringify(admissions));
                         renderAdmissions();
@@ -691,7 +694,7 @@
                         <td>${a.name}</td>
                         <td>${a.grade}</td>
                         <td>${a.status}</td>
-                        <td>${a.documents ? a.documents.length : 0} docs</td>
+                        <td>${a.documents.length} docs</td>
                         <td>
                             <button class="btn btn-sm btn-success" onclick="approveAdmission(${a.id})">Approve</button>
                             <button class="btn btn-sm btn-danger" onclick="rejectAdmission(${a.id})">Reject</button>
@@ -750,6 +753,7 @@
             renderStudents(filtered);
         }
         function viewStudent(id) {
+            currentStudentId = id;
             const s = students.find(st => st.id === id);
             document.getElementById('studentDetails').innerHTML = `
                 <p><strong>Name:</strong> ${s.name}</p>
@@ -761,16 +765,19 @@
             const modal = new bootstrap.Modal(document.getElementById('viewStudentModal'));
             modal.show();
         }
-        function uploadStudentDocuments() {
-            const id = students.find(s => true).id; // Placeholder, assume from context
+        function uploadStudentDocuments(studentId) {
             const files = document.getElementById('studentDocuments').files;
-            if (!documents[id]) documents[id] = [];
+            if (!documents[studentId]) documents[studentId] = [];
+            let loaded = 0;
             for (let file of files) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    documents[id].push({name: file.name, data: e.target.result});
-                    localStorage.setItem('documents', JSON.stringify(documents));
-                    viewStudent(id); // Refresh
+                    documents[studentId].push({name: file.name, data: e.target.result});
+                    loaded++;
+                    if (loaded === files.length) {
+                        localStorage.setItem('documents', JSON.stringify(documents));
+                        viewStudent(studentId); // Refresh
+                    }
                 };
                 reader.readAsDataURL(file);
             }
@@ -826,10 +833,31 @@
             }
             filteredStudents.forEach(s => markPresent(s.id, date));
         }
-        function syncBiometricAttendance() {
-            // Enhanced integration with biometric system
-            alert('Attendance synced from biometric system for students and teachers. (Integrate your biomatrix API here, e.g., fetch attendance data and update records.)');
-            // Example: fetch('biomatrix-api-url?date=' + date).then(res => res.json()).then(data => { data.forEach(d => markPresent(d.studentId, date)); loadAttendance(); });
+        async function syncBiometricAttendance() {
+            const date = document.getElementById('attendanceDate').value || new Date().toISOString().split('T')[0];
+            try {
+                // Example integration with Cams Biometrics API - replace with your actual API endpoint and auth
+                const response = await fetch('https://your-biometric-api.com/api/punchlogs?stgid=YOUR_STGID&date=' + date, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': 'Bearer YOUR_AUTH_TOKEN',
+                        'Content-Type': 'application/json'
+                    }
+                });
+                const data = await response.json();
+                // Assume data is array of {UserId, LogTime, Type: 'CheckIn' or 'CheckOut'}
+                data.forEach(log => {
+                    const student = students.find(s => s.id.toString() === log.UserId); // Assume UserId matches student id
+                    if (student) {
+                        markPresent(student.id, date); // Or based on Type
+                    }
+                });
+                loadAttendance();
+                alert('Biometric attendance synced successfully.');
+            } catch (error) {
+                alert('Error syncing biometric attendance: ' + error.message + '. Check console for details.');
+                console.error(error);
+            }
         }
 
         // Fees
@@ -1126,42 +1154,6 @@
             }
             const modal = new bootstrap.Modal(document.getElementById('previewContentModal'));
             modal.show();
-        }
-
-        // AI Research with Grok
-        async function sendGrokQuery() {
-            const query = document.getElementById('grokQuery').value;
-            if (!query) return;
-            const apiKey = document.getElementById('grokApiKey').value;
-            if (!apiKey) return alert('Enter your xAI API Key');
-            addChatMessage('user', query);
-            document.getElementById('grokQuery').value = '';
-            try {
-                const response = await fetch('https://api.x.ai/v1/chat/completions', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${apiKey}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        model: 'grok-beta',
-                        messages: [...chatHistory, {role: 'system', content: 'You are Grok, a helpful and engaging AI built by xAI. Be concise, witty, and informative.'}, {role: 'user', content: query}]
-                    })
-                });
-                const data = await response.json();
-                const reply = data.choices[0].message.content;
-                addChatMessage('assistant', reply);
-            } catch (error) {
-                addChatMessage('assistant', 'Error: ' + error.message + '. Check API key and network.');
-            }
-        }
-        function addChatMessage(role, content) {
-            chatHistory.push({role, content});
-            const div = document.createElement('div');
-            div.classList.add('chat-message', `chat-${role}`);
-            div.textContent = `${role === 'user' ? 'You' : 'Grok'}: ${content}`;
-            document.getElementById('chatHistory').appendChild(div);
-            div.scrollIntoView();
         }
 
         // Reports
