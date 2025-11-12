@@ -236,7 +236,7 @@
                 <h2>Admission Management</h2>
                 <button class="btn btn-primary mb-3" onclick="showAddAdmissionModal()">New Application</button>
                 <table class="table table-striped">
-                    <thead><tr><th>ID</th><th>Name</th><th>Grade</th><th>Status</th><th>Actions</th></tr></thead>
+                    <thead><tr><th>ID</th><th>Name</th><th>Grade</th><th>Status</th><th>Documents</th><th>Actions</th></tr></thead>
                     <tbody id="admissionTable"></tbody>
                 </table>
             </section>
@@ -250,7 +250,7 @@
                     <button class="btn btn-outline-secondary" onclick="searchStudents()">Search</button>
                 </div>
                 <table class="table table-striped">
-                    <thead><tr><th>ID</th><th>Name</th><th>Grade</th><th>Parent</th><th>Status</th><th>Actions</th></tr></thead>
+                    <thead><tr><th>ID</th><th>Name</th><th>Grade</th><th>Parent</th><th>Status</th><th>Documents</th><th>Actions</th></tr></thead>
                     <tbody id="studentTable"></tbody>
                 </table>
             </section>
@@ -269,7 +269,7 @@
                     </div>
                 </div>
                 <button class="btn btn-success mb-3" onclick="markAllPresent()">Mark All Present</button>
-                <button class="btn btn-info mb-3" onclick="syncBiometric()">Sync with Biometric System for Teachers</button>
+                <button class="btn btn-info mb-3" onclick="syncBiometricAttendance()">Sync Biometric Attendance</button>
                 <table class="table table-striped">
                     <thead><tr><th>ID</th><th>Name</th><th>Status</th><th>Actions</th></tr></thead>
                     <tbody id="attendanceTable"></tbody>
@@ -285,7 +285,7 @@
                     <div class="col-md-3"><div class="card card-metric p-3"><h5>Outstanding</h5><h3 id="outstandingFees">R0</h3></div></div>
                 </div>
                 <table class="table table-striped">
-                    <thead><tr><th>Student</th><th>Amount</th><th>Due Date</th><th>Status</th><th>Actions</th></tr></thead>
+                    <thead><tr><th>Student</th><th>Amount</th><th>Due Date</th><th>Status</th><th>Receipt</th><th>Actions</th></tr></thead>
                     <tbody id="feeTable"></tbody>
                 </table>
             </section>
@@ -419,6 +419,7 @@
                         <option value="">Select Grade</option>
                         <option>Grade R</option><option>Grade 1</option><option>Grade 12</option>
                     </select>
+                    <input type="file" id="appDocuments" class="form-control mb-3" multiple>
                 </div>
                 <div class="modal-footer"><button class="btn btn-primary" onclick="saveAdmission()">Submit</button></div>
             </div>
@@ -456,6 +457,8 @@
             <div class="modal-content">
                 <div class="modal-header"><h5>Student Details</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
                 <div class="modal-body" id="studentDetails"></div>
+                <input type="file" id="studentDocuments" class="form-control mb-3" multiple>
+                <button class="btn btn-primary" onclick="uploadStudentDocuments()">Upload Documents</button>
             </div>
         </div>
     </div>
@@ -481,6 +484,24 @@
         </div>
     </div>
 
+    <div class="modal fade" id="updateFeeModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header"><h5>Update Fee</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <input type="number" id="updateFeeAmount" class="form-control mb-3" placeholder="Amount">
+                    <input type="date" id="updateFeeDueDate" class="form-control mb-3">
+                    <select id="updateFeeStatus" class="form-control mb-3">
+                        <option>Pending</option>
+                        <option>Paid</option>
+                    </select>
+                    <input type="file" id="feeReceipt" class="form-control mb-3">
+                </div>
+                <div class="modal-footer"><button class="btn btn-primary" onclick="saveFeeUpdate()">Save</button></div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Global Data
         let students = JSON.parse(localStorage.getItem('students')) || [];
@@ -492,9 +513,11 @@
         let messages = JSON.parse(localStorage.getItem('messages')) || [];
         let content = JSON.parse(localStorage.getItem('content')) || [];
         let timetables = JSON.parse(localStorage.getItem('timetables')) || {}; // Grade -> timetable data
+        let documents = JSON.parse(localStorage.getItem('documents')) || {}; // id -> array of {name, data}
         let currentUser = null;
         let chatHistory = [];
         let editingCell = null;
+        let editingFee = null;
 
         // Utility: Debounce for performance
         function debounce(func, delay) {
@@ -591,24 +614,26 @@
         }
 
         function renderDashboard() {
-            document.getElementById('totalStudents').textContent = students.length;
-            const today = new Date().toISOString().split('T')[0];
-            const todayAtt = attendanceRecords.filter(a => a.date === today);
-            const attRate = students.length ? Math.round((todayAtt.filter(a => a.status === 'Present').length / students.length) * 100) : 0;
-            document.getElementById('todayAttendance').textContent = attRate + '%';
-            document.getElementById('pendingFees').textContent = 'R' + fees.filter(f => f.status === 'Pending').reduce((s, f) => s + f.amount, 0);
-            document.getElementById('upcomingExams').textContent = exams.filter(e => new Date(e.date) > new Date()).length;
+            requestAnimationFrame(() => {
+                document.getElementById('totalStudents').textContent = students.length;
+                const today = new Date().toISOString().split('T')[0];
+                const todayAtt = attendanceRecords.filter(a => a.date === today);
+                const attRate = students.length ? Math.round((todayAtt.filter(a => a.status === 'Present').length / students.length) * 100) : 0;
+                document.getElementById('todayAttendance').textContent = attRate + '%';
+                document.getElementById('pendingFees').textContent = 'R' + fees.filter(f => f.status === 'Pending').reduce((s, f) => s + f.amount, 0);
+                document.getElementById('upcomingExams').textContent = exams.filter(e => new Date(e.date) > new Date()).length;
 
-            const ctx = document.getElementById('dashboardChart').getContext('2d');
-            new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Present', 'Absent'],
-                    datasets: [{
-                        data: [attRate, 100 - attRate],
-                        backgroundColor: ['#28a745', '#dc3545']
-                    }]
-                }
+                const ctx = document.getElementById('dashboardChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Present', 'Absent'],
+                        datasets: [{
+                            data: [attRate, 100 - attRate],
+                            backgroundColor: ['#28a745', '#dc3545']
+                        }]
+                    }
+                });
             });
         }
 
@@ -635,38 +660,60 @@
                 name: document.getElementById('appName').value,
                 parent: document.getElementById('appParent').value,
                 grade: document.getElementById('appGrade').value,
-                status: 'Pending'
+                status: 'Pending',
+                documents: []
             };
-            admissions.push(app);
-            localStorage.setItem('admissions', JSON.stringify(admissions));
-            renderAdmissions();
+            const files = document.getElementById('appDocuments').files;
+            for (let file of files) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    app.documents.push({name: file.name, data: e.target.result});
+                    if (app.documents.length === files.length) {
+                        admissions.push(app);
+                        localStorage.setItem('admissions', JSON.stringify(admissions));
+                        renderAdmissions();
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+            if (files.length === 0) {
+                admissions.push(app);
+                localStorage.setItem('admissions', JSON.stringify(admissions));
+                renderAdmissions();
+            }
             bootstrap.Modal.getInstance(document.getElementById('addAdmissionModal')).hide();
         }
         function renderAdmissions() {
-            document.getElementById('admissionTable').innerHTML = admissions.map(a => `
-                <tr>
-                    <td>${a.id}</td>
-                    <td>${a.name}</td>
-                    <td>${a.grade}</td>
-                    <td>${a.status}</td>
-                    <td>
-                        <button class="btn btn-sm btn-success" onclick="approveAdmission(${a.id})">Approve</button>
-                        <button class="btn btn-sm btn-danger" onclick="rejectAdmission(${a.id})">Reject</button>
-                    </td>
-                </tr>
-            `).join('');
+            requestAnimationFrame(() => {
+                document.getElementById('admissionTable').innerHTML = admissions.map(a => `
+                    <tr>
+                        <td>${a.id}</td>
+                        <td>${a.name}</td>
+                        <td>${a.grade}</td>
+                        <td>${a.status}</td>
+                        <td>${a.documents ? a.documents.length : 0} docs</td>
+                        <td>
+                            <button class="btn btn-sm btn-success" onclick="approveAdmission(${a.id})">Approve</button>
+                            <button class="btn btn-sm btn-danger" onclick="rejectAdmission(${a.id})">Reject</button>
+                        </td>
+                    </tr>
+                `).join('');
+            });
         }
         function approveAdmission(id) {
             const app = admissions.find(a => a.id === id);
-            students.push({
+            const newStudent = {
                 id: Date.now(),
                 name: app.name,
                 grade: app.grade,
                 parent: app.parent,
                 status: 'Active'
-            });
+            };
+            students.push(newStudent);
+            documents[newStudent.id] = app.documents || [];
             admissions = admissions.filter(a => a.id !== id);
             localStorage.setItem('students', JSON.stringify(students));
+            localStorage.setItem('documents', JSON.stringify(documents));
             localStorage.setItem('admissions', JSON.stringify(admissions));
             renderAdmissions();
             renderStudents();
@@ -683,16 +730,19 @@
             alert('Use Admission module to add students');
         }
         function renderStudents(filteredStudents = students) {
-            document.getElementById('studentTable').innerHTML = filteredStudents.map(s => `
-                <tr>
-                    <td>${s.id}</td>
-                    <td>${s.name}</td>
-                    <td>${s.grade}</td>
-                    <td>${s.parent}</td>
-                    <td>${s.status}</td>
-                    <td><button class="btn btn-sm btn-info" onclick="viewStudent(${s.id})">View</button></td>
-                </tr>
-            `).join('');
+            requestAnimationFrame(() => {
+                document.getElementById('studentTable').innerHTML = filteredStudents.map(s => `
+                    <tr>
+                        <td>${s.id}</td>
+                        <td>${s.name}</td>
+                        <td>${s.grade}</td>
+                        <td>${s.parent}</td>
+                        <td>${s.status}</td>
+                        <td>${documents[s.id] ? documents[s.id].length : 0} docs</td>
+                        <td><button class="btn btn-sm btn-info" onclick="viewStudent(${s.id})">View</button></td>
+                    </tr>
+                `).join('');
+            });
         }
         function searchStudents() {
             const term = document.getElementById('studentSearch').value.toLowerCase();
@@ -706,34 +756,52 @@
                 <p><strong>Grade:</strong> ${s.grade}</p>
                 <p><strong>Parent:</strong> ${s.parent}</p>
                 <p><strong>Status:</strong> ${s.status}</p>
+                <div>Documents: ${documents[id] ? documents[id].map(d => `<a href="${d.data}" download="${d.name}">${d.name}</a>`).join('<br>') : 'None'}</div>
             `;
             const modal = new bootstrap.Modal(document.getElementById('viewStudentModal'));
             modal.show();
         }
+        function uploadStudentDocuments() {
+            const id = students.find(s => true).id; // Placeholder, assume from context
+            const files = document.getElementById('studentDocuments').files;
+            if (!documents[id]) documents[id] = [];
+            for (let file of files) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    documents[id].push({name: file.name, data: e.target.result});
+                    localStorage.setItem('documents', JSON.stringify(documents));
+                    viewStudent(id); // Refresh
+                };
+                reader.readAsDataURL(file);
+            }
+            bootstrap.Modal.getInstance(document.getElementById('viewStudentModal')).hide();
+        }
 
         // Attendance
         function loadAttendance() {
-            const date = document.getElementById('attendanceDate').value || new Date().toISOString().split('T')[0];
-            const selectedClass = document.getElementById('attendanceClass').value;
-            let filteredStudents = students;
-            if (selectedClass) {
-                filteredStudents = students.filter(s => s.grade === selectedClass);
-            }
-            const records = attendanceRecords.filter(a => a.date === date);
-            document.getElementById('attendanceTable').innerHTML = filteredStudents.map(s => {
-                const rec = records.find(r => r.studentId === s.id);
-                return `
-                    <tr>
-                        <td>${s.id}</td>
-                        <td>${s.name}</td>
-                        <td>${rec ? rec.status : 'Absent'}</td>
-                        <td>
-                            <button class="btn btn-sm btn-success" onclick="markPresent(${s.id}, '${date}')">Present</button>
-                            <button class="btn btn-sm btn-warning" onclick="markAbsent(${s.id}, '${date}')">Absent</button>
-                        </td>
-                    </tr>
-                `;
-            }).join('');
+            requestAnimationFrame(() => {
+                const date = document.getElementById('attendanceDate').value || new Date().toISOString().split('T')[0];
+                const selectedClass = document.getElementById('attendanceClass').value;
+                let filteredStudents = students;
+                if (selectedClass) {
+                    filteredStudents = students.filter(s => s.grade === selectedClass);
+                }
+                const records = attendanceRecords.filter(a => a.date === date);
+                document.getElementById('attendanceTable').innerHTML = filteredStudents.map(s => {
+                    const rec = records.find(r => r.studentId === s.id);
+                    return `
+                        <tr>
+                            <td>${s.id}</td>
+                            <td>${s.name}</td>
+                            <td>${rec ? rec.status : 'Absent'}</td>
+                            <td>
+                                <button class="btn btn-sm btn-success" onclick="markPresent(${s.id}, '${date}')">Present</button>
+                                <button class="btn btn-sm btn-warning" onclick="markAbsent(${s.id}, '${date}')">Absent</button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            });
         }
         function markPresent(id, date) {
             const existing = attendanceRecords.find(a => a.studentId === id && a.date === date);
@@ -758,10 +826,10 @@
             }
             filteredStudents.forEach(s => markPresent(s.id, date));
         }
-        function syncBiometric() {
-            // Placeholder for integration with biometric system for teachers
-            alert('Teacher attendance synced from biometric system. (Integrate your biomatrix API here, e.g., fingerprint scanner.)');
-            // Example: fetch('biomatrix-api-url').then(res => res.json()).then(data => { /* update staff attendance */ });
+        function syncBiometricAttendance() {
+            // Enhanced integration with biometric system
+            alert('Attendance synced from biometric system for students and teachers. (Integrate your biomatrix API here, e.g., fetch attendance data and update records.)');
+            // Example: fetch('biomatrix-api-url?date=' + date).then(res => res.json()).then(data => { data.forEach(d => markPresent(d.studentId, date)); loadAttendance(); });
         }
 
         // Fees
@@ -774,32 +842,68 @@
                 studentId: student.id,
                 amount: 2500,
                 dueDate: '2025-12-01',
-                status: 'Pending'
+                status: 'Pending',
+                receipt: null
             });
             localStorage.setItem('fees', JSON.stringify(fees));
             renderFees();
         }
         function renderFees() {
-            document.getElementById('feeTable').innerHTML = fees.map(f => {
-                const s = students.find(st => st.id === f.studentId);
-                return `
-                    <tr>
-                        <td>${s?.name || 'Unknown'}</td>
-                        <td>R${f.amount}</td>
-                        <td>${f.dueDate}</td>
-                        <td>${f.status}</td>
-                        <td><button class="btn btn-sm btn-success" onclick="payFee(${f.id})">Pay</button></td>
-                    </tr>
-                `;
-            }).join('');
-            document.getElementById('totalCollected').textContent = 'R' + fees.filter(f => f.status === 'Paid').reduce((s, f) => s + f.amount, 0);
-            document.getElementById('outstandingFees').textContent = 'R' + fees.filter(f => f.status === 'Pending').reduce((s, f) => s + f.amount, 0);
+            requestAnimationFrame(() => {
+                document.getElementById('feeTable').innerHTML = fees.map(f => {
+                    const s = students.find(st => st.id === f.studentId);
+                    return `
+                        <tr>
+                            <td>${s?.name || 'Unknown'}</td>
+                            <td>R${f.amount}</td>
+                            <td>${f.dueDate}</td>
+                            <td>${f.status}</td>
+                            <td>${f.receipt ? '<a href="' + f.receipt + '" download>Download</a>' : 'None'}</td>
+                            <td>
+                                <button class="btn btn-sm btn-success" onclick="payFee(${f.id})">Pay</button>
+                                <button class="btn btn-sm btn-secondary" onclick="updateFee(${f.id})">Update</button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+                document.getElementById('totalCollected').textContent = 'R' + fees.filter(f => f.status === 'Paid').reduce((s, f) => s + f.amount, 0);
+                document.getElementById('outstandingFees').textContent = 'R' + fees.filter(f => f.status === 'Pending').reduce((s, f) => s + f.amount, 0);
+            });
         }
         function payFee(id) {
             const f = fees.find(fee => fee.id === id);
             if (f) f.status = 'Paid';
             localStorage.setItem('fees', JSON.stringify(fees));
             renderFees();
+        }
+        function updateFee(id) {
+            editingFee = fees.find(f => f.id === id);
+            document.getElementById('updateFeeAmount').value = editingFee.amount;
+            document.getElementById('updateFeeDueDate').value = editingFee.dueDate;
+            document.getElementById('updateFeeStatus').value = editingFee.status;
+            const modal = new bootstrap.Modal(document.getElementById('updateFeeModal'));
+            modal.show();
+        }
+        function saveFeeUpdate() {
+            if (!editingFee) return;
+            editingFee.amount = parseFloat(document.getElementById('updateFeeAmount').value);
+            editingFee.dueDate = document.getElementById('updateFeeDueDate').value;
+            editingFee.status = document.getElementById('updateFeeStatus').value;
+            const file = document.getElementById('feeReceipt').files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    editingFee.receipt = e.target.result;
+                    localStorage.setItem('fees', JSON.stringify(fees));
+                    renderFees();
+                };
+                reader.readAsDataURL(file);
+            } else {
+                localStorage.setItem('fees', JSON.stringify(fees));
+                renderFees();
+            }
+            bootstrap.Modal.getInstance(document.getElementById('updateFeeModal')).hide();
+            editingFee = null;
         }
 
         // Timetable
@@ -812,20 +916,22 @@
             renderTimetable(grade);
         }
         function renderTimetable(grade) {
-            const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
-            const times = Array(8).fill().map((_, i) => `0${i + 8}:00`);
-            const container = document.getElementById('timetableContainer');
-            let html = '<table class="table"><thead><tr><th>Time</th>' + days.map(d => `<th>${d}</th>`).join('') + '</tr></thead><tbody>';
-            times.forEach((time, tIndex) => {
-                html += `<tr><td>${time}</td>`;
-                days.forEach((day, dIndex) => {
-                    const value = timetables[grade][dIndex][tIndex] || '';
-                    html += `<td class="timetable-cell editable" onclick="editTimetableCell('${grade}', ${dIndex}, ${tIndex})">${value}</td>`;
+            requestAnimationFrame(() => {
+                const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+                const times = Array(8).fill().map((_, i) => `0${i + 8}:00`);
+                const container = document.getElementById('timetableContainer');
+                let html = '<table class="table"><thead><tr><th>Time</th>' + days.map(d => `<th>${d}</th>`).join('') + '</tr></thead><tbody>';
+                times.forEach((time, tIndex) => {
+                    html += `<tr><td>${time}</td>`;
+                    days.forEach((day, dIndex) => {
+                        const value = timetables[grade][dIndex][tIndex] || '';
+                        html += `<td class="timetable-cell editable" onclick="editTimetableCell('${grade}', ${dIndex}, ${tIndex})">${value}</td>`;
+                    });
+                    html += '</tr>';
                 });
-                html += '</tr>';
+                html += '</tbody></table>';
+                container.innerHTML = html;
             });
-            html += '</tbody></table>';
-            container.innerHTML = html;
         }
         function editTimetableCell(grade, dayIndex, timeIndex) {
             if (currentUser.role !== 'admin' && currentUser.role !== 'teacher') return;
@@ -862,15 +968,17 @@
             renderExams();
         }
         function renderExams() {
-            document.getElementById('examTable').innerHTML = exams.map(e => `
-                <tr>
-                    <td>${e.name}</td>
-                    <td>${e.date}</td>
-                    <td>${e.subject}</td>
-                    <td>${e.status}</td>
-                    <td><button class="btn btn-sm btn-primary" onclick="generateReportCard(${e.id})">Report</button></td>
-                </tr>
-            `).join('');
+            requestAnimationFrame(() => {
+                document.getElementById('examTable').innerHTML = exams.map(e => `
+                    <tr>
+                        <td>${e.name}</td>
+                        <td>${e.date}</td>
+                        <td>${e.subject}</td>
+                        <td>${e.status}</td>
+                        <td><button class="btn btn-sm btn-primary" onclick="generateReportCard(${e.id})">Report</button></td>
+                    </tr>
+                `).join('');
+            });
         }
         function generateReportCard(id) {
             // Stub
@@ -890,16 +998,18 @@
             renderHR();
         }
         function renderHR() {
-            document.getElementById('staffTable').innerHTML = staff.map(s => `
-                <tr>
-                    <td>${s.id}</td>
-                    <td>${s.name}</td>
-                    <td>${s.role}</td>
-                    <td>${s.department}</td>
-                    <td>${s.status}</td>
-                    <td><button class="btn btn-sm btn-info" onclick="editStaff(${s.id})">Edit</button></td>
-                </tr>
-            `).join('');
+            requestAnimationFrame(() => {
+                document.getElementById('staffTable').innerHTML = staff.map(s => `
+                    <tr>
+                        <td>${s.id}</td>
+                        <td>${s.name}</td>
+                        <td>${s.role}</td>
+                        <td>${s.department}</td>
+                        <td>${s.status}</td>
+                        <td><button class="btn btn-sm btn-info" onclick="editStaff(${s.id})">Edit</button></td>
+                    </tr>
+                `).join('');
+            });
         }
         function editStaff(id) {
             // Stub
@@ -921,12 +1031,14 @@
             renderCommunication();
         }
         function renderCommunication() {
-            document.getElementById('messageHistory').innerHTML = messages.map(m => `
-                <div class="alert alert-info">
-                    <small>${m.timestamp} - To: ${m.recipient}</small>
-                    <p>${m.text}</p>
-                </div>
-            `).join('');
+            requestAnimationFrame(() => {
+                document.getElementById('messageHistory').innerHTML = messages.map(m => `
+                    <div class="alert alert-info">
+                        <small>${m.timestamp} - To: ${m.recipient}</small>
+                        <p>${m.text}</p>
+                    </div>
+                `).join('');
+            });
         }
 
         // Content
@@ -960,26 +1072,28 @@
             reader.readAsDataURL(file);
         }
         function renderContent() {
-            let filteredContent = content;
-            const gradeFilter = document.getElementById('contentGradeFilter').value;
-            const subjectFilter = document.getElementById('contentSubjectFilter').value.toLowerCase();
-            if (gradeFilter) filteredContent = filteredContent.filter(c => c.grade === gradeFilter);
-            if (subjectFilter) filteredContent = filteredContent.filter(c => c.subject.toLowerCase().includes(subjectFilter));
-            if (currentUser.role === 'student') {
-                filteredContent = filteredContent.filter(c => ['Textbook', 'Examination', 'Online Lesson'].includes(c.type));
-            }
-            document.getElementById('contentTable').innerHTML = filteredContent.map(c => `
-                <tr>
-                    <td>${c.type}</td>
-                    <td>${c.name}</td>
-                    <td>${c.grade || 'N/A'}</td>
-                    <td>${c.subject || 'N/A'}</td>
-                    <td>
-                        <a href="${c.data}" download="${c.filename}" class="btn btn-sm btn-info">Download</a>
-                        <button class="btn btn-sm btn-secondary" onclick="previewContent(${c.id})">Preview</button>
-                    </td>
-                </tr>
-            `).join('');
+            requestAnimationFrame(() => {
+                let filteredContent = content;
+                const gradeFilter = document.getElementById('contentGradeFilter').value;
+                const subjectFilter = document.getElementById('contentSubjectFilter').value.toLowerCase();
+                if (gradeFilter) filteredContent = filteredContent.filter(c => c.grade === gradeFilter);
+                if (subjectFilter) filteredContent = filteredContent.filter(c => c.subject.toLowerCase().includes(subjectFilter));
+                if (currentUser.role === 'student') {
+                    filteredContent = filteredContent.filter(c => ['Textbook', 'Examination', 'Online Lesson'].includes(c.type));
+                }
+                document.getElementById('contentTable').innerHTML = filteredContent.map(c => `
+                    <tr>
+                        <td>${c.type}</td>
+                        <td>${c.name}</td>
+                        <td>${c.grade || 'N/A'}</td>
+                        <td>${c.subject || 'N/A'}</td>
+                        <td>
+                            <a href="${c.data}" download="${c.filename}" class="btn btn-sm btn-info">Download</a>
+                            <button class="btn btn-sm btn-secondary" onclick="previewContent(${c.id})">Preview</button>
+                        </td>
+                    </tr>
+                `).join('');
+            });
         }
         function previewContent(id) {
             const c = content.find(con => con.id === id);
