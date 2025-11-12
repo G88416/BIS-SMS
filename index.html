@@ -236,6 +236,7 @@
             <section id="admission" class="section d-none">
                 <h2>Admission Management</h2>
                 <button class="btn btn-primary mb-3" onclick="showAddAdmissionModal()">New Application</button>
+                <button class="btn btn-secondary mb-3" onclick="showBulkAdmissionModal()">Bulk Import (CSV/Excel)</button>
                 <table class="table table-striped">
                     <thead><tr><th>ID</th><th>Name</th><th>Grade</th><th>Status</th><th>Documents</th><th>Actions</th></tr></thead>
                     <tbody id="admissionTable"></tbody>
@@ -281,7 +282,7 @@
             <section id="fees" class="section d-none">
                 <h2>Fee Management</h2>
                 <button class="btn btn-primary mb-3" onclick="showGenerateInvoiceModal()">Generate Invoice</button>
-                <button class="btn btn-secondary mb-3" onclick="showBulkUploadFeesModal()">Bulk Upload Fees</button>
+                <button class="btn btn-secondary mb-3" onclick="showBulkUploadFeesModal()">Bulk Import (CSV/Excel)</button>
                 <button class="btn btn-warning mb-3" onclick="sendFeeReminders()">Send Reminders</button>
                 <div class="row mb-3">
                     <div class="col-md-3"><div class="card card-metric p-3"><h5>Total Collected</h5><h3 id="totalCollected">R0</h3></div></div>
@@ -482,11 +483,25 @@
     <div class="modal fade" id="bulkUploadFeesModal">
         <div class="modal-dialog">
             <div class="modal-content">
-                <div class="modal-header"><h5>Bulk Upload Fees</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-header"><h5>Bulk Import Fees (CSV/Excel)</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
                 <div class="modal-body">
-                    <input type="file" id="bulkFeesFile" class="form-control mb-3" accept=".csv">
+                    <p>Expected columns: Student Name, Amount, Due Date (YYYY-MM-DD)</p>
+                    <input type="file" id="bulkFeesFile" class="form-control mb-3" accept=".csv,.xlsx">
                 </div>
                 <div class="modal-footer"><button class="btn btn-primary" onclick="processBulkFees()">Upload</button></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="bulkAdmissionModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header"><h5>Bulk Import Admissions (CSV/Excel)</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <p>Expected columns: Name, Parent, Grade</p>
+                    <input type="file" id="bulkAdmissionFile" class="form-control mb-3" accept=".csv,.xlsx">
+                </div>
+                <div class="modal-footer"><button class="btn btn-primary" onclick="processBulkAdmissions()">Upload</button></div>
             </div>
         </div>
     </div>
@@ -626,6 +641,55 @@
             };
         }
 
+        // Robust parsing with try-catch
+        function safeParseJSON(key) {
+            try {
+                return JSON.parse(localStorage.getItem(key)) || [];
+            } catch (e) {
+                console.error(`Error parsing ${key}:`, e);
+                localStorage.removeItem(key);
+                return [];
+            }
+        }
+
+        // Bulk processing function for CSV/Excel
+        function processBulk(file, processor, callback) {
+            if (!file) return alert('Please select a file.');
+            const ext = file.name.split('.').pop().toLowerCase();
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                let rows = [];
+                try {
+                    if (ext === 'csv') {
+                        const text = e.target.result;
+                        rows = text.split('\n').map(line => line.split(',').map(d => d.trim())).filter(row => row.length > 1 && row.some(d => d));
+                        rows = rows.slice(1); // Skip header
+                    } else if (ext === 'xlsx' || ext === 'xls') {
+                        const workbook = XLSX.read(e.target.result, {type: 'binary'});
+                        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                        rows = XLSX.utils.sheet_to_json(sheet, {header: 1}).slice(1);
+                    } else {
+                        throw new Error('Unsupported file type.');
+                    }
+                    let count = 0;
+                    rows.forEach(row => {
+                        if (processor(row)) count++;
+                    });
+                    alert(`${count} records imported successfully.`);
+                    callback();
+                } catch (error) {
+                    console.error('Error processing file:', error);
+                    alert('Error processing file: ' + error.message + '. Ensure correct format and columns.');
+                }
+            };
+            reader.onerror = () => alert('Error reading file.');
+            if (ext === 'csv') {
+                reader.readAsText(file);
+            } else {
+                reader.readAsBinaryString(file);
+            }
+        }
+
         // Login
         function login() {
             const username = document.getElementById('username').value;
@@ -697,6 +761,22 @@
         }
 
         function initApp() {
+            // Safe load data
+            students = safeParseJSON('students');
+            admissions = safeParseJSON('admissions');
+            attendanceRecords = safeParseJSON('attendance');
+            fees = safeParseJSON('fees');
+            exams = safeParseJSON('exams');
+            staff = safeParseJSON('staff');
+            messages = safeParseJSON('messages');
+            content = safeParseJSON('content');
+            timetables = safeParseJSON('timetables');
+            documents = safeParseJSON('documents');
+            leaveRequests = safeParseJSON('leaveRequests');
+            performanceReviews = safeParseJSON('performanceReviews');
+            marks = safeParseJSON('marks');
+            timeSlots = safeParseJSON('timeSlots');
+
             updateRoleVisibility();
             populateGrades();
             populateTeachers();
@@ -810,35 +890,69 @@
             modal.show();
         }
         function saveAdmission() {
-            const app = {
-                id: Date.now(),
-                name: document.getElementById('appName').value,
-                parent: document.getElementById('appParent').value,
-                grade: document.getElementById('appGrade').value,
-                status: 'Pending',
-                documents: []
-            };
-            const files = document.getElementById('appDocuments').files;
-            let loaded = 0;
-            for (let file of files) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    app.documents.push({name: file.name, data: e.target.result});
-                    loaded++;
-                    if (loaded === files.length) {
-                        admissions.push(app);
-                        localStorage.setItem('admissions', JSON.stringify(admissions));
-                        renderAdmissions();
-                    }
+            try {
+                const name = document.getElementById('appName').value.trim();
+                const grade = document.getElementById('appGrade').value.trim();
+                if (!name || !grade) throw new Error('Name and Grade are required.');
+                const app = {
+                    id: Date.now(),
+                    name,
+                    parent: document.getElementById('appParent').value.trim(),
+                    grade,
+                    status: 'Pending',
+                    documents: []
                 };
-                reader.readAsDataURL(file);
+                const files = document.getElementById('appDocuments').files;
+                let loaded = 0;
+                if (files.length > 0) {
+                    for (let file of files) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            app.documents.push({name: file.name, data: e.target.result});
+                            loaded++;
+                            if (loaded === files.length) {
+                                admissions.push(app);
+                                localStorage.setItem('admissions', JSON.stringify(admissions));
+                                renderAdmissions();
+                            }
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                } else {
+                    admissions.push(app);
+                    localStorage.setItem('admissions', JSON.stringify(admissions));
+                    renderAdmissions();
+                }
+                bootstrap.Modal.getInstance(document.getElementById('addAdmissionModal')).hide();
+            } catch (error) {
+                alert('Error saving admission: ' + error.message);
             }
-            if (files.length === 0) {
-                admissions.push(app);
+        }
+        function showBulkAdmissionModal() {
+            const modal = new bootstrap.Modal(document.getElementById('bulkAdmissionModal'));
+            modal.show();
+        }
+        function processBulkAdmissions() {
+            const file = document.getElementById('bulkAdmissionFile').files[0];
+            processBulk(file, (data) => {
+                const [name, parent, grade] = data;
+                if (name && grade) {
+                    admissions.push({
+                        id: Date.now(),
+                        name: name.trim(),
+                        parent: (parent || '').trim(),
+                        grade: grade.trim(),
+                        status: 'Pending',
+                        documents: []
+                    });
+                    return true;
+                }
+                return false;
+            }, () => {
                 localStorage.setItem('admissions', JSON.stringify(admissions));
                 renderAdmissions();
-            }
-            bootstrap.Modal.getInstance(document.getElementById('addAdmissionModal')).hide();
+                bootstrap.Modal.getInstance(document.getElementById('bulkAdmissionModal')).hide();
+            });
         }
         function renderAdmissions() {
             requestAnimationFrame(() => {
@@ -1020,53 +1134,51 @@
             modal.show();
         }
         function saveInvoice() {
-            const studentId = document.getElementById('invoiceStudent').value;
-            const amount = parseFloat(document.getElementById('invoiceAmount').value);
-            const dueDate = document.getElementById('invoiceDueDate').value;
-            fees.push({
-                id: Date.now(),
-                studentId,
-                amount,
-                dueDate,
-                paidDate: null,
-                status: 'Pending',
-                receipt: null
-            });
-            localStorage.setItem('fees', JSON.stringify(fees));
-            renderFees();
-            bootstrap.Modal.getInstance(document.getElementById('generateInvoiceModal')).hide();
-        }
-        function showBulkUploadFeesModal() {
-            const modal = new bootstrap.Modal(document.getElementById('bulkUploadFeesModal'));
-            modal.show();
-        }
-        function processBulkFees() {
-            const file = document.getElementById('bulkFeesFile').files[0];
-            if (!file) return alert('Select a CSV file');
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const text = e.target.result;
-                const lines = text.split('\n').slice(1); // Skip header
-                lines.forEach(line => {
-                    const [studentName, amount, dueDate] = line.split(',');
-                    const student = students.find(s => s.name === studentName.trim());
-                    if (student) {
-                        fees.push({
-                            id: Date.now(),
-                            studentId: student.id,
-                            amount: parseFloat(amount),
-                            dueDate: dueDate.trim(),
-                            paidDate: null,
-                            status: 'Pending',
-                            receipt: null
-                        });
-                    }
+            try {
+                const studentId = document.getElementById('invoiceStudent').value;
+                const amount = parseFloat(document.getElementById('invoiceAmount').value);
+                const dueDate = document.getElementById('invoiceDueDate').value;
+                if (!studentId || isNaN(amount) || !dueDate) throw new Error('All fields are required and amount must be a number.');
+                fees.push({
+                    id: Date.now(),
+                    studentId,
+                    amount,
+                    dueDate,
+                    paidDate: null,
+                    status: 'Pending',
+                    receipt: null
                 });
                 localStorage.setItem('fees', JSON.stringify(fees));
                 renderFees();
+                bootstrap.Modal.getInstance(document.getElementById('generateInvoiceModal')).hide();
+            } catch (error) {
+                alert('Error generating invoice: ' + error.message);
+            }
+        }
+        function processBulkFees() {
+            const file = document.getElementById('bulkFeesFile').files[0];
+            processBulk(file, (data) => {
+                const [studentName, amountStr, dueDate] = data;
+                const amount = parseFloat(amountStr);
+                const student = students.find(s => s.name.toLowerCase() === (studentName || '').toLowerCase().trim());
+                if (student && !isNaN(amount) && dueDate) {
+                    fees.push({
+                        id: Date.now(),
+                        studentId: student.id,
+                        amount,
+                        dueDate: dueDate.trim(),
+                        paidDate: null,
+                        status: 'Pending',
+                        receipt: null
+                    });
+                    return true;
+                }
+                return false;
+            }, () => {
+                localStorage.setItem('fees', JSON.stringify(fees));
+                renderFees();
                 bootstrap.Modal.getInstance(document.getElementById('bulkUploadFeesModal')).hide();
-            };
-            reader.readAsText(file);
+            });
         }
         function sendFeeReminders() {
             const overdue = fees.filter(f => f.status === 'Pending' && new Date(f.dueDate) < new Date());
