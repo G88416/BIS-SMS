@@ -356,31 +356,74 @@
                 </div>
             </section>
 
-            <!-- HR Management -->
+            <!-- Improved HR Management -->
             <section id="hr" class="section d-none admin-only">
                 <h2>Human Resource Management</h2>
-                <button class="btn btn-primary mb-3" onclick="showAddStaffModal()">Add Staff</button>
-                <button class="btn btn-secondary mb-3" onclick="syncStaffBiometric()">Sync Staff Biometric</button>
-                <button class="btn btn-info mb-3" onclick="generatePayroll()">Generate Payroll</button>
-                <div class="row mb-3">
-                    <div class="col-md-4">
-                        <input type="date" id="leaveDate" class="form-control" onchange="loadLeaveRequests()">
+                <ul class="nav nav-tabs mb-3">
+                    <li class="nav-item">
+                        <a class="nav-link active" data-bs-toggle="tab" href="#hr-staff">Staff</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#hr-payroll">Payroll</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#hr-leaves">Leaves</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#hr-performance">Performance</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#hr-recruitment">Recruitment</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#hr-audit">Audit Trail</a>
+                    </li>
+                </ul>
+                <div class="tab-content">
+                    <div class="tab-pane fade show active" id="hr-staff">
+                        <button class="btn btn-primary mb-3" onclick="showAddStaffModal()">Add Staff</button>
+                        <button class="btn btn-secondary mb-3" onclick="syncStaffBiometric()">Sync Biometric</button>
+                        <table class="table table-striped">
+                            <thead><tr><th>ID</th><th>Name</th><th>Role</th><th>Department</th><th>Salary</th><th>Tax #</th><th>UIF #</th><th>Status</th><th>Actions</th></tr></thead>
+                            <tbody id="staffTable"></tbody>
+                        </table>
+                    </div>
+                    <div class="tab-pane fade" id="hr-payroll">
+                        <button class="btn btn-primary mb-3" onclick="showAddPayrollModal()">Add Payroll</button>
+                        <button class="btn btn-info mb-3" onclick="generatePayroll()">Generate Payroll</button>
+                        <table class="table table-striped">
+                            <thead><tr><th>ID</th><th>Staff</th><th>Month</th><th>Salary</th><th>Deductions</th><th>Net</th><th>Tax #</th><th>Actions</th></tr></thead>
+                            <tbody id="payrollTable"></tbody>
+                        </table>
+                    </div>
+                    <div class="tab-pane fade" id="hr-leaves">
+                        <input type="date" id="leaveDate" class="form-control mb-3 w-25" onchange="loadLeaveRequests()">
+                        <table class="table table-striped">
+                            <thead><tr><th>Staff</th><th>Date</th><th>Reason</th><th>Status</th><th>Actions</th></tr></thead>
+                            <tbody id="leaveTable"></tbody>
+                        </table>
+                    </div>
+                    <div class="tab-pane fade" id="hr-performance">
+                        <button class="btn btn-primary mb-3" onclick="showAddReviewModal()">Add Review</button>
+                        <table class="table table-striped">
+                            <thead><tr><th>Staff</th><th>Date</th><th>Score</th><th>Comments</th><th>Actions</th></tr></thead>
+                            <tbody id="reviewTable"></tbody>
+                        </table>
+                    </div>
+                    <div class="tab-pane fade" id="hr-recruitment">
+                        <button class="btn btn-primary mb-3" onclick="showAddJobModal()">Add Position</button>
+                        <table class="table table-striped">
+                            <thead><tr><th>ID</th><th>Title</th><th>Department</th><th>Applications</th><th>Actions</th></tr></thead>
+                            <tbody id="jobTable"></tbody>
+                        </table>
+                    </div>
+                    <div class="tab-pane fade" id="hr-audit">
+                        <table class="table table-striped">
+                            <thead><tr><th>Time</th><th>User</th><th>Action</th><th>Details</th></tr></thead>
+                            <tbody id="auditTable"></tbody>
+                        </table>
                     </div>
                 </div>
-                <table class="table table-striped">
-                    <thead><tr><th>ID</th><th>Name</th><th>Role</th><th>Department</th><th>Salary</th><th>Status</th><th>Actions</th></tr></thead>
-                    <tbody id="staffTable"></tbody>
-                </table>
-                <h3>Leave Requests</h3>
-                <table class="table table-striped">
-                    <thead><tr><th>Staff</th><th>Date</th><th>Reason</th><th>Status</th><th>Actions</th></tr></thead>
-                    <tbody id="leaveTable"></tbody>
-                </table>
-                <h3>Performance Reviews</h3>
-                <table class="table table-striped">
-                    <thead><tr><th>Staff</th><th>Review Date</th><th>Score</th><th>Comments</th><th>Actions</th></tr></thead>
-                    <tbody id="reviewTable"></tbody>
-                </table>
             </section>
 
             <!-- Communication Module -->
@@ -433,6 +476,8 @@
                     <div class="col-md-4"><button class="btn btn-primary w-100 mb-3" onclick="exportToExcel(students, 'students')">Export Students</button></div>
                     <div class="col-md-4"><button class="btn btn-success w-100 mb-3" onclick="exportToExcel(fees, 'fees')">Export Fees</button></div>
                     <div class="col-md-4"><button class="btn btn-info w-100 mb-3" onclick="exportToExcel(attendanceRecords, 'attendance')">Export Attendance</button></div>
+                    <div class="col-md-4"><button class="btn btn-warning w-100 mb-3" onclick="exportToExcel(staff, 'staff')">Export Staff</button></div>
+                    <div class="col-md-4"><button class="btn btn-danger w-100 mb-3" onclick="exportToExcel(payrolls, 'payrolls')">Export Payrolls</button></div>
                 </div>
             </section>
 
@@ -556,10 +601,11 @@
         </div>
     </div>
 
+    <!-- HR Modals -->
     <div class="modal fade" id="addStaffModal">
         <div class="modal-dialog">
             <div class="modal-content">
-                <div class="modal-header"><h5>Add Staff</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-header"><h5>Add/Edit Staff</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
                 <div class="modal-body">
                     <input type="text" id="staffName" class="form-control mb-3" placeholder="Name">
                     <select id="staffRole" class="form-control mb-3">
@@ -569,8 +615,26 @@
                     </select>
                     <input type="text" id="staffDepartment" class="form-control mb-3" placeholder="Department">
                     <input type="number" id="staffSalary" class="form-control mb-3" placeholder="Salary">
+                    <input type="text" id="staffTaxNumber" class="form-control mb-3" placeholder="Tax Number">
+                    <input type="text" id="staffUifNumber" class="form-control mb-3" placeholder="UIF Number">
                 </div>
-                <div class="modal-footer"><button class="btn btn-primary" onclick="saveStaff()">Add</button></div>
+                <div class="modal-footer"><button class="btn btn-primary" onclick="saveStaff()">Save</button></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="addPayrollModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header"><h5>Add/Edit Payroll</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <select id="payrollStaff" class="form-control mb-3">
+                        <option value="">Select Staff</option>
+                    </select>
+                    <input type="month" id="payrollMonth" class="form-control mb-3">
+                    <input type="number" id="payrollDeductions" class="form-control mb-3" placeholder="Deductions">
+                </div>
+                <div class="modal-footer"><button class="btn btn-primary" onclick="savePayroll()">Save</button></div>
             </div>
         </div>
     </div>
@@ -590,16 +654,69 @@
         </div>
     </div>
 
-    <div class="modal fade" id="performanceReviewModal">
+    <div class="modal fade" id="addReviewModal">
         <div class="modal-dialog">
             <div class="modal-content">
-                <div class="modal-header"><h5>Performance Review</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-header"><h5>Add/Edit Performance Review</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
                 <div class="modal-body">
+                    <select id="reviewStaff" class="form-control mb-3">
+                        <option value="">Select Staff</option>
+                    </select>
                     <input type="date" id="reviewDate" class="form-control mb-3">
-                    <input type="number" id="reviewScore" class="form-control mb-3" placeholder="Score (0-100)">
+                    <input type="number" id="reviewScore" class="form-control mb-3" min="0" max="100" placeholder="Score (0-100)">
                     <textarea id="reviewComments" class="form-control" rows="3" placeholder="Comments"></textarea>
                 </div>
                 <div class="modal-footer"><button class="btn btn-primary" onclick="saveReview()">Save</button></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="addJobModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header"><h5>Add/Edit Position</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <input type="text" id="jobTitle" class="form-control mb-3" placeholder="Title">
+                    <input type="text" id="jobDepartment" class="form-control mb-3" placeholder="Department">
+                    <textarea id="jobDescription" class="form-control" rows="3" placeholder="Description"></textarea>
+                </div>
+                <div class="modal-footer"><button class="btn btn-primary" onclick="saveJob()">Save</button></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="payslipModal">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Payslip Preview</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="payslipPreview" class="payslip-preview">
+                        <div class="payslip-header">
+                            <h4>ASMS - Payslip</h4>
+                            <p id="payslipStaff"></p>
+                            <p id="payslipPeriod"></p>
+                        </div>
+                        <div class="payslip-body">
+                            <table class="table table-borderless">
+                                <tr><th>Basic Salary</th><td id="payslipSalary">R0.00</td></tr>
+                                <tr><th>Deductions</th><td id="payslipDeductions">R0.00</td></tr>
+                                <tr><th><strong>Net Pay</strong></th><td><strong id="payslipNet">R0.00</strong></td></tr>
+                            </table>
+                            <div id="payslipTaxNumber"></div>
+                        </div>
+                        <div class="payslip-footer">
+                            <p>Tax Number: <span id="payslipTaxNumFooter"></span></p>
+                            <p>This is a computer-generated payslip</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button class="btn btn-primary" onclick="downloadPayslipPDF()">Download PDF</button>
+                </div>
             </div>
         </div>
     </div>
@@ -612,12 +729,15 @@
         let fees = JSON.parse(localStorage.getItem('fees')) || [];
         let exams = JSON.parse(localStorage.getItem('exams')) || [];
         let staff = JSON.parse(localStorage.getItem('staff')) || [];
+        let payrolls = JSON.parse(localStorage.getItem('payrolls')) || [];
+        let leaveRequests = JSON.parse(localStorage.getItem('leaveRequests')) || [];
+        let performanceReviews = JSON.parse(localStorage.getItem('performanceReviews')) || [];
+        let jobs = JSON.parse(localStorage.getItem('jobs')) || [];
+        let auditLog = JSON.parse(localStorage.getItem('auditLog')) || [];
         let messages = JSON.parse(localStorage.getItem('messages')) || [];
         let content = JSON.parse(localStorage.getItem('content')) || [];
         let timetables = JSON.parse(localStorage.getItem('timetables')) || {}; // Grade -> timetable data
         let documents = JSON.parse(localStorage.getItem('documents')) || {}; // id -> array of {name, data}
-        let leaveRequests = JSON.parse(localStorage.getItem('leaveRequests')) || [];
-        let performanceReviews = JSON.parse(localStorage.getItem('performanceReviews')) || [];
         let marks = JSON.parse(localStorage.getItem('marks')) || {}; // examId -> {studentId: mark}
         let timeSlots = JSON.parse(localStorage.getItem('timeSlots')) || Array(8).fill().map((_, i) => ({start: `0${i + 8}:00`, end: `0${i + 9}:00`, label: ''}));
         let currentUser = null;
@@ -627,7 +747,10 @@
         let currentStudentId = null;
         let currentMarksExam = null;
         let editingLeave = null;
-        let editingReviewStaff = null;
+        let editingReview = null;
+        let editingPayroll = null;
+        let editingJob = null;
+        let editingStaff = null;
 
         // Payment Gateway Setup (Stripe)
         const stripe = Stripe('your-publishable-key-here'); // Replace with your Stripe publishable key
@@ -768,12 +891,15 @@
             fees = safeParseJSON('fees');
             exams = safeParseJSON('exams');
             staff = safeParseJSON('staff');
+            payrolls = safeParseJSON('payrolls');
+            leaveRequests = safeParseJSON('leaveRequests');
+            performanceReviews = safeParseJSON('performanceReviews');
+            jobs = safeParseJSON('jobs');
+            auditLog = safeParseJSON('auditLog');
             messages = safeParseJSON('messages');
             content = safeParseJSON('content');
             timetables = safeParseJSON('timetables');
             documents = safeParseJSON('documents');
-            leaveRequests = safeParseJSON('leaveRequests');
-            performanceReviews = safeParseJSON('performanceReviews');
             marks = safeParseJSON('marks');
             timeSlots = safeParseJSON('timeSlots');
 
@@ -782,6 +908,7 @@
             populateTeachers();
             populateStudentsSelect();
             populateExamsSelect();
+            populateStaffSelects();
             document.getElementById('attendanceDate').value = new Date().toISOString().split('T')[0];
             renderDashboard();
             renderAll();
@@ -820,6 +947,12 @@
             if (document.getElementById('marksExamSelect')) document.getElementById('marksExamSelect').innerHTML = options;
         }
 
+        function populateStaffSelects() {
+            const options = '<option value="">Select Staff</option>' + staff.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+            if (document.getElementById('payrollStaff')) document.getElementById('payrollStaff').innerHTML = options;
+            if (document.getElementById('reviewStaff')) document.getElementById('reviewStaff').innerHTML = options;
+        }
+
         function updateRoleVisibility() {
             document.querySelectorAll('.admin-only').forEach(el => el.style.display = currentUser.role === 'admin' ? 'block' : 'none');
             document.querySelectorAll('.teacher-only').forEach(el => el.style.display = currentUser.role === 'teacher' ? 'block' : 'none');
@@ -836,6 +969,7 @@
             document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
             const link = document.querySelector(`a[href="#${id}"]`);
             if (link) link.classList.add('active');
+            if (id === 'hr') renderHR();
         }
 
         function toggleSidebar() {
@@ -1259,9 +1393,6 @@
                 alert('Error initiating payment: ' + error.message);
             }
         }
-        function payFee(id) {
-            initiatePayment(id);
-        }
         function updateFee(id) {
             editingFee = fees.find(f => f.id === id);
             document.getElementById('updateFeeAmount').value = editingFee.amount;
@@ -1473,26 +1604,17 @@
             });
         }
 
-        // HR
-        function showAddStaffModal() {
-            const modal = new bootstrap.Modal(document.getElementById('addStaffModal'));
-            modal.show();
-        }
-        function saveStaff() {
-            staff.push({
-                id: Date.now(),
-                name: document.getElementById('staffName').value,
-                role: document.getElementById('staffRole').value,
-                department: document.getElementById('staffDepartment').value,
-                salary: parseFloat(document.getElementById('staffSalary').value),
-                status: 'Active'
-            });
-            localStorage.setItem('staff', JSON.stringify(staff));
-            renderHR();
-            populateTeachers();
-            bootstrap.Modal.getInstance(document.getElementById('addStaffModal')).hide();
-        }
+        // Improved HR Functions
         function renderHR() {
+            renderStaff();
+            renderPayrolls();
+            loadLeaveRequests();
+            renderReviews();
+            renderJobs();
+            renderAudit();
+        }
+
+        function renderStaff() {
             requestAnimationFrame(() => {
                 document.getElementById('staffTable').innerHTML = staff.map(s => `
                     <tr>
@@ -1501,49 +1623,229 @@
                         <td>${s.role}</td>
                         <td>${s.department}</td>
                         <td>R${s.salary}</td>
+                        <td>${s.taxNumber || '-'}</td>
+                        <td>${s.uifNumber || '-'}</td>
                         <td>${s.status}</td>
                         <td>
-                            <button class="btn btn-sm btn-info" onclick="editStaff(${s.id})">Edit</button>
+                            <button class="btn btn-sm btn-info" onclick="showEditStaffModal(${s.id})">Edit</button>
                             <button class="btn btn-sm btn-warning" onclick="showPerformanceReviewModal(${s.id})">Review</button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteStaff(${s.id})">Delete</button>
                         </td>
                     </tr>
                 `).join('');
             });
         }
-        function editStaff(id) {
-            // Stub
-            alert('Edit staff ID: ' + id);
+
+        let editingStaff = null;
+        function showAddStaffModal() {
+            editingStaff = null;
+            document.getElementById('staffName').value = '';
+            document.getElementById('staffRole').value = 'Teacher';
+            document.getElementById('staffDepartment').value = '';
+            document.getElementById('staffSalary').value = '';
+            document.getElementById('staffTaxNumber').value = '';
+            document.getElementById('staffUifNumber').value = '';
+            const modal = new bootstrap.Modal(document.getElementById('addStaffModal'));
+            modal.show();
         }
+
+        function showEditStaffModal(id) {
+            editingStaff = staff.find(s => s.id === id);
+            document.getElementById('staffName').value = editingStaff.name;
+            document.getElementById('staffRole').value = editingStaff.role;
+            document.getElementById('staffDepartment').value = editingStaff.department;
+            document.getElementById('staffSalary').value = editingStaff.salary;
+            document.getElementById('staffTaxNumber').value = editingStaff.taxNumber || '';
+            document.getElementById('staffUifNumber').value = editingStaff.uifNumber || '';
+            const modal = new bootstrap.Modal(document.getElementById('addStaffModal'));
+            modal.show();
+        }
+
+        function saveStaff() {
+            const staffData = {
+                name: document.getElementById('staffName').value,
+                role: document.getElementById('staffRole').value,
+                department: document.getElementById('staffDepartment').value,
+                salary: parseFloat(document.getElementById('staffSalary').value),
+                taxNumber: document.getElementById('staffTaxNumber').value,
+                uifNumber: document.getElementById('staffUifNumber').value,
+                status: 'Active'
+            };
+            if (editingStaff) {
+                Object.assign(editingStaff, staffData);
+            } else {
+                staffData.id = Date.now();
+                staff.push(staffData);
+            }
+            localStorage.setItem('staff', JSON.stringify(staff));
+            renderStaff();
+            populateTeachers();
+            populateStaffSelects();
+            bootstrap.Modal.getInstance(document.getElementById('addStaffModal')).hide();
+        }
+
+        function deleteStaff(id) {
+            if (confirm('Delete staff?')) {
+                staff = staff.filter(s => s.id !== id);
+                localStorage.setItem('staff', JSON.stringify(staff));
+                renderStaff();
+                populateTeachers();
+                populateStaffSelects();
+            }
+        }
+
         function syncStaffBiometric() {
             alert('Staff biometric synced.');
             // Integrate API similar to student biometric
         }
-        function generatePayroll() {
-            let payroll = 'Payroll:\n';
-            staff.forEach(s => payroll += `${s.name}: R${s.salary}\n`);
-            alert(payroll);
+
+        function renderPayrolls() {
+            requestAnimationFrame(() => {
+                document.getElementById('payrollTable').innerHTML = payrolls.map(p => {
+                    const s = staff.find(st => st.id === p.staffId);
+                    const net = p.salary - p.deductions;
+                    return `
+                        <tr>
+                            <td>${p.id}</td>
+                            <td>${s ? s.name : 'Unknown'}</td>
+                            <td>${p.month}</td>
+                            <td>R${p.salary}</td>
+                            <td>R${p.deductions}</td>
+                            <td>R${net}</td>
+                            <td>${s ? s.taxNumber : '-'}</td>
+                            <td>
+                                <button class="btn btn-sm btn-info" onclick="viewPayslip(${p.id})">View</button>
+                                <button class="btn btn-sm btn-secondary" onclick="showEditPayrollModal(${p.id})">Edit</button>
+                                <button class="btn btn-sm btn-danger" onclick="deletePayroll(${p.id})">Delete</button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            });
         }
+
+        function showAddPayrollModal() {
+            editingPayroll = null;
+            document.getElementById('payrollStaff').value = '';
+            document.getElementById('payrollMonth').value = '';
+            document.getElementById('payrollDeductions').value = '';
+            const modal = new bootstrap.Modal(document.getElementById('addPayrollModal'));
+            modal.show();
+        }
+
+        function showEditPayrollModal(id) {
+            editingPayroll = payrolls.find(p => p.id === id);
+            document.getElementById('payrollStaff').value = editingPayroll.staffId;
+            document.getElementById('payrollMonth').value = editingPayroll.month;
+            document.getElementById('payrollDeductions').value = editingPayroll.deductions;
+            const modal = new bootstrap.Modal(document.getElementById('addPayrollModal'));
+            modal.show();
+        }
+
+        function savePayroll() {
+            const staffId = parseInt(document.getElementById('payrollStaff').value);
+            const s = staff.find(st => st.id === staffId);
+            const payrollData = {
+                staffId,
+                month: document.getElementById('payrollMonth').value,
+                salary: s.salary,
+                deductions: parseFloat(document.getElementById('payrollDeductions').value) || 0
+            };
+            if (editingPayroll) {
+                Object.assign(editingPayroll, payrollData);
+                logAudit('Payroll Updated', `ID: ${editingPayroll.id}`);
+            } else {
+                payrollData.id = Date.now();
+                payrolls.push(payrollData);
+                logAudit('Payroll Added', `ID: ${payrollData.id}`);
+            }
+            localStorage.setItem('payrolls', JSON.stringify(payrolls));
+            renderPayrolls();
+            bootstrap.Modal.getInstance(document.getElementById('addPayrollModal')).hide();
+        }
+
+        function deletePayroll(id) {
+            if (confirm('Delete payroll?')) {
+                payrolls = payrolls.filter(p => p.id !== id);
+                localStorage.setItem('payrolls', JSON.stringify(payrolls));
+                renderPayrolls();
+                logAudit('Payroll Deleted', `ID: ${id}`);
+            }
+        }
+
+        function generatePayroll() {
+            const currentMonth = new Date().toISOString().slice(0,7);
+            staff.forEach(s => {
+                if (!payrolls.some(p => p.staffId === s.id && p.month === currentMonth)) {
+                    payrolls.push({
+                        id: Date.now(),
+                        staffId: s.id,
+                        month: currentMonth,
+                        salary: s.salary,
+                        deductions: 0
+                    });
+                }
+            });
+            localStorage.setItem('payrolls', JSON.stringify(payrolls));
+            renderPayrolls();
+            alert('Payroll generated for current month.');
+            logAudit('Payroll Generated', `For month: ${currentMonth}`);
+        }
+
+        function viewPayslip(id) {
+            const p = payrolls.find(pr => pr.id === id);
+            const s = staff.find(st => st.id === p.staffId);
+            document.getElementById('payslipStaff').textContent = `Staff: ${s.name}`;
+            document.getElementById('payslipPeriod').textContent = `Period: ${p.month}`;
+            document.getElementById('payslipSalary').textContent = `R${p.salary.toFixed(2)}`;
+            document.getElementById('payslipDeductions').textContent = `R${p.deductions.toFixed(2)}`;
+            document.getElementById('payslipNet').textContent = `R${(p.salary - p.deductions).toFixed(2)}`;
+            document.getElementById('payslipTaxNumber').textContent = `Tax Number: ${s.taxNumber || '-'}`;
+            document.getElementById('payslipTaxNumFooter').textContent = s.taxNumber || '-';
+            const modal = new bootstrap.Modal(document.getElementById('payslipModal'));
+            modal.show();
+        }
+
+        function downloadPayslipPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.text('ASMS - Payslip', 105, 20, { align: 'center' });
+            doc.text(document.getElementById('payslipStaff').textContent, 20, 40);
+            doc.text(document.getElementById('payslipPeriod').textContent, 20, 50);
+            doc.text('Basic Salary: ' + document.getElementById('payslipSalary').textContent, 20, 60);
+            doc.text('Deductions: ' + document.getElementById('payslipDeductions').textContent, 20, 70);
+            doc.text('Net Pay: ' + document.getElementById('payslipNet').textContent, 20, 80);
+            doc.text(document.getElementById('payslipTaxNumber').textContent, 20, 90);
+            doc.text('This is a computer-generated payslip', 105, 110, { align: 'center' });
+            doc.save('payslip.pdf');
+        }
+
         function loadLeaveRequests() {
             const date = document.getElementById('leaveDate').value;
             const filtered = leaveRequests.filter(l => !date || l.date === date);
-            document.getElementById('leaveTable').innerHTML = filtered.map(l => {
-                const s = staff.find(st => st.id === l.staffId);
-                return `
-                    <tr>
-                        <td>${s.name}</td>
-                        <td>${l.date}</td>
-                        <td>${l.reason}</td>
-                        <td>${l.status || 'Pending'}</td>
-                        <td><button class="btn btn-sm btn-secondary" onclick="editLeave(${l.id})">Approve/Reject</button></td>
-                    </tr>
-                `;
-            }).join('');
+            requestAnimationFrame(() => {
+                document.getElementById('leaveTable').innerHTML = filtered.map(l => {
+                    const s = staff.find(st => st.id === l.staffId);
+                    return `
+                        <tr>
+                            <td>${s.name}</td>
+                            <td>${l.date}</td>
+                            <td>${l.reason}</td>
+                            <td>${l.status || 'Pending'}</td>
+                            <td><button class="btn btn-sm btn-secondary" onclick="editLeave(${l.id})">Approve/Reject</button></td>
+                        </tr>
+                    `;
+                }).join('');
+            });
         }
+
         function editLeave(id) {
             editingLeave = leaveRequests.find(l => l.id === id);
+            document.getElementById('leaveStatus').value = editingLeave.status || 'Pending';
             const modal = new bootstrap.Modal(document.getElementById('leaveRequestModal'));
             modal.show();
         }
+
         function saveLeaveStatus() {
             if (!editingLeave) return;
             editingLeave.status = document.getElementById('leaveStatus').value;
@@ -1552,11 +1854,16 @@
             loadLeaveRequests();
             editingLeave = null;
         }
+
         function showPerformanceReviewModal(staffId) {
             editingReviewStaff = staffId;
+            document.getElementById('reviewDate').value = '';
+            document.getElementById('reviewScore').value = '';
+            document.getElementById('reviewComments').value = '';
             const modal = new bootstrap.Modal(document.getElementById('performanceReviewModal'));
             modal.show();
         }
+
         function saveReview() {
             performanceReviews.push({
                 id: Date.now(),
@@ -1570,19 +1877,118 @@
             renderReviews();
             editingReviewStaff = null;
         }
+
         function renderReviews() {
-            document.getElementById('reviewTable').innerHTML = performanceReviews.map(r => {
-                const s = staff.find(st => st.id === r.staffId);
-                return `
+            requestAnimationFrame(() => {
+                document.getElementById('reviewTable').innerHTML = performanceReviews.map(r => {
+                    const s = staff.find(st => st.id === r.staffId);
+                    return `
+                        <tr>
+                            <td>${s.name}</td>
+                            <td>${r.date}</td>
+                            <td>${r.score}</td>
+                            <td>${r.comments}</td>
+                            <td><button class="btn btn-sm btn-info" onclick="editReview(${r.id})">Edit</button></td>
+                        </tr>
+                    `;
+                }).join('');
+            });
+        }
+
+        function editReview(id) {
+            const r = performanceReviews.find(rev => rev.id === id);
+            editingReviewStaff = r.staffId;
+            document.getElementById('reviewDate').value = r.date;
+            document.getElementById('reviewScore').value = r.score;
+            document.getElementById('reviewComments').value = r.comments;
+            const modal = new bootstrap.Modal(document.getElementById('performanceReviewModal'));
+            modal.show();
+        }
+
+        function renderJobs() {
+            requestAnimationFrame(() => {
+                document.getElementById('jobTable').innerHTML = jobs.map(j => `
                     <tr>
-                        <td>${s.name}</td>
-                        <td>${r.date}</td>
-                        <td>${r.score}</td>
-                        <td>${r.comments}</td>
-                        <td><button class="btn btn-sm btn-info">Edit</button></td>
+                        <td>${j.id}</td>
+                        <td>${j.title}</td>
+                        <td>${j.department}</td>
+                        <td>${j.applications ? j.applications.length : 0}</td>
+                        <td>
+                            <button class="btn btn-sm btn-primary" onclick="showEditJobModal(${j.id})">Edit</button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteJob(${j.id})">Delete</button>
+                        </td>
                     </tr>
-                `;
-            }).join('');
+                `).join('');
+            });
+        }
+
+        function showAddJobModal() {
+            editingJob = null;
+            document.getElementById('jobTitle').value = '';
+            document.getElementById('jobDepartment').value = '';
+            document.getElementById('jobDescription').value = '';
+            const modal = new bootstrap.Modal(document.getElementById('addJobModal'));
+            modal.show();
+        }
+
+        function showEditJobModal(id) {
+            editingJob = jobs.find(j => j.id === id);
+            document.getElementById('jobTitle').value = editingJob.title;
+            document.getElementById('jobDepartment').value = editingJob.department;
+            document.getElementById('jobDescription').value = editingJob.description;
+            const modal = new bootstrap.Modal(document.getElementById('addJobModal'));
+            modal.show();
+        }
+
+        function saveJob() {
+            const jobData = {
+                title: document.getElementById('jobTitle').value,
+                department: document.getElementById('jobDepartment').value,
+                description: document.getElementById('jobDescription').value,
+                applications: editingJob ? editingJob.applications : []
+            };
+            if (editingJob) {
+                Object.assign(editingJob, jobData);
+            } else {
+                jobData.id = Date.now();
+                jobs.push(jobData);
+            }
+            localStorage.setItem('jobs', JSON.stringify(jobs));
+            renderJobs();
+            bootstrap.Modal.getInstance(document.getElementById('addJobModal')).hide();
+        }
+
+        function deleteJob(id) {
+            if (confirm('Delete position?')) {
+                jobs = jobs.filter(j => j.id !== id);
+                localStorage.setItem('jobs', JSON.stringify(jobs));
+                renderJobs();
+            }
+        }
+
+        function logAudit(action, details) {
+            const entry = {
+                time: new Date().toLocaleString(),
+                user: currentUser.role,
+                action,
+                details
+            };
+            auditLog.push(entry);
+            localStorage.setItem('auditLog', JSON.stringify(auditLog));
+            renderAudit();
+        }
+
+        function renderAudit() {
+            requestAnimationFrame(() => {
+                document.getElementById('auditTable').innerHTML = auditLog.map(a => `
+                    <tr>
+                        <td>${a.time}</td>
+                        <td>${a.user}</td>
+                        <td>${a.action}</td>
+                        <td>${a.details}</td>
+                    </tr>
+                `).join('');
+            });
         }
 
         // Communication
@@ -1720,6 +2126,7 @@
             }
             loadLeaveRequests();
             renderReviews();
+            renderAudit();
         });
     </script>
 </body>
