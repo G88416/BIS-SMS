@@ -198,8 +198,10 @@
                 <li><a href="#exams" class="nav-link" onclick="showSection('exams')"><i class="fas fa-file-alt me-2"></i><span class="nav-text">Examinations</span></a></li>
                 <li class="admin-only"><a href="#hr" class="nav-link" onclick="showSection('hr')"><i class="fas fa-user-tie me-2"></i><span class="nav-text">HR Management</span></a></li>
                 <li><a href="#communication" class="nav-link" onclick="showSection('communication')"><i class="fas fa-comments me-2"></i><span class="nav-text">Communication</span></a></li>
+                <li><a href="#content" class="nav-link" onclick="showSection('content')"><i class="fas fa-book me-2"></i><span class="nav-text">Content</span></a></li>
                 <li class="admin-only"><a href="#reports" class="nav-link" onclick="showSection('reports')"><i class="fas fa-chart-bar me-2"></i><span class="nav-text">Reports</span></a></li>
                 <li class="admin-only"><a href="#settings" class="nav-link" onclick="showSection('settings')"><i class="fas fa-cog me-2"></i><span class="nav-text">Settings</span></a></li>
+                <li class="student-only"><a href="#aiResearch" class="nav-link" onclick="showSection('aiResearch')"><i class="fas fa-robot me-2"></i><span class="nav-text">AI Research</span></a></li>
                 <li><a href="#" class="nav-link text-danger" onclick="logout()"><i class="fas fa-sign-out-alt me-2"></i><span class="nav-text">Logout</span></a></li>
             </ul>
         </div>
@@ -255,6 +257,7 @@
                     </div>
                 </div>
                 <button class="btn btn-success mb-3" onclick="markAllPresent()">Mark All Present</button>
+                <button class="btn btn-info mb-3" onclick="syncBiometric()">Sync with Biometric System</button>
                 <table class="table table-striped">
                     <thead><tr><th>ID</th><th>Name</th><th>Status</th><th>Actions</th></tr></thead>
                     <tbody id="attendanceTable"></tbody>
@@ -331,6 +334,17 @@
                 <div id="messageHistory" class="mt-3"></div>
             </section>
 
+            <!-- Content Module -->
+            <section id="content" class="section d-none">
+                <h2>Content Management</h2>
+                <p>This module hosts subjects, interventions, online lessons, text books and work due.</p>
+                <button class="btn btn-primary mb-3" onclick="showUploadContentModal()">Upload Content</button>
+                <table class="table table-striped">
+                    <thead><tr><th>Type</th><th>Name</th><th>Actions</th></tr></thead>
+                    <tbody id="contentTable"></tbody>
+                </table>
+            </section>
+
             <!-- Reports -->
             <section id="reports" class="section d-none admin-only">
                 <h2>Reports & Analytics</h2>
@@ -350,6 +364,16 @@
                 </div>
                 <h5>School Year</h5>
                 <input type="text" id="schoolYear" class="form-control w-50" value="2025">
+            </section>
+
+            <!-- AI Research Module (Student Only) -->
+            <section id="aiResearch" class="section d-none">
+                <h2>AI Research Module - Powered by Grok</h2>
+                <div class="mb-3">
+                    <textarea id="grokQuery" class="form-control" rows="3" placeholder="Enter your research query..."></textarea>
+                </div>
+                <button class="btn btn-primary" onclick="queryGrok()">Submit Query</button>
+                <div id="grokResponse" class="mt-3 p-3 bg-light rounded"></div>
             </section>
         </div>
     </div>
@@ -372,6 +396,26 @@
         </div>
     </div>
 
+    <div class="modal fade" id="uploadContentModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header"><h5>Upload Content</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <input type="text" id="contentName" placeholder="Content Name" class="form-control mb-3">
+                    <select id="contentType" class="form-control mb-3">
+                        <option>Subject</option>
+                        <option>Intervention</option>
+                        <option>Online Lesson</option>
+                        <option>Textbook</option>
+                        <option>Work Due</option>
+                    </select>
+                    <input type="file" id="contentFile" class="form-control mb-3">
+                </div>
+                <div class="modal-footer"><button class="btn btn-primary" onclick="saveContent()">Upload</button></div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Global Data
         let students = JSON.parse(localStorage.getItem('students')) || [];
@@ -381,6 +425,7 @@
         let exams = JSON.parse(localStorage.getItem('exams')) || [];
         let staff = JSON.parse(localStorage.getItem('staff')) || [];
         let messages = JSON.parse(localStorage.getItem('messages')) || [];
+        let content = JSON.parse(localStorage.getItem('content')) || [];
         let currentUser = null;
 
         // Login
@@ -457,6 +502,7 @@
             renderExams();
             renderHR();
             renderCommunication();
+            renderContent();
         }
 
         // Admission
@@ -548,6 +594,13 @@
             if (existing) existing.status = 'Present';
             else attendanceRecords.push({ studentId: id, date, status: 'Present' });
             localStorage.setItem('attendance', JSON.stringify(attendanceRecords));
+            loadAttendance();
+        }
+        function syncBiometric() {
+            // Placeholder for integration with biometric system (e.g., API call to fetch teacher attendance data)
+            // In a real implementation, this would fetch data from your biometric system and update attendanceRecords accordingly.
+            alert('Attendance synced from biometric system for teachers. (This is a placeholder - integrate your biometric API here.)');
+            // Example: fetch('your-biometric-api-url').then(response => response.json()).then(data => { /* update attendance */ });
             loadAttendance();
         }
 
@@ -658,6 +711,54 @@
                     <p>${m.text}</p>
                 </div>
             `).join('');
+        }
+
+        // Content
+        function showUploadContentModal() {
+            const modal = new bootstrap.Modal(document.getElementById('uploadContentModal'));
+            modal.show();
+        }
+        function saveContent() {
+            const name = document.getElementById('contentName').value;
+            const type = document.getElementById('contentType').value;
+            const file = document.getElementById('contentFile').files[0];
+            if (!file) return alert('Select a file');
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                content.push({
+                    id: Date.now(),
+                    name,
+                    type,
+                    data: e.target.result,
+                    filename: file.name
+                });
+                localStorage.setItem('content', JSON.stringify(content));
+                renderContent();
+                bootstrap.Modal.getInstance(document.getElementById('uploadContentModal')).hide();
+            };
+            reader.readAsDataURL(file);
+        }
+        function renderContent() {
+            document.getElementById('contentTable').innerHTML = content.map(c => `
+                <tr>
+                    <td>${c.type}</td>
+                    <td>${c.name}</td>
+                    <td><a href="${c.data}" download="${c.filename}" class="btn btn-sm btn-info">Download</a></td>
+                </tr>
+            `).join('');
+        }
+
+        // AI Research with Grok
+        function queryGrok() {
+            const query = document.getElementById('grokQuery').value;
+            if (!query) return;
+            document.getElementById('grokResponse').innerHTML = 'Thinking...';
+            // Placeholder for Grok AI integration via xAI API.
+            // In production, replace with actual API call: fetch('https://api.x.ai/v1/chat/completions', { method: 'POST', headers: { 'Authorization': 'Bearer YOUR_API_KEY' }, body: JSON.stringify({ model: 'grok', messages: [{ role: 'user', content: query }] }) }).then(res => res.json()).then(data => { document.getElementById('grokResponse').innerHTML = data.choices[0].message.content; });
+            // Visit https://x.ai/api for API details and to obtain a key.
+            setTimeout(() => {
+                document.getElementById('grokResponse').innerHTML = `Mock response from Grok: This is a simulated answer to "${query}". Integrate the real xAI API for live responses.`;
+            }, 1000);
         }
 
         // Reports
