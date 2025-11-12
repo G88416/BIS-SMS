@@ -547,19 +547,55 @@
             }
         }
 
-        function biometricLogin() {
-            // Placeholder for biometric integration (e.g., using WebAuthn or external API)
-            if (navigator.credentials) {
-                // Example WebAuthn for fingerprint/face (requires setup)
-                alert('Biometric login initiated. (Integrate with your biomatrix system API here, e.g., fingerprint scanner.)');
-                // Simulate success
-                currentUser = { username: 'student', role: 'student' }; // Replace with actual auth
-                localStorage.setItem('currentUser', JSON.stringify(currentUser));
-                document.getElementById('loginPage').style.display = 'none';
-                document.getElementById('appContainer').style.display = 'block';
-                initApp();
-            } else {
-                alert('Biometric not supported in this browser. Use username/password.');
+        async function biometricLogin() {
+            // Integration with biometric API using WebAuthn for client-side biometric authentication
+            try {
+                // First, check if WebAuthn is supported
+                if (!window.PublicKeyCredential) {
+                    throw new Error('WebAuthn not supported in this browser.');
+                }
+
+                // Get challenge from server (placeholder - in real app, fetch from backend)
+                const challengeResponse = await fetch('https://your-backend.com/api/biometric/challenge', { method: 'GET' });
+                const challengeData = await challengeResponse.json();
+                const publicKey = {
+                    challenge: Uint8Array.from(atob(challengeData.challenge), c => c.charCodeAt(0)),
+                    rpId: window.location.hostname,
+                    userVerification: 'preferred'
+                };
+
+                // Get credential
+                const credential = await navigator.credentials.get({ publicKey });
+
+                // Verify on server (placeholder)
+                const verifyResponse = await fetch('https://your-backend.com/api/biometric/verify', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        id: credential.id,
+                        rawId: btoa(String.fromCharCode(...new Uint8Array(credential.rawId))),
+                        response: {
+                            authenticatorData: btoa(String.fromCharCode(...new Uint8Array(credential.response.authenticatorData))),
+                            clientDataJSON: btoa(String.fromCharCode(...new Uint8Array(credential.response.clientDataJSON))),
+                            signature: btoa(String.fromCharCode(...new Uint8Array(credential.response.signature))),
+                            userHandle: credential.response.userHandle ? btoa(String.fromCharCode(...new Uint8Array(credential.response.userHandle))) : null
+                        },
+                        type: credential.type
+                    }),
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const verifyData = await verifyResponse.json();
+                if (verifyData.success) {
+                    currentUser = { username: verifyData.username, role: verifyData.role };
+                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                    document.getElementById('loginPage').style.display = 'none';
+                    document.getElementById('appContainer').style.display = 'block';
+                    initApp();
+                } else {
+                    alert('Biometric authentication failed.');
+                }
+            } catch (error) {
+                alert('Error with biometric login: ' + error.message + '. Use username/password.');
+                console.error(error);
             }
         }
 
