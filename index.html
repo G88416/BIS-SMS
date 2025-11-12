@@ -10,6 +10,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <script src="https://js.stripe.com/v3/"></script> <!-- Stripe SDK -->
     <style>
         body { 
             font-family: 'Poppins', sans-serif; 
@@ -350,7 +351,7 @@
                         <thead><tr><th>Student</th><th>Marks</th></tr></thead>
                         <tbody id="marksTable"></tbody>
                     </table>
-                    <button class="btn btn-primary" onclick="saveMarks()">Save Marks</button>
+                    <button class="btn btn-primary" onclick="saveMarks()">Save</button>
                 </div>
             </section>
 
@@ -612,6 +613,9 @@
         let currentMarksExam = null;
         let editingLeave = null;
         let editingReviewStaff = null;
+
+        // Payment Gateway Setup (Stripe)
+        const stripe = Stripe('your-publishable-key-here'); // Replace with your Stripe publishable key
 
         // Utility: Debounce for performance
         function debounce(func, delay) {
@@ -1092,7 +1096,7 @@
                             <td>${f.status}</td>
                             <td>${f.receipt ? '<a href="' + f.receipt + '" download>Download</a>' : 'None'}</td>
                             <td>
-                                <button class="btn btn-sm btn-success" onclick="payFee(${f.id})">Pay</button>
+                                <button class="btn btn-sm btn-success" onclick="initiatePayment(${f.id})">Pay</button>
                                 <button class="btn btn-sm btn-secondary" onclick="updateFee(${f.id})">Update</button>
                             </td>
                         </tr>
@@ -1112,14 +1116,39 @@
             });
             renderFees(filtered);
         }
-        function payFee(id) {
+        async function initiatePayment(id) {
             const f = fees.find(fee => fee.id === id);
-            if (f) {
-                f.status = 'Paid';
-                f.paidDate = new Date().toISOString().split('T')[0];
+            if (!f || f.status === 'Paid') return;
+            try {
+                // Create payment intent on server (placeholder - in real app, fetch from backend)
+                const response = await fetch('https://your-backend.com/create-payment-intent', {
+                    method: 'POST',
+                    body: JSON.stringify({ amount: f.amount * 100 }), // cents
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const { clientSecret } = await response.json();
+
+                const { error } = await stripe.confirmCardPayment(clientSecret, {
+                    payment_method: {
+                        card: {token: 'tok_visa'} // Placeholder, in real use Stripe Elements
+                    }
+                });
+
+                if (error) {
+                    alert('Payment failed: ' + error.message);
+                } else {
+                    f.status = 'Paid';
+                    f.paidDate = new Date().toISOString().split('T')[0];
+                    localStorage.setItem('fees', JSON.stringify(fees));
+                    renderFees();
+                    alert('Payment successful');
+                }
+            } catch (error) {
+                alert('Error initiating payment: ' + error.message);
             }
-            localStorage.setItem('fees', JSON.stringify(fees));
-            renderFees();
+        }
+        function payFee(id) {
+            initiatePayment(id);
         }
         function updateFee(id) {
             editingFee = fees.find(f => f.id === id);
