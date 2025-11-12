@@ -279,28 +279,45 @@
             <!-- Fee Management -->
             <section id="fees" class="section d-none">
                 <h2>Fee Management</h2>
-                <button class="btn btn-primary mb-3" onclick="generateFeeInvoice()">Generate Invoice</button>
+                <button class="btn btn-primary mb-3" onclick="showGenerateInvoiceModal()">Generate Invoice</button>
+                <button class="btn btn-secondary mb-3" onclick="showBulkUploadFeesModal()">Bulk Upload Fees</button>
+                <button class="btn btn-warning mb-3" onclick="sendFeeReminders()">Send Reminders</button>
                 <div class="row mb-3">
                     <div class="col-md-3"><div class="card card-metric p-3"><h5>Total Collected</h5><h3 id="totalCollected">R0</h3></div></div>
                     <div class="col-md-3"><div class="card card-metric p-3"><h5>Outstanding</h5><h3 id="outstandingFees">R0</h3></div></div>
+                    <div class="col-md-3"><div class="card card-metric p-3"><h5>Overdue</h5><h3 id="overdueFees">R0</h3></div></div>
+                    <div class="col-md-3"><div class="card card-metric p-3"><h5>Payment Rate</h5><h3 id="paymentRate">0%</h3></div></div>
+                </div>
+                <div class="input-group mb-3 w-50">
+                    <input type="text" class="form-control" placeholder="Search fees..." id="feeSearch">
+                    <button class="btn btn-outline-secondary" onclick="searchFees()">Search</button>
                 </div>
                 <table class="table table-striped">
-                    <thead><tr><th>Student</th><th>Amount</th><th>Due Date</th><th>Status</th><th>Receipt</th><th>Actions</th></tr></thead>
+                    <thead><tr><th>Student</th><th>Amount</th><th>Due Date</th><th>Paid Date</th><th>Status</th><th>Receipt</th><th>Actions</th></tr></thead>
                     <tbody id="feeTable"></tbody>
                 </table>
+                <div id="feeHistory" class="mt-4"></div>
             </section>
 
             <!-- Timetable Management -->
             <section id="timetable" class="section d-none">
                 <h2>Timetable Management</h2>
                 <div class="row mb-3">
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <select id="timetableGrade" class="form-control" onchange="loadTimetable()">
                             <option value="">Select Grade</option>
                         </select>
                     </div>
-                    <div class="col-md-4">
-                        <button class="btn btn-primary" onclick="toggleEditTimetable()">Edit Timetable</button>
+                    <div class="col-md-3">
+                        <select id="timetableTeacher" class="form-control" onchange="highlightTeacherSchedule()">
+                            <option value="">Select Teacher</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <button class="btn btn-primary" onclick="showAddTimeSlotModal()">Add Time Slot</button>
+                    </div>
+                    <div class="col-md-3">
+                        <button class="btn btn-warning" onclick="checkTimetableConflicts()">Check Conflicts</button>
                     </div>
                 </div>
                 <div id="timetableContainer"></div>
@@ -310,20 +327,57 @@
             <section id="exams" class="section d-none">
                 <h2>Examination Management</h2>
                 <button class="btn btn-primary mb-3" onclick="showAddExamModal()">Schedule Exam</button>
-                <button class="btn btn-info mb-3" onclick="generateReportCard()">Generate Report Card</button>
+                <button class="btn btn-info mb-3" onclick="showEnterMarksModal()">Enter Marks</button>
+                <button class="btn btn-success mb-3" onclick="generateAllReportCards()">Generate All Report Cards</button>
+                <button class="btn btn-warning mb-3" onclick="generateHallTickets()">Generate Hall Tickets</button>
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <select id="examGradeFilter" class="form-control" onchange="renderExams()">
+                            <option value="">All Grades</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <input type="text" id="examSubjectFilter" class="form-control" placeholder="Filter by Subject" oninput="debounce(renderExams, 300)()">
+                    </div>
+                </div>
                 <table class="table table-striped">
-                    <thead><tr><th>Exam</th><th>Date</th><th>Subject</th><th>Status</th><th>Actions</th></tr></thead>
+                    <thead><tr><th>Exam</th><th>Date</th><th>Subject</th><th>Grade</th><th>Status</th><th>Actions</th></tr></thead>
                     <tbody id="examTable"></tbody>
                 </table>
+                <div id="marksEntry" class="mt-4 d-none">
+                    <h3>Enter Marks for <span id="marksExamName"></span></h3>
+                    <table class="table table-striped">
+                        <thead><tr><th>Student</th><th>Marks</th></tr></thead>
+                        <tbody id="marksTable"></tbody>
+                    </table>
+                    <button class="btn btn-primary" onclick="saveMarks()">Save Marks</button>
+                </div>
             </section>
 
             <!-- HR Management -->
             <section id="hr" class="section d-none admin-only">
                 <h2>Human Resource Management</h2>
                 <button class="btn btn-primary mb-3" onclick="showAddStaffModal()">Add Staff</button>
+                <button class="btn btn-secondary mb-3" onclick="syncStaffBiometric()">Sync Staff Biometric</button>
+                <button class="btn btn-info mb-3" onclick="generatePayroll()">Generate Payroll</button>
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <input type="date" id="leaveDate" class="form-control" onchange="loadLeaveRequests()">
+                    </div>
+                </div>
                 <table class="table table-striped">
-                    <thead><tr><th>ID</th><th>Name</th><th>Role</th><th>Department</th><th>Status</th><th>Actions</th></tr></thead>
+                    <thead><tr><th>ID</th><th>Name</th><th>Role</th><th>Department</th><th>Salary</th><th>Status</th><th>Actions</th></tr></thead>
                     <tbody id="staffTable"></tbody>
+                </table>
+                <h3>Leave Requests</h3>
+                <table class="table table-striped">
+                    <thead><tr><th>Staff</th><th>Date</th><th>Reason</th><th>Status</th><th>Actions</th></tr></thead>
+                    <tbody id="leaveTable"></tbody>
+                </table>
+                <h3>Performance Reviews</h3>
+                <table class="table table-striped">
+                    <thead><tr><th>Staff</th><th>Review Date</th><th>Score</th><th>Comments</th><th>Actions</th></tr></thead>
+                    <tbody id="reviewTable"></tbody>
                 </table>
             </section>
 
@@ -407,97 +461,129 @@
         </div>
     </div>
 
-    <!-- Modals -->
-    <div class="modal fade" id="addAdmissionModal">
+    <!-- Additional Modals -->
+    <div class="modal fade" id="generateInvoiceModal">
         <div class="modal-dialog">
             <div class="modal-content">
-                <div class="modal-header"><h5>Add Admission Application</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-header"><h5>Generate Fee Invoice</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
                 <div class="modal-body">
-                    <input id="appName" placeholder="Student Name" class="form-control mb-3">
-                    <input id="appParent" placeholder="Parent Name" class="form-control mb-3">
-                    <select id="appGrade" class="form-control mb-3">
-                        <option value="">Select Grade</option>
-                        <option>Grade R</option><option>Grade 1</option><option>Grade 12</option>
+                    <select id="invoiceStudent" class="form-control mb-3">
+                        <option value="">Select Student</option>
                     </select>
-                    <input type="file" id="appDocuments" class="form-control mb-3" multiple>
+                    <input type="number" id="invoiceAmount" class="form-control mb-3" placeholder="Amount">
+                    <input type="date" id="invoiceDueDate" class="form-control mb-3">
                 </div>
-                <div class="modal-footer"><button class="btn btn-primary" onclick="saveAdmission()">Submit</button></div>
+                <div class="modal-footer"><button class="btn btn-primary" onclick="saveInvoice()">Generate</button></div>
             </div>
         </div>
     </div>
 
-    <div class="modal fade" id="uploadContentModal">
+    <div class="modal fade" id="bulkUploadFeesModal">
         <div class="modal-dialog">
             <div class="modal-content">
-                <div class="modal-header"><h5>Upload Content</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-header"><h5>Bulk Upload Fees</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
                 <div class="modal-body">
-                    <input type="text" id="contentName" placeholder="Content Name" class="form-control mb-3">
-                    <select id="contentType" class="form-control mb-3">
-                        <option>Subject</option>
-                        <option>Intervention</option>
-                        <option>Online Lesson</option>
-                        <option>Textbook</option>
-                        <option>Examination</option>
-                        <option>Work Due</option>
-                    </select>
-                    <select id="contentGrade" class="form-control mb-3">
-                        <option value="">Select Grade</option>
-                        <option>Grade R</option><option>Grade 1</option><option>Grade 12</option>
-                    </select>
-                    <input type="text" id="contentSubject" placeholder="Subject" class="form-control mb-3">
-                    <input type="file" id="contentFile" class="form-control mb-3">
+                    <input type="file" id="bulkFeesFile" class="form-control mb-3" accept=".csv">
                 </div>
-                <div class="modal-footer"><button class="btn btn-primary" onclick="saveContent()">Upload</button></div>
+                <div class="modal-footer"><button class="btn btn-primary" onclick="processBulkFees()">Upload</button></div>
             </div>
         </div>
     </div>
 
-    <div class="modal fade" id="viewStudentModal">
+    <div class="modal fade" id="addTimeSlotModal">
         <div class="modal-dialog">
             <div class="modal-content">
-                <div class="modal-header"><h5>Student Details</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-                <div class="modal-body" id="studentDetails"></div>
-                <input type="file" id="studentDocuments" class="form-control mb-3" multiple>
-                <button class="btn btn-primary" onclick="uploadStudentDocuments(currentStudentId)">Upload Documents</button>
+                <div class="modal-header"><h5>Add Time Slot</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <input type="time" id="timeSlotStart" class="form-control mb-3">
+                    <input type="time" id="timeSlotEnd" class="form-control mb-3">
+                    <input type="text" id="timeSlotLabel" class="form-control mb-3" placeholder="Label (e.g., Break)">
+                </div>
+                <div class="modal-footer"><button class="btn btn-primary" onclick="saveTimeSlot()">Add</button></div>
             </div>
         </div>
     </div>
 
-    <div class="modal fade" id="previewContentModal">
+    <div class="modal fade" id="addExamModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header"><h5>Schedule Exam</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <input type="text" id="examName" class="form-control mb-3" placeholder="Exam Name">
+                    <input type="date" id="examDate" class="form-control mb-3">
+                    <input type="text" id="examSubject" class="form-control mb-3" placeholder="Subject">
+                    <select id="examGrade" class="form-control mb-3">
+                        <option value="">Select Grade</option>
+                    </select>
+                    <input type="number" id="examMaxMarks" class="form-control mb-3" placeholder="Max Marks">
+                </div>
+                <div class="modal-footer"><button class="btn btn-primary" onclick="saveExam()">Schedule</button></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="enterMarksModal">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
-                <div class="modal-header"><h5>Content Preview</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-                <div class="modal-body" id="previewBody"></div>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal fade" id="editTimetableModal">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header"><h5>Edit Timetable Entry</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-header"><h5>Enter Marks</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
                 <div class="modal-body">
-                    <input type="text" id="editTimetableValue" class="form-control" placeholder="Enter subject">
-                </div>
-                <div class="modal-footer"><button class="btn btn-primary" onclick="saveTimetableEdit()">Save</button></div>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal fade" id="updateFeeModal">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header"><h5>Update Fee</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-                <div class="modal-body">
-                    <input type="number" id="updateFeeAmount" class="form-control mb-3" placeholder="Amount">
-                    <input type="date" id="updateFeeDueDate" class="form-control mb-3">
-                    <select id="updateFeeStatus" class="form-control mb-3">
-                        <option>Pending</option>
-                        <option>Paid</option>
+                    <select id="marksExamSelect" class="form-control mb-3" onchange="loadMarksEntry()">
+                        <option value="">Select Exam</option>
                     </select>
-                    <input type="file" id="feeReceipt" class="form-control mb-3">
+                    <table class="table table-striped">
+                        <thead><tr><th>Student</th><th>Marks</th></tr></thead>
+                        <tbody id="marksTable"></tbody>
+                    </table>
                 </div>
-                <div class="modal-footer"><button class="btn btn-primary" onclick="saveFeeUpdate()">Save</button></div>
+                <div class="modal-footer"><button class="btn btn-primary" onclick="saveMarks()">Save</button></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="addStaffModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header"><h5>Add Staff</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <input type="text" id="staffName" class="form-control mb-3" placeholder="Name">
+                    <select id="staffRole" class="form-control mb-3">
+                        <option>Teacher</option>
+                        <option>Admin</option>
+                        <option>Support</option>
+                    </select>
+                    <input type="text" id="staffDepartment" class="form-control mb-3" placeholder="Department">
+                    <input type="number" id="staffSalary" class="form-control mb-3" placeholder="Salary">
+                </div>
+                <div class="modal-footer"><button class="btn btn-primary" onclick="saveStaff()">Add</button></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="leaveRequestModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header"><h5>Approve/Reject Leave</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <select id="leaveStatus" class="form-control">
+                        <option>Approved</option>
+                        <option>Rejected</option>
+                    </select>
+                </div>
+                <div class="modal-footer"><button class="btn btn-primary" onclick="saveLeaveStatus()">Save</button></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="performanceReviewModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header"><h5>Performance Review</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <input type="date" id="reviewDate" class="form-control mb-3">
+                    <input type="number" id="reviewScore" class="form-control mb-3" placeholder="Score (0-100)">
+                    <textarea id="reviewComments" class="form-control" rows="3" placeholder="Comments"></textarea>
+                </div>
+                <div class="modal-footer"><button class="btn btn-primary" onclick="saveReview()">Save</button></div>
             </div>
         </div>
     </div>
@@ -514,11 +600,18 @@
         let content = JSON.parse(localStorage.getItem('content')) || [];
         let timetables = JSON.parse(localStorage.getItem('timetables')) || {}; // Grade -> timetable data
         let documents = JSON.parse(localStorage.getItem('documents')) || {}; // id -> array of {name, data}
+        let leaveRequests = JSON.parse(localStorage.getItem('leaveRequests')) || [];
+        let performanceReviews = JSON.parse(localStorage.getItem('performanceReviews')) || [];
+        let marks = JSON.parse(localStorage.getItem('marks')) || {}; // examId -> {studentId: mark}
+        let timeSlots = JSON.parse(localStorage.getItem('timeSlots')) || Array(8).fill().map((_, i) => ({start: `0${i + 8}:00`, end: `0${i + 9}:00`, label: ''}));
         let currentUser = null;
         let chatHistory = [];
         let editingCell = null;
         let editingFee = null;
         let currentStudentId = null;
+        let currentMarksExam = null;
+        let editingLeave = null;
+        let editingReviewStaff = null;
 
         // Utility: Debounce for performance
         function debounce(func, delay) {
@@ -602,6 +695,9 @@
         function initApp() {
             updateRoleVisibility();
             populateGrades();
+            populateTeachers();
+            populateStudentsSelect();
+            populateExamsSelect();
             document.getElementById('attendanceDate').value = new Date().toISOString().split('T')[0];
             renderDashboard();
             renderAll();
@@ -620,6 +716,24 @@
             document.getElementById('contentGradeFilter').innerHTML = gradeOptions.replace('Select', 'All');
             if (document.getElementById('contentGrade')) document.getElementById('contentGrade').innerHTML = gradeOptions;
             if (document.getElementById('appGrade')) document.getElementById('appGrade').innerHTML = gradeOptions;
+            if (document.getElementById('examGrade')) document.getElementById('examGrade').innerHTML = gradeOptions;
+            if (document.getElementById('examGradeFilter')) document.getElementById('examGradeFilter').innerHTML = gradeOptions.replace('Select', 'All');
+        }
+
+        function populateTeachers() {
+            const teachers = staff.filter(s => s.role === 'Teacher');
+            const options = '<option value="">Select Teacher</option>' + teachers.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+            document.getElementById('timetableTeacher').innerHTML = options;
+        }
+
+        function populateStudentsSelect() {
+            const options = '<option value="">Select Student</option>' + students.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+            if (document.getElementById('invoiceStudent')) document.getElementById('invoiceStudent').innerHTML = options;
+        }
+
+        function populateExamsSelect() {
+            const options = '<option value="">Select Exam</option>' + exams.map(e => `<option value="${e.id}">${e.name} - ${e.subject}</option>`).join('');
+            if (document.getElementById('marksExamSelect')) document.getElementById('marksExamSelect').innerHTML = options;
         }
 
         function updateRoleVisibility() {
@@ -897,30 +1011,84 @@
         }
 
         // Fees
-        function generateFeeInvoice() {
-            if (!students.length) return alert('No students');
-            // For demo, generate for first student
-            const student = students[0];
+        function showGenerateInvoiceModal() {
+            const modal = new bootstrap.Modal(document.getElementById('generateInvoiceModal'));
+            modal.show();
+        }
+        function saveInvoice() {
+            const studentId = document.getElementById('invoiceStudent').value;
+            const amount = parseFloat(document.getElementById('invoiceAmount').value);
+            const dueDate = document.getElementById('invoiceDueDate').value;
             fees.push({
                 id: Date.now(),
-                studentId: student.id,
-                amount: 2500,
-                dueDate: '2025-12-01',
+                studentId,
+                amount,
+                dueDate,
+                paidDate: null,
                 status: 'Pending',
                 receipt: null
             });
             localStorage.setItem('fees', JSON.stringify(fees));
             renderFees();
+            bootstrap.Modal.getInstance(document.getElementById('generateInvoiceModal')).hide();
         }
-        function renderFees() {
+        function showBulkUploadFeesModal() {
+            const modal = new bootstrap.Modal(document.getElementById('bulkUploadFeesModal'));
+            modal.show();
+        }
+        function processBulkFees() {
+            const file = document.getElementById('bulkFeesFile').files[0];
+            if (!file) return alert('Select a CSV file');
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = e.target.result;
+                const lines = text.split('\n').slice(1); // Skip header
+                lines.forEach(line => {
+                    const [studentName, amount, dueDate] = line.split(',');
+                    const student = students.find(s => s.name === studentName.trim());
+                    if (student) {
+                        fees.push({
+                            id: Date.now(),
+                            studentId: student.id,
+                            amount: parseFloat(amount),
+                            dueDate: dueDate.trim(),
+                            paidDate: null,
+                            status: 'Pending',
+                            receipt: null
+                        });
+                    }
+                });
+                localStorage.setItem('fees', JSON.stringify(fees));
+                renderFees();
+                bootstrap.Modal.getInstance(document.getElementById('bulkUploadFeesModal')).hide();
+            };
+            reader.readAsText(file);
+        }
+        function sendFeeReminders() {
+            const overdue = fees.filter(f => f.status === 'Pending' && new Date(f.dueDate) < new Date());
+            overdue.forEach(f => {
+                const student = students.find(s => s.id === f.studentId);
+                messages.push({
+                    id: Date.now(),
+                    text: `Reminder: Fee of R${f.amount} for ${student.name} is overdue. Due date: ${f.dueDate}`,
+                    recipient: 'parents',
+                    timestamp: new Date().toLocaleString()
+                });
+            });
+            localStorage.setItem('messages', JSON.stringify(messages));
+            alert('Reminders sent for overdue fees.');
+            renderCommunication();
+        }
+        function renderFees(filteredFees = fees) {
             requestAnimationFrame(() => {
-                document.getElementById('feeTable').innerHTML = fees.map(f => {
+                document.getElementById('feeTable').innerHTML = filteredFees.map(f => {
                     const s = students.find(st => st.id === f.studentId);
                     return `
                         <tr>
                             <td>${s?.name || 'Unknown'}</td>
                             <td>R${f.amount}</td>
                             <td>${f.dueDate}</td>
+                            <td>${f.paidDate || 'N/A'}</td>
                             <td>${f.status}</td>
                             <td>${f.receipt ? '<a href="' + f.receipt + '" download>Download</a>' : 'None'}</td>
                             <td>
@@ -932,11 +1100,24 @@
                 }).join('');
                 document.getElementById('totalCollected').textContent = 'R' + fees.filter(f => f.status === 'Paid').reduce((s, f) => s + f.amount, 0);
                 document.getElementById('outstandingFees').textContent = 'R' + fees.filter(f => f.status === 'Pending').reduce((s, f) => s + f.amount, 0);
+                document.getElementById('overdueFees').textContent = 'R' + fees.filter(f => f.status === 'Pending' && new Date(f.dueDate) < new Date()).reduce((s, f) => s + f.amount, 0);
+                document.getElementById('paymentRate').textContent = fees.length ? Math.round((fees.filter(f => f.status === 'Paid').length / fees.length) * 100) + '%' : '0%';
             });
+        }
+        function searchFees() {
+            const term = document.getElementById('feeSearch').value.toLowerCase();
+            const filtered = fees.filter(f => {
+                const s = students.find(st => st.id === f.studentId);
+                return s && s.name.toLowerCase().includes(term);
+            });
+            renderFees(filtered);
         }
         function payFee(id) {
             const f = fees.find(fee => fee.id === id);
-            if (f) f.status = 'Paid';
+            if (f) {
+                f.status = 'Paid';
+                f.paidDate = new Date().toISOString().split('T')[0];
+            }
             localStorage.setItem('fees', JSON.stringify(fees));
             renderFees();
         }
@@ -975,21 +1156,21 @@
             const grade = document.getElementById('timetableGrade').value;
             if (!grade) return;
             if (!timetables[grade]) {
-                timetables[grade] = Array.from({length: 5}, () => Array.from({length: 8}, () => ''));
+                timetables[grade] = timeSlots.map(() => Array(5).fill({subject: '', teacherId: ''}));
             }
             renderTimetable(grade);
         }
         function renderTimetable(grade) {
             requestAnimationFrame(() => {
                 const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
-                const times = Array(8).fill().map((_, i) => `0${i + 8}:00`);
                 const container = document.getElementById('timetableContainer');
                 let html = '<table class="table"><thead><tr><th>Time</th>' + days.map(d => `<th>${d}</th>`).join('') + '</tr></thead><tbody>';
-                times.forEach((time, tIndex) => {
-                    html += `<tr><td>${time}</td>`;
+                timeSlots.forEach((slot, tIndex) => {
+                    html += `<tr><td>${slot.start} - ${slot.end} ${slot.label ? '(' + slot.label + ')' : ''}</td>`;
                     days.forEach((day, dIndex) => {
-                        const value = timetables[grade][dIndex][tIndex] || '';
-                        html += `<td class="timetable-cell editable" onclick="editTimetableCell('${grade}', ${dIndex}, ${tIndex})">${value}</td>`;
+                        const entry = timetables[grade][tIndex][dIndex] || {subject: '', teacherId: ''};
+                        const teacher = staff.find(t => t.id === entry.teacherId);
+                        html += `<td class="timetable-cell editable" onclick="editTimetableCell('${grade}', ${dIndex}, ${tIndex})">${entry.subject} ${teacher ? ' (' + teacher.name + ')' : ''}</td>`;
                     });
                     html += '</tr>';
                 });
@@ -1000,66 +1181,175 @@
         function editTimetableCell(grade, dayIndex, timeIndex) {
             if (currentUser.role !== 'admin' && currentUser.role !== 'teacher') return;
             editingCell = {grade, dayIndex, timeIndex};
-            document.getElementById('editTimetableValue').value = timetables[grade][dayIndex][timeIndex] || '';
+            document.getElementById('editTimetableValue').value = timetables[grade][timeIndex][dayIndex].subject || '';
+            // Add teacher select
+            const teacherSelect = document.createElement('select');
+            teacherSelect.id = 'editTimetableTeacher';
+            teacherSelect.classList.add('form-control', 'mt-3');
+            teacherSelect.innerHTML = '<option value="">Select Teacher</option>' + staff.filter(s => s.role === 'Teacher').map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+            teacherSelect.value = timetables[grade][timeIndex][dayIndex].teacherId || '';
+            document.getElementById('editTimetableModal').querySelector('.modal-body').appendChild(teacherSelect);
             const modal = new bootstrap.Modal(document.getElementById('editTimetableModal'));
             modal.show();
+            modal._element.addEventListener('hidden.bs.modal', () => teacherSelect.remove(), {once: true});
         }
         function saveTimetableEdit() {
             if (!editingCell) return;
             const value = document.getElementById('editTimetableValue').value;
-            timetables[editingCell.grade][editingCell.dayIndex][editingCell.timeIndex] = value;
+            const teacherId = document.getElementById('editTimetableTeacher').value;
+            timetables[editingCell.grade][editingCell.timeIndex][editingCell.dayIndex] = {subject: value, teacherId};
             localStorage.setItem('timetables', JSON.stringify(timetables));
             bootstrap.Modal.getInstance(document.getElementById('editTimetableModal')).hide();
             renderTimetable(editingCell.grade);
             editingCell = null;
         }
-        function toggleEditTimetable() {
-            // Already editable via clicks
-            alert('Click on cells to edit (admin/teacher only).');
+        function showAddTimeSlotModal() {
+            const modal = new bootstrap.Modal(document.getElementById('addTimeSlotModal'));
+            modal.show();
+        }
+        function saveTimeSlot() {
+            const start = document.getElementById('timeSlotStart').value;
+            const end = document.getElementById('timeSlotEnd').value;
+            const label = document.getElementById('timeSlotLabel').value;
+            timeSlots.push({start, end, label});
+            timeSlots.sort((a, b) => a.start.localeCompare(b.start));
+            localStorage.setItem('timeSlots', JSON.stringify(timeSlots));
+            bootstrap.Modal.getInstance(document.getElementById('addTimeSlotModal')).hide();
+            loadTimetable();
+        }
+        function highlightTeacherSchedule() {
+            const teacherId = document.getElementById('timetableTeacher').value;
+            if (!teacherId) return;
+            // Highlight cells with teacher
+            document.querySelectorAll('.timetable-cell').forEach(cell => cell.style.background = '');
+            document.querySelectorAll('.timetable-cell').forEach(cell => {
+                if (cell.textContent.includes(staff.find(t => t.id === teacherId).name)) {
+                    cell.style.background = 'rgba(255, 255, 0, 0.2)';
+                }
+            });
+        }
+        function checkTimetableConflicts() {
+            const grade = document.getElementById('timetableGrade').value;
+            if (!grade) return alert('Select grade');
+            const conflicts = [];
+            timeSlots.forEach((_, tIndex) => {
+                const teachers = new Set();
+                timetables[grade][tIndex].forEach(entry => {
+                    if (entry.teacherId) {
+                        if (teachers.has(entry.teacherId)) conflicts.push(`Conflict at time slot ${tIndex + 1}: Teacher ${staff.find(t => t.id === entry.teacherId).name}`);
+                        teachers.add(entry.teacherId);
+                    }
+                });
+            });
+            alert(conflicts.length ? conflicts.join('\n') : 'No conflicts found.');
         }
 
         // Exams
         function showAddExamModal() {
-            // Stub: add example
+            const modal = new bootstrap.Modal(document.getElementById('addExamModal'));
+            modal.show();
+        }
+        function saveExam() {
             exams.push({
                 id: Date.now(),
-                name: 'Term 4 Exams',
-                date: '2025-12-10',
-                subject: 'Mathematics',
+                name: document.getElementById('examName').value,
+                date: document.getElementById('examDate').value,
+                subject: document.getElementById('examSubject').value,
+                grade: document.getElementById('examGrade').value,
+                maxMarks: parseInt(document.getElementById('examMaxMarks').value),
                 status: 'Scheduled'
             });
             localStorage.setItem('exams', JSON.stringify(exams));
             renderExams();
+            populateExamsSelect();
+            bootstrap.Modal.getInstance(document.getElementById('addExamModal')).hide();
         }
         function renderExams() {
             requestAnimationFrame(() => {
-                document.getElementById('examTable').innerHTML = exams.map(e => `
+                let filteredExams = exams;
+                const gradeFilter = document.getElementById('examGradeFilter').value;
+                const subjectFilter = document.getElementById('examSubjectFilter').value.toLowerCase();
+                if (gradeFilter) filteredExams = filteredExams.filter(e => e.grade === gradeFilter);
+                if (subjectFilter) filteredExams = filteredExams.filter(e => e.subject.toLowerCase().includes(subjectFilter));
+                document.getElementById('examTable').innerHTML = filteredExams.map(e => `
                     <tr>
                         <td>${e.name}</td>
                         <td>${e.date}</td>
                         <td>${e.subject}</td>
+                        <td>${e.grade}</td>
                         <td>${e.status}</td>
                         <td><button class="btn btn-sm btn-primary" onclick="generateReportCard(${e.id})">Report</button></td>
                     </tr>
                 `).join('');
             });
         }
-        function generateReportCard(id) {
-            // Stub
-            alert('Report card generated for exam ID: ' + (id || 'all'));
+        function showEnterMarksModal() {
+            const modal = new bootstrap.Modal(document.getElementById('enterMarksModal'));
+            modal.show();
+        }
+        function loadMarksEntry() {
+            const examId = document.getElementById('marksExamSelect').value;
+            if (!examId) return;
+            currentMarksExam = exams.find(e => e.id == examId);
+            const gradeStudents = students.filter(s => s.grade === currentMarksExam.grade);
+            document.getElementById('marksExamName').textContent = currentMarksExam.name + ' - ' + currentMarksExam.subject;
+            document.getElementById('marksTable').innerHTML = gradeStudents.map(s => `
+                <tr>
+                    <td>${s.name}</td>
+                    <td><input type="number" class="form-control marks-input" data-student-id="${s.id}" value="${marks[examId] ? marks[examId][s.id] || '' : ''}"></td>
+                </tr>
+            `).join('');
+            document.getElementById('marksEntry').classList.remove('d-none');
+        }
+        function saveMarks() {
+            const examId = currentMarksExam.id;
+            if (!marks[examId]) marks[examId] = {};
+            document.querySelectorAll('.marks-input').forEach(input => {
+                marks[examId][input.dataset.studentId] = parseFloat(input.value) || 0;
+            });
+            localStorage.setItem('marks', JSON.stringify(marks));
+            alert('Marks saved.');
+            bootstrap.Modal.getInstance(document.getElementById('enterMarksModal')).hide();
+        }
+        function generateAllReportCards() {
+            exams.forEach(e => generateReportCard(e.id));
+            alert('All report cards generated.');
+        }
+        function generateReportCard(examId) {
+            const exam = exams.find(e => e.id == examId);
+            const gradeStudents = students.filter(s => s.grade === exam.grade);
+            let report = `Report for ${exam.name} - ${exam.subject}\n`;
+            gradeStudents.forEach(s => {
+                const mark = marks[examId] ? marks[examId][s.id] || 0 : 0;
+                const grade = mark / exam.maxMarks * 100 >= 90 ? 'A' : mark >= 80 ? 'B' : mark >= 70 ? 'C' : mark >= 60 ? 'D' : 'F';
+                report += `${s.name}: ${mark}/${exam.maxMarks} (${grade})\n`;
+            });
+            alert(report); // In real app, generate PDF
+        }
+        function generateHallTickets() {
+            exams.forEach(e => {
+                students.filter(s => s.grade === e.grade).forEach(s => alert(`Hall Ticket for ${s.name} - ${e.name}: Seat #${Math.floor(Math.random() * 100)}`));
+            });
         }
 
         // HR
         function showAddStaffModal() {
+            const modal = new bootstrap.Modal(document.getElementById('addStaffModal'));
+            modal.show();
+        }
+        function saveStaff() {
             staff.push({
                 id: Date.now(),
-                name: 'New Teacher',
-                role: 'Teacher',
-                department: 'Academics',
+                name: document.getElementById('staffName').value,
+                role: document.getElementById('staffRole').value,
+                department: document.getElementById('staffDepartment').value,
+                salary: parseFloat(document.getElementById('staffSalary').value),
                 status: 'Active'
             });
             localStorage.setItem('staff', JSON.stringify(staff));
             renderHR();
+            populateTeachers();
+            bootstrap.Modal.getInstance(document.getElementById('addStaffModal')).hide();
         }
         function renderHR() {
             requestAnimationFrame(() => {
@@ -1069,8 +1359,12 @@
                         <td>${s.name}</td>
                         <td>${s.role}</td>
                         <td>${s.department}</td>
+                        <td>R${s.salary}</td>
                         <td>${s.status}</td>
-                        <td><button class="btn btn-sm btn-info" onclick="editStaff(${s.id})">Edit</button></td>
+                        <td>
+                            <button class="btn btn-sm btn-info" onclick="editStaff(${s.id})">Edit</button>
+                            <button class="btn btn-sm btn-warning" onclick="showPerformanceReviewModal(${s.id})">Review</button>
+                        </td>
                     </tr>
                 `).join('');
             });
@@ -1078,6 +1372,76 @@
         function editStaff(id) {
             // Stub
             alert('Edit staff ID: ' + id);
+        }
+        function syncStaffBiometric() {
+            alert('Staff biometric synced.');
+            // Integrate API similar to student biometric
+        }
+        function generatePayroll() {
+            let payroll = 'Payroll:\n';
+            staff.forEach(s => payroll += `${s.name}: R${s.salary}\n`);
+            alert(payroll);
+        }
+        function loadLeaveRequests() {
+            const date = document.getElementById('leaveDate').value;
+            const filtered = leaveRequests.filter(l => !date || l.date === date);
+            document.getElementById('leaveTable').innerHTML = filtered.map(l => {
+                const s = staff.find(st => st.id === l.staffId);
+                return `
+                    <tr>
+                        <td>${s.name}</td>
+                        <td>${l.date}</td>
+                        <td>${l.reason}</td>
+                        <td>${l.status || 'Pending'}</td>
+                        <td><button class="btn btn-sm btn-secondary" onclick="editLeave(${l.id})">Approve/Reject</button></td>
+                    </tr>
+                `;
+            }).join('');
+        }
+        function editLeave(id) {
+            editingLeave = leaveRequests.find(l => l.id === id);
+            const modal = new bootstrap.Modal(document.getElementById('leaveRequestModal'));
+            modal.show();
+        }
+        function saveLeaveStatus() {
+            if (!editingLeave) return;
+            editingLeave.status = document.getElementById('leaveStatus').value;
+            localStorage.setItem('leaveRequests', JSON.stringify(leaveRequests));
+            bootstrap.Modal.getInstance(document.getElementById('leaveRequestModal')).hide();
+            loadLeaveRequests();
+            editingLeave = null;
+        }
+        function showPerformanceReviewModal(staffId) {
+            editingReviewStaff = staffId;
+            const modal = new bootstrap.Modal(document.getElementById('performanceReviewModal'));
+            modal.show();
+        }
+        function saveReview() {
+            performanceReviews.push({
+                id: Date.now(),
+                staffId: editingReviewStaff,
+                date: document.getElementById('reviewDate').value,
+                score: parseInt(document.getElementById('reviewScore').value),
+                comments: document.getElementById('reviewComments').value
+            });
+            localStorage.setItem('performanceReviews', JSON.stringify(performanceReviews));
+            bootstrap.Modal.getInstance(document.getElementById('performanceReviewModal')).hide();
+            renderReviews();
+            editingReviewStaff = null;
+        }
+        function renderReviews() {
+            document.getElementById('reviewTable').innerHTML = performanceReviews.map(r => {
+                const s = staff.find(st => st.id === r.staffId);
+                return `
+                    <tr>
+                        <td>${s.name}</td>
+                        <td>${r.date}</td>
+                        <td>${r.score}</td>
+                        <td>${r.comments}</td>
+                        <td><button class="btn btn-sm btn-info">Edit</button></td>
+                    </tr>
+                `;
+            }).join('');
         }
 
         // Communication
@@ -1213,6 +1577,8 @@
                 document.getElementById('appContainer').style.display = 'block';
                 initApp();
             }
+            loadLeaveRequests();
+            renderReviews();
         });
     </script>
 </body>
