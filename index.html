@@ -142,6 +142,8 @@
         }
         .chat-user { background: rgba(255, 255, 255, 0.2); }
         .chat-assistant { background: rgba(0, 255, 0, 0.1); }
+        .editable { cursor: pointer; }
+        .editable:hover { background: rgba(255, 255, 255, 0.2); }
         @media (max-width: 768px) {
             .sidebar { width: 70px; }
             .sidebar .nav-text { display: none; }
@@ -170,6 +172,9 @@
                 </div>
                 <button type="submit" class="btn btn-primary w-100 mb-3">
                     <i class="fas fa-sign-in-alt me-2"></i>Login
+                </button>
+                <button type="button" class="btn btn-secondary w-100 mb-3" onclick="biometricLogin()">
+                    <i class="fas fa-fingerprint me-2"></i>Biometric Login
                 </button>
                 <div class="login-demo">
                     <p class="mb-1"><strong>Admin:</strong> admin / admin123</p>
@@ -294,6 +299,9 @@
                             <option value="">Select Grade</option>
                         </select>
                     </div>
+                    <div class="col-md-4">
+                        <button class="btn btn-primary" onclick="toggleEditTimetable()">Edit Timetable</button>
+                    </div>
                 </div>
                 <div id="timetableContainer"></div>
             </section>
@@ -353,7 +361,7 @@
                         </select>
                     </div>
                     <div class="col-md-3">
-                        <input type="text" id="contentSubjectFilter" class="form-control" placeholder="Filter by Subject" oninput="renderContent()">
+                        <input type="text" id="contentSubjectFilter" class="form-control" placeholder="Filter by Subject" oninput="debounce(renderContent, 300)()">
                     </div>
                 </div>
                 <table class="table table-striped">
@@ -452,6 +460,27 @@
         </div>
     </div>
 
+    <div class="modal fade" id="previewContentModal">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header"><h5>Content Preview</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body" id="previewBody"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="editTimetableModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header"><h5>Edit Timetable Entry</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <input type="text" id="editTimetableValue" class="form-control" placeholder="Enter subject">
+                </div>
+                <div class="modal-footer"><button class="btn btn-primary" onclick="saveTimetableEdit()">Save</button></div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Global Data
         let students = JSON.parse(localStorage.getItem('students')) || [];
@@ -462,8 +491,19 @@
         let staff = JSON.parse(localStorage.getItem('staff')) || [];
         let messages = JSON.parse(localStorage.getItem('messages')) || [];
         let content = JSON.parse(localStorage.getItem('content')) || [];
+        let timetables = JSON.parse(localStorage.getItem('timetables')) || {}; // Grade -> timetable data
         let currentUser = null;
         let chatHistory = [];
+        let editingCell = null;
+
+        // Utility: Debounce for performance
+        function debounce(func, delay) {
+            let timeout;
+            return function(...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), delay);
+            };
+        }
 
         // Login
         function login() {
@@ -480,6 +520,22 @@
                 initApp();
             } else {
                 alert('Invalid credentials');
+            }
+        }
+
+        function biometricLogin() {
+            // Placeholder for biometric integration (e.g., using WebAuthn or external API)
+            if (navigator.credentials) {
+                // Example WebAuthn for fingerprint/face (requires setup)
+                alert('Biometric login initiated. (Integrate with your biomatrix system API here, e.g., fingerprint scanner.)');
+                // Simulate success
+                currentUser = { username: 'student', role: 'student' }; // Replace with actual auth
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                document.getElementById('loginPage').style.display = 'none';
+                document.getElementById('appContainer').style.display = 'block';
+                initApp();
+            } else {
+                alert('Biometric not supported in this browser. Use username/password.');
             }
         }
 
@@ -704,7 +760,7 @@
         }
         function syncBiometric() {
             // Placeholder for integration with biometric system for teachers
-            alert('Teacher attendance synced from biometric system. (Integrate your biomatrix API here.)');
+            alert('Teacher attendance synced from biometric system. (Integrate your biomatrix API here, e.g., fingerprint scanner.)');
             // Example: fetch('biomatrix-api-url').then(res => res.json()).then(data => { /* update staff attendance */ });
         }
 
@@ -748,11 +804,48 @@
 
         // Timetable
         function loadTimetable() {
-            // Stub: same for all grades
+            const grade = document.getElementById('timetableGrade').value;
+            if (!grade) return;
+            if (!timetables[grade]) {
+                timetables[grade] = Array.from({length: 5}, () => Array.from({length: 8}, () => ''));
+            }
+            renderTimetable(grade);
+        }
+        function renderTimetable(grade) {
+            const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+            const times = Array(8).fill().map((_, i) => `0${i + 8}:00`);
             const container = document.getElementById('timetableContainer');
-            container.innerHTML = '<table class="table"><thead><tr><th>Time</th><th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th><th>Fri</th></tr></thead><tbody>' +
-                Array(8).fill().map((_, i) => `<tr><td>0${i + 8}:00</td><td class="timetable-cell">Math</td><td class="timetable-cell">English</td><td class="timetable-cell">Science</td><td class="timetable-cell">History</td><td class="timetable-cell">Art</td></tr>`).join('') +
-                '</tbody></table>';
+            let html = '<table class="table"><thead><tr><th>Time</th>' + days.map(d => `<th>${d}</th>`).join('') + '</tr></thead><tbody>';
+            times.forEach((time, tIndex) => {
+                html += `<tr><td>${time}</td>`;
+                days.forEach((day, dIndex) => {
+                    const value = timetables[grade][dIndex][tIndex] || '';
+                    html += `<td class="timetable-cell editable" onclick="editTimetableCell('${grade}', ${dIndex}, ${tIndex})">${value}</td>`;
+                });
+                html += '</tr>';
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+        function editTimetableCell(grade, dayIndex, timeIndex) {
+            if (currentUser.role !== 'admin' && currentUser.role !== 'teacher') return;
+            editingCell = {grade, dayIndex, timeIndex};
+            document.getElementById('editTimetableValue').value = timetables[grade][dayIndex][timeIndex] || '';
+            const modal = new bootstrap.Modal(document.getElementById('editTimetableModal'));
+            modal.show();
+        }
+        function saveTimetableEdit() {
+            if (!editingCell) return;
+            const value = document.getElementById('editTimetableValue').value;
+            timetables[editingCell.grade][editingCell.dayIndex][editingCell.timeIndex] = value;
+            localStorage.setItem('timetables', JSON.stringify(timetables));
+            bootstrap.Modal.getInstance(document.getElementById('editTimetableModal')).hide();
+            renderTimetable(editingCell.grade);
+            editingCell = null;
+        }
+        function toggleEditTimetable() {
+            // Already editable via clicks
+            alert('Click on cells to edit (admin/teacher only).');
         }
 
         // Exams
@@ -857,7 +950,8 @@
                     grade,
                     subject,
                     data: e.target.result,
-                    filename: file.name
+                    filename: file.name,
+                    mimeType: file.type
                 });
                 localStorage.setItem('content', JSON.stringify(content));
                 renderContent();
@@ -880,9 +974,44 @@
                     <td>${c.name}</td>
                     <td>${c.grade || 'N/A'}</td>
                     <td>${c.subject || 'N/A'}</td>
-                    <td><a href="${c.data}" download="${c.filename}" class="btn btn-sm btn-info">Download</a></td>
+                    <td>
+                        <a href="${c.data}" download="${c.filename}" class="btn btn-sm btn-info">Download</a>
+                        <button class="btn btn-sm btn-secondary" onclick="previewContent(${c.id})">Preview</button>
+                    </td>
                 </tr>
             `).join('');
+        }
+        function previewContent(id) {
+            const c = content.find(con => con.id === id);
+            if (!c) return;
+            const previewBody = document.getElementById('previewBody');
+            previewBody.innerHTML = '';
+            if (c.mimeType.startsWith('image/')) {
+                const img = document.createElement('img');
+                img.src = c.data;
+                img.style.maxWidth = '100%';
+                previewBody.appendChild(img);
+            } else if (c.mimeType === 'application/pdf') {
+                const iframe = document.createElement('iframe');
+                iframe.src = c.data;
+                iframe.style.width = '100%';
+                iframe.style.height = '500px';
+                previewBody.appendChild(iframe);
+            } else if (c.mimeType.startsWith('video/')) {
+                const video = document.createElement('video');
+                video.src = c.data;
+                video.controls = true;
+                video.style.maxWidth = '100%';
+                previewBody.appendChild(video);
+            } else if (c.mimeType.startsWith('text/')) {
+                const pre = document.createElement('pre');
+                pre.textContent = atob(c.data.split(',')[1]); // Decode base64
+                previewBody.appendChild(pre);
+            } else {
+                previewBody.innerHTML = '<p>Preview not supported for this file type. Download to view.</p>';
+            }
+            const modal = new bootstrap.Modal(document.getElementById('previewContentModal'));
+            modal.show();
         }
 
         // AI Research with Grok
