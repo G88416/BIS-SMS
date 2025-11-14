@@ -12,134 +12,134 @@
     <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
     <script src="https://js.stripe.com/v3/"></script> <!-- Stripe SDK -->
     <style>
-        body {
-            font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, #1e3c72, #2a5298);
-            color: #fff;
+        body { 
+            font-family: 'Poppins', sans-serif; 
+            background: linear-gradient(135deg, #1e3c72, #2a5298); 
+            color: #fff; 
             min-height: 100vh;
         }
-        .sidebar {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border-right: 1px solid rgba(255, 255, 255, 0.2);
-            height: 100vh;
-            position: fixed;
-            width: 260px;
-            padding: 20px;
-            overflow-y: auto;
-            transition: width 0.3s ease;
-            z-index: 1000;
+        .sidebar { 
+            background: rgba(255, 255, 255, 0.1); 
+            backdrop-filter: blur(10px); 
+            border-right: 1px solid rgba(255, 255, 255, 0.2); 
+            height: 100vh; 
+            position: fixed; 
+            width: 260px; 
+            padding: 20px; 
+            overflow-y: auto; 
+            transition: width 0.3s ease; 
+            z-index: 1000; 
             box-shadow: 0 0 30px rgba(0, 0, 0, 0.3);
         }
         .sidebar.collapsed { width: 70px; }
         .sidebar.collapsed .nav-text { display: none; }
-        .sidebar .nav-link {
-            color: #fff;
-            font-weight: 500;
-            margin-bottom: 10px;
-            padding: 12px;
-            border-radius: 10px;
-            transition: all 0.3s;
+        .sidebar .nav-link { 
+            color: #fff; 
+            font-weight: 500; 
+            margin-bottom: 10px; 
+            padding: 12px; 
+            border-radius: 10px; 
+            transition: all 0.3s; 
             backdrop-filter: blur(5px);
         }
-        .sidebar .nav-link:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: translateX(5px);
+        .sidebar .nav-link:hover { 
+            background: rgba(255, 255, 255, 0.2); 
+            transform: translateX(5px); 
         }
-        .sidebar .nav-link.active {
-            background: rgba(255, 255, 255, 0.3);
+        .sidebar .nav-link.active { 
+            background: rgba(255, 255, 255, 0.3); 
             font-weight: 600;
         }
-        .content {
-            margin-left: 260px;
-            padding: 40px;
-            transition: margin-left 0.3s ease;
+        .content { 
+            margin-left: 260px; 
+            padding: 40px; 
+            transition: margin-left 0.3s ease; 
             min-height: 100vh;
         }
         .content.expanded { margin-left: 70px; }
-        .card-metric {
-            background: rgba(255, 255, 255, 0.15);
-            border: none;
-            border-radius: 15px;
-            backdrop-filter: blur(10px);
-            transition: transform 0.3s;
+        .card-metric { 
+            background: rgba(255, 255, 255, 0.15); 
+            border: none; 
+            border-radius: 15px; 
+            backdrop-filter: blur(10px); 
+            transition: transform 0.3s; 
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
         }
         .card-metric:hover { transform: translateY(-8px); }
-        .table {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 15px;
-            overflow: hidden;
+        .table { 
+            background: rgba(255, 255, 255, 0.1); 
+            border-radius: 15px; 
+            overflow: hidden; 
             backdrop-filter: blur(10px);
         }
         .table th { background: rgba(255, 255, 255, 0.2); color: #fff; }
-        .modal-content {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
-            backdrop-filter: blur(15px);
+        .modal-content { 
+            background: rgba(255, 255, 255, 0.95); 
+            border-radius: 20px; 
+            backdrop-filter: blur(15px); 
             color: #333;
         }
-        .btn-toggle-sidebar {
-            position: fixed;
-            top: 20px;
-            left: 270px;
-            z-index: 1001;
-            background: rgba(255, 255, 255, 0.2);
-            border: none;
+        .btn-toggle-sidebar { 
+            position: fixed; 
+            top: 20px; 
+            left: 270px; 
+            z-index: 1001; 
+            background: rgba(255, 255, 255, 0.2); 
+            border: none; 
             color: #fff;
         }
         .btn-toggle-sidebar.expanded { left: 80px; }
-        #notificationBell {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 1100;
+        #notificationBell { 
+            position: fixed; 
+            top: 20px; 
+            right: 20px; 
+            z-index: 1100; 
         }
         .admin-only { display: block; }
         .teacher-only { display: none; }
         .parent-only { display: none; }
         .student-only { display: none; }
         .dark-mode { filter: brightness(0.8); }
-        .login-page {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        .login-page { 
+            min-height: 100vh; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
             background: linear-gradient(135deg, #1e3c72, #2a5298);
         }
-        .login-card {
-            width: 100%;
-            max-width: 450px;
-            padding: 2.5rem;
-            border-radius: 20px;
-            background: rgba(255, 255, 255, 0.95);
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+        .login-card { 
+            width: 100%; 
+            max-width: 450px; 
+            padding: 2.5rem; 
+            border-radius: 20px; 
+            background: rgba(255, 255, 255, 0.95); 
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3); 
             backdrop-filter: blur(15px);
         }
-        .login-title {
-            font-weight: 700;
-            color: #1e3c72;
+        .login-title { 
+            font-weight: 700; 
+            color: #1e3c72; 
             text-align: center;
         }
-        .report-card {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 15px;
-            padding: 20px;
-            margin: 10px 0;
+        .report-card { 
+            background: rgba(255, 255, 255, 0.1); 
+            border-radius: 15px; 
+            padding: 20px; 
+            margin: 10px 0; 
             backdrop-filter: blur(10px);
         }
-        .timetable-cell {
-            padding: 10px;
-            text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 8px;
-            margin: 2px;
+        .timetable-cell { 
+            padding: 10px; 
+            text-align: center; 
+            border: 1px solid rgba(255, 255, 255, 0.3); 
+            border-radius: 8px; 
+            margin: 2px; 
             background: rgba(255, 255, 255, 0.1);
         }
-        .chat-message {
-            margin-bottom: 10px;
-            padding: 10px;
-            border-radius: 10px;
+        .chat-message { 
+            margin-bottom: 10px; 
+            padding: 10px; 
+            border-radius: 10px; 
         }
         .chat-user { background: rgba(255, 255, 255, 0.2); }
         .chat-assistant { background: rgba(0, 255, 0, 0.1); }
@@ -192,6 +192,7 @@
             </form>
         </div>
     </div>
+
     <!-- Main App -->
     <div class="app-container" id="appContainer" style="display:none;">
         <!-- Notification Bell -->
@@ -201,7 +202,9 @@
                 <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notificationBadge" style="display:none;">0</span>
             </button>
         </div>
+
         <button class="btn btn-sm btn-light btn-toggle-sidebar" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+
         <div class="sidebar">
             <h4 class="mb-4 text-center"><i class="fas fa-school me-2"></i><span class="nav-text">ASMS</span></h4>
             <ul class="nav flex-column">
@@ -221,6 +224,7 @@
                 <li><a href="#" class="nav-link text-danger" onclick="logout()"><i class="fas fa-sign-out-alt me-2"></i><span class="nav-text">Logout</span></a></li>
             </ul>
         </div>
+
         <div class="content">
             <!-- Dashboard -->
             <section id="dashboard" class="section">
@@ -237,6 +241,7 @@
                 </div>
                 <canvas id="dashboardChart" class="mt-4"></canvas>
             </section>
+
             <!-- Admission Management -->
             <section id="admission" class="section d-none">
                 <h2>Admission Management</h2>
@@ -251,6 +256,7 @@
                     <tbody id="admissionTable"></tbody>
                 </table>
             </section>
+
             <!-- Student Information System -->
             <section id="students" class="section d-none">
                 <h2>Student Information System</h2>
@@ -264,6 +270,7 @@
                     <tbody id="studentTable"></tbody>
                 </table>
             </section>
+
             <!-- Attendance Management -->
             <section id="attendance" class="section d-none">
                 <h2>Attendance Management</h2>
@@ -284,6 +291,7 @@
                     <tbody id="attendanceTable"></tbody>
                 </table>
             </section>
+
             <!-- Fee Management -->
             <section id="fees" class="section d-none">
                 <h2>Fee Management</h2>
@@ -306,6 +314,7 @@
                 </table>
                 <div id="feeHistory" class="mt-4"></div>
             </section>
+
             <!-- Timetable Management -->
             <section id="timetable" class="section d-none">
                 <h2>Timetable Management</h2>
@@ -329,6 +338,7 @@
                 </div>
                 <div id="timetableContainer"></div>
             </section>
+
             <!-- Examination Management -->
             <section id="exams" class="section d-none">
                 <h2>Examination Management</h2>
@@ -359,6 +369,7 @@
                     <button class="btn btn-primary" onclick="saveMarks()">Save</button>
                 </div>
             </section>
+
             <!-- Enhanced HR Management -->
             <section id="hr" class="section d-none admin-only">
                 <h2>Human Resource Management</h2>
@@ -534,6 +545,7 @@
                     </div>
                 </div>
             </section>
+
             <!-- Communication Module -->
             <section id="communication" class="section d-none">
                 <h2>Communication Hub</h2>
@@ -555,6 +567,7 @@
                 </div>
                 <div id="messageHistory" class="mt-3"></div>
             </section>
+
             <!-- Content Module -->
             <section id="content" class="section d-none">
                 <h2>Content Management</h2>
@@ -575,6 +588,7 @@
                     <tbody id="contentTable"></tbody>
                 </table>
             </section>
+
             <!-- Reports -->
             <section id="reports" class="section d-none admin-only">
                 <h2>Reports & Analytics</h2>
@@ -589,6 +603,7 @@
                     <div class="col-md-4"><button class="btn btn-info w-100 mb-3" onclick="exportToExcel(jobs, 'recruitment')">Export Recruitment</button></div>
                 </div>
             </section>
+
             <!-- Settings -->
             <section id="settings" class="section d-none admin-only">
                 <h2>System Settings</h2>
@@ -615,6 +630,7 @@
                 </div>
                 <button class="btn btn-primary mt-3" onclick="saveHRSettings()">Save Settings</button>
             </section>
+
             <!-- AI Research Module (Student Only) -->
             <section id="aiResearch" class="section d-none">
                 <h2>AI Research Module - Powered by Grok</h2>
@@ -630,6 +646,7 @@
             </section>
         </div>
     </div>
+
     <!-- Modals -->
     <!-- Staff Modal - Enhanced with certifications -->
     <div class="modal fade" id="addStaffModal">
@@ -666,6 +683,7 @@
             </div>
         </div>
     </div>
+
     <!-- Certification Modal -->
     <div class="modal fade" id="addCertModal">
         <div class="modal-dialog">
@@ -679,6 +697,7 @@
             </div>
         </div>
     </div>
+
     <!-- Payroll Modal - Enhanced with SA Tax Calculation -->
     <div class="modal fade" id="addPayrollModal">
         <div class="modal-dialog">
@@ -699,6 +718,7 @@
             </div>
         </div>
     </div>
+
     <!-- Leave Modal - Enhanced with SA Leave Types -->
     <div class="modal fade" id="addLeaveModal">
         <div class="modal-dialog">
@@ -723,6 +743,7 @@
             </div>
         </div>
     </div>
+
     <!-- Leave Status Modal -->
     <div class="modal fade" id="leaveStatusModal">
         <div class="modal-dialog">
@@ -740,6 +761,7 @@
             </div>
         </div>
     </div>
+
     <!-- Performance Review Modal - Enhanced with Goals -->
     <div class="modal fade" id="addReviewModal">
         <div class="modal-dialog modal-lg">
@@ -760,6 +782,7 @@
             </div>
         </div>
     </div>
+
     <!-- Goal Modal -->
     <div class="modal fade" id="addGoalModal">
         <div class="modal-dialog">
@@ -778,6 +801,7 @@
             </div>
         </div>
     </div>
+
     <!-- Recruitment Job Modal - Enhanced with Stages -->
     <div class="modal fade" id="addJobModal">
         <div class="modal-dialog">
@@ -796,6 +820,7 @@
             </div>
         </div>
     </div>
+
     <!-- Application Modal - Enhanced with Stages -->
     <div class="modal fade" id="applyJobModal">
         <div class="modal-dialog">
@@ -815,6 +840,7 @@
             </div>
         </div>
     </div>
+
     <!-- Interview Scheduling Modal -->
     <div class="modal fade" id="scheduleInterviewModal">
         <div class="modal-dialog">
@@ -834,6 +860,7 @@
             </div>
         </div>
     </div>
+
     <!-- Payslip Modal -->
     <div class="modal fade" id="payslipModal">
         <div class="modal-dialog modal-lg">
@@ -872,8 +899,10 @@
             </div>
         </div>
     </div>
+
     <!-- Other Modals (abbreviated for brevity, implement as needed) -->
     <!-- Add Admission, Bulk, etc. -->
+
     <script>
         // Global Data - Enhanced
         let students = [];
@@ -912,6 +941,7 @@
         let performanceChart = null;
         let leaveChart = null;
         let hrSettings = { annualLeaveDays: 21, sickLeaveDays: 30, maternityLeaveMonths: 4 };
+
         // SA Tax Brackets 2025/26
         const saTaxBrackets = [
             { min: 0, max: 237100, rate: 0.18 },
@@ -922,9 +952,11 @@
             { min: 857901, max: 1817000, rate: 0.41, fixed: 251258 },
             { min: 1817001, max: Infinity, rate: 0.45, fixed: 644489 }
         ];
+
         const saRebates = { under65: 17235, 65plus: 26724, 75plus: 29958 };
         const saThresholds = { under65: 95750, 65plus: 148217, 75plus: 165689 };
         const uifRate = 0.01; // 1%
+
         // Utility Functions
         function debounce(func, delay) {
             let timeout;
@@ -933,6 +965,7 @@
                 timeout = setTimeout(() => func.apply(this, args), delay);
             };
         }
+
         function safeParseJSON(key, defaultVal = []) {
             try {
                 const val = localStorage.getItem(key);
@@ -943,6 +976,7 @@
                 return defaultVal;
             }
         }
+
         function calculatePAYE(income, ageGroup = 'under65') {
             const threshold = saThresholds[ageGroup];
             if (income <= threshold) return 0;
@@ -957,12 +991,14 @@
             const rebate = saRebates[ageGroup];
             return Math.max(0, tax - rebate);
         }
+
         function toggleSidebar() {
             sidebarCollapsed = !sidebarCollapsed;
             document.querySelector('.sidebar').classList.toggle('collapsed', sidebarCollapsed);
             document.querySelector('.content').classList.toggle('expanded', sidebarCollapsed);
             document.querySelector('.btn-toggle-sidebar').classList.toggle('expanded', sidebarCollapsed);
         }
+
         function showSection(section) {
             document.querySelectorAll('.section').forEach(s => s.classList.add('d-none'));
             document.getElementById(section).classList.remove('d-none');
@@ -972,6 +1008,7 @@
             if (section === 'hr') renderHR();
             // Other sections...
         }
+
         function renderDashboard() {
             // Existing + HR metrics
             const totalStaff = staff.length;
@@ -984,6 +1021,7 @@
             document.getElementById('avgPerformanceDash').textContent = avgPerformance.toFixed(1) + '%';
             // Chart...
         }
+
         function initApp() {
             // Load data
             staff = safeParseJSON('staff', []);
@@ -999,21 +1037,25 @@
             renderHR();
             updateRoleVisibility();
         }
+
         function login() {
             // Existing login
             // After login
             updateRoleVisibility();
         }
+
         function updateRoleVisibility() {
             document.querySelectorAll('.admin-only').forEach(el => el.style.display = currentUser.role === 'admin' ? 'block' : 'none');
             // Others...
         }
+
         // HR Functions - Enhanced
+
         // Staff - With certifications and expiry alerts
         function renderStaff() {
             const searchTerm = document.getElementById('staffSearch').value.toLowerCase();
             const roleFilter = document.getElementById('staffFilterRole').value;
-            let filtered = staff.filter(s =>
+            let filtered = staff.filter(s => 
                 s.name.toLowerCase().includes(searchTerm) && (!roleFilter || s.role === roleFilter)
             );
             const total = staff.length;
@@ -1024,6 +1066,7 @@
             document.getElementById('activeStaff').textContent = active;
             document.getElementById('avgSalary').textContent = 'R' + avgSalary.toFixed(2);
             document.getElementById('expiringCerts').textContent = expiringCerts;
+
             document.getElementById('staffTable').innerHTML = filtered.map(s => {
                 const certExpiry = s.certifications ? s.certifications.map(c => new Date(c.expiry) < new Date() ? 'cert-expired' : new Date(c.expiry) < new Date(Date.now() + 90*24*60*60*1000) ? 'cert-expiry' : '').join(', ') : '';
                 return `
@@ -1046,6 +1089,7 @@
                 `;
             }).join('');
         }
+
         function showAddStaffModal(editId = null) {
             editingStaff = editId ? staff.find(s => s.id === editId) : null;
             document.getElementById('staffModalTitle').textContent = editingStaff ? 'Edit Staff' : 'Add Staff';
@@ -1060,12 +1104,14 @@
             }
             new bootstrap.Modal(document.getElementById('addStaffModal')).show();
         }
+
         function addCertification() {
             editingCertification = { id: Date.now(), name: '', expiry: '' };
             document.getElementById('certName').value = '';
             document.getElementById('certExpiry').value = '';
             new bootstrap.Modal(document.getElementById('addCertModal')).show();
         }
+
         function saveCertification() {
             editingCertification.name = document.getElementById('certName').value;
             editingCertification.expiry = document.getElementById('certExpiry').value;
@@ -1074,6 +1120,7 @@
             renderCertifications(editingStaff.certifications);
             bootstrap.Modal.getInstance(document.getElementById('addCertModal')).hide();
         }
+
         function renderCertifications(certs) {
             document.getElementById('certificationsList').innerHTML = certs.map(c => `
                 <div class="d-flex justify-content-between mb-2">
@@ -1082,10 +1129,12 @@
                 </div>
             `).join('');
         }
+
         function removeCert(id) {
             editingStaff.certifications = editingStaff.certifications.filter(c => c.id !== id);
             renderCertifications(editingStaff.certifications);
         }
+
         function saveStaff() {
             // Validation and save
             if (editingStaff) {
@@ -1101,11 +1150,12 @@
             logAudit('Staff ' + (editingStaff ? 'Updated' : 'Added'), editingStaff ? editingStaff.name : 'New');
             editingStaff = null;
         }
+
         // Payroll - With SA PAYE and UIF
         function renderPayrolls() {
             // Filter and render
             // Calculate totals
-            const filtered = // ...
+            const filtered = // ... 
             const totalPayroll = filtered.reduce((sum, p) => sum + p.salary, 0);
             const totalDeductions = filtered.reduce((sum, p) => sum + p.deductions, 0);
             const totalTax = filtered.reduce((sum, p) => sum + p.tax, 0);
@@ -1117,6 +1167,7 @@
             // Compliance score based on complete records
             const compliance = filtered.filter(p => p.tax > 0 && p.uif > 0).length / filtered.length * 100 || 100;
             document.getElementById('complianceScore').textContent = compliance.toFixed(0) + '%';
+
             document.getElementById('payrollTable').innerHTML = filtered.map(p => {
                 const s = staff.find(st => st.id === p.staffId);
                 const net = p.salary - p.deductions - p.tax - p.uif;
@@ -1135,6 +1186,7 @@
                 `;
             }).join('');
         }
+
         function calculateTax() {
             const staffId = document.getElementById('payrollStaff').value;
             const salary = parseFloat(document.getElementById('payrollSalary').value) || 0;
@@ -1148,11 +1200,13 @@
             document.getElementById('payrollUIF').value = uif; // Assume separate field
             document.getElementById('payrollTaxDisplay').innerHTML = `<small>Calculated PAYE: R${paye.toFixed(2)}, UIF: R${uif.toFixed(2)}</small>`;
         }
+
         function calculateCompliance() {
             // Check for missing UIF, tax, etc.
             const issues = payrolls.filter(p => !p.tax || !p.uif).length;
             alert(`Compliance check: ${issues} records with missing calculations.`);
         }
+
         // Leaves - SA compliant with calendar
         function loadLeaveRequests() {
             // Existing + avg balance
@@ -1160,12 +1214,14 @@
             document.getElementById('avgLeaveBalance').textContent = avgBalance.toFixed(1) + ' days';
             // Render table with type
         }
+
         function viewLeaveCalendar() {
             document.getElementById('leaveCalendar').classList.remove('d-none');
             // Use Chart.js for calendar or simple list
             const ctx = document.getElementById('leaveCalendar').getContext('2d');
             leaveChart = new Chart(ctx, { type: 'bar', data: { labels: ['Jan', 'Feb'], datasets: [{ label: 'Leaves', data: [12, 19] }] } });
         }
+
         // Performance - With goals
         function renderReviews() {
             // Existing + goals achieved
@@ -1174,23 +1230,28 @@
             const pendingFeedback = performanceReviews.filter(r => !r.feedbackReceived).length; // Assume field
             document.getElementById('feedbackPending').textContent = pendingFeedback;
         }
+
         function showGoalSettingModal() {
             // Modal for setting goals
             new bootstrap.Modal(document.getElementById('addGoalModal')).show();
         }
+
         function addGoal() {
             editingGoal = { id: Date.now() };
             new bootstrap.Modal(document.getElementById('addGoalModal')).show();
         }
+
         function saveGoal() {
             // Save to goals array
             goals.push(editingGoal);
             localStorage.setItem('goals', JSON.stringify(goals));
             renderGoalsInReview();
         }
+
         function renderGoalsInReview() {
             // Add to review modal
         }
+
         // Recruitment - With stages and interviews
         function renderJobs() {
             // Existing + interviews
@@ -1199,12 +1260,14 @@
             const hireRate = jobs.reduce((hires, j) => hires + (j.hired || 0), 0) / jobs.reduce((apps, j) => apps + (j.applications ? j.applications.length : 0), 0) * 100 || 0;
             document.getElementById('hireRate').textContent = hireRate.toFixed(1) + '%';
         }
+
         function submitApplication() {
             // Existing + set stage 'Applied'
             application.stage = 'Applied';
             // Simulate email
             logAudit('Application Submitted', name);
         }
+
         function viewJobApplications(id) {
             // Existing + buttons for stage change
             const job = jobs.find(j => j.id === id);
@@ -1216,11 +1279,13 @@
                 }
             });
         }
+
         function scheduleInterviewForApp(appId) {
             editingApplication = // find
             document.getElementById('interviewApplicant').value = editingApplication.name;
             new bootstrap.Modal(document.getElementById('scheduleInterviewModal')).show();
         }
+
         function saveInterview() {
             // Update stage to 'Interview', add interview details
             editingApplication.stage = 'Interview';
@@ -1228,6 +1293,7 @@
             localStorage.setItem('jobs', JSON.stringify(jobs));
             renderJobs();
         }
+
         // Audit - With risk levels
         function renderAudit() {
             // Existing + risk level (e.g., Delete = High)
@@ -1237,758 +1303,96 @@
             document.getElementById('complianceIssues').textContent = issues;
             // Table with risk badge
         }
+
         function logAudit(action, details, risk = 'Low', complianceIssue = false) {
             // Existing + risk and issue
             entry.risk = risk;
             entry.complianceIssue = complianceIssue;
         }
+
         function generateAuditReport() {
             // Export filtered or summary
         }
+
                 function generateAuditReport() {
-            // Export filtered or summary
-            const filtered = auditLog; // Apply filters if needed
+            // Simple summary report
             const summary = {
-                total: filtered.length,
-                highRisk: filtered.filter(a => a.risk === 'High').length,
-                complianceIssues: filtered.filter(a => a.complianceIssue).length
+                total: auditLog.length,
+                highRisk: auditLog.filter(a => a.risk === 'High').length,
+                today: auditLog.filter(a => new Date(a.timestamp).toDateString() === new Date().toDateString()).length
             };
-            console.log('Audit Report:', summary); // In real app, generate PDF/Excel
-            alert(`Audit Summary: ${summary.total} entries, ${summary.highRisk} high risk, ${summary.complianceIssues} issues.`);
+            console.log('Audit Report:', summary);
+            // Export to Excel
+            exportToExcel(auditLog, 'audit');
         }
-        // End HR Functions
-
-        // Core App Functions
-        function login() {
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            const users = {
-                admin: { role: 'admin', name: 'Admin User' },
-                teacher: { role: 'teacher', name: 'Teacher User' },
-                parent: { role: 'parent', name: 'Parent User' },
-                student: { role: 'student', name: 'Student User' }
-            };
-            if (users[username] && password === username + '123') {
-                currentUser = users[username];
-                document.getElementById('loginPage').style.display = 'none';
-                document.getElementById('appContainer').style.display = 'block';
-                updateRoleVisibility();
-                initApp();
-                renderDashboard();
-            } else {
-                alert('Invalid credentials');
-            }
-        }
-
-        function biometricLogin() {
-            // Demo: Random user
-            const roles = ['admin', 'teacher', 'parent', 'student'];
-            currentUser = { role: roles[Math.floor(Math.random() * roles.length)], name: 'Biometric User' };
-            document.getElementById('loginPage').style.display = 'none';
-            document.getElementById('appContainer').style.display = 'block';
-            updateRoleVisibility();
-            initApp();
-            renderDashboard();
-        }
-
-        function logout() {
-            currentUser = null;
-            document.getElementById('appContainer').style.display = 'none';
-            document.getElementById('loginPage').style.display = 'flex';
-            document.getElementById('username').value = '';
-            document.getElementById('password').value = '';
-        }
-
-        function updateRoleVisibility() {
-            const role = currentUser ? currentUser.role : '';
-            document.querySelectorAll('.admin-only').forEach(el => el.style.display = role === 'admin' ? 'block' : 'none');
-            document.querySelectorAll('.teacher-only').forEach(el => el.style.display = role === 'teacher' ? 'block' : 'none');
-            document.querySelectorAll('.parent-only').forEach(el => el.style.display = role === 'parent' ? 'block' : 'none');
-            document.querySelectorAll('.student-only').forEach(el => el.style.display = role === 'student' ? 'block' : 'none');
-            document.querySelectorAll('.non-student').forEach(el => el.style.display = role !== 'student' ? 'block' : 'none');
-        }
-
-        // Data Loading/Saving
-        function loadData() {
-            students = safeParseJSON('students', []);
-            admissions = safeParseJSON('admissions', []);
-            attendanceRecords = safeParseJSON('attendanceRecords', []);
-            fees = safeParseJSON('fees', []);
-            exams = safeParseJSON('exams', []);
-            timetables = safeParseJSON('timetables', {});
-            documents = safeParseJSON('documents', {});
-            marks = safeParseJSON('marks', {});
-            messages = safeParseJSON('messages', []);
-            content = safeParseJSON('content', []);
-        }
-
-        function saveData() {
-            localStorage.setItem('students', JSON.stringify(students));
-            localStorage.setItem('admissions', JSON.stringify(admissions));
-            localStorage.setItem('attendanceRecords', JSON.stringify(attendanceRecords));
-            localStorage.setItem('fees', JSON.stringify(fees));
-            localStorage.setItem('exams', JSON.stringify(exams));
-            localStorage.setItem('timetables', JSON.stringify(timetables));
-            localStorage.setItem('documents', JSON.stringify(documents));
-            localStorage.setItem('marks', JSON.stringify(marks));
-            localStorage.setItem('messages', JSON.stringify(messages));
-            localStorage.setItem('content', JSON.stringify(content));
-            localStorage.setItem('hrSettings', JSON.stringify(hrSettings));
-        }
-
-        function initApp() {
-            loadData();
-            // HR data already loaded in HR init
-            populateSelects();
-            renderAllSections();
-            // Notifications demo
-            setInterval(() => {
-                if (Math.random() > 0.8) {
-                    document.getElementById('notificationBadge').style.display = 'block';
-                    document.getElementById('notificationBadge').textContent = Math.floor(Math.random() * 10) + 1;
-                }
-            }, 30000);
-        }
-
-        function populateSelects() {
-            // Students
-            const studentSelects = document.querySelectorAll('select[id*="Student"], select[id*="student"]');
-            studentSelects.forEach(select => {
-                select.innerHTML = '<option value="">Select Student</option>' + students.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
-            });
-            // Staff
-            const staffSelects = document.querySelectorAll('select[id*="Staff"], select[id*="staff"]');
-            staffSelects.forEach(select => {
+        // Other HR utility functions
+        function populateStaffSelects() {
+            const selects = document.querySelectorAll('select[id*="Staff"], select[id*="leaveStaff"], select[id*="reviewStaff"], select[id*="payrollStaff"]');
+            selects.forEach(select => {
                 select.innerHTML = '<option value="">Select Staff</option>' + staff.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
             });
-            // Grades, Classes, etc. - demo data
-            const grades = ['Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12'];
-            document.querySelectorAll('select[id*="Grade"], select[id*="grade"], select[id*="Class"], select[id*="class"]').forEach(select => {
-                if (select.id.includes('attendanceClass') || select.id.includes('timetableGrade') || select.id.includes('examGradeFilter') || select.id.includes('contentGradeFilter')) {
-                    select.innerHTML = '<option value="">All Grades</option>' + grades.map(g => `<option value="${g}">${g}</option>`).join('');
-                }
-            });
-            // Subjects
-            const subjects = ['Math', 'English', 'Science', 'History', 'Geography', 'Art'];
-            document.querySelectorAll('select[id*="Subject"]').forEach(select => {
-                select.innerHTML = '<option value="">All Subjects</option>' + subjects.map(sub => `<option value="${sub}">${sub}</option>`).join('');
-            });
-            // Teachers for timetable
-            document.getElementById('timetableTeacher').innerHTML = '<option value="">Select Teacher</option>' + staff.filter(s => s.role === 'Teacher').map(t => `<option value="${t.id}">${t.name}</option>`).join('');
         }
-
-        function renderAllSections() {
-            renderStudents();
-            renderAdmissions();
-            renderAttendance();
-            renderFees();
-            renderTimetable();
-            renderExams();
-            renderCommunication();
-            renderContent();
-            renderHR();
-            renderDashboard();
-        }
-
-        // Dashboard
-        function renderDashboard() {
-            document.getElementById('totalStudents').textContent = students.length;
-            const today = new Date().toISOString().split('T')[0];
-            const todayAtt = attendanceRecords.filter(a => a.date === today);
-            const attRate = todayAtt.length ? (todayAtt.filter(a => a.status === 'Present').length / todayAtt.length * 100).toFixed(0) : 0;
-            document.getElementById('todayAttendance').textContent = attRate + '%';
-            const pending = fees.filter(f => f.status === 'Pending').reduce((sum, f) => sum + f.amount, 0);
-            document.getElementById('pendingFees').textContent = 'R' + pending.toFixed(2);
-            const upcoming = exams.filter(e => new Date(e.date) > new Date() && new Date(e.date) < new Date(Date.now() + 7*24*60*60*1000)).length;
-            document.getElementById('upcomingExams').textContent = upcoming;
-            // Chart demo
-            const ctx = document.getElementById('dashboardChart').getContext('2d');
-            new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Students', 'Staff', 'Exams'],
-                    datasets: [{ data: [students.length, staff.length, exams.length], backgroundColor: ['#007bff', '#28a745', '#ffc107'] }]
-                }
-            });
-        }
-
-        // Admissions
-        function showAddAdmissionModal() {
-            // Demo modal content
-            alert('New Admission Modal - Implement form for application details');
-        }
-
-        function showBulkAdmissionModal() {
-            // File upload for CSV/Excel
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = '.csv,.xlsx';
-            input.onchange = e => {
-                const file = e.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = ev => {
-                        const data = new Uint8Array(ev.target.result);
-                        const workbook = XLSX.read(data, { type: 'array' });
-                        const sheet = workbook.Sheets[workbook.SheetNames[0]];
-                        const json = XLSX.utils.sheet_to_json(sheet);
-                        admissions.push(...json.map((row, i) => ({ id: Date.now() + i, ...row, status: 'Pending' })));
-                        saveData();
-                        renderAdmissions();
-                    };
-                    reader.readAsArrayBuffer(file);
-                }
-            };
-            input.click();
-        }
-
-        function searchAdmissions() {
-            const term = document.getElementById('admissionSearch').value.toLowerCase();
-            // Filter and re-render
-            renderAdmissions(term);
-        }
-
-        function renderAdmissions(searchTerm = '') {
-            let filtered = admissions.filter(a => a.name.toLowerCase().includes(searchTerm));
-            document.getElementById('admissionTable').innerHTML = filtered.map(a => `
-                <tr>
-                    <td>${a.id}</td>
-                    <td>${a.name}</td>
-                    <td>${a.grade || '-'}</td>
-                    <td><span class="badge bg-${a.status === 'Approved' ? 'success' : 'warning'}">${a.status}</span></td>
-                    <td>${a.documents ? Object.keys(a.documents).length : 0}</td>
-                    <td><button class="btn btn-sm btn-info">View</button></td>
-                </tr>
-            `).join('');
-        }
-
-        // Students
-        function showAddStudentModal() {
-            // Similar to admission, add to students
-            const newStudent = { id: Date.now(), name: 'New Student', grade: 'Grade 1', parent: 'Parent Name', status: 'Active' };
-            students.push(newStudent);
-            saveData();
-            renderStudents();
-        }
-
-        function searchStudents() {
-            const term = document.getElementById('studentSearch').value.toLowerCase();
-            renderStudents(term);
-        }
-
-        function renderStudents(searchTerm = '') {
-            let filtered = students.filter(s => s.name.toLowerCase().includes(searchTerm));
-            document.getElementById('studentTable').innerHTML = filtered.map(s => `
-                <tr>
-                    <td>${s.id}</td>
-                    <td>${s.name}</td>
-                    <td>${s.grade}</td>
-                    <td>${s.parent}</td>
-                    <td><span class="badge bg-${s.status === 'Active' ? 'success' : 'warning'}">${s.status}</span></td>
-                    <td>${s.documents ? Object.keys(s.documents).length : 0}</td>
-                    <td><button class="btn btn-sm btn-info" onclick="editStudent(${s.id})">Edit</button></td>
-                </tr>
-            `).join('');
-        }
-
-        function editStudent(id) {
-            // Implement edit modal
-            alert(`Edit Student ${id}`);
-        }
-
-        // Attendance
-        function loadAttendance() {
-            const date = document.getElementById('attendanceDate').value || new Date().toISOString().split('T')[0];
-            const cls = document.getElementById('attendanceClass').value;
-            // Filter records
-            renderAttendance(date, cls);
-        }
-
-        function markAllPresent() {
-            const date = document.getElementById('attendanceDate').value;
-            students.forEach(s => {
-                if (!attendanceRecords.find(a => a.studentId === s.id && a.date === date)) {
-                    attendanceRecords.push({ studentId: s.id, date, status: 'Present' });
-                }
-            });
-            saveData();
-            renderAttendance(date);
-        }
-
-        function syncBiometricAttendance() {
-            // Demo: Mark random present
-            alert('Biometric sync simulated');
-            markAllPresent();
-        }
-
-        function renderAttendance(date = new Date().toISOString().split('T')[0], cls = '') {
-            let filteredStudents = students;
-            if (cls) filteredStudents = students.filter(s => s.grade === cls);
-            const attForDate = attendanceRecords.filter(a => a.date === date);
-            document.getElementById('attendanceTable').innerHTML = filteredStudents.map(s => {
-                const status = attForDate.find(a => a.studentId === s.id)?.status || 'Absent';
-                return `
-                    <tr>
-                        <td>${s.id}</td>
-                        <td>${s.name}</td>
-                        <td><span class="badge bg-${status === 'Present' ? 'success' : 'danger'}">${status}</span></td>
-                        <td><button class="btn btn-sm btn-${status === 'Present' ? 'warning' : 'success'}" onclick="toggleAttendance(${s.id}, '${date}', '${status}')">Toggle</button></td>
-                    </tr>
-                `;
-            }).join('');
-        }
-
-        function toggleAttendance(studentId, date, currentStatus) {
-            const index = attendanceRecords.findIndex(a => a.studentId === studentId && a.date === date);
-            if (index > -1) {
-                attendanceRecords[index].status = currentStatus === 'Present' ? 'Absent' : 'Present';
-            } else {
-                attendanceRecords.push({ studentId, date, status: 'Present' });
-            }
-            saveData();
-            loadAttendance();
-        }
-
-        // Fees
-        function showGenerateInvoiceModal() {
-            // Select student and generate
-            const studentId = prompt('Student ID:');
-            if (studentId) {
-                const student = students.find(s => s.id == studentId);
-                if (student) {
-                    const invoice = { id: Date.now(), studentId, amount: 5000, dueDate: new Date(Date.now() + 30*24*60*60*1000).toISOString().split('T')[0], status: 'Pending' };
-                    fees.push(invoice);
-                    saveData();
-                    renderFees();
-                }
-            }
-        }
-
-        function showBulkUploadFeesModal() {
-            // Similar to bulk admission
-            alert('Bulk fees upload - Implement file reader');
-        }
-
-        function sendFeeReminders() {
-            const overdue = fees.filter(f => f.status === 'Pending' && new Date(f.dueDate) < new Date());
-            alert(`${overdue.length} reminders sent!`);
-        }
-
-        function searchFees() {
-            const term = document.getElementById('feeSearch').value.toLowerCase();
-            renderFees(term);
-        }
-
-        function renderFees(searchTerm = '') {
-            let filtered = fees.filter(f => students.find(s => s.id === f.studentId)?.name.toLowerCase().includes(searchTerm));
-            const totalCollected = filtered.filter(f => f.status === 'Paid').reduce((sum, f) => sum + f.amount, 0);
-            const outstanding = filtered.filter(f => f.status === 'Pending').reduce((sum, f) => sum + f.amount, 0);
-            const overdue = filtered.filter(f => f.status === 'Pending' && new Date(f.dueDate) < new Date()).reduce((sum, f) => sum + f.amount, 0);
-            const rate = filtered.length ? (totalCollected / (totalCollected + outstanding) * 100).toFixed(0) : 0;
-            document.getElementById('totalCollected').textContent = 'R' + totalCollected.toFixed(2);
-            document.getElementById('outstandingFees').textContent = 'R' + outstanding.toFixed(2);
-            document.getElementById('overdueFees').textContent = 'R' + overdue.toFixed(2);
-            document.getElementById('paymentRate').textContent = rate + '%';
-            document.getElementById('feeTable').innerHTML = filtered.map(f => {
-                const s = students.find(st => st.id === f.studentId);
-                return `
-                    <tr>
-                        <td>${s ? s.name : 'Unknown'}</td>
-                        <td>R${f.amount.toFixed(2)}</td>
-                        <td>${f.dueDate}</td>
-                        <td>${f.paidDate || '-'}</td>
-                        <td><span class="badge bg-${f.status === 'Paid' ? 'success' : 'warning'}">${f.status}</span></td>
-                        <td><button class="btn btn-sm btn-info" onclick="generateReceipt(${f.id})">Receipt</button></td>
-                        <td><button class="btn btn-sm btn-success" onclick="markPaid(${f.id})">Mark Paid</button></td>
-                    </tr>
-                `;
-            }).join('');
-            // History demo
-            document.getElementById('feeHistory').innerHTML = '<h5>Payment History</h5><p>Demo: Last payment on ' + new Date().toDateString() + '</p>';
-        }
-
-        function markPaid(id) {
-            const fee = fees.find(f => f.id === id);
-            if (fee) {
-                fee.status = 'Paid';
-                fee.paidDate = new Date().toISOString().split('T')[0];
-                saveData();
-                renderFees();
-            }
-        }
-
-        function generateReceipt(id) {
-            const fee = fees.find(f => f.id === id);
-            if (fee) alert('Receipt generated for ' + id + ' - Amount: R' + fee.amount);
-        }
-
-        // Timetable
-        function loadTimetable() {
-            const grade = document.getElementById('timetableGrade').value;
-            if (grade) {
-                timetables[grade] = timetables[grade] || Array(5).fill().map(() => [...timeSlots]); // Mon-Fri
-                renderTimetable(grade);
-            }
-        }
-
-        function highlightTeacherSchedule() {
-            const teacherId = document.getElementById('timetableTeacher').value;
-            // Highlight cells with teacher
-            document.querySelectorAll('.timetable-cell').forEach(cell => {
-                cell.style.background = cell.dataset.teacher === teacherId ? 'rgba(255, 255, 0, 0.3)' : '';
-            });
-        }
-
-        function showAddTimeSlotModal() {
-            const grade = document.getElementById('timetableGrade').value;
-            const day = prompt('Day (0-4):');
-            const slot = prompt('Slot (0-7):');
-            const subject = prompt('Subject:');
-            const teacher = prompt('Teacher ID:');
-            if (grade && day && slot && subject) {
-                if (!timetables[grade]) timetables[grade] = Array(5).fill().map(() => [...timeSlots]);
-                timetables[grade][day][slot].label = subject;
-                timetables[grade][day][slot].teacher = teacher;
-                saveData();
-                renderTimetable(grade);
-            }
-        }
-
-        function checkTimetableConflicts() {
-            const grade = document.getElementById('timetableGrade').value;
-            if (timetables[grade]) {
-                // Simple check: same teacher in multiple slots
-                const conflicts = [];
-                staff.filter(s => s.role === 'Teacher').forEach(t => {
-                    let count = 0;
-                    timetables[grade].flat().forEach(slot => { if (slot.teacher === t.id) count++; });
-                    if (count > 5) conflicts.push(t.name); // Arbitrary
-                });
-                alert(conflicts.length ? `Conflicts for: ${conflicts.join(', ')}` : 'No conflicts');
-            }
-        }
-
-        function renderTimetable(grade = '') {
-            if (!grade) return;
-            const container = document.getElementById('timetableContainer');
-            const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
-            let html = '<table class="table"><thead><tr><th>Time</th>' + days.map(d => `<th>${d}</th>`).join('') + '</tr></thead><tbody>';
-            timeSlots.forEach((slot, i) => {
-                html += `<tr><td>${slot.start} - ${slot.end}</td>`;
-                for (let day = 0; day < 5; day++) {
-                    const label = timetables[grade]?.[day]?.[i]?.label || '';
-                    const teacher = timetables[grade]?.[day]?.[i]?.teacher || '';
-                    html += `<td class="timetable-cell editable" data-teacher="${teacher}" onclick="editTimeSlot('${grade}', ${day}, ${i})">${label}</td>`;
-                }
-                html += '</tr>';
-            });
-            html += '</tbody></table>';
-            container.innerHTML = html;
-        }
-
-        function editTimeSlot(grade, day, slot) {
-            const subject = prompt('Subject:');
-            if (subject) {
-                timetables[grade][day][slot].label = subject;
-                saveData();
-                renderTimetable(grade);
-            }
-        }
-
-        // Exams
-        function showAddExamModal() {
-            const exam = {
-                id: Date.now(),
-                name: prompt('Exam Name:'),
-                date: prompt('Date (YYYY-MM-DD):'),
-                subject: prompt('Subject:'),
-                grade: prompt('Grade:')
-            };
-            if (exam.name && exam.date) {
-                exams.push(exam);
-                saveData();
-                renderExams();
-            }
-        }
-
-        function showEnterMarksModal() {
-            currentMarksExam = prompt('Exam ID:');
-            if (currentMarksExam) {
-                document.getElementById('marksExamName').textContent = exams.find(e => e.id == currentMarksExam)?.name || 'Unknown';
-                document.getElementById('marksEntry').classList.remove('d-none');
-                renderMarks();
-            }
-        }
-
-        function renderExams() {
-            const grade = document.getElementById('examGradeFilter').value;
-            const subject = document.getElementById('examSubjectFilter').value.toLowerCase();
-            let filtered = exams.filter(e => (!grade || e.grade === grade) && (!subject || e.subject.toLowerCase().includes(subject)));
-            document.getElementById('examTable').innerHTML = filtered.map(e => `
-                <tr>
-                    <td>${e.name}</td>
-                    <td>${e.date}</td>
-                    <td>${e.subject}</td>
-                    <td>${e.grade}</td>
-                    <td><span class="badge bg-info">Scheduled</span></td>
-                    <td><button class="btn btn-sm btn-info" onclick="enterMarks(${e.id})">Marks</button></td>
-                </tr>
-            `).join('');
-        }
-
-        function enterMarks(examId) {
-            currentMarksExam = examId;
-            showEnterMarksModal();
-        }
-
-        function renderMarks() {
-            const exam = exams.find(e => e.id == currentMarksExam);
-            if (!exam) return;
-            const gradeStudents = students.filter(s => s.grade === exam.grade);
-            document.getElementById('marksTable').innerHTML = gradeStudents.map(s => {
-                const mark = marks[exam.id]?.[s.id] || 0;
-                return `<tr><td>${s.name}</td><td><input type="number" class="form-control" value="${mark}" min="0" max="100" onchange="updateMark(${s.id}, this.value)"></td></tr>`;
-            }).join('');
-        }
-
-        function updateMark(studentId, value) {
-            if (!marks[currentMarksExam]) marks[currentMarksExam] = {};
-            marks[currentMarksExam][studentId] = parseFloat(value) || 0;
-            saveData();
-        }
-
-        function saveMarks() {
-            // Already saved on change
-            document.getElementById('marksEntry').classList.add('d-none');
-            alert('Marks saved!');
-        }
-
-        function generateAllReportCards() {
-            alert('Report cards generated for all students');
-        }
-
-        function generateHallTickets() {
-            alert('Hall tickets generated');
-        }
-
-        // Communication
-        function sendMessage() {
-            const text = document.getElementById('messageText').value;
-            const recipient = document.getElementById('messageRecipient').value;
-            if (text) {
-                messages.push({ id: Date.now(), text, recipient, sender: currentUser.name, date: new Date().toISOString() });
-                saveData();
-                renderCommunication();
-                document.getElementById('messageText').value = '';
-            }
-        }
-
-        function renderCommunication() {
-            document.getElementById('messageHistory').innerHTML = messages.map(m => `
-                <div class="chat-message ${m.sender === currentUser.name ? 'chat-user' : 'chat-assistant'}">
-                    <strong>${m.sender}</strong> to ${m.recipient}: ${m.text} <small>${new Date(m.date).toLocaleString()}</small>
-                </div>
-            `).join('');
-        }
-
-        // Content
-        function showUploadContentModal() {
-            const type = prompt('Type (lesson/textbook/exam):');
-            const name = prompt('Name:');
-            const grade = prompt('Grade:');
-            const subject = prompt('Subject:');
-            if (name) {
-                content.push({ id: Date.now(), type, name, grade, subject });
-                saveData();
-                renderContent();
-            }
-        }
-
-        function renderContent() {
-            const grade = document.getElementById('contentGradeFilter').value;
-            const subject = document.getElementById('contentSubjectFilter').value.toLowerCase();
-            let filtered = content.filter(c => (!grade || c.grade === grade) && (!subject || c.subject.toLowerCase().includes(subject)));
-            document.getElementById('contentTable').innerHTML = filtered.map(c => `
-                <tr>
-                    <td><span class="badge bg-primary">${c.type}</span></td>
-                    <td>${c.name}</td>
-                    <td>${c.grade}</td>
-                    <td>${c.subject}</td>
-                    <td><button class="btn btn-sm btn-info">Download</button></td>
-                </tr>
-            `).join('');
-        }
-
-        // Reports
-        function exportToExcel(data, type) {
-            const ws = XLSX.utils.json_to_sheet(data);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, type);
-            XLSX.writeFile(wb, `${type}.xlsx`);
-        }
-
-        // Settings
-        function toggleDarkMode(enabled) {
-            document.body.classList.toggle('dark-mode', enabled);
-            localStorage.setItem('darkMode', enabled);
-        }
-
-        function saveHRSettings() {
-            hrSettings.annualLeaveDays = parseInt(document.getElementById('annualLeaveDays').value);
-            hrSettings.sickLeaveDays = parseInt(document.getElementById('sickLeaveDays').value);
-            hrSettings.maternityLeaveMonths = parseInt(document.getElementById('maternityLeaveMonths').value);
-            saveData();
-            alert('Settings saved');
-        }
-
-        // AI Research
-        async function sendGrokQuery() {
-            const query = document.getElementById('grokQuery').value;
-            const apiKey = document.getElementById('grokApiKey').value;
-            if (!query || !apiKey) return alert('Enter query and API key');
-            const historyDiv = document.getElementById('chatHistory');
-            historyDiv.innerHTML += `<div class="chat-user">You: ${query}</div>`;
-            try {
-                const response = await fetch('https://api.x.ai/v1/chat/completions', {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        model: 'grok-beta',
-                        messages: [{ role: 'user', content: query }],
-                        stream: false
-                    })
-                });
-                const data = await response.json();
-                const reply = data.choices[0].message.content;
-                historyDiv.innerHTML += `<div class="chat-assistant">Grok: ${reply}</div>`;
-                chatHistory.push({ query, reply });
-                document.getElementById('grokQuery').value = '';
-                historyDiv.scrollTop = historyDiv.scrollHeight;
-            } catch (e) {
-                alert('Error: ' + e.message);
-            }
-        }
-
-        // Payslip (HR related)
-        function viewPayslip(id) {
-            const payroll = payrolls.find(p => p.id === id);
-            if (payroll) {
-                const s = staff.find(st => st.id === payroll.staffId);
-                document.getElementById('payslipStaff').textContent = s ? s.name : 'Unknown';
-                document.getElementById('payslipPeriod').textContent = payroll.month;
-                document.getElementById('payslipSalary').textContent = 'R' + payroll.salary.toFixed(2);
-                document.getElementById('payslipDeductions').textContent = 'R' + payroll.deductions.toFixed(2);
-                document.getElementById('payslipTax').textContent = 'R' + payroll.tax.toFixed(2);
-                document.getElementById('payslipUIF').textContent = 'R' + payroll.uif.toFixed(2);
-                const net = payroll.salary - payroll.deductions - payroll.tax - payroll.uif;
-                document.getElementById('payslipNet').textContent = 'R' + net.toFixed(2);
-                document.getElementById('payslipTaxNumber').textContent = `Tax Number: ${s.taxNumber}`;
-                document.getElementById('payslipTaxNumFooter').textContent = s.taxNumber;
-                new bootstrap.Modal(document.getElementById('payslipModal')).show();
-            }
-        }
-
-        function downloadPayslipPDF() {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            doc.html(document.getElementById('payslipPreview'), { callback: pdf => pdf.save('payslip.pdf') });
-        }
-
-        // Stripe Demo (if needed for fees)
-        const stripe = Stripe('pk_test_...'); // Replace with real key
-        function processPayment(amount) {
-            stripe.redirectToCheckout({ sessionId: 'demo' }); // Demo
-        }
-
-        // Event Listeners
-        document.addEventListener('DOMContentLoaded', () => {
-            // Init dark mode
-            const darkMode = localStorage.getItem('darkMode') === 'true';
-            document.getElementById('darkModeSwitch').checked = darkMode;
-            toggleDarkMode(darkMode);
-            // School year
-            document.getElementById('schoolYear').value = new Date().getFullYear();
-            // Attendance date default
-            document.getElementById('attendanceDate').value = new Date().toISOString().split('T')[0];
-            // Payroll month default
-            document.getElementById('payrollMonthFilter').value = new Date().toISOString().slice(0, 7);
-        });
-
-        // Demo Data Population on Init
-        if (localStorage.getItem('students') === null) {
-            students = Array.from({length: 50}, (_, i) => ({ id: i+1, name: `Student ${i+1}`, grade: `Grade ${Math.floor(i/5)+1}`, parent: `Parent ${i+1}`, status: 'Active' }));
-            staff = [
-                { id: 1, name: 'John Teacher', role: 'Teacher', department: 'Math', salary: 30000, taxNumber: '123', uifNumber: '456', status: 'Active', certifications: [{id:1, name:'Teaching Cert', expiry:'2026-01-01'}], age: 35 },
-                { id: 2, name: 'Jane Admin', role: 'Admin', department: 'HR', salary: 25000, taxNumber: '789', uifNumber: '012', status: 'Active', certifications: [], age: 40 }
-            ];
-            // Add more demo data as needed
-            saveData();
-            localStorage.setItem('staff', JSON.stringify(staff));
-        }
-
-        // Notifications Modal Demo
-        document.getElementById('notificationsModal') ? 
-        document.querySelector('[data-bs-target="#notificationsModal"]').addEventListener('click', () => {
-            const modal = new bootstrap.Modal(document.getElementById('notificationsModal'));
-            // Assume modal HTML exists or create dynamically
-            if (!document.getElementById('notificationsModal')) {
-                const modalHtml = `
-                    <div class="modal fade" id="notificationsModal">
-                        <div class="modal-dialog">
-                            <div class="modal-content">
-                                <div class="modal-header"><h5>Notifications</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-                                <div class="modal-body"><p>Demo: 3 new messages</p></div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                document.body.insertAdjacentHTML('beforeend', modalHtml);
-            }
-            modal.show();
-        }) : null;
-
-        // Save functions for modals (generic)
-        function saveStaff() {
-            const name = document.getElementById('staffName').value;
-            const role = document.getElementById('staffRole').value;
-            const department = document.getElementById('staffDepartment').value;
-            const salary = parseFloat(document.getElementById('staffSalary').value);
-            const taxNumber = document.getElementById('staffTaxNumber').value;
-            const uifNumber = document.getElementById('staffUifNumber').value;
-            const status = document.getElementById('staffStatus').value;
-            if (editingStaff) {
-                editingStaff.name = name;
-                editingStaff.role = role;
-                editingStaff.department = department;
-                editingStaff.salary = salary;
-                editingStaff.taxNumber = taxNumber;
-                editingStaff.uifNumber = uifNumber;
-                editingStaff.status = status;
-            } else {
-                const newStaff = { id: Date.now(), name, role, department, salary, taxNumber, uifNumber, status, certifications: [] };
-                staff.push(newStaff);
-            }
-            localStorage.setItem('staff', JSON.stringify(staff));
-            renderStaff();
-            bootstrap.Modal.getInstance(document.getElementById('addStaffModal')).hide();
-            logAudit(editingStaff ? 'Updated Staff' : 'Added Staff', name);
-            editingStaff = null;
-        }
-
         function showEditStaffModal(id) {
-            editingStaff = staff.find(s => s.id === id);
             showAddStaffModal(id);
         }
-
         function deleteStaff(id) {
-            if (confirm('Delete?')) {
+            if (confirm('Delete staff?')) {
                 staff = staff.filter(s => s.id !== id);
                 localStorage.setItem('staff', JSON.stringify(staff));
                 renderStaff();
-                logAudit('Deleted Staff', staff.find(s => s.id === id)?.name || id, 'High');
+                logAudit('Staff Deleted', `ID: ${id}`, 'High');
             }
         }
-
+        function syncStaffBiometric() {
+            alert('Biometric sync simulated - all staff enrolled.');
+        }
+        function generateStaffReport() {
+            exportToExcel(staff, 'staff_report');
+        }
+        function viewPayslip(id) {
+            const p = payrolls.find(pr => pr.id === id);
+            if (!p) return;
+            const s = staff.find(st => st.id === p.staffId);
+            if (!s) return;
+            document.getElementById('payslipStaff').textContent = s.name;
+            document.getElementById('payslipPeriod').textContent = p.month;
+            document.getElementById('payslipSalary').textContent = 'R' + p.salary.toFixed(2);
+            document.getElementById('payslipDeductions').textContent = 'R' + p.deductions.toFixed(2);
+            document.getElementById('payslipTax').textContent = 'R' + p.tax.toFixed(2);
+            document.getElementById('payslipUIF').textContent = 'R' + p.uif.toFixed(2);
+            const net = p.salary - p.deductions - p.tax - p.uif;
+            document.getElementById('payslipNet').textContent = 'R' + net.toFixed(2);
+            document.getElementById('payslipTaxNumber').textContent = `Tax Number: ${s.taxNumber || 'N/A'}`;
+            document.getElementById('payslipTaxNumFooter').textContent = s.taxNumber || 'N/A';
+            new bootstrap.Modal(document.getElementById('payslipModal')).show();
+        }
+        function downloadPayslipPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.html(document.getElementById('payslipPreview'), {
+                callback: function (doc) {
+                    doc.save('payslip.pdf');
+                },
+                x: 10,
+                y: 10,
+                width: 190,
+                windowWidth: 800
+            });
+        }
+        function showAddPayrollModal(editId = null) {
+            editingPayroll = editId ? payrolls.find(p => p.id === editId) : null;
+            document.getElementById('payrollModalTitle').textContent = editingPayroll ? 'Edit Payroll' : 'Add Payroll';
+            if (editingPayroll) {
+                // Fill fields
+                const s = staff.find(st => st.id === editingPayroll.staffId);
+                document.getElementById('payrollStaff').value = editingPayroll.staffId;
+                document.getElementById('payrollMonth').value = editingPayroll.month;
+                document.getElementById('payrollSalary').value = editingPayroll.salary;
+                document.getElementById('payrollDeductions').value = editingPayroll.deductions;
+                calculateTax();
+            }
+            new bootstrap.Modal(document.getElementById('addPayrollModal')).show();
+        }
         function savePayroll() {
             const staffId = parseInt(document.getElementById('payrollStaff').value);
             const month = document.getElementById('payrollMonth').value;
@@ -1996,95 +1400,82 @@
             const deductions = parseFloat(document.getElementById('payrollDeductions').value) || 0;
             const tax = parseFloat(document.getElementById('payrollTax').value);
             const uif = parseFloat(document.getElementById('payrollUIF').value) || 0;
+            if (!staffId || !month || !salary) return alert('Fill required fields');
             if (editingPayroll) {
-                editingPayroll.staffId = staffId;
-                editingPayroll.month = month;
-                editingPayroll.salary = salary;
-                editingPayroll.deductions = deductions;
-                editingPayroll.tax = tax;
-                editingPayroll.uif = uif;
+                Object.assign(editingPayroll, { staffId, month, salary, deductions, tax, uif });
             } else {
                 payrolls.push({ id: Date.now(), staffId, month, salary, deductions, tax, uif });
             }
             localStorage.setItem('payrolls', JSON.stringify(payrolls));
             renderPayrolls();
             bootstrap.Modal.getInstance(document.getElementById('addPayrollModal')).hide();
-            logAudit('Payroll ' + (editingPayroll ? 'Updated' : 'Added'), month);
+            logAudit('Payroll ' + (editingPayroll ? 'Updated' : 'Added'), `Staff ID: ${staffId}`);
             editingPayroll = null;
         }
-
-        function showAddPayrollModal(editId = null) {
-            editingPayroll = editId ? payrolls.find(p => p.id === editId) : null;
-            document.getElementById('payrollModalTitle').textContent = editingPayroll ? 'Edit Payroll' : 'Add Payroll';
-            populateStaffSelect(document.getElementById('payrollStaff'), staff);
-            if (editingPayroll) {
-                document.getElementById('payrollStaff').value = editingPayroll.staffId;
-                document.getElementById('payrollMonth').value = editingPayroll.month;
-                document.getElementById('payrollSalary').value = editingPayroll.salary;
-                // etc.
-                calculateTax();
-            }
-            new bootstrap.Modal(document.getElementById('addPayrollModal')).show();
-        }
-
-        function populateStaffSelect(select, staffList) {
-            select.innerHTML = '<option value="">Select Staff</option>' + staffList.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
-        }
-
-        function generatePayroll() {
-            staff.forEach(s => {
-                if (!payrolls.find(p => p.staffId === s.id && p.month === document.getElementById('payrollMonthFilter').value)) {
-                    const salary = s.salary;
-                    const deductions = 0; // Demo
-                    const tax = calculatePAYE(salary);
-                    const uif = Math.min(salary * uifRate, 177.12);
-                    payrolls.push({ id: Date.now(), staffId: s.id, month: document.getElementById('payrollMonthFilter').value, salary, deductions, tax, uif });
-                }
-            });
-            localStorage.setItem('payrolls', JSON.stringify(payrolls));
-            renderPayrolls();
-        }
-
         function exportPayrollToExcel() {
-            exportToExcel(payrolls, 'payrolls');
+            exportToExcel(payrolls, 'payroll');
         }
-
+        function showAddLeaveModal(editId = null) {
+            editingLeave = editId ? leaveRequests.find(l => l.id === editId) : null;
+            document.getElementById('leaveModalTitle').textContent = editingLeave ? 'Edit Leave' : 'Add Leave';
+            if (editingLeave) {
+                // Fill fields
+                document.getElementById('leaveStaff').value = editingLeave.staffId;
+                document.getElementById('leaveDate').value = editingLeave.date;
+                document.getElementById('leaveType').value = editingLeave.type;
+                document.getElementById('leaveReason').value = editingLeave.reason;
+                document.getElementById('leaveDays').value = editingLeave.days;
+                updateLeaveBalance();
+            }
+            new bootstrap.Modal(document.getElementById('addLeaveModal')).show();
+        }
         function saveLeave() {
             const staffId = parseInt(document.getElementById('leaveStaff').value);
             const date = document.getElementById('leaveDate').value;
             const type = document.getElementById('leaveType').value;
             const reason = document.getElementById('leaveReason').value;
             const days = parseInt(document.getElementById('leaveDays').value);
+            if (!staffId || !date || !reason || !days) return alert('Fill required fields');
+            const s = staff.find(st => st.id === staffId);
+            if (!s) return;
+            // Update balance
+            if (!s.leaveBalances) s.leaveBalances = { annual: hrSettings.annualLeaveDays, sick: hrSettings.sickLeaveDays };
+            if (type === 'Annual' && days > s.leaveBalances.annual) return alert('Insufficient annual leave');
+            // Similar for others
             if (editingLeave) {
-                editingLeave.staffId = staffId;
-                editingLeave.date = date;
-                editingLeave.type = type;
-                editingLeave.reason = reason;
-                editingLeave.days = days;
+                Object.assign(editingLeave, { staffId, date, type, reason, days, status: 'Pending' });
             } else {
                 leaveRequests.push({ id: Date.now(), staffId, date, type, reason, days, status: 'Pending' });
             }
             localStorage.setItem('leaveRequests', JSON.stringify(leaveRequests));
-            renderLeaves();
+            localStorage.setItem('staff', JSON.stringify(staff));
+            renderLeaves(); // Assume renderLeaves function
             bootstrap.Modal.getInstance(document.getElementById('addLeaveModal')).hide();
-            logAudit('Leave Request ' + (editingLeave ? 'Updated' : 'Added'), reason);
+            logAudit('Leave Request ' + (editingLeave ? 'Updated' : 'Added'), `Staff ID: ${staffId}`);
             editingLeave = null;
         }
-
-        function showAddLeaveModal(editId = null) {
-            editingLeave = editId ? leaveRequests.find(l => l.id === editId) : null;
-            document.getElementById('leaveModalTitle').textContent = editingLeave ? 'Edit Leave' : 'Add Leave';
-            populateStaffSelect(document.getElementById('leaveStaff'), staff);
-            if (editingLeave) {
-                document.getElementById('leaveStaff').value = editingLeave.staffId;
-                // etc.
-            }
-            new bootstrap.Modal(document.getElementById('addLeaveModal')).show();
+        function updateLeaveBalance() {
+            const staffId = document.getElementById('leaveStaff').value;
+            const type = document.getElementById('leaveType').value;
+            if (!staffId || !type) return;
+            const s = staff.find(st => st.id == staffId);
+            if (!s || !s.leaveBalances) return;
+            const balance = s.leaveBalances[type.toLowerCase()] || 0;
+            document.getElementById('leaveBalanceDisplay').innerHTML = `<small>Available: ${balance} days</small>`;
         }
-
+        function saveLeaveStatus() {
+            if (!editingLeave) return;
+            editingLeave.status = document.getElementById('leaveStatus').value;
+            editingLeave.comments = document.getElementById('leaveComments').value;
+            localStorage.setItem('leaveRequests', JSON.stringify(leaveRequests));
+            renderLeaves();
+            bootstrap.Modal.getInstance(document.getElementById('leaveStatusModal')).hide();
+            logAudit('Leave Status Updated', `ID: ${editingLeave.id}, Status: ${editingLeave.status}`);
+        }
         function renderLeaves() {
-            const date = document.getElementById('leaveDateFilter').value;
-            let filtered = leaveRequests.filter(l => !date || l.date === date);
+            const dateFilter = document.getElementById('leaveDateFilter').value;
+            let filtered = leaveRequests;
+            if (dateFilter) filtered = filtered.filter(l => l.date === dateFilter);
             const pending = filtered.filter(l => l.status === 'Pending').length;
             const approved = filtered.filter(l => l.status === 'Approved').length;
             const rejected = filtered.filter(l => l.status === 'Rejected').length;
@@ -2097,79 +1488,148 @@
                     <tr>
                         <td>${s ? s.name : 'Unknown'}</td>
                         <td>${l.date}</td>
-                        <td>${l.type}</td>
+                        <td><span class="badge bg-info">${l.type}</span></td>
                         <td>${l.reason}</td>
                         <td><span class="badge bg-${l.status === 'Approved' ? 'success' : l.status === 'Rejected' ? 'danger' : 'warning'}">${l.status}</span></td>
-                        <td>${l.balance || 0}</td>
-                        <td><button class="btn btn-sm btn-info" onclick="showLeaveStatusModal(${l.id})">Update</button></td>
+                        <td>${l.balance || 0} days</td>
+                        <td>
+                            <button class="btn btn-sm btn-info" onclick="showLeaveStatusModal(${l.id})">Update</button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteLeave(${l.id})">Delete</button>
+                        </td>
                     </tr>
                 `;
             }).join('');
         }
-
         function showLeaveStatusModal(id) {
             editingLeave = leaveRequests.find(l => l.id === id);
+            document.getElementById('leaveStatus').value = editingLeave.status;
+            document.getElementById('leaveComments').value = editingLeave.comments || '';
             new bootstrap.Modal(document.getElementById('leaveStatusModal')).show();
         }
-
-        function saveLeaveStatus() {
-            const status = document.getElementById('leaveStatus').value;
-            const comments = document.getElementById('leaveComments').value;
-            if (editingLeave) {
-                editingLeave.status = status;
-                editingLeave.comments = comments;
-                // Update balance
-                const s = staff.find(st => st.id === editingLeave.staffId);
-                if (!s.currentBalance) s.currentBalance = hrSettings.annualLeaveDays;
-                if (status === 'Approved') s.currentBalance -= editingLeave.days;
+        function deleteLeave(id) {
+            if (confirm('Delete leave?')) {
+                leaveRequests = leaveRequests.filter(l => l.id !== id);
+                localStorage.setItem('leaveRequests', JSON.stringify(leaveRequests));
+                renderLeaves();
             }
-            localStorage.setItem('leaveRequests', JSON.stringify(leaveRequests));
-            localStorage.setItem('staff', JSON.stringify(staff));
-            renderLeaves();
-            bootstrap.Modal.getInstance(document.getElementById('leaveStatusModal')).hide();
-            logAudit('Leave Status Updated', editingLeave.reason, 'Medium');
         }
-
+        function showAddReviewModal(staffId = null) {
+            editingReview = staffId ? { staffId, id: Date.now() } : null;
+            document.getElementById('reviewModalTitle').textContent = 'Add Review';
+            if (editingReview && staffId) {
+                document.getElementById('reviewStaff').value = staffId;
+            }
+            renderGoalsInReview();
+            new bootstrap.Modal(document.getElementById('addReviewModal')).show();
+        }
         function saveReview() {
             const staffId = parseInt(document.getElementById('reviewStaff').value);
             const date = document.getElementById('reviewDate').value;
             const score = parseFloat(document.getElementById('reviewScore').value);
             const comments = document.getElementById('reviewComments').value;
-            if (editingReview) {
-                editingReview.staffId = staffId;
-                editingReview.date = date;
-                editingReview.score = score;
-                editingReview.comments = comments;
+            if (!staffId || !date || !score) return alert('Fill required fields');
+            const review = editingReview || { id: Date.now(), staffId, date, score, comments, goals: [] };
+            review.date = date;
+            review.score = score;
+            review.comments = comments;
+            review.goals = goals.filter(g => g.reviewId === review.id); // Assume link
+            const index = performanceReviews.findIndex(r => r.id === review.id);
+            if (index > -1) {
+                performanceReviews[index] = review;
             } else {
-                performanceReviews.push({ id: Date.now(), staffId, date, score, comments, goals: [] });
+                performanceReviews.push(review);
             }
             localStorage.setItem('performanceReviews', JSON.stringify(performanceReviews));
             renderReviews();
             bootstrap.Modal.getInstance(document.getElementById('addReviewModal')).hide();
-            logAudit('Performance Review ' + (editingReview ? 'Updated' : 'Added'), comments);
+            logAudit('Performance Review ' + (index > -1 ? 'Updated' : 'Added'), `Staff ID: ${staffId}`);
             editingReview = null;
         }
-
-        function showAddReviewModal(editId = null) {
-            editingReview = editId ? performanceReviews.find(r => r.id === editId) : null;
-            document.getElementById('reviewModalTitle').textContent = editingReview ? 'Edit Review' : 'Add Review';
-            populateStaffSelect(document.getElementById('reviewStaff'), staff);
-            if (editingReview) {
-                document.getElementById('reviewStaff').value = editingReview.staffId;
-                // etc.
-            }
-            renderGoalsInReview(editingReview?.goals || []);
-            new bootstrap.Modal(document.getElementById('addReviewModal')).show();
+        function generatePerformanceReport() {
+            exportToExcel(performanceReviews, 'performance');
         }
-
+        function showAddJobModal(editId = null) {
+            editingJob = editId ? jobs.find(j => j.id === editId) : null;
+            document.getElementById('jobModalTitle').textContent = editingJob ? 'Edit Job' : 'Add Job';
+            if (editingJob) {
+                // Fill fields
+                document.getElementById('jobTitle').value = editingJob.title;
+                document.getElementById('jobDepartment').value = editingJob.department;
+                document.getElementById('jobDescription').value = editingJob.description;
+                document.getElementById('jobStatus').value = editingJob.status;
+            }
+            new bootstrap.Modal(document.getElementById('addJobModal')).show();
+        }
+        function saveJob() {
+            const title = document.getElementById('jobTitle').value;
+            const department = document.getElementById('jobDepartment').value;
+            const description = document.getElementById('jobDescription').value;
+            const status = document.getElementById('jobStatus').value;
+            if (!title || !description) return alert('Fill required fields');
+            const job = editingJob || { id: Date.now(), applications: [], hired: 0 };
+            job.title = title;
+            job.department = department;
+            job.description = description;
+            job.status = status;
+            const index = jobs.findIndex(j => j.id === job.id);
+            if (index > -1) {
+                jobs[index] = job;
+            } else {
+                jobs.push(job);
+            }
+            localStorage.setItem('jobs', JSON.stringify(jobs));
+            renderJobs();
+            bootstrap.Modal.getInstance(document.getElementById('addJobModal')).hide();
+            logAudit('Job ' + (index > -1 ? 'Updated' : 'Added'), title);
+            editingJob = null;
+        }
+        function showApplyJobModal() {
+            document.getElementById('applyJobSelect').innerHTML = jobs.map(j => `<option value="${j.id}">${j.title}</option>`).join('');
+            new bootstrap.Modal(document.getElementById('applyJobModal')).show();
+        }
+        function submitApplication() {
+            const jobId = parseInt(document.getElementById('applyJobSelect').value);
+            const name = document.getElementById('applicantName').value;
+            const email = document.getElementById('applicantEmail').value;
+            const phone = document.getElementById('applicantPhone').value;
+            const coverLetter = document.getElementById('applicantCoverLetter').value;
+            const resume = document.getElementById('applicantResume').files[0];
+            if (!jobId || !name || !email) return alert('Fill required fields');
+            const job = jobs.find(j => j.id === jobId);
+            if (!job) return;
+            const application = { id: Date.now(), name, email, phone, coverLetter, resume: resume ? resume.name : '', stage: 'Applied' };
+            if (!job.applications) job.applications = [];
+            job.applications.push(application);
+            localStorage.setItem('jobs', JSON.stringify(jobs));
+            renderJobs();
+            bootstrap.Modal.getInstance(document.getElementById('applyJobModal')).hide();
+            alert('Application submitted!');
+        }
+        function generateRecruitmentReport() {
+            exportToExcel(jobs, 'recruitment');
+        }
+        function renderHR() {
+            // Tab switching
+            document.querySelectorAll('.nav-tabs a').forEach(tab => {
+                tab.addEventListener('shown.bs.tab', function (e) {
+                    const target = e.target.getAttribute('href').substring(1);
+                    if (target === 'hr-staff') renderStaff();
+                    if (target === 'hr-payroll') renderPayrolls();
+                    if (target === 'hr-leaves') renderLeaves();
+                    if (target === 'hr-performance') renderReviews();
+                    if (target === 'hr-recruitment') renderJobs();
+                    if (target === 'hr-audit') renderAudit();
+                });
+            });
+            renderStaff(); // Default
+        }
         function renderReviews() {
             const searchTerm = document.getElementById('reviewSearch').value.toLowerCase();
-            let filtered = performanceReviews.filter(r => staff.find(s => s.id === r.staffId)?.name.toLowerCase().includes(searchTerm));
+            let filtered = performanceReviews.filter(r => r.comments.toLowerCase().includes(searchTerm));
             const avgScore = filtered.reduce((sum, r) => sum + r.score, 0) / filtered.length || 0;
             const total = filtered.length;
             document.getElementById('avgScore').textContent = avgScore.toFixed(1);
             document.getElementById('totalReviews').textContent = total;
-            // goalsAchieved, feedbackPending as before
             document.getElementById('reviewTable').innerHTML = filtered.map(r => {
                 const s = staff.find(st => st.id === r.staffId);
                 const achieved = r.goals ? r.goals.filter(g => g.status === 'Achieved').length : 0;
@@ -2179,147 +1639,64 @@
                         <td>${r.date}</td>
                         <td>${r.score}</td>
                         <td>${achieved}/${r.goals ? r.goals.length : 0}</td>
-                        <td>${r.comments}</td>
-                        <td><button class="btn btn-sm btn-info">Edit</button></td>
+                        <td>${r.comments.substring(0, 50)}...</td>
+                        <td><button class="btn btn-sm btn-info" onclick="showAddReviewModal(${r.staffId})">Edit</button></td>
                     </tr>
                 `;
             }).join('');
-            // Chart
-            const ctx = document.getElementById('performanceChart').getContext('2d');
-            performanceChart = new Chart(ctx, {
-                type: 'radar',
-                data: { labels: ['Score', 'Goals'], datasets: [{ data: [avgScore, total] }] }
-            });
         }
-
-        function generatePerformanceReport() {
-            exportToExcel(performanceReviews, 'performance');
-        }
-
-        function saveJob() {
-            const title = document.getElementById('jobTitle').value;
-            const department = document.getElementById('jobDepartment').value;
-            const description = document.getElementById('jobDescription').value;
-            const status = document.getElementById('jobStatus').value;
-            if (editingJob) {
-                editingJob.title = title;
-                editingJob.department = department;
-                editingJob.description = description;
-                editingJob.status = status;
-            } else {
-                jobs.push({ id: Date.now(), title, department, description, status: 'Open', applications: [] });
-            }
-            localStorage.setItem('jobs', JSON.stringify(jobs));
-            renderJobs();
-            bootstrap.Modal.getInstance(document.getElementById('addJobModal')).hide();
-            logAudit('Job ' + (editingJob ? 'Updated' : 'Added'), title);
-            editingJob = null;
-        }
-
-        function showAddJobModal(editId = null) {
-            editingJob = editId ? jobs.find(j => j.id === editId) : null;
-            document.getElementById('jobModalTitle').textContent = editingJob ? 'Edit Job' : 'Add Job';
-            if (editingJob) {
-                document.getElementById('jobTitle').value = editingJob.title;
-                // etc.
-            }
-            new bootstrap.Modal(document.getElementById('addJobModal')).show();
-        }
-
         function renderJobs() {
             const searchTerm = document.getElementById('jobSearch').value.toLowerCase();
             let filtered = jobs.filter(j => j.title.toLowerCase().includes(searchTerm));
             const open = filtered.filter(j => j.status === 'Open').length;
             const totalApps = filtered.reduce((sum, j) => sum + (j.applications ? j.applications.length : 0), 0);
-            // interviews, hireRate as before
             document.getElementById('openPositions').textContent = open;
             document.getElementById('totalApplications').textContent = totalApps;
+            const interviews = filtered.reduce((sum, j) => sum + (j.applications ? j.applications.filter(a => a.stage === 'Interview').length : 0), 0);
+            document.getElementById('interviewsScheduled').textContent = interviews;
+            const totalHired = filtered.reduce((sum, j) => sum + (j.hired || 0), 0);
+            const hireRate = totalApps > 0 ? (totalHired / totalApps * 100) : 0;
+            document.getElementById('hireRate').textContent = hireRate.toFixed(1) + '%';
             document.getElementById('jobTable').innerHTML = filtered.map(j => `
                 <tr>
                     <td>${j.id}</td>
                     <td>${j.title}</td>
-                    <td>${j.department}</td>
+                    <td>${j.department || '-'}</td>
                     <td>${j.applications ? j.applications.length : 0}</td>
                     <td><span class="badge bg-${j.status === 'Open' ? 'success' : 'secondary'}">${j.status}</span></td>
-                    <td><button class="btn btn-sm btn-info" onclick="viewJobApplications(${j.id})">View Apps</button></td>
+                    <td>
+                        <button class="btn btn-sm btn-info" onclick="showEditJobModal(${j.id})">Edit</button>
+                        <button class="btn btn-sm btn-primary" onclick="viewJobApplications(${j.id})">View Apps</button>
+                    </td>
                 </tr>
             `).join('');
         }
-
-        function showApplyJobModal() {
-            populateJobSelect();
-            new bootstrap.Modal(document.getElementById('applyJobModal')).show();
+        function showEditJobModal(id) {
+            showAddJobModal(id);
         }
-
-        function populateJobSelect() {
-            document.getElementById('applyJobSelect').innerHTML = '<option value="">Select Position</option>' + jobs.filter(j => j.status === 'Open').map(j => `<option value="${j.id}">${j.title}</option>`).join('');
+        function viewJobApplications(id) {
+            const job = jobs.find(j => j.id === id);
+            if (!job || !job.applications) return;
+            alert('Applications:\n' + job.applications.map(a => `${a.name} - Stage: ${a.stage}`).join('\n'));
+            // In real, show modal with list and stage buttons
         }
-
-        function submitApplication() {
-            const jobId = parseInt(document.getElementById('applyJobSelect').value);
-            const name = document.getElementById('applicantName').value;
-            const email = document.getElementById('applicantEmail').value;
-            const phone = document.getElementById('applicantPhone').value;
-            const coverLetter = document.getElementById('applicantCoverLetter').value;
-            const job = jobs.find(j => j.id === jobId);
-            if (job) {
-                const app = { id: Date.now(), name, email, phone, coverLetter, stage: 'Applied', resume: 'demo.pdf' };
-                job.applications.push(app);
-                localStorage.setItem('jobs', JSON.stringify(jobs));
-                renderJobs();
-                alert('Application submitted!');
-            }
-            bootstrap.Modal.getInstance(document.getElementById('applyJobModal')).hide();
-        }
-
-        function viewJobApplications(jobId) {
-            const job = jobs.find(j => j.id === jobId);
-            if (job && job.applications) {
-                const appsHtml = job.applications.map(a => `
-                    <div class="border p-2 mb-2">
-                        <strong>${a.name}</strong> - ${a.email} <br> Stage: <span class="applicant-stage" onclick="updateAppStage(${a.id})">${a.stage}</span>
-                        ${a.stage === 'Applied' ? `<button class="btn btn-sm btn-success" onclick="scheduleInterviewForApp(${a.id})">Interview</button>` : ''}
-                    </div>
-                `).join('');
-                alert(`Applications:\n${appsHtml}`); // Modal in real
-            }
-        }
-
-        function updateAppStage(appId) {
-            const stages = ['Applied', 'Screened', 'Interview', 'Offer', 'Hired'];
-            const current = prompt('New stage: ' + stages.join(', '));
-            if (stages.includes(current)) {
-                // Update app stage
-                jobs.forEach(j => {
-                    const app = j.applications.find(a => a.id === appId);
-                    if (app) app.stage = current;
-                });
-                localStorage.setItem('jobs', JSON.stringify(jobs));
-                renderJobs();
-            }
-        }
-
-        function generateRecruitmentReport() {
-            exportToExcel(jobs, 'recruitment');
-        }
-
-        function logAudit(action, details, risk = 'Low', complianceIssue = false) {
-            auditLog.unshift({ id: Date.now(), timestamp: new Date().toISOString(), user: currentUser.name, action, details, risk, complianceIssue });
-            localStorage.setItem('auditLog', JSON.stringify(auditLog));
-        }
-
         function renderAudit() {
-            const date = document.getElementById('auditDateFilter').value;
-            const action = document.getElementById('auditActionFilter').value;
-            let filtered = auditLog.filter(a => (!date || a.timestamp.startsWith(date)) && (!action || a.action.includes(action)));
+            const dateFilter = document.getElementById('auditDateFilter').value;
+            const actionFilter = document.getElementById('auditActionFilter').value;
+            let filtered = auditLog;
+            if (dateFilter) filtered = filtered.filter(a => new Date(a.timestamp).toDateString() === new Date(dateFilter).toDateString());
+            if (actionFilter) filtered = filtered.filter(a => a.action.includes(actionFilter));
             const total = filtered.length;
-            const today = filtered.filter(a => new Date(a.timestamp).toDateString() === new Date().toDateString()).length;
-            // highRisk, complianceIssues as before
+            const today = auditLog.filter(a => new Date(a.timestamp).toDateString() === new Date().toDateString()).length;
+            const highRisk = filtered.filter(a => a.risk === 'High').length;
+            const issues = filtered.filter(a => a.complianceIssue).length;
             document.getElementById('totalAudit').textContent = total;
             document.getElementById('todayAudit').textContent = today;
+            document.getElementById('highRiskAudit').textContent = highRisk;
+            document.getElementById('complianceIssues').textContent = issues;
             document.getElementById('auditTable').innerHTML = filtered.map(a => `
                 <tr>
-                    <td>${new Date(a.timestamp).toLocaleString()}</td>
+                    <td>${a.timestamp}</td>
                     <td>${a.user}</td>
                     <td>${a.action}</td>
                     <td>${a.details}</td>
@@ -2327,64 +1704,147 @@
                 </tr>
             `).join('');
         }
-
         function exportAuditToExcel() {
             exportToExcel(auditLog, 'audit');
         }
-
-        // Additional saves for other modals (similar pattern)
-        // e.g., saveAdmission, saveStudent, etc. - implement as needed
-
-        // Init HR renders
-        function renderHR() {
-            renderStaff();
-            renderPayrolls();
-            renderLeaves();
-            renderReviews();
-            renderJobs();
-            renderAudit();
+        function logAudit(action, details, risk = 'Low', complianceIssue = false) {
+            const entry = {
+                id: Date.now(),
+                timestamp: new Date().toISOString(),
+                user: currentUser ? currentUser.username : 'System',
+                action,
+                details,
+                risk,
+                complianceIssue
+            };
+            auditLog.unshift(entry); // Latest first
+            if (auditLog.length > 10000) auditLog = auditLog.slice(0, 10000); // Limit size
+            localStorage.setItem('auditLog', JSON.stringify(auditLog));
         }
-
-        function renderPayrolls() {
-            const month = document.getElementById('payrollMonthFilter').value;
-            let filtered = payrolls.filter(p => !month || p.month === month);
-            // totals as before
-            const totalPayroll = filtered.reduce((sum, p) => sum + p.salary, 0);
-            const totalDeductions = filtered.reduce((sum, p) => sum + p.deductions, 0);
-            const netPayroll = filtered.reduce((sum, p) => sum + (p.salary - p.deductions - p.tax - p.uif), 0);
-            document.getElementById('totalPayroll').textContent = 'R' + totalPayroll.toFixed(2);
-            document.getElementById('totalDeductions').textContent = 'R' + totalDeductions.toFixed(2);
-            document.getElementById('netPayroll').textContent = 'R' + netPayroll.toFixed(2);
-            const complianceScore = filtered.length ? (filtered.filter(p => p.tax && p.uif).length / filtered.length * 100).toFixed(0) : 100;
-            document.getElementById('complianceScore').textContent = complianceScore + '%';
-            document.getElementById('payrollTable').innerHTML = filtered.map(p => {
-                const s = staff.find(st => st.id === p.staffId);
-                const net = p.salary - p.deductions - p.tax - p.uif;
-                return `
-                    <tr>
-                        <td>${p.id}</td>
-                        <td>${s ? s.name : 'Unknown'}</td>
-                        <td>${p.month}</td>
-                        <td>R${p.salary.toFixed(2)}</td>
-                        <td>R${p.deductions.toFixed(2)}</td>
-                        <td>R${p.tax.toFixed(2)}</td>
-                        <td>R${p.uif.toFixed(2)}</td>
-                        <td>R${net.toFixed(2)}</td>
-                        <td><button class="btn btn-sm btn-info" onclick="showAddPayrollModal(${p.id})">Edit</button> <button class="btn btn-sm btn-success" onclick="viewPayslip(${p.id})">Payslip</button></td>
-                    </tr>
-                `;
-            }).join('');
+        // Generic Export Function
+        function exportToExcel(data, filename) {
+            const ws = XLSX.utils.json_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Data');
+            XLSX.writeFile(wb, `${filename}.xlsx`);
         }
-
-        function syncStaffBiometric() {
-            alert('Biometric sync for staff completed');
+        // Settings
+        function toggleDarkMode(enabled) {
+            document.body.classList.toggle('dark-mode', enabled);
+            localStorage.setItem('darkMode', enabled);
         }
-
-        function generateStaffReport() {
-            exportToExcel(staff, 'staff');
+        function saveHRSettings() {
+            hrSettings.annualLeaveDays = parseInt(document.getElementById('annualLeaveDays').value);
+            hrSettings.sickLeaveDays = parseInt(document.getElementById('sickLeaveDays').value);
+            hrSettings.maternityLeaveMonths = parseInt(document.getElementById('maternityLeaveMonths').value);
+            localStorage.setItem('hrSettings', JSON.stringify(hrSettings));
+            alert('Settings saved!');
         }
+        // Basic implementations for other sections (placeholders for completeness)
+        function biometricLogin() {
+            alert('Biometric login simulated - using demo credentials.');
+            currentUser = { role: 'admin', username: 'biometric' };
+            document.getElementById('loginPage').style.display = 'none';
+            document.getElementById('appContainer').style.display = 'block';
+            initApp();
+        }
+        function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const users = {
+                admin: 'admin123',
+                teacher: 'teacher123',
+                parent: 'parent123',
+                student: 'student123'
+            };
+            if (users[username] && users[username] === password) {
+                currentUser = { role: username, username };
+                document.getElementById('loginPage').style.display = 'none';
+                document.getElementById('appContainer').style.display = 'block';
+                initApp();
+                updateRoleVisibility();
+            } else {
+                alert('Invalid credentials');
+            }
+        }
+        function logout() {
+            currentUser = null;
+            document.getElementById('appContainer').style.display = 'none';
+            document.getElementById('loginPage').style.display = 'flex';
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+        }
+        function showAddStudentModal() { alert('Add student modal - implement form'); }
+        function searchStudents() { alert('Search students'); }
+        // Similarly for other functions...
+        function renderDashboard() {
+            document.getElementById('totalStudents').textContent = students.length || 0;
+            document.getElementById('todayAttendance').textContent = '95%'; // Demo
+            document.getElementById('pendingFees').textContent = 'R5000';
+            document.getElementById('upcomingExams').textContent = exams.length || 0;
+            // Chart demo
+            const ctx = document.getElementById('dashboardChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar'],
+                    datasets: [{ label: 'Attendance', data: [65, 59, 80] }]
+                }
+            });
+        }
+        function initApp() {
+            // Load all data
+            students = safeParseJSON('students', []);
+            admissions = safeParseJSON('admissions', []);
+            attendanceRecords = safeParseJSON('attendanceRecords', []);
+            fees = safeParseJSON('fees', []);
+            exams = safeParseJSON('exams', []);
+            messages = safeParseJSON('messages', []);
+            content = safeParseJSON('content', []);
+            timetables = safeParseJSON('timetables', {});
+            // HR already loaded
+            populateStaffSelects();
+            renderDashboard();
+            // Load dark mode
+            const darkMode = localStorage.getItem('darkMode') === 'true';
+            document.getElementById('darkModeSwitch').checked = darkMode;
+            toggleDarkMode(darkMode);
+            logAudit('System Login', currentUser ? currentUser.username : 'Anonymous');
+        }
+        // AI Research - Simulate Grok API
+        function sendGrokQuery() {
+            const query = document.getElementById('grokQuery').value;
+            const apiKey = document.getElementById('grokApiKey').value;
+            if (!apiKey) return alert('Enter API key from https://x.ai/api');
+            if (!query) return;
+            const historyDiv = document.getElementById('chatHistory');
+            historyDiv.innerHTML += `<div class="chat-message chat-user mb-2">${query}</div>`;
+            // Simulate response
+            setTimeout(() => {
+                const response = `Grok response to: ${query} (Demo - integrate real xAI API call here)`;
+                historyDiv.innerHTML += `<div class="chat-message chat-assistant mb-2">${response}</div>`;
+                historyDiv.scrollTop = historyDiv.scrollHeight;
+            }, 1000);
+            document.getElementById('grokQuery').value = '';
+        }
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Demo data if empty
+            if (staff.length === 0) {
+                staff = [
+                    { id: 1, name: 'John Doe', role: 'Teacher', department: 'Math', salary: 30000, taxNumber: '123', uifNumber: '456', status: 'Active', certifications: [], age: 40 }
+                ];
+                localStorage.setItem('staff', JSON.stringify(staff));
+            }
+            // Other demos...
+            if (payrolls.length === 0) {
+                payrolls = [{ id: 1, staffId: 1, month: '2025-11', salary: 30000, deductions: 1000, tax: 4000, uif: 300 }];
+                localStorage.setItem('payrolls', JSON.stringify(payrolls));
+            }
+            initApp();
+        });
     </script>
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
+
+       
