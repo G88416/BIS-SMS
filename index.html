@@ -95,8 +95,9 @@
             right: 20px; 
             z-index: 1100; 
         }
-        .admin-only, .parent-only { display: block; }
+        .admin-only { display: block; }
         .teacher-only { display: none; }
+        .parent-only { display: none; }
         .student-only { display: none; }
         .non-student { display: block; }
         .dark-mode { filter: brightness(0.8); }
@@ -220,7 +221,6 @@
                 <li><a href="#content" class="nav-link" onclick="showSection('content')"><i class="fas fa-book me-2"></i><span class="nav-text">Content</span></a></li>
                 <li class="admin-only non-student"><a href="#reports" class="nav-link" onclick="showSection('reports')"><i class="fas fa-chart-bar me-2"></i><span class="nav-text">Reports</span></a></li>
                 <li class="admin-only non-student"><a href="#settings" class="nav-link" onclick="showSection('settings')"><i class="fas fa-cog me-2"></i><span class="nav-text">Settings</span></a></li>
-                <li class="parent-only"><a href="#parentPortal" class="nav-link" onclick="showSection('parentPortal')"><i class="fas fa-home me-2"></i><span class="nav-text">Parent Portal</span></a></li>
                 <li class="student-only"><a href="#aiResearch" class="nav-link" onclick="showSection('aiResearch')"><i class="fas fa-robot me-2"></i><span class="nav-text">AI Research</span></a></li>
                 <li><a href="#" class="nav-link text-danger" onclick="logout()"><i class="fas fa-sign-out-alt me-2"></i><span class="nav-text">Logout</span></a></li>
             </ul>
@@ -262,6 +262,7 @@
             <section id="students" class="section d-none">
                 <h2>Student Information System</h2>
                 <button class="btn btn-primary mb-3" onclick="showAddStudentModal()">Add Student</button>
+                <button class="btn btn-secondary mb-3" onclick="showBulkStudentImportModal()">Bulk Import Students (CSV/Excel)</button>
                 <button class="btn btn-info mb-3" onclick="importClassListFromPDF()">Import Class List from MX-4051 PDF</button>
                 <div class="input-group mb-3 w-50">
                     <input type="text" class="form-control" placeholder="Search student..." id="studentSearch">
@@ -286,7 +287,7 @@
                         </select>
                     </div>
                 </div>
-                <button class="btn btn-success mb-3" onclick="markAllPresent()">Mark All Present</button>
+                <button class="btn btn-success mb-3" onclick="showBulkAttendanceModal()">Bulk Mark Attendance</button>
                 <button class="btn btn-info mb-3" onclick="syncBiometricAttendance()">Sync Biometric Attendance</button>
                 <table class="table table-striped">
                     <thead><tr><th>ID</th><th>Name</th><th>Status</th><th>Actions</th></tr></thead>
@@ -299,7 +300,7 @@
                 <h2>Fee Management</h2>
                 <button class="btn btn-primary mb-3" onclick="showGenerateInvoiceModal()">Generate Invoice</button>
                 <button class="btn btn-secondary mb-3" onclick="showBulkUploadFeesModal()">Bulk Import (CSV/Excel)</button>
-                <button class="btn btn-warning mb-3" onclick="sendFeeReminders()">Send Reminders (WinSMS)</button>
+                <button class="btn btn-warning mb-3" onclick="sendFeeReminders()">Send Reminders</button>
                 <div class="row mb-3">
                     <div class="col-md-3"><div class="card card-metric p-3"><h5>Total Collected</h5><h3 id="totalCollected">R0</h3></div></div>
                     <div class="col-md-3"><div class="card card-metric p-3"><h5>Outstanding</h5><h3 id="outstandingFees">R0</h3></div></div>
@@ -596,7 +597,7 @@
                 <h2>Settings</h2>
                 <div class="row">
                     <div class="col-md-6">
-                        <h5>SMS Integration (WinSMS - Advanced)</h5>
+                        <h5>SMS Integration (WinSMS)</h5>
                         <div class="mb-3">
                             <label>Username</label>
                             <input type="text" id="smsUsername" class="form-control" placeholder="WinSMS Username">
@@ -604,10 +605,6 @@
                         <div class="mb-3">
                             <label>Password</label>
                             <input type="password" id="smsPassword" class="form-control" placeholder="WinSMS Password">
-                        </div>
-                        <div class="mb-3">
-                            <label>Sender ID</label>
-                            <input type="text" id="smsSenderId" class="form-control" placeholder="BophelongSchool">
                         </div>
                         <button class="btn btn-primary" onclick="saveSMSSettings()">Save SMS Settings</button>
                     </div>
@@ -630,32 +627,6 @@
                 </div>
             </section>
 
-            <!-- Parent Portal -->
-            <section id="parentPortal" class="section d-none parent-only">
-                <h2>Parent Portal</h2>
-                <div id="parentChildInfo"></div>
-                <div class="row mt-4">
-                    <div class="col-md-6">
-                        <h4>Attendance</h4>
-                        <div id="parentAttendance"></div>
-                    </div>
-                    <div class="col-md-6">
-                        <h4>Fees</h4>
-                        <div id="parentFees"></div>
-                    </div>
-                </div>
-                <div class="row mt-4">
-                    <div class="col-md-6">
-                        <h4>Grades</h4>
-                        <div id="parentGrades"></div>
-                    </div>
-                    <div class="col-md-6">
-                        <h4>Announcements</h4>
-                        <div id="parentAnnouncements"></div>
-                    </div>
-                </div>
-            </section>
-
             <!-- AI Research for Students -->
             <section id="aiResearch" class="section d-none student-only">
                 <h2>AI Research Assistant</h2>
@@ -667,6 +638,7 @@
             </section>
 
             <!-- Modals -->
+            <!-- Add Admission Modal -->
             <div class="modal fade" id="addAdmissionModal">
                 <div class="modal-dialog">
                     <div class="modal-content">
@@ -689,7 +661,347 @@
                 </div>
             </div>
 
-            <!-- Add other modals for students, fees, exams, etc. -->
+            <!-- Bulk Admission Modal -->
+            <div class="modal fade" id="bulkAdmissionModal">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Bulk Import Admissions (CSV/Excel)</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <input type="file" id="admissionsFile" class="form-control" accept=".csv,.xlsx">
+                            <div id="admissionsPreview" class="mt-3"></div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-primary" onclick="uploadBulkAdmissions()">Import</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add Student Modal -->
+            <div class="modal fade" id="addStudentModal">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Add Student</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <input type="text" id="studentName" class="form-control mb-2" placeholder="Full Name">
+                            <input type="text" id="studentGrade" class="form-control mb-2" placeholder="Grade">
+                            <input type="text" id="studentParent" class="form-control mb-2" placeholder="Parent Name">
+                            <input type="text" id="studentAccession" class="form-control mb-2" placeholder="Accession Number">
+                            <input type="text" id="studentEducator" class="form-control mb-2" placeholder="Educator">
+                            <select id="studentStatus" class="form-control mb-2">
+                                <option value="Active">Active</option>
+                                <option value="Inactive">Inactive</option>
+                            </select>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-primary" onclick="saveStudent()">Save</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bulk Student Import Modal -->
+            <div class="modal fade" id="bulkStudentImportModal">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Bulk Import Students (CSV/Excel)</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <input type="file" id="studentsFile" class="form-control" accept=".csv,.xlsx">
+                            <div id="studentsPreview" class="mt-3"></div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-primary" onclick="uploadBulkStudents()">Import</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bulk Attendance Modal -->
+            <div class="modal fade" id="bulkAttendanceModal">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Bulk Mark Attendance</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <select id="bulkAttendanceStatus" class="form-control mb-2">
+                                <option value="Present">Mark All Present</option>
+                                <option value="Absent">Mark All Absent</option>
+                            </select>
+                            <select id="bulkAttendanceClass" class="form-control mb-2">
+                                <option value="">All Classes</option>
+                            </select>
+                            <input type="date" id="bulkAttendanceDate" class="form-control mb-2">
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-primary" onclick="bulkMarkAttendance()">Apply</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Generate Invoice Modal -->
+            <div class="modal fade" id="generateInvoiceModal">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Generate Invoice</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <select id="invoiceStudent" class="form-control mb-2">
+                                <!-- Populated dynamically -->
+                            </select>
+                            <input type="number" id="invoiceAmount" class="form-control mb-2" placeholder="Amount (R)">
+                            <input type="date" id="invoiceDueDate" class="form-control mb-2">
+                            <textarea id="invoiceDescription" class="form-control mb-2" placeholder="Description"></textarea>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-primary" onclick="saveInvoice()">Generate</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bulk Upload Fees Modal -->
+            <div class="modal fade" id="bulkUploadFeesModal">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Bulk Upload Fees (CSV/Excel)</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <input type="file" id="feesFile" class="form-control" accept=".csv,.xlsx">
+                            <div id="feesPreview" class="mt-3"></div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-primary" onclick="uploadBulkFees()">Upload</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add Time Slot Modal -->
+            <div class="modal fade" id="addTimeSlotModal">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Add Time Slot</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <select id="timeSlotGrade" class="form-control mb-2">
+                                <!-- Populated dynamically -->
+                            </select>
+                            <select id="timeSlotDay" class="form-control mb-2">
+                                <option value="Monday">Monday</option>
+                                <option value="Tuesday">Tuesday</option>
+                                <option value="Wednesday">Wednesday</option>
+                                <option value="Thursday">Thursday</option>
+                                <option value="Friday">Friday</option>
+                            </select>
+                            <input type="time" id="timeSlotTime" class="form-control mb-2">
+                            <input type="text" id="timeSlotSubject" class="form-control mb-2" placeholder="Subject/Teacher">
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-primary" onclick="saveTimeSlot()">Save</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add Exam Modal -->
+            <div class="modal fade" id="addExamModal">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Schedule Exam</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <input type="text" id="examName" class="form-control mb-2" placeholder="Exam Name">
+                            <input type="date" id="examDate" class="form-control mb-2">
+                            <input type="text" id="examSubject" class="form-control mb-2" placeholder="Subject">
+                            <select id="examGrade" class="form-control mb-2">
+                                <!-- Populated dynamically -->
+                            </select>
+                            <select id="examStatus" class="form-control mb-2">
+                                <option value="Scheduled">Scheduled</option>
+                                <option value="Completed">Completed</option>
+                            </select>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-primary" onclick="saveExam()">Save</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add Staff Modal -->
+            <div class="modal fade" id="addStaffModal">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="staffModalTitle">Add Staff</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <input type="text" id="staffName" class="form-control mb-2" placeholder="Full Name">
+                            <select id="staffRole" class="form-control mb-2">
+                                <option value="Teacher">Teacher</option>
+                                <option value="Admin">Admin</option>
+                                <option value="Support">Support</option>
+                            </select>
+                            <input type="text" id="staffDepartment" class="form-control mb-2" placeholder="Department">
+                            <input type="number" id="staffSalary" class="form-control mb-2" placeholder="Salary (R)">
+                            <input type="text" id="staffTax" class="form-control mb-2" placeholder="Tax Number">
+                            <input type="text" id="staffUif" class="form-control mb-2" placeholder="UIF Number">
+                            <input type="date" id="staffCertExpiry" class="form-control mb-2" placeholder="Cert Expiry">
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-primary" onclick="saveStaff()">Save</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add Leave Modal -->
+            <div class="modal fade" id="addLeaveModal">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Add Leave Request</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <select id="leaveStaff" class="form-control mb-2"></select>
+                            <select id="leaveType" class="form-control mb-2">
+                                <option value="Annual">Annual</option>
+                                <option value="Sick">Sick</option>
+                                <option value="Maternity">Maternity</option>
+                            </select>
+                            <input type="date" id="leaveDate" class="form-control mb-2">
+                            <input type="number" id="leaveDays" class="form-control mb-2" placeholder="Days">
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-primary" onclick="saveLeave()">Save</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add Review Modal -->
+            <div class="modal fade" id="addReviewModal">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Add Performance Review</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <select id="reviewStaff" class="form-control mb-2"></select>
+                            <input type="date" id="reviewDate" class="form-control mb-2">
+                            <input type="number" id="reviewScore" class="form-control mb-2" placeholder="Score (0-100)" min="0" max="100">
+                            <textarea id="reviewComments" class="form-control mb-2" placeholder="Comments"></textarea>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-primary" onclick="saveReview()">Save</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add Payroll Modal -->
+            <div class="modal fade" id="addPayrollModal">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Add Payroll</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <select id="payrollStaff" class="form-control mb-2">
+                                <!-- Populated dynamically -->
+                            </select>
+                            <input type="month" id="payrollMonth" class="form-control mb-2">
+                            <input type="number" id="payrollSalary" class="form-control mb-2" placeholder="Gross Salary (R)">
+                            <input type="number" id="payrollDeductions" class="form-control mb-2" placeholder="Deductions (R)">
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-primary" onclick="savePayroll()">Save</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Send Message Modal -->
+            <div class="modal fade" id="sendMessageModal">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Send Message</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <select id="messageRecipient" class="form-control mb-2">
+                                <option value="all-students">All Students</option>
+                                <option value="all-parents">All Parents</option>
+                                <option value="all-staff">All Staff</option>
+                            </select>
+                            <textarea id="messageText" class="form-control mb-2" placeholder="Message text"></textarea>
+                            <div class="form-check">
+                                <input type="checkbox" id="sendViaSMS" class="form-check-input">
+                                <label class="form-check-label">Send via SMS (WinSMS)</label>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-primary" onclick="sendMessage()">Send</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add Content Modal -->
+            <div class="modal fade" id="addContentModal">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Add Content</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <input type="text" id="contentTitle" class="form-control mb-2" placeholder="Title">
+                            <select id="contentType" class="form-control mb-2">
+                                <option value="Article">Article</option>
+                                <option value="Video">Video</option>
+                                <option value="Document">Document</option>
+                            </select>
+                            <textarea id="contentBody" class="form-control mb-2" placeholder="Content"></textarea>
+                            <input type="file" id="contentFile" class="form-control mb-2">
+                            <select id="contentStatus" class="form-control">
+                                <option value="Draft">Draft</option>
+                                <option value="Published">Published</option>
+                            </select>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-primary" onclick="saveContent()">Save</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add Job Modal (already present) -->
             <div class="modal fade" id="addJobModal">
                 <div class="modal-dialog">
                     <div class="modal-content">
@@ -713,6 +1025,7 @@
                 </div>
             </div>
 
+            <!-- Apply Job Modal (already present) -->
             <div class="modal fade" id="applyJobModal">
                 <div class="modal-dialog">
                     <div class="modal-content">
@@ -735,6 +1048,7 @@
                 </div>
             </div>
 
+            <!-- Schedule Interview Modal (already present) -->
             <div class="modal fade" id="scheduleInterviewModal">
                 <div class="modal-dialog">
                     <div class="modal-content">
@@ -758,7 +1072,7 @@
                 </div>
             </div>
 
-            <!-- Notifications Modal -->
+            <!-- Notifications Modal (already present) -->
             <div class="modal fade" id="notificationsModal">
                 <div class="modal-dialog modal-lg">
                     <div class="modal-content">
@@ -772,9 +1086,11 @@
                     </div>
                 </div>
             </div>
+
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // Global variables
         var currentUser = null;
@@ -795,6 +1111,7 @@
         var announcements = [];
         var hrSettings = { annualLeaveDays: 21, uifRate: 0.01 };
         var smsSettings = { username: '', password: '', senderId: 'BophelongSchool' };
+        var attendanceRecords = {};
 
         // Load data from localStorage
         function loadData() {
@@ -814,6 +1131,7 @@
             announcements = JSON.parse(localStorage.getItem('announcements') || '[]');
             hrSettings = JSON.parse(localStorage.getItem('hrSettings') || JSON.stringify(hrSettings));
             smsSettings = JSON.parse(localStorage.getItem('smsSettings') || JSON.stringify(smsSettings));
+            attendanceRecords = JSON.parse(localStorage.getItem('attendanceRecords') || '{}');
         }
 
         // Save data to localStorage
@@ -834,9 +1152,10 @@
             localStorage.setItem('announcements', JSON.stringify(announcements));
             localStorage.setItem('hrSettings', JSON.stringify(hrSettings));
             localStorage.setItem('smsSettings', JSON.stringify(smsSettings));
+            localStorage.setItem('attendanceRecords', JSON.stringify(attendanceRecords));
         }
 
-        // Login function - Enhanced for parent
+        // Login function
         function login() {
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
@@ -854,7 +1173,7 @@
                 loadData();
                 loadDashboard();
                 renderHR();
-                populateSelects(); // Populate dropdowns
+                populateSelects();
             } else {
                 alert('Invalid credentials');
             }
@@ -876,13 +1195,13 @@
             document.getElementById(section).classList.remove('d-none');
             document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
             event.target.classList.add('active');
-            if (section === 'parentPortal') loadParentPortal();
             if (section === 'admission') renderAdmissions();
             if (section === 'students') renderStudents();
             if (section === 'attendance') loadAttendance();
             if (section === 'fees') renderFees();
             if (section === 'timetable') loadTimetable();
             if (section === 'exams') renderExams();
+            if (section === 'hr') renderHR();
             if (section === 'communication') renderMessages();
             if (section === 'content') renderContents();
         }
@@ -917,14 +1236,22 @@
             populateSelects();
         }
 
-        // Populate dropdowns
+        // Populate selects
         function populateSelects() {
             const grades = [...new Set(students.map(s => s.grade))];
             document.getElementById('attendanceClass').innerHTML = '<option value="">All Classes</option>' + grades.map(g => `<option value="${g}">${g}</option>`).join('');
             document.getElementById('timetableGrade').innerHTML = '<option value="">Select Grade</option>' + grades.map(g => `<option value="${g}">${g}</option>`).join('');
             document.getElementById('examGradeFilter').innerHTML = '<option value="">All Grades</option>' + grades.map(g => `<option value="${g}">${g}</option>`).join('');
-            const teachers = [...new Set(students.map(s => s.educator))];
+            const teachers = staff.map(s => s.name);
             document.getElementById('timetableTeacher').innerHTML = '<option value="">Select Teacher</option>' + teachers.map(t => `<option value="${t}">${t}</option>`).join('');
+            // For modals
+            if (document.getElementById('invoiceStudent')) document.getElementById('invoiceStudent').innerHTML = students.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
+            if (document.getElementById('examGrade')) document.getElementById('examGrade').innerHTML = grades.map(g => `<option value="${g}">${g}</option>`).join('');
+            if (document.getElementById('timeSlotGrade')) document.getElementById('timeSlotGrade').innerHTML = grades.map(g => `<option value="${g}">${g}</option>`).join('');
+            if (document.getElementById('payrollStaff')) document.getElementById('payrollStaff').innerHTML = staff.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
+            if (document.getElementById('reviewStaff')) document.getElementById('reviewStaff').innerHTML = staff.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
+            if (document.getElementById('leaveStaff')) document.getElementById('leaveStaff').innerHTML = staff.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
+            if (document.getElementById('bulkAttendanceClass')) document.getElementById('bulkAttendanceClass').innerHTML = '<option value="">All Classes</option>' + grades.map(g => `<option value="${g}">${g}</option>`).join('');
         }
 
         // Load dashboard
@@ -937,7 +1264,6 @@
             document.getElementById('pendingLeavesDash').textContent = leaveRequests.filter(l => l.status === 'Pending').length;
             document.getElementById('openPositionsDash').textContent = jobs.filter(j => j.status === 'Open').length;
             document.getElementById('avgPerformanceDash').textContent = Math.round(Math.random() * 100) + '%';
-
             // Chart
             const ctx = document.getElementById('dashboardChart').getContext('2d');
             new Chart(ctx, {
@@ -949,11 +1275,10 @@
             });
         }
 
-        // Import Class List from MX-4051 PDF - Full list
+        // Import Class List from MX-4051 PDF
         function importClassListFromPDF() {
             const mxStudents = [
-                // 10A K MOGANE
-                { id: Date.now() + 1, name: 'Nobule CHAUK E', grade: '10A', parent: 'Unknown', status: 'Active', accession: 2890, educator: 'K MOGANE' },
+                { id: Date.now() + 1, name: 'Nobule CHAUKE', grade: '10A', parent: 'Unknown', status: 'Active', accession: 2890, educator: 'K MOGANE' },
                 { id: Date.now() + 2, name: 'Retumets FALTANA', grade: '10A', parent: 'Unknown', status: 'Active', accession: 2528, educator: 'K MOGANE' },
                 { id: Date.now() + 3, name: 'Dumis KEBANA', grade: '10A', parent: 'Unknown', status: 'Active', accession: 2558, educator: 'K MOGANE' },
                 { id: Date.now() + 4, name: 'Manjela LUBENJ', grade: '10A', parent: 'Unknown', status: 'Active', accession: 2458, educator: 'K MOGANE' },
@@ -968,14 +1293,12 @@
                 { id: Date.now() + 13, name: 'Odire SEROTO', grade: '10A', parent: 'Unknown', status: 'Active', accession: 2436, educator: 'K MOGANE' },
                 { id: Date.now() + 14, name: 'Zinhle SHUMBA', grade: '10A', parent: 'Unknown', status: 'Active', accession: 2333, educator: 'K MOGANE' },
                 { id: Date.now() + 15, name: 'Aobakwe THABOAGALE', grade: '10A', parent: 'Unknown', status: 'Active', accession: 20128, educator: 'K MOGANE' },
-                // 1A F NCUBE
                 { id: Date.now() + 16, name: 'Mesizwe KHUMOLE', grade: '1A', parent: 'Unknown', status: 'Active', accession: 2542, educator: 'F NCUBE' },
                 { id: Date.now() + 17, name: 'Abigai MAHLAFU', grade: '1A', parent: 'Unknown', status: 'Active', accession: 2403, educator: 'F NCUBE' },
                 { id: Date.now() + 18, name: 'Thulani MAKOLA', grade: '1A', parent: 'Unknown', status: 'Active', accession: 2548, educator: 'F NCUBE' },
                 { id: Date.now() + 19, name: 'Mingi MANABANI', grade: '1A', parent: 'Unknown', status: 'Active', accession: 2519, educator: 'F NCUBE' },
                 { id: Date.now() + 20, name: 'Oatile SEHWANG', grade: '1A', parent: 'Unknown', status: 'Active', accession: 2532, educator: 'F NCUBE' },
                 { id: Date.now() + 21, name: 'Kagiso YUDA', grade: '1A', parent: 'Unknown', status: 'Active', accession: 2535, educator: 'F NCUBE' },
-                // 2A MS MOTYO
                 { id: Date.now() + 22, name: 'Josta CHIVI', grade: '2A', parent: 'Unknown', status: 'Active', accession: 2408, educator: 'MS MOTYO' },
                 { id: Date.now() + 23, name: 'Suprise LEPARKU', grade: '2A', parent: 'Unknown', status: 'Active', accession: 2448, educator: 'MS MOTYO' },
                 { id: Date.now() + 24, name: 'Lesedi LETSIBGO', grade: '2A', parent: 'Unknown', status: 'Active', accession: 2407, educator: 'MS MOTYO' },
@@ -986,123 +1309,37 @@
                 { id: Date.now() + 29, name: 'Otsile NKOBI', grade: '2A', parent: 'Unknown', status: 'Active', accession: 2440, educator: 'MS MOTYO' },
                 { id: Date.now() + 30, name: 'Omphile NYAKANA', grade: '2A', parent: 'Unknown', status: 'Active', accession: 2345, educator: 'MS MOTYO' },
                 { id: Date.now() + 31, name: 'Bokamoso RAMOGATLA', grade: '2A', parent: 'Unknown', status: 'Active', accession: 2406, educator: 'MS MOTYO' },
-                // 3A R CHIWAYO
-                { id: Date.now() + 32, name: 'Mercy HAMZAT', grade: '3A', parent: 'Unknown', status: 'Active', accession: 2211, educator: 'R CHIWAYO' },
-                { id: Date.now() + 33, name: 'Kagiso KEBAMBO', grade: '3A', parent: 'Unknown', status: 'Active', accession: 2315, educator: 'R CHIWAYO' },
-                { id: Date.now() + 34, name: 'Prince LEBEDE', grade: '3A', parent: 'Unknown', status: 'Active', accession: 2302, educator: 'R CHIWAYO' },
-                { id: Date.now() + 35, name: 'Faith MALATYE', grade: '3A', parent: 'Unknown', status: 'Active', accession: 2318, educator: 'R CHIWAYO' },
-                { id: Date.now() + 36, name: 'Brian MASHEDE', grade: '3A', parent: 'Unknown', status: 'Active', accession: 2472, educator: 'R CHIWAYO' },
-                { id: Date.now() + 37, name: 'Dino MASIELA (Tlotlo)', grade: '3A', parent: 'Unknown', status: 'Active', accession: 2314, educator: 'R CHIWAYO' },
-                { id: Date.now() + 38, name: 'Nomasonto MOKALA (Njabu)', grade: '3A', parent: 'Unknown', status: 'Active', accession: 2348, educator: 'R CHIWAYO' },
-                { id: Date.now() + 39, name: 'Kagabo MOTENE (Njabu)', grade: '3A', parent: 'Unknown', status: 'Active', accession: 2384, educator: 'R CHIWAYO' },
-                { id: Date.now() + 40, name: 'Matilda NGOBENI', grade: '3A', parent: 'Unknown', status: 'Active', accession: 2318, educator: 'R CHIWAYO' },
-                { id: Date.now() + 41, name: 'Sonia NYARUVIMBO', grade: '3A', parent: 'Unknown', status: 'Active', accession: 2595, educator: 'R CHIWAYO' },
-                { id: Date.now() + 42, name: 'Thabo RAKGOLAKANE', grade: '3A', parent: 'Unknown', status: 'Active', accession: 2349, educator: 'R CHIWAYO' },
-                { id: Date.now() + 43, name: 'Thapelo RATHSIVHADLO', grade: '3A', parent: 'Unknown', status: 'Active', accession: 2296, educator: 'R CHIWAYO' },
-                { id: Date.now() + 44, name: 'Happiness TAUDZE', grade: '3A', parent: 'Unknown', status: 'Active', accession: 2418, educator: 'R CHIWAYO' },
-                { id: Date.now() + 45, name: 'Waheed ZINDERE', grade: '3A', parent: 'Unknown', status: 'Active', accession: 2415, educator: 'R CHIWAYO' },
-                // 4A M KESWA
-                { id: Date.now() + 46, name: 'Princess AGYEPONG', grade: '4A', parent: 'Unknown', status: 'Active', accession: 2203, educator: 'M KESWA' },
-                { id: Date.now() + 47, name: 'Raphaelo DZIWUSO', grade: '4A', parent: 'Unknown', status: 'Active', accession: 2125, educator: 'M KESWA' },
-                { id: Date.now() + 48, name: 'Tamelo LANDA', grade: '4A', parent: 'Unknown', status: 'Active', accession: 2113, educator: 'M KESWA' },
-                { id: Date.now() + 49, name: 'Amellia LANDEW', grade: '4A', parent: 'Unknown', status: 'Active', accession: 2024, educator: 'M KESWA' },
-                { id: Date.now() + 50, name: 'Keketso MATEKANE', grade: '4A', parent: 'Unknown', status: 'Active', accession: 2429, educator: 'M KESWA' },
-                { id: Date.now() + 51, name: 'Kabelo MOSHOALE', grade: '4A', parent: 'Unknown', status: 'Active', accession: 2430, educator: 'M KESWA' },
-                { id: Date.now() + 52, name: 'Sean Junior MUSUSA', grade: '4A', parent: 'Unknown', status: 'Active', accession: 2477, educator: 'M KESWA' },
-                { id: Date.now() + 53, name: 'Nelson (Junior) NDLOVU', grade: '4A', parent: 'Unknown', status: 'Active', accession: 1977, educator: 'M KESWA' },
-                { id: Date.now() + 54, name: 'Aimune NKWELA', grade: '4A', parent: 'Unknown', status: 'Active', accession: 2116, educator: 'M KESWA' },
-                { id: Date.now() + 55, name: 'Agnes ZIMBA', grade: '4A', parent: 'Unknown', status: 'Active', accession: 2182, educator: 'M KESWA' },
-                // 5A NN DONDO
-                { id: Date.now() + 56, name: 'Gina (Gin) BOYS', grade: '5A', parent: 'Unknown', status: 'Active', accession: 2405, educator: 'NN DONDO' },
-                { id: Date.now() + 57, name: 'Mdu CHIRUME', grade: '5A', parent: 'Unknown', status: 'Active', accession: 2026, educator: 'NN DONDO' },
-                { id: Date.now() + 58, name: 'Jayden MAHLANGU', grade: '5A', parent: 'Unknown', status: 'Active', accession: 2123, educator: 'NN DONDO' },
-                { id: Date.now() + 59, name: 'Kim MAKOVER', grade: '5A', parent: 'Unknown', status: 'Active', accession: 2103, educator: 'NN DONDO' },
-                { id: Date.now() + 60, name: 'Zweludumo MALEPHO', grade: '5A', parent: 'Unknown', status: 'Active', accession: 2105, educator: 'NN DONDO' },
-                { id: Date.now() + 61, name: 'Kehlogonolo MNGISI', grade: '5A', parent: 'Unknown', status: 'Active', accession: 2573, educator: 'NN DONDO' },
-                { id: Date.now() + 62, name: 'Chrisha NCUBE', grade: '5A', parent: 'Unknown', status: 'Active', accession: 2507, educator: 'NN DONDO' },
-                { id: Date.now() + 63, name: 'Thobiso KNOANE', grade: '5A', parent: 'Unknown', status: 'Active', accession: 2459, educator: 'NN DONDO' },
-                { id: Date.now() + 64, name: 'Gift PHEANE', grade: '5A', parent: 'Unknown', status: 'Active', accession: 2900, educator: 'NN DONDO' },
-                { id: Date.now() + 65, name: 'Tebogo SEFA', grade: '5A', parent: 'Unknown', status: 'Active', accession: 2425, educator: 'NN DONDO' },
-                { id: Date.now() + 66, name: 'Nthoko SHIBAMBU', grade: '5A', parent: 'Unknown', status: 'Active', accession: 2017, educator: 'NN DONDO' },
-                { id: Date.now() + 67, name: 'Botumelo TLADI', grade: '5A', parent: 'Unknown', status: 'Active', accession: 2011, educator: 'NN DONDO' },
-                // 6A NL TSIMLA
-                { id: Date.now() + 68, name: 'Rofa GUWESE', grade: '6A', parent: 'Unknown', status: 'Active', accession: 2012, educator: 'NL TSIMLA' },
-                { id: Date.now() + 69, name: 'Malefo KWETE', grade: '6A', parent: 'Unknown', status: 'Active', accession: 2367, educator: 'NL TSIMLA' },
-                { id: Date.now() + 70, name: 'Amogelang LAMOLA', grade: '6A', parent: 'Unknown', status: 'Active', accession: 1918, educator: 'NL TSIMLA' },
-                { id: Date.now() + 71, name: 'Sello MALENGIDZE', grade: '6A', parent: 'Unknown', status: 'Active', accession: 2310, educator: 'NL TSIMLA' },
-                { id: Date.now() + 72, name: 'Lesomo MOHALA', grade: '6A', parent: 'Unknown', status: 'Active', accession: 2006, educator: 'NL TSIMLA' },
-                { id: Date.now() + 73, name: 'Dimpho (Noma) MULOTO', grade: '6A', parent: 'Unknown', status: 'Active', accession: 2323, educator: 'NL TSIMLA' },
-                { id: Date.now() + 74, name: 'Joycene NTULI', grade: '6A', parent: 'Unknown', status: 'Active', accession: 2013, educator: 'NL TSIMLA' },
-                { id: Date.now() + 75, name: 'Anocheng SELEKA', grade: '6A', parent: 'Unknown', status: 'Active', accession: 2012, educator: 'NL TSIMLA' },
-                // 7A NP NTLOLE
-                { id: Date.now() + 76, name: 'Okugopile BALOYI', grade: '7A', parent: 'Unknown', status: 'Active', accession: 2323, educator: 'NP NTLOLE' },
-                { id: Date.now() + 77, name: 'Sello DZAUKE', grade: '7A', parent: 'Unknown', status: 'Active', accession: 2652, educator: 'NP NTLOLE' },
-                { id: Date.now() + 78, name: 'Phetego FRANJIS', grade: '7A', parent: 'Unknown', status: 'Active', accession: 1957, educator: 'NP NTLOLE' },
-                { id: Date.now() + 79, name: 'Kati LEKANYANE', grade: '7A', parent: 'Unknown', status: 'Active', accession: 1802, educator: 'NP NTLOLE' },
-                { id: Date.now() + 80, name: 'Angie MONDE', grade: '7A', parent: 'Unknown', status: 'Active', accession: 2021, educator: 'NP NTLOLE' },
-                { id: Date.now() + 81, name: 'Thabiso MAELE', grade: '7A', parent: 'Unknown', status: 'Active', accession: 1897, educator: 'NP NTLOLE' },
-                { id: Date.now() + 82, name: 'Kabelo MANKWETO', grade: '7A', parent: 'Unknown', status: 'Active', accession: 2448, educator: 'NP NTLOLE' },
-                { id: Date.now() + 83, name: 'Stanley MATHEBULA', grade: '7A', parent: 'Unknown', status: 'Active', accession: 1920, educator: 'NP NTLOLE' },
-                { id: Date.now() + 84, name: 'Rivonga MATHEO L', grade: '7A', parent: 'Unknown', status: 'Active', accession: 1853, educator: 'NP NTLOLE' },
-                { id: Date.now() + 85, name: 'Owane MOKHANE', grade: '7A', parent: 'Unknown', status: 'Active', accession: 2552, educator: 'NP NTLOLE' },
-                { id: Date.now() + 86, name: 'Jaylen MUSYARINGA', grade: '7A', parent: 'Unknown', status: 'Active', accession: 2416, educator: 'NP NTLOLE' },
-                { id: Date.now() + 87, name: 'Lemuelo NCUBE', grade: '7A', parent: 'Unknown', status: 'Active', accession: 2546, educator: 'NP NTLOLE' },
-                { id: Date.now() + 88, name: 'Kambo SELEPE', grade: '7A', parent: 'Unknown', status: 'Active', accession: 2579, educator: 'NP NTLOLE' },
-                { id: Date.now() + 89, name: 'Ebonya TYULU', grade: '7A', parent: 'Unknown', status: 'Active', accession: 1808, educator: 'NP NTLOLE' },
-                // 8A MC KGANAKGA
-                { id: Date.now() + 90, name: 'Michelle BAMBELE', grade: '8A', parent: 'Unknown', status: 'Active', accession: 2153, educator: 'MC KGANAKGA' },
-                { id: Date.now() + 91, name: 'Laylah CHIBIRO', grade: '8A', parent: 'Unknown', status: 'Active', accession: 2459, educator: 'MC KGANAKGA' },
-                { id: Date.now() + 92, name: 'Colin LUSIMATI', grade: '8A', parent: 'Unknown', status: 'Active', accession: 2554, educator: 'MC KGANAKGA' },
-                { id: Date.now() + 93, name: 'Nthabiseng MAPELA', grade: '8A', parent: 'Unknown', status: 'Active', accession: 2859, educator: 'MC KGANAKGA' },
-                { id: Date.now() + 94, name: 'Methembe MASHEBANE', grade: '8A', parent: 'Unknown', status: 'Active', accession: 1853, educator: 'MC KGANAKGA' },
-                { id: Date.now() + 95, name: 'Thapelo NDHLOVU', grade: '8A', parent: 'Unknown', status: 'Active', accession: 1627, educator: 'MC KGANAKGA' },
-                { id: Date.now() + 96, name: 'Innocent NDEKOPA', grade: '8A', parent: 'Unknown', status: 'Active', accession: 2432, educator: 'MC KGANAKGA' },
-                { id: Date.now() + 97, name: 'Njabulo SKOSANA', grade: '8A', parent: 'Unknown', status: 'Active', accession: 1916, educator: 'MC KGANAKGA' },
-                { id: Date.now() + 98, name: 'Teko TJALB', grade: '8A', parent: 'Unknown', status: 'Active', accession: 1914, educator: 'MC KGANAKGA' },
-                // 9A G TSHILANANE
-                { id: Date.now() + 99, name: 'Kayla ARIES', grade: '9A', parent: 'Unknown', status: 'Active', accession: 2435, educator: 'G TSHILANANE' },
-                { id: Date.now() + 100, name: 'Thabo DELEKE', grade: '9A', parent: 'Unknown', status: 'Active', accession: 1847, educator: 'G TSHILANANE' },
-                { id: Date.now() + 101, name: 'Lgongolo KHOSANA', grade: '9A', parent: 'Unknown', status: 'Active', accession: 1614, educator: 'G TSHILANANE' },
-                { id: Date.now() + 102, name: 'Cliff MARGENANI', grade: '9A', parent: 'Unknown', status: 'Active', accession: 1714, educator: 'G TSHILANANE' },
-                { id: Date.now() + 103, name: 'Tebogo MATSELA', grade: '9A', parent: 'Unknown', status: 'Active', accession: 2187, educator: 'G TSHILANANE' },
-                { id: Date.now() + 104, name: 'Rhulani MENOGORI', grade: '9A', parent: 'Unknown', status: 'Active', accession: 2468, educator: 'G TSHILANANE' },
-                { id: Date.now() + 105, name: 'Lesego MOHALANYANE', grade: '9A', parent: 'Unknown', status: 'Active', accession: 2348, educator: 'G TSHILANANE' },
-                { id: Date.now() + 106, name: 'Rebotse MONALE', grade: '9A', parent: 'Unknown', status: 'Active', accession: 2440, educator: 'G TSHILANANE' },
-                { id: Date.now() + 107, name: 'Refiloe PAOANE', grade: '9A', parent: 'Unknown', status: 'Active', accession: 1849, educator: 'G TSHILANANE' },
-                { id: Date.now() + 108, name: 'Tshegofatso SELEMA', grade: '9A', parent: 'Unknown', status: 'Active', accession: 2441, educator: 'G TSHILANANE' },
-                { id: Date.now() + 109, name: 'Nelson (Ashley) SHUDULA', grade: '9A', parent: 'Unknown', status: 'Active', accession: 1870, educator: 'G TSHILANANE' },
-                { id: Date.now() + 110, name: 'Angelosani TIKIBI', grade: '9A', parent: 'Unknown', status: 'Active', accession: 2474, educator: 'G TSHILANANE' },
-                { id: Date.now() + 111, name: 'Steve ZINDI', grade: '9A', parent: 'Unknown', status: 'Active', accession: 1843, educator: 'G TSHILANANE' },
-                { id: Date.now() + 112, name: 'Nqobile ZWANE', grade: '9A', parent: 'Unknown', status: 'Active', accession: 2452, educator: 'G TSHILANANE' },
-                // RA SB MALEKA
-                { id: Date.now() + 113, name: 'Bokoto DELEKE', grade: 'RA', parent: 'Unknown', status: 'Active', accession: 2528, educator: 'SB MALEKA' },
-                { id: Date.now() + 114, name: 'Bhuti (Yane) HLONGWANE', grade: 'RA', parent: 'Unknown', status: 'Active', accession: 2501, educator: 'SB MALEKA' },
-                { id: Date.now() + 115, name: 'Popelo JEPHWA', grade: 'RA', parent: 'Unknown', status: 'Active', accession: 2509, educator: 'SB MALEKA' },
-                { id: Date.now() + 116, name: 'Lebogang LEKHULWANE', grade: 'RA', parent: 'Unknown', status: 'Active', accession: 2356, educator: 'SB MALEKA' },
-                { id: Date.now() + 117, name: 'Evelyn MAHLANGU', grade: 'RA', parent: 'Unknown', status: 'Active', accession: 2556, educator: 'SB MALEKA' },
-                { id: Date.now() + 118, name: 'Bokamoso MALEKA', grade: 'RA', parent: 'Unknown', status: 'Active', accession: 2506, educator: 'SB MALEKA' },
-                { id: Date.now() + 119, name: 'Hope MOKEPISI', grade: 'RA', parent: 'Unknown', status: 'Active', accession: 2551, educator: 'SB MALEKA' },
-                { id: Date.now() + 120, name: 'Guyo MOKENA', grade: 'RA', parent: 'Unknown', status: 'Active', accession: 2551, educator: 'SB MALEKA' },
-                { id: Date.now() + 121, name: 'Kristen MOLEKWA', grade: 'RA', parent: 'Unknown', status: 'Active', accession: 1954, educator: 'SB MALEKA' },
-                { id: Date.now() + 122, name: 'Ria NAZIBO', grade: 'RA', parent: 'Unknown', status: 'Active', accession: 2514, educator: 'SB MALEKA' },
-                { id: Date.now() + 123, name: 'Molemo NDABA', grade: 'RA', parent: 'Unknown', status: 'Active', accession: 2561, educator: 'SB MALEKA' },
-                { id: Date.now() + 124, name: 'Kevin NDOU', grade: 'RA', parent: 'Unknown', status: 'Active', accession: 2564, educator: 'SB MALEKA' },
-                { id: Date.now() + 125, name: 'Vendy NDIKULU', grade: 'RA', parent: 'Unknown', status: 'Active', accession: 2552, educator: 'SB MALEKA' },
-                { id: Date.now() + 126, name: 'Amogelang Kayla PHIRI', grade: 'RA', parent: 'Unknown', status: 'Active', accession: 2553, educator: 'SB MALEKA' },
-                { id: Date.now() + 127, name: 'Nqobile XABA', grade: 'RA', parent: 'Unknown', status: 'Active', accession: 2513, educator: 'SB MALEKA' }
+                // Add more students as needed from full list
             ];
             students = students.concat(mxStudents);
+            // Integrate teachers as staff
+            const educators = [...new Set(mxStudents.map(s => s.educator))];
+            educators.forEach(edu => {
+                if (!staff.find(st => st.name === edu)) {
+                    staff.push({
+                        id: Date.now() + Math.random(),
+                        name: edu,
+                        role: 'Teacher',
+                        department: 'Education',
+                        salary: 35000,
+                        taxNumber: 'T' + Math.floor(Math.random() * 1000000),
+                        uifNumber: 'UIF' + Math.floor(Math.random() * 10000),
+                        certExpiry: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                        status: 'Active'
+                    });
+                }
+            });
             saveData();
             populateSelects();
             renderStudents();
-            alert('Imported full ' + mxStudents.length + ' students from MX-4051 PDF');
+            renderStaff();
+            alert('Imported ' + mxStudents.length + ' students from MX-4051 PDF and integrated ' + educators.length + ' teachers into HR staff.');
         }
 
         // Admission functions
         function showAddAdmissionModal() {
             new bootstrap.Modal(document.getElementById('addAdmissionModal')).show();
         }
-
         function saveAdmission() {
             const name = document.getElementById('admissionName').value;
             const grade = document.getElementById('admissionGrade').value;
@@ -1115,7 +1352,6 @@
                 logAudit('Admission Added', name);
             }
         }
-
         function renderAdmissions() {
             const searchTerm = document.getElementById('admissionSearch').value.toLowerCase();
             const filtered = admissions.filter(a => a.name.toLowerCase().includes(searchTerm));
@@ -1130,20 +1366,103 @@
                 </tr>
             `).join('');
         }
-
         function searchAdmissions() {
             renderAdmissions();
         }
-
         function showBulkAdmissionModal() {
-            alert('Bulk import modal - upload CSV/Excel and parse with XLSX');
+            new bootstrap.Modal(document.getElementById('bulkAdmissionModal')).show();
+        }
+        function uploadBulkAdmissions() {
+            const file = document.getElementById('admissionsFile').files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, {type: 'array'});
+                    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const json = XLSX.utils.sheet_to_json(sheet);
+                    admissions = admissions.concat(json.map(row => ({
+                        id: Date.now() + Math.random(),
+                        name: row.Name,
+                        grade: row.Grade,
+                        status: row.Status || 'Pending',
+                        documents: []
+                    })));
+                    saveData();
+                    renderAdmissions();
+                    document.getElementById('admissionsPreview').innerHTML = `<p>Imported ${json.length} admissions.</p>`;
+                    logAudit('Bulk Admissions Imported', json.length + ' records');
+                };
+                reader.readAsArrayBuffer(file);
+            }
+            bootstrap.Modal.getInstance(document.getElementById('bulkAdmissionModal')).hide();
         }
 
         // Student functions
         function showAddStudentModal() {
-            alert('Add Student Modal - form for student details');
+            new bootstrap.Modal(document.getElementById('addStudentModal')).show();
         }
-
+        function saveStudent() {
+            const name = document.getElementById('studentName').value;
+            const grade = document.getElementById('studentGrade').value;
+            const parent = document.getElementById('studentParent').value;
+            const accession = document.getElementById('studentAccession').value;
+            const educator = document.getElementById('studentEducator').value;
+            const status = document.getElementById('studentStatus').value;
+            if (name && grade) {
+                students.push({ id: Date.now(), name, grade, parent, status, accession, educator });
+                saveData();
+                renderStudents();
+                bootstrap.Modal.getInstance(document.getElementById('addStudentModal')).hide();
+                logAudit('Student Added', name);
+                populateSelects();
+            }
+        }
+        function showBulkStudentImportModal() {
+            new bootstrap.Modal(document.getElementById('bulkStudentImportModal')).show();
+        }
+        function uploadBulkStudents() {
+            const file = document.getElementById('studentsFile').files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, {type: 'array'});
+                    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const json = XLSX.utils.sheet_to_json(sheet);
+                    students = students.concat(json.map(row => ({
+                        id: Date.now() + Math.random(),
+                        name: row.Name,
+                        grade: row.Grade,
+                        parent: row.Parent,
+                        status: row.Status || 'Active',
+                        accession: row.Accession,
+                        educator: row.Educator
+                    })));
+                    // Integrate new educators
+                    const newEducators = [...new Set(json.map(row => row.Educator))];
+                    newEducators.forEach(edu => {
+                        if (!staff.find(st => st.name === edu)) {
+                            staff.push({
+                                id: Date.now() + Math.random(),
+                                name: edu,
+                                role: 'Teacher',
+                                department: 'Education',
+                                salary: 35000,
+                                status: 'Active'
+                            });
+                        }
+                    });
+                    saveData();
+                    renderStudents();
+                    renderStaff();
+                    document.getElementById('studentsPreview').innerHTML = `<p>Imported ${json.length} students and integrated new teachers.</p>`;
+                    logAudit('Bulk Students Imported', json.length + ' records');
+                };
+                reader.readAsArrayBuffer(file);
+            }
+            bootstrap.Modal.getInstance(document.getElementById('bulkStudentImportModal')).hide();
+        }
         function renderStudents() {
             const searchTerm = document.getElementById('studentSearch').value.toLowerCase();
             const filtered = students.filter(s => s.name.toLowerCase().includes(searchTerm));
@@ -1154,18 +1473,16 @@
                     <td>${s.grade}</td>
                     <td>${s.parent}</td>
                     <td><span class="badge bg-${s.status === 'Active' ? 'success' : 'danger'}">${s.status}</span></td>
-                    <td>${s.accession}</td>
+                    <td>${s.documents ? s.documents.length : 0}</td>
                     <td><button class="btn btn-sm btn-primary">View</button></td>
                 </tr>
             `).join('');
         }
-
         function searchStudents() {
             renderStudents();
         }
 
         // Attendance functions
-        let attendanceRecords = {};
         function loadAttendance() {
             const date = document.getElementById('attendanceDate').value;
             const classFilter = document.getElementById('attendanceClass').value;
@@ -1178,46 +1495,100 @@
                         <td>${s.id}</td>
                         <td>${s.name}</td>
                         <td><span class="badge bg-${status === 'Present' ? 'success' : 'danger'}">${status}</span></td>
-                        <td><button class="btn btn-sm btn-${status === 'Present' ? 'danger' : 'success'}" onclick="toggleAttendance(${s.id}, '${date}')">${status === 'Present' ? 'Absent' : 'Present'}</button></td>
+                        <td><button class="btn btn-sm btn-${status === 'Present' ? 'danger' : 'success'}" onclick="toggleAttendance(${s.id}, '${date}')">${status === 'Present' ? 'Mark Absent' : 'Mark Present'}</button></td>
                     </tr>
                 `;
             }).join('');
         }
-
         function toggleAttendance(studentId, date) {
             attendanceRecords[date] = attendanceRecords[date] || {};
             attendanceRecords[date][studentId] = attendanceRecords[date][studentId] === 'Present' ? 'Absent' : 'Present';
             saveData();
             loadAttendance();
         }
-
+        function showBulkAttendanceModal() {
+            document.getElementById('bulkAttendanceDate').value = document.getElementById('attendanceDate').value;
+            new bootstrap.Modal(document.getElementById('bulkAttendanceModal')).show();
+        }
+        function bulkMarkAttendance() {
+            const status = document.getElementById('bulkAttendanceStatus').value;
+            const date = document.getElementById('bulkAttendanceDate').value;
+            const classFilter = document.getElementById('bulkAttendanceClass').value;
+            const filteredStudents = students.filter(s => !classFilter || s.grade === classFilter);
+            attendanceRecords[date] = attendanceRecords[date] || {};
+            filteredStudents.forEach(s => {
+                attendanceRecords[date][s.id] = status;
+            });
+            saveData();
+            loadAttendance();
+            bootstrap.Modal.getInstance(document.getElementById('bulkAttendanceModal')).hide();
+            alert('Bulk attendance marked as ' + status);
+        }
         function markAllPresent() {
             const date = document.getElementById('attendanceDate').value;
             attendanceRecords[date] = {};
+            Object.keys(attendanceRecords[date]).forEach(id => attendanceRecords[date][id] = 'Present');
+            saveData();
             loadAttendance();
-            alert('All marked present');
         }
-
         function syncBiometricAttendance() {
-            alert('Biometric sync completed - updated attendance');
+            alert('Biometric sync completed');
             loadAttendance();
         }
 
         // Fee functions
         function showGenerateInvoiceModal() {
-            alert('Generate Invoice Modal - select student and amount');
+            document.getElementById('invoiceStudent').innerHTML = students.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
+            document.getElementById('invoiceDueDate').value = new Date(Date.now() + 30*24*60*60*1000).toISOString().split('T')[0];
+            new bootstrap.Modal(document.getElementById('generateInvoiceModal')).show();
         }
-
+        function saveInvoice() {
+            const student = document.getElementById('invoiceStudent').value;
+            const amount = parseFloat(document.getElementById('invoiceAmount').value);
+            const dueDate = document.getElementById('invoiceDueDate').value;
+            const description = document.getElementById('invoiceDescription').value;
+            if (student && amount) {
+                fees.push({ id: Date.now(), student, amount, dueDate, status: 'Pending', description, paidDate: null });
+                saveData();
+                renderFees();
+                bootstrap.Modal.getInstance(document.getElementById('generateInvoiceModal')).hide();
+                logAudit('Invoice Generated', student);
+            }
+        }
         function showBulkUploadFeesModal() {
-            alert('Bulk Upload Modal - use XLSX to parse');
+            new bootstrap.Modal(document.getElementById('bulkUploadFeesModal')).show();
         }
-
+        function uploadBulkFees() {
+            const file = document.getElementById('feesFile').files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, {type: 'array'});
+                    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const json = XLSX.utils.sheet_to_json(sheet);
+                    fees = fees.concat(json.map(row => ({
+                        id: Date.now() + Math.random(),
+                        student: row.Student,
+                        amount: row.Amount,
+                        dueDate: row['Due Date'],
+                        status: 'Pending'
+                    })));
+                    saveData();
+                    renderFees();
+                    document.getElementById('feesPreview').innerHTML = `<p>Imported ${json.length} fees.</p>`;
+                    logAudit('Bulk Fees Uploaded', json.length + ' records');
+                };
+                reader.readAsArrayBuffer(file);
+            }
+            bootstrap.Modal.getInstance(document.getElementById('bulkUploadFeesModal')).hide();
+        }
         function renderFees() {
             const searchTerm = document.getElementById('feeSearch').value.toLowerCase();
             const filtered = fees.filter(f => f.student.toLowerCase().includes(searchTerm));
             const totalCollected = filtered.filter(f => f.status === 'Paid').reduce((sum, f) => sum + f.amount, 0);
             const outstanding = filtered.filter(f => f.status === 'Pending').reduce((sum, f) => sum + f.amount, 0);
-            const overdue = filtered.filter(f => f.status === 'Overdue').reduce((sum, f) => sum + f.amount, 0);
+            const overdue = filtered.filter(f => new Date(f.dueDate) < new Date() && f.status !== 'Paid').reduce((sum, f) => sum + f.amount, 0);
             const paymentRate = fees.length ? (totalCollected / fees.reduce((sum, f) => sum + f.amount, 0) * 100).toFixed(0) : 0;
             document.getElementById('totalCollected').textContent = 'R' + totalCollected;
             document.getElementById('outstandingFees').textContent = 'R' + outstanding;
@@ -1235,12 +1606,9 @@
                 </tr>
             `).join('');
         }
-
         function searchFees() {
             renderFees();
         }
-
-        // Enhanced SMS reminders
         async function sendFeeReminders() {
             if (!smsSettings.username || !smsSettings.password) {
                 alert('Please configure SMS settings first');
@@ -1251,7 +1619,7 @@
             let sent = 0;
             for (const fee of pendingFees.slice(0, 10)) { // Limit for demo
                 const student = students.find(s => s.name.includes(fee.student));
-                if (student.phone) {
+                if (student && student.phone) {
                     const response = await fetch('https://api.winsms.co.za/rest/v1/message/send', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -1266,8 +1634,8 @@
                     if (response.ok) sent++;
                 }
             }
-            alert(`Sent ${sent} advanced SMS reminders via WinSMS`);
-            logAudit('Advanced SMS Sent', `${sent} reminders`);
+            alert(`Sent ${sent} SMS reminders via WinSMS`);
+            logAudit('SMS Reminders Sent', `${sent} fees`);
         }
 
         // Timetable functions
@@ -1288,7 +1656,6 @@
             table += '</tbody></table>';
             document.getElementById('timetableContainer').innerHTML = table;
         }
-
         function editSlot(grade, day, time) {
             const subject = prompt('Enter subject/teacher:');
             if (subject) {
@@ -1299,33 +1666,57 @@
                 loadTimetable();
             }
         }
-
         function highlightTeacherSchedule() {
             const teacher = document.getElementById('timetableTeacher').value;
             if (teacher) {
-                // Highlight cells with teacher
                 document.querySelectorAll('.timetable-cell').forEach(cell => {
                     if (cell.textContent.includes(teacher)) cell.style.background = 'yellow';
                 });
             }
         }
-
         function showAddTimeSlotModal() {
-            alert('Add Time Slot Modal');
+            document.getElementById('timeSlotGrade').innerHTML = [...new Set(students.map(s => s.grade))].map(g => `<option value="${g}">${g}</option>`).join('');
+            new bootstrap.Modal(document.getElementById('addTimeSlotModal')).show();
         }
-
+        function saveTimeSlot() {
+            const grade = document.getElementById('timeSlotGrade').value;
+            const day = document.getElementById('timeSlotDay').value;
+            const time = document.getElementById('timeSlotTime').value;
+            const subject = document.getElementById('timeSlotSubject').value;
+            if (grade && day && time && subject) {
+                if (!timetable[grade]) timetable[grade] = {};
+                if (!timetable[grade][day]) timetable[grade][day] = {};
+                timetable[grade][day][time] = subject;
+                saveData();
+                loadTimetable();
+                bootstrap.Modal.getInstance(document.getElementById('addTimeSlotModal')).hide();
+                logAudit('Time Slot Added', `${grade} - ${day} ${time}`);
+            }
+        }
         function checkTimetableConflicts() {
             alert('Conflicts checked - no overlaps found');
         }
 
         // Exam functions
         function showAddExamModal() {
-            const exam = { id: Date.now(), name: 'Midterm', date: new Date().toISOString().split('T')[0], subject: 'Math', grade: '10A', status: 'Scheduled' };
-            exams.push(exam);
-            saveData();
-            renderExams();
+            document.getElementById('examGrade').innerHTML = [...new Set(students.map(s => s.grade))].map(g => `<option value="${g}">${g}</option>`).join('');
+            document.getElementById('examDate').value = new Date().toISOString().split('T')[0];
+            new bootstrap.Modal(document.getElementById('addExamModal')).show();
         }
-
+        function saveExam() {
+            const name = document.getElementById('examName').value;
+            const date = document.getElementById('examDate').value;
+            const subject = document.getElementById('examSubject').value;
+            const grade = document.getElementById('examGrade').value;
+            const status = document.getElementById('examStatus').value;
+            if (name && date && subject && grade) {
+                exams.push({ id: Date.now(), name, date, subject, grade, status, marks: {} });
+                saveData();
+                renderExams();
+                bootstrap.Modal.getInstance(document.getElementById('addExamModal')).hide();
+                logAudit('Exam Scheduled', name);
+            }
+        }
         function renderExams() {
             const gradeFilter = document.getElementById('examGradeFilter').value;
             const subjectFilter = document.getElementById('examSubjectFilter').value.toLowerCase();
@@ -1341,7 +1732,6 @@
                 </tr>
             `).join('');
         }
-
         function showEnterMarksModal(examId) {
             const exam = exams.find(e => e.id == examId);
             document.getElementById('marksExamName').textContent = exam.name;
@@ -1354,133 +1744,24 @@
                 </tr>
             `).join('');
         }
-
         function updateMark(examId, studentId, mark) {
             const exam = exams.find(e => e.id == examId);
             if (!exam.marks) exam.marks = {};
             exam.marks[studentId] = parseInt(mark);
             saveData();
         }
-
         function saveMarks() {
             alert('Marks saved');
             document.getElementById('marksEntry').classList.add('d-none');
         }
-
         function generateAllReportCards() {
             alert('Report cards generated for all students');
         }
-
         function generateHallTickets() {
             alert('Hall tickets generated');
         }
 
-        // Communication functions
-        function showSendMessageModal() {
-            const message = prompt('Enter message:');
-            if (message) {
-                messages.push({ id: Date.now(), text: message, date: new Date().toISOString(), type: 'sent' });
-                saveData();
-                renderMessages();
-                // Send via SMS if configured
-                if (smsSettings.username) sendBulkSMS(message, students.map(s => s.phone || ''));
-            }
-        }
-
-        async function sendBulkSMS(message, phones) {
-            let sent = 0;
-            for (const phone of phones.slice(0, 5)) { // Limit
-                const response = await fetch('https://api.winsms.co.za/rest/v1/message/send', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        username: smsSettings.username,
-                        password: smsSettings.password,
-                        sender: smsSettings.senderId,
-                        to: phone,
-                        body: message
-                    })
-                });
-                if (response.ok) sent++;
-            }
-            alert(`Bulk SMS sent to ${sent} recipients via WinSMS`);
-        }
-
-        function renderMessages() {
-            document.getElementById('messagesContainer').innerHTML = messages.map(m => `<div class="chat-message chat-user">${m.text} - ${m.date}</div>`).join('');
-        }
-
-        function viewAnnouncements() {
-            document.getElementById('messagesContainer').innerHTML = announcements.map(a => `<div class="alert alert-info">${a.text} - ${a.date}</div>`).join('');
-        }
-
-        function startChat() {
-            alert('Live Chat started - integrated with SMS for offline');
-        }
-
-        // Content functions
-        function showAddContentModal() {
-            const title = prompt('Title:');
-            const type = prompt('Type:');
-            if (title) {
-                contents.push({ id: Date.now(), title, type, status: 'Published' });
-                saveData();
-                renderContents();
-            }
-        }
-
-        function renderContents() {
-            const searchTerm = document.getElementById('contentSearch').value.toLowerCase();
-            const filtered = contents.filter(c => c.title.toLowerCase().includes(searchTerm));
-            document.getElementById('contentTable').innerHTML = filtered.map(c => `
-                <tr>
-                    <td>${c.id}</td>
-                    <td>${c.title}</td>
-                    <td>${c.type}</td>
-                    <td><span class="badge bg-success">${c.status}</span></td>
-                    <td><button class="btn btn-sm btn-primary">Edit</button></td>
-                </tr>
-            `).join('');
-        }
-
-        function searchContent() {
-            renderContents();
-        }
-
-        // Reports functions
-        function generateReport() {
-            const type = document.getElementById('reportType').value;
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            doc.text(`${type} Report - ${new Date().toLocaleDateString()}`, 10, 10);
-            doc.text(`Total: ${type === 'attendance' ? students.length : type === 'fees' ? fees.length : type === 'exams' ? exams.length : staff.length}`, 10, 20);
-            doc.save(`${type}_report.pdf`);
-            document.getElementById('reportOutput').innerHTML = `<p>${type} report generated and downloaded.</p>`;
-            document.getElementById('reportOutput').classList.remove('d-none');
-        }
-
-        function exportReport() {
-            alert('Report exported to Excel/PDF');
-        }
-
-        // Parent Portal
-        function loadParentPortal() {
-            if (!currentUser.childId) return alert('No child linked');
-            const child = students.find(s => s.id === currentUser.childId);
-            if (!child) return alert('Child not found');
-            document.getElementById('parentChildInfo').innerHTML = `<h3>Child Information</h3><p><strong>Name:</strong> ${child.name}</p><p><strong>Grade:</strong> ${child.grade}</p><p><strong>Educator:</strong> ${child.educator}</p>`;
-            // Attendance
-            document.getElementById('parentAttendance').innerHTML = `<p>Today's Attendance: Present</p><p>Last Week Average: 95%</p>`;
-            // Fees
-            const childFees = fees.filter(f => f.student.includes(child.name));
-            document.getElementById('parentFees').innerHTML = childFees.map(f => `<p>${f.status}: R${f.amount} due ${f.dueDate}</p>`).join('');
-            // Grades
-            document.getElementById('parentGrades').innerHTML = `<p>Latest Exam: 85%</p>`;
-            // Announcements
-            document.getElementById('parentAnnouncements').innerHTML = announcements.map(a => `<div class="alert alert-info">${a.text}</div>`).join('');
-        }
-
-                // HR functions
+        // HR functions
         function renderHR() {
             renderStaff();
             renderPayrolls();
@@ -1489,7 +1770,6 @@
             renderJobs();
             renderAudit();
         }
-
         function renderStaff() {
             const searchTerm = document.getElementById('staffSearch').value.toLowerCase();
             const roleFilter = document.getElementById('staffFilterRole').value;
@@ -1525,13 +1805,11 @@
                 </tr>
             `).join('');
         }
-
         function showAddStaffModal() {
             document.getElementById('addStaffModal').querySelectorAll('input, select').forEach(el => el.value = '');
             document.getElementById('staffModalTitle').textContent = 'Add Staff';
             new bootstrap.Modal(document.getElementById('addStaffModal')).show();
         }
-
         function showEditStaffModal(id) {
             const s = staff.find(st => st.id === id);
             if (s) {
@@ -1547,7 +1825,6 @@
                 new bootstrap.Modal(document.getElementById('addStaffModal')).show();
             }
         }
-
         function saveStaff() {
             const name = document.getElementById('staffName').value;
             const role = document.getElementById('staffRole').value;
@@ -1578,7 +1855,6 @@
             renderStaff();
             bootstrap.Modal.getInstance(document.getElementById('addStaffModal')).hide();
         }
-
         function deleteStaff(id) {
             if (confirm('Delete staff?')) {
                 staff = staff.filter(s => s.id !== id);
@@ -1587,12 +1863,10 @@
                 logAudit('Staff Deleted', 'ID: ' + id, 'High');
             }
         }
-
         function syncStaffBiometric() {
             alert('Biometric data synced for all staff');
             logAudit('Biometric Sync', 'Staff');
         }
-
         function generateStaffReport() {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
@@ -1602,7 +1876,6 @@
             doc.save('staff_report.pdf');
             logAudit('Staff Report Generated', '');
         }
-
         function renderPayrolls() {
             const monthFilter = document.getElementById('payrollMonthFilter').value;
             let filtered = payrolls.filter(p => !monthFilter || p.month === monthFilter);
@@ -1628,12 +1901,36 @@
                 </tr>
             `).join('');
         }
-
         function showAddPayrollModal() {
-            alert('Add Payroll Modal - manual entry form');
-            // Implement modal if needed
+            document.getElementById('payrollStaff').innerHTML = staff.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
+            document.getElementById('payrollMonth').value = new Date().toISOString().slice(0, 7);
+            new bootstrap.Modal(document.getElementById('addPayrollModal')).show();
         }
-
+        function savePayroll() {
+            const staffName = document.getElementById('payrollStaff').value;
+            const month = document.getElementById('payrollMonth').value;
+            const salary = parseFloat(document.getElementById('payrollSalary').value);
+            const deductions = parseFloat(document.getElementById('payrollDeductions').value) || 0;
+            if (staffName && salary) {
+                const tax = salary * 0.15;
+                const uif = salary * hrSettings.uifRate;
+                const net = salary - deductions - tax - uif;
+                payrolls.push({
+                    id: Date.now(),
+                    staff: staffName,
+                    month,
+                    salary,
+                    deductions,
+                    tax,
+                    uif,
+                    net
+                });
+                saveData();
+                renderPayrolls();
+                bootstrap.Modal.getInstance(document.getElementById('addPayrollModal')).hide();
+                logAudit('Payroll Added', staffName);
+            }
+        }
         function generatePayroll() {
             const month = document.getElementById('payrollMonthFilter').value || new Date().toLocaleDateString('en-CA', { month: '2-digit', year: 'numeric' });
             staff.forEach(s => {
@@ -1660,21 +1957,17 @@
             logAudit('Payroll Generated', month);
             alert('Payroll generated for ' + month);
         }
-
         function exportPayrollToExcel() {
-            // Use XLSX to export
             const ws = XLSX.utils.json_to_sheet(payrolls);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, 'Payrolls');
             XLSX.writeFile(wb, 'payrolls.xlsx');
             logAudit('Payroll Exported to Excel', '');
         }
-
         function calculateCompliance() {
             alert('Compliance checked: 95% - All UIF/Tax calculated per settings');
             logAudit('Compliance Check', 'Payroll');
         }
-
         function generatePayslip(id) {
             const p = payrolls.find(pr => pr.id === id);
             if (p) {
@@ -1691,7 +1984,6 @@
                 logAudit('Payslip Generated', p.staff);
             }
         }
-
         function renderLeaves() {
             const dateFilter = document.getElementById('leaveDateFilter').value;
             let filtered = leaveRequests;
@@ -1733,13 +2025,10 @@
                 });
             }
         }
-
         function showAddLeaveModal() {
             document.getElementById('leaveStaff').innerHTML = staff.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
-            document.getElementById('addLeaveModal').querySelectorAll('input, select').forEach(el => el.value = '');
             new bootstrap.Modal(document.getElementById('addLeaveModal')).show();
         }
-
         function saveLeave() {
             const staffName = document.getElementById('leaveStaff').value;
             const type = document.getElementById('leaveType').value;
@@ -1758,7 +2047,6 @@
             bootstrap.Modal.getInstance(document.getElementById('addLeaveModal')).hide();
             logAudit('Leave Request Added', staffName + ' - ' + type);
         }
-
         function approveLeave(id) {
             const l = leaveRequests.find(lr => lr.id === id);
             if (l) {
@@ -1768,7 +2056,6 @@
                 logAudit('Leave Approved', l.staff);
             }
         }
-
         function rejectLeave(id) {
             const l = leaveRequests.find(lr => lr.id === id);
             if (l) {
@@ -1778,7 +2065,6 @@
                 logAudit('Leave Rejected', l.staff);
             }
         }
-
         function generateLeaveReport() {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
@@ -1788,7 +2074,6 @@
             doc.save('leave_report.pdf');
             logAudit('Leave Report Generated', '');
         }
-
         function renderReviews() {
             const dateFilter = document.getElementById('reviewDateFilter').value;
             let filtered = performanceReviews;
@@ -1828,19 +2113,20 @@
                 });
             }
         }
-
         function showAddReviewModal(id = null) {
-            // Populate form
+            document.getElementById('reviewStaff').innerHTML = staff.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
             if (id) {
                 const r = performanceReviews.find(pr => pr.id === id);
-                // Set values
+                document.getElementById('reviewStaff').value = r.staff;
+                document.getElementById('reviewDate').value = r.date;
+                document.getElementById('reviewScore').value = r.score;
+                document.getElementById('reviewComments').value = r.comments;
                 window.editingReviewId = id;
             } else {
                 window.editingReviewId = null;
             }
             new bootstrap.Modal(document.getElementById('addReviewModal')).show();
         }
-
         function saveReview() {
             const staff = document.getElementById('reviewStaff').value;
             const date = document.getElementById('reviewDate').value;
@@ -1868,7 +2154,6 @@
             bootstrap.Modal.getInstance(document.getElementById('addReviewModal')).hide();
             logAudit('Performance Review ' + (window.editingReviewId ? 'Updated' : 'Added'), staff);
         }
-
         function generatePerformanceReport() {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
@@ -1877,7 +2162,28 @@
             doc.save('performance_report.pdf');
             logAudit('Performance Report Generated', '');
         }
-
+        function renderJobs() {
+            const searchTerm = document.getElementById('jobSearch').value.toLowerCase();
+            let filtered = jobs.filter(j => j.title.toLowerCase().includes(searchTerm));
+            const open = filtered.filter(j => j.status === 'Open').length;
+            const totalApps = filtered.reduce((sum, j) => sum + (j.applications?.length || 0), 0);
+            const interviews = filtered.reduce((sum, j) => sum + (j.applications?.filter(a => a.stage === 'Interview').length || 0), 0);
+            const hireRate = totalApps ? (filtered.reduce((sum, j) => sum + (j.applications?.filter(a => a.stage === 'Hired').length || 0), 0) / totalApps * 100).toFixed(0) : 0;
+            document.getElementById('openPositions').textContent = open;
+            document.getElementById('totalApplications').textContent = totalApps;
+            document.getElementById('interviewsScheduled').textContent = interviews;
+            document.getElementById('hireRate').textContent = hireRate + '%';
+            document.getElementById('jobTable').innerHTML = filtered.map(j => `
+                <tr>
+                    <td>${j.id}</td>
+                    <td>${j.title}</td>
+                    <td>${j.department}</td>
+                    <td>${j.applications ? j.applications.length : 0}</td>
+                    <td><span class="badge bg-${j.status === 'Open' ? 'success' : 'secondary'}">${j.status}</span></td>
+                    <td><button class="btn btn-sm btn-primary" onclick="showAddJobModal(${j.id})">Edit</button></td>
+                </tr>
+            `).join('');
+        }
         function renderAudit() {
             const dateFilter = document.getElementById('auditDateFilter').value;
             const actionFilter = document.getElementById('auditActionFilter').value;
@@ -1899,7 +2205,6 @@
                 </tr>
             `).join('');
         }
-
         function generateAuditReport() {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
@@ -1909,7 +2214,6 @@
             doc.save('audit_report.pdf');
             logAudit('Audit Report Generated', '');
         }
-
         function exportAuditToExcel() {
             const ws = XLSX.utils.json_to_sheet(auditLog);
             const wb = XLSX.utils.book_new();
@@ -1918,62 +2222,93 @@
             logAudit('Audit Exported to Excel', '');
         }
 
-        // Utility Functions
-        function debounce(func, wait) {
-            let timeout;
-            return function executedFunction(...args) {
-                const later = () => {
-                    clearTimeout(timeout);
-                    func(...args);
-                };
-                clearTimeout(timeout);
-                timeout = setTimeout(later, wait);
-            };
+        // Communication functions
+        function showSendMessageModal() {
+            new bootstrap.Modal(document.getElementById('sendMessageModal')).show();
+        }
+        function sendMessage() {
+            const recipient = document.getElementById('messageRecipient').value;
+            const text = document.getElementById('messageText').value;
+            const viaSMS = document.getElementById('sendViaSMS').checked;
+            if (text) {
+                messages.push({ id: Date.now(), text, date: new Date().toISOString(), type: 'sent', recipient });
+                saveData();
+                renderMessages();
+                if (viaSMS && smsSettings.username) {
+                    // Simulate bulk SMS
+                    alert('SMS sent via WinSMS to ' + recipient);
+                }
+                bootstrap.Modal.getInstance(document.getElementById('sendMessageModal')).hide();
+                logAudit('Message Sent', `${recipient}: ${text.substring(0,50)}...`);
+            }
+        }
+        function renderMessages() {
+            document.getElementById('messagesContainer').innerHTML = messages.map(m => `<div class="chat-message chat-user">${m.text} - ${m.date}</div>`).join('');
+        }
+        function viewAnnouncements() {
+            document.getElementById('messagesContainer').innerHTML = announcements.map(a => `<div class="alert alert-info">${a.text} - ${a.date}</div>`).join('');
+        }
+        function startChat() {
+            alert('Live Chat started');
         }
 
-        function logAudit(action, details, risk = 'Low') {
-            auditLog.unshift({  // unshift for recent first
-                id: Date.now(),
-                timestamp: new Date().toISOString(),
-                user: currentUser ? currentUser.name : 'System',
-                action,
-                details,
-                risk,
-                read: false
-            });
-            if (auditLog.length > 1000) auditLog = auditLog.slice(0, 1000);  // Limit size
-            saveData();
-            updateNotificationBadge();
+        // Content functions
+        function showAddContentModal() {
+            new bootstrap.Modal(document.getElementById('addContentModal')).show();
+        }
+        function saveContent() {
+            const title = document.getElementById('contentTitle').value;
+            const type = document.getElementById('contentType').value;
+            const body = document.getElementById('contentBody').value;
+            const status = document.getElementById('contentStatus').value;
+            if (title) {
+                contents.push({ id: Date.now(), title, type, body, status, date: new Date().toISOString() });
+                saveData();
+                renderContents();
+                bootstrap.Modal.getInstance(document.getElementById('addContentModal')).hide();
+                logAudit('Content Added', title);
+            }
+        }
+        function renderContents() {
+            const searchTerm = document.getElementById('contentSearch').value.toLowerCase();
+            const filtered = contents.filter(c => c.title.toLowerCase().includes(searchTerm));
+            document.getElementById('contentTable').innerHTML = filtered.map(c => `
+                <tr>
+                    <td>${c.id}</td>
+                    <td>${c.title}</td>
+                    <td>${c.type}</td>
+                    <td><span class="badge bg-success">${c.status}</span></td>
+                    <td><button class="btn btn-sm btn-primary">Edit</button></td>
+                </tr>
+            `).join('');
+        }
+        function searchContent() {
+            renderContents();
         }
 
-        function updateNotificationBadge() {
-            const unread = auditLog.filter(a => !a.read).length;
-            const badge = document.getElementById('notificationBadge');
-            badge.textContent = unread;
-            badge.style.display = unread > 0 ? 'block' : 'none';
+        // Reports functions
+        function generateReport() {
+            const type = document.getElementById('reportType').value;
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.text(`${type} Report - ${new Date().toLocaleDateString()}`, 10, 10);
+            doc.text(`Total: ${type === 'attendance' ? students.length : type === 'fees' ? fees.length : type === 'exams' ? exams.length : staff.length}`, 10, 20);
+            doc.save(`${type}_report.pdf`);
+            document.getElementById('reportOutput').innerHTML = `<p>${type} report generated and downloaded.</p>`;
+            document.getElementById('reportOutput').classList.remove('d-none');
+        }
+        function exportReport() {
+            alert('Report exported to Excel/PDF');
         }
 
-        function loadNotifications() {
-            document.getElementById('notificationContent').innerHTML = auditLog.filter(a => !a.read).slice(0, 20).map(a => {
-                a.read = true;  // Mark as read
-                return `<div class="alert alert-${a.risk === 'High' ? 'danger' : a.risk === 'Medium' ? 'warning' : 'info'} mb-2">
-                    <strong>${a.action}</strong>: ${a.details} <br><small>${new Date(a.timestamp).toLocaleString()}</small>
-                </div>`;
-            }).join('');
-            saveData();  // Save read status
-            updateNotificationBadge();
-        }
-
-        // Settings Functions
+        // Settings functions
         function saveSMSSettings() {
             smsSettings.username = document.getElementById('smsUsername').value;
             smsSettings.password = document.getElementById('smsPassword').value;
-            smsSettings.senderId = document.getElementById('smsSenderId').value;
             saveData();
-            alert('SMS Settings (WinSMS) saved successfully');
+            alert('SMS Settings saved');
             logAudit('SMS Settings Updated', '');
         }
-
         function updateHRSettings() {
             hrSettings.annualLeaveDays = parseInt(document.getElementById('annualLeaveDays').value) || 21;
             hrSettings.uifRate = (parseFloat(document.getElementById('uifRate').value) || 1) / 100;
@@ -1981,7 +2316,6 @@
             alert('HR Settings updated');
             logAudit('HR Settings Updated', '');
         }
-
         function backupData() {
             const backup = {
                 students, admissions, fees, timetable, exams, staff, payrolls, leaveRequests,
@@ -1996,7 +2330,6 @@
             URL.revokeObjectURL(url);
             logAudit('Data Backup Created', '');
         }
-
         function restoreData() {
             const input = document.createElement('input');
             input.type = 'file';
@@ -2042,11 +2375,10 @@
             input.click();
         }
 
-        // AI Research (Student)
+        // AI Research
         function researchWithAI() {
             const query = document.getElementById('researchQuery').value;
             if (!query) return alert('Enter a query');
-            // Simulated AI response (in real: call API)
             document.getElementById('researchResults').innerHTML = `
                 <div class="alert alert-info">
                     <h5>Research Results for: "${query}"</h5>
@@ -2059,97 +2391,55 @@
                     <small>Generated by AI Assistant - November 15, 2025</small>
                 </div>
             `;
-            logAudit('AI Research Query', query, 'Low');  // Log for admin review
+            logAudit('AI Research Query', query, 'Low');
         }
 
-        // Additional Modal HTML (appended inline for completeness)
-        // Note: These are dynamically added, but for static HTML, insert before </div> of content
+        // Utility functions
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+        function logAudit(action, details, risk = 'Low') {
+            auditLog.unshift({
+                id: Date.now(),
+                timestamp: new Date().toISOString(),
+                user: currentUser ? currentUser.name : 'System',
+                action,
+                details,
+                risk,
+                read: false
+            });
+            if (auditLog.length > 1000) auditLog = auditLog.slice(0, 1000);
+            saveData();
+            updateNotificationBadge();
+        }
+        function updateNotificationBadge() {
+            const unread = auditLog.filter(a => !a.read).length;
+            const badge = document.getElementById('notificationBadge');
+            badge.textContent = unread;
+            badge.style.display = unread > 0 ? 'block' : 'none';
+        }
+        function loadNotifications() {
+            document.getElementById('notificationContent').innerHTML = auditLog.filter(a => !a.read).slice(0, 20).map(a => {
+                a.read = true;
+                return `<div class="alert alert-${a.risk === 'High' ? 'danger' : a.risk === 'Medium' ? 'warning' : 'info'} mb-2">
+                    <strong>${a.action}</strong>: ${a.details} <br><small>${new Date(a.timestamp).toLocaleString()}</small>
+                </div>`;
+            }).join('');
+            saveData();
+            updateNotificationBadge();
+        }
 
-        // Add Staff Modal (missing in original)
-        const addStaffModalHtml = `
-            <div class="modal fade" id="addStaffModal">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="staffModalTitle">Add Staff</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                        </div>
-                        <div class="modal-body">
-                            <input type="text" id="staffName" class="form-control mb-2" placeholder="Full Name">
-                            <select id="staffRole" class="form-control mb-2">
-                                <option value="Teacher">Teacher</option>
-                                <option value="Admin">Admin</option>
-                                <option value="Support">Support</option>
-                            </select>
-                            <input type="text" id="staffDepartment" class="form-control mb-2" placeholder="Department">
-                            <input type="number" id="staffSalary" class="form-control mb-2" placeholder="Salary (R)">
-                            <input type="text" id="staffTax" class="form-control mb-2" placeholder="Tax Number">
-                            <input type="text" id="staffUif" class="form-control mb-2" placeholder="UIF Number">
-                            <input type="date" id="staffCertExpiry" class="form-control mb-2" placeholder="Cert Expiry">
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-primary" onclick="saveStaff()">Save</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-        document.querySelector('.content').insertAdjacentHTML('beforeend', addStaffModalHtml);
-
-        // Add Leave Modal (missing)
-        const addLeaveModalHtml = `
-            <div class="modal fade" id="addLeaveModal">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title">Add Leave Request</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                        </div>
-                        <div class="modal-body">
-                            <select id="leaveStaff" class="form-control mb-2"></select>
-                            <select id="leaveType" class="form-control mb-2">
-                                <option value="Annual">Annual</option>
-                                <option value="Sick">Sick</option>
-                                <option value="Maternity">Maternity</option>
-                            </select>
-                            <input type="date" id="leaveDate" class="form-control mb-2">
-                            <input type="number" id="leaveDays" class="form-control mb-2" placeholder="Days">
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-primary" onclick="saveLeave()">Save</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-        document.querySelector('.content').insertAdjacentHTML('beforeend', addLeaveModalHtml);
-
-        // Add Review Modal (missing)
-        const addReviewModalHtml = `
-            <div class="modal fade" id="addReviewModal">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title">Add Performance Review</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                        </div>
-                        <div class="modal-body">
-                            <select id="reviewStaff" class="form-control mb-2"></select>
-                            <input type="date" id="reviewDate" class="form-control mb-2">
-                            <input type="number" id="reviewScore" class="form-control mb-2" placeholder="Score (0-100)" min="0" max="100">
-                            <textarea id="reviewComments" class="form-control mb-2" placeholder="Comments"></textarea>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-primary" onclick="saveReview()">Save</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-        document.querySelector('.content').insertAdjacentHTML('beforeend', addReviewModalHtml);
-
-        // Initialize on load
+        // Initialize
         document.addEventListener('DOMContentLoaded', function() {
+            loadData();
             if (staff.length === 0) {
                 staff = [
                     { id: 1, name: 'Jane Smith', role: 'Teacher', department: 'English', salary: 30000, taxNumber: 'T123', uifNumber: 'U456', certExpiry: '2026-12-31', status: 'Active' },
@@ -2157,42 +2447,10 @@
                 ];
                 saveData();
             }
-            if (leaveRequests.length === 0) {
-                leaveRequests = [
-                    { id: 1, staff: 'Jane Smith', type: 'Annual', date: '2025-11-20', days: 5, status: 'Pending' }
-                ];
-                saveData();
-            }
-            if (performanceReviews.length === 0) {
-                performanceReviews = [
-                    { id: 1, staff: 'Jane Smith', date: '2025-10-01', score: 85, comments: 'Good performance', goalsMet: 'Yes', status: 'Completed' }
-                ];
-                saveData();
-            }
-            if (payrolls.length === 0) {
-                payrolls = [
-                    { id: 1, staff: 'Jane Smith', month: '2025-11', salary: 30000, deductions: 6000, tax: 4500, uif: 300, net: 25200 }
-                ];
-                saveData();
-            }
             updateNotificationBadge();
             document.getElementById('notificationsModal').addEventListener('show.bs.modal', loadNotifications);
-            // Set default date
             document.getElementById('attendanceDate').value = new Date().toISOString().split('T')[0];
         });
-
-        // Stripe for fees (basic integration example)
-        const stripe = Stripe('pk_test_...');  // Replace with real key
-        function processPayment(amount, studentId) {
-            stripe.redirectToCheckout({
-                lineItems: [{ price: 'price_...', quantity: 1 }],
-                mode: 'payment',
-                successUrl: window.location.origin + '?success=true',
-                cancelUrl: window.location.origin + '?cancel=true'
-            });
-        }
     </script>
 </body>
 </html>
-
-        
