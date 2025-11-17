@@ -222,6 +222,10 @@
                 <li class="admin-only non-student"><a href="#content" class="nav-link" onclick="showSection('content')"><i class="fas fa-book me-2"></i><span class="nav-text">Content</span></a></li>
                 <li class="admin-only non-student"><a href="#reports" class="nav-link" onclick="showSection('reports')"><i class="fas fa-chart-bar me-2"></i><span class="nav-text">Reports</span></a></li>
                 <li class="admin-only non-student"><a href="#settings" class="nav-link" onclick="showSection('settings')"><i class="fas fa-cog me-2"></i><span class="nav-text">Settings</span></a></li>
+                <li class="student-only"><a href="#studentTimetable" class="nav-link" onclick="showSection('studentTimetable')"><i class="fas fa-calendar-alt me-2"></i><span class="nav-text">Time Table</span></a></li>
+                <li class="student-only"><a href="#studentExamination" class="nav-link" onclick="showSection('studentExamination')"><i class="fas fa-file-alt me-2"></i><span class="nav-text">Examination</span></a></li>
+                <li class="student-only"><a href="#studentInbox" class="nav-link" onclick="showSection('studentInbox')"><i class="fas fa-inbox me-2"></i><span class="nav-text">Inbox</span></a></li>
+                <li class="student-only"><a href="#studentUploadWork" class="nav-link" onclick="showSection('studentUploadWork')"><i class="fas fa-upload me-2"></i><span class="nav-text">Upload Work</span></a></li>
                 <li class="student-only"><a href="#aiResearch" class="nav-link" onclick="showSection('aiResearch')"><i class="fas fa-robot me-2"></i><span class="nav-text">AI Research</span></a></li>
                 <li class="parent-only"><a href="#parentPortal" class="nav-link" onclick="showSection('parentPortal')"><i class="fas fa-home me-2"></i><span class="nav-text">Parent Portal</span></a></li>
                 <li><a href="#" class="nav-link text-danger" onclick="logout()"><i class="fas fa-sign-out-alt me-2"></i><span class="nav-text">Logout</span></a></li>
@@ -765,14 +769,166 @@
                     </div>
                 </div>
             </section>
+            <!-- Student Time Table (Read-Only) -->
+            <section id="studentTimetable" class="section d-none student-only">
+                <h2>My Time Table</h2>
+                <div class="alert alert-info mb-3">
+                    <i class="fas fa-info-circle me-2"></i>This is a read-only view of your class timetable.
+                </div>
+                <div id="studentTimetableContainer">
+                    <p class="text-center">Loading your timetable...</p>
+                </div>
+            </section>
+            <!-- Student Examination (Read-Only) -->
+            <section id="studentExamination" class="section d-none student-only">
+                <h2>My Examinations</h2>
+                <div class="alert alert-info mb-3">
+                    <i class="fas fa-info-circle me-2"></i>View your upcoming exams and past results.
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <div class="card card-metric p-3">
+                            <h5>Upcoming Exams</h5>
+                            <h3 id="studentUpcomingExams">0</h3>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card card-metric p-3">
+                            <h5>Average Score</h5>
+                            <h3 id="studentAvgScore">0%</h3>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card card-metric p-3">
+                            <h5>Completed Exams</h5>
+                            <h3 id="studentCompletedExams">0</h3>
+                        </div>
+                    </div>
+                </div>
+                <h4 class="mt-4">Upcoming Examinations</h4>
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Subject</th>
+                            <th>Date</th>
+                            <th>Time</th>
+                            <th>Duration</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="studentExamTable"></tbody>
+                </table>
+                <h4 class="mt-4">My Results</h4>
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Subject</th>
+                            <th>Exam</th>
+                            <th>Date</th>
+                            <th>Score</th>
+                            <th>Grade</th>
+                            <th>Comments</th>
+                        </tr>
+                    </thead>
+                    <tbody id="studentResultsTable"></tbody>
+                </table>
+            </section>
+            <!-- Student Inbox (Read-Only) -->
+            <section id="studentInbox" class="section d-none student-only">
+                <h2>My Inbox</h2>
+                <div class="alert alert-info mb-3">
+                    <i class="fas fa-info-circle me-2"></i>View messages from teachers and administrators.
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="input-group">
+                            <input type="text" class="form-control" placeholder="Search messages..." id="studentInboxSearch">
+                            <button class="btn btn-outline-secondary" onclick="searchStudentInbox()">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <select class="form-control" id="studentInboxFilter" onchange="loadStudentInbox()">
+                            <option value="all">All Messages</option>
+                            <option value="unread">Unread</option>
+                            <option value="important">Important</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="studentInboxContainer"></div>
+            </section>
+            <!-- Student Upload Work (Read-Only) -->
+            <section id="studentUploadWork" class="section d-none student-only">
+                <h2>My Work Submissions</h2>
+                <div class="alert alert-info mb-3">
+                    <i class="fas fa-info-circle me-2"></i>View your submitted work and assignments.
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <div class="card card-metric p-3">
+                            <h5>Submitted</h5>
+                            <h3 id="studentSubmittedWork">0</h3>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card card-metric p-3">
+                            <h5>Pending</h5>
+                            <h3 id="studentPendingWork">0</h3>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card card-metric p-3">
+                            <h5>Graded</h5>
+                            <h3 id="studentGradedWork">0</h3>
+                        </div>
+                    </div>
+                </div>
+                <h4 class="mt-4">My Submissions</h4>
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Assignment</th>
+                            <th>Subject</th>
+                            <th>Submitted Date</th>
+                            <th>Status</th>
+                            <th>Grade</th>
+                            <th>Feedback</th>
+                        </tr>
+                    </thead>
+                    <tbody id="studentWorkTable"></tbody>
+                </table>
+            </section>
             <!-- AI Research for Students -->
             <section id="aiResearch" class="section d-none student-only">
                 <h2>AI Research Assistant</h2>
-                <div class="mb-3">
-                    <input type="text" id="researchQuery" class="form-control" placeholder="Ask a research question...">
-                    <button class="btn btn-primary mt-2" onclick="researchWithAI()">Research</button>
+                <div class="alert alert-success mb-3">
+                    <i class="fas fa-lightbulb me-2"></i>Use our advanced AI to help with your research, homework, and learning!
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-8">
+                        <textarea id="researchQuery" class="form-control" rows="3" placeholder="Ask a detailed research question or describe what you'd like to learn..."></textarea>
+                    </div>
+                    <div class="col-md-4">
+                        <select id="researchCategory" class="form-control mb-2">
+                            <option value="general">General Research</option>
+                            <option value="science">Science</option>
+                            <option value="mathematics">Mathematics</option>
+                            <option value="history">History</option>
+                            <option value="literature">Literature</option>
+                            <option value="geography">Geography</option>
+                            <option value="technology">Technology</option>
+                        </select>
+                        <button class="btn btn-primary w-100" onclick="researchWithAI()">
+                            <i class="fas fa-search me-2"></i>Research
+                        </button>
+                        <button class="btn btn-secondary w-100 mt-2" onclick="clearResearch()">
+                            <i class="fas fa-eraser me-2"></i>Clear
+                        </button>
+                    </div>
                 </div>
                 <div id="researchResults"></div>
+                <div id="researchHistory" class="mt-4"></div>
             </section>
             <!-- Modals -->
             <!-- New Admission Modal -->
@@ -1620,7 +1776,11 @@
                 case 'reports': break;
                 case 'settings': loadSettings(); updateVaultMetrics(); break;
                 case 'parentPortal': loadParentPortal(); break;
-                case 'aiResearch': break;
+                case 'aiResearch': loadResearchHistory(); break;
+                case 'studentTimetable': loadStudentTimetable(); break;
+                case 'studentExamination': loadStudentExamination(); break;
+                case 'studentInbox': loadStudentInbox(); break;
+                case 'studentUploadWork': loadStudentUploadWork(); break;
             }
         }
         // Toggle Sidebar
@@ -4286,23 +4446,460 @@
             document.getElementById('parentAnnouncements').innerHTML = announcements.map(a => `<p><strong>${a.title}</strong>: ${a.content}</p>`).join('');
         }
 
-        // AI Research
-        function researchWithAI() {
-            const query = document.getElementById('researchQuery').value;
-            if (query) {
-                document.getElementById('researchResults').innerHTML = `
-                    <div class="alert alert-info">
-                        <h5>Research on "${query}"</h5>
-                        <p>Mock AI response: This is a simulated research result based on your query. In a real system, this would integrate with an AI API like Grok.</p>
-                        <ul>
-                            <li>Key fact 1</li>
-                            <li>Key fact 2</li>
-                            <li>Source: Educational Database</li>
-                        </ul>
+        // Student Module Functions
+        
+        // Load Student Timetable
+        function loadStudentTimetable() {
+            if (!currentUser || currentUser.role !== 'student') return;
+            
+            // Mock timetable data - in a real system, this would be filtered for the current student's class
+            const timetableData = timetable.length > 0 ? timetable : [
+                { day: 'Monday', period: '08:00-09:00', subject: 'Mathematics', teacher: 'Mr. Smith' },
+                { day: 'Monday', period: '09:00-10:00', subject: 'English', teacher: 'Mrs. Johnson' },
+                { day: 'Monday', period: '10:00-11:00', subject: 'Science', teacher: 'Dr. Brown' },
+                { day: 'Tuesday', period: '08:00-09:00', subject: 'History', teacher: 'Ms. Davis' },
+                { day: 'Tuesday', period: '09:00-10:00', subject: 'Geography', teacher: 'Mr. Wilson' },
+                { day: 'Wednesday', period: '08:00-09:00', subject: 'Physical Education', teacher: 'Coach Taylor' },
+            ];
+            
+            const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+            let html = '<div class="table-responsive"><table class="table table-bordered">';
+            html += '<thead><tr><th>Time</th>';
+            days.forEach(day => html += `<th>${day}</th>`);
+            html += '</tr></thead><tbody>';
+            
+            const periods = ['08:00-09:00', '09:00-10:00', '10:00-11:00', '11:00-12:00', '13:00-14:00', '14:00-15:00'];
+            periods.forEach(period => {
+                html += `<tr><td><strong>${period}</strong></td>`;
+                days.forEach(day => {
+                    const slot = timetableData.find(t => t.day === day && t.period === period);
+                    if (slot) {
+                        html += `<td class="timetable-cell">
+                            <div><strong>${slot.subject}</strong></div>
+                            <div><small>${slot.teacher}</small></div>
+                        </td>`;
+                    } else {
+                        html += '<td class="timetable-cell">-</td>';
+                    }
+                });
+                html += '</tr>';
+            });
+            html += '</tbody></table></div>';
+            
+            document.getElementById('studentTimetableContainer').innerHTML = html;
+        }
+        
+        // Load Student Examination
+        function loadStudentExamination() {
+            if (!currentUser || currentUser.role !== 'student') return;
+            
+            // Mock exam data
+            const upcomingExams = [
+                { subject: 'Mathematics', date: '2025-12-01', time: '09:00', duration: '2 hours', status: 'Scheduled' },
+                { subject: 'English', date: '2025-12-03', time: '10:00', duration: '1.5 hours', status: 'Scheduled' },
+                { subject: 'Science', date: '2025-12-05', time: '09:00', duration: '2 hours', status: 'Scheduled' },
+            ];
+            
+            const pastResults = [
+                { subject: 'Mathematics', exam: 'Mid-term', date: '2025-10-15', score: 85, grade: 'B', comments: 'Good work!' },
+                { subject: 'English', exam: 'Mid-term', date: '2025-10-16', score: 92, grade: 'A', comments: 'Excellent!' },
+                { subject: 'Science', exam: 'Mid-term', date: '2025-10-17', score: 78, grade: 'C', comments: 'Needs improvement' },
+            ];
+            
+            // Update metrics
+            document.getElementById('studentUpcomingExams').textContent = upcomingExams.length;
+            const avgScore = Math.round(pastResults.reduce((sum, r) => sum + r.score, 0) / pastResults.length);
+            document.getElementById('studentAvgScore').textContent = avgScore + '%';
+            document.getElementById('studentCompletedExams').textContent = pastResults.length;
+            
+            // Render upcoming exams
+            let examHtml = '';
+            upcomingExams.forEach(exam => {
+                examHtml += `<tr>
+                    <td>${exam.subject}</td>
+                    <td>${exam.date}</td>
+                    <td>${exam.time}</td>
+                    <td>${exam.duration}</td>
+                    <td><span class="badge bg-info">${exam.status}</span></td>
+                </tr>`;
+            });
+            document.getElementById('studentExamTable').innerHTML = examHtml || '<tr><td colspan="5" class="text-center">No upcoming exams</td></tr>';
+            
+            // Render results
+            let resultsHtml = '';
+            pastResults.forEach(result => {
+                const gradeClass = result.grade === 'A' ? 'success' : result.grade === 'B' ? 'primary' : 'warning';
+                resultsHtml += `<tr>
+                    <td>${result.subject}</td>
+                    <td>${result.exam}</td>
+                    <td>${result.date}</td>
+                    <td>${result.score}%</td>
+                    <td><span class="badge bg-${gradeClass}">${result.grade}</span></td>
+                    <td>${result.comments}</td>
+                </tr>`;
+            });
+            document.getElementById('studentResultsTable').innerHTML = resultsHtml || '<tr><td colspan="6" class="text-center">No results yet</td></tr>';
+        }
+        
+        // Load Student Inbox
+        function loadStudentInbox() {
+            if (!currentUser || currentUser.role !== 'student') return;
+            
+            // Mock messages data
+            const messages = [
+                { 
+                    id: 1, 
+                    from: 'Mr. Smith (Mathematics Teacher)', 
+                    subject: 'Homework Assignment Due',
+                    date: '2025-11-15',
+                    message: 'Please complete pages 45-47 by Friday.',
+                    read: false,
+                    important: true
+                },
+                { 
+                    id: 2, 
+                    from: 'Administration', 
+                    subject: 'School Event Reminder',
+                    date: '2025-11-14',
+                    message: 'Sports day is scheduled for next week. Please bring appropriate attire.',
+                    read: true,
+                    important: false
+                },
+                { 
+                    id: 3, 
+                    from: 'Mrs. Johnson (English Teacher)', 
+                    subject: 'Great work on your essay!',
+                    date: '2025-11-13',
+                    message: 'Your essay showed excellent writing skills. Keep up the good work!',
+                    read: true,
+                    important: false
+                },
+            ];
+            
+            const filter = document.getElementById('studentInboxFilter')?.value || 'all';
+            let filteredMessages = messages;
+            if (filter === 'unread') {
+                filteredMessages = messages.filter(m => !m.read);
+            } else if (filter === 'important') {
+                filteredMessages = messages.filter(m => m.important);
+            }
+            
+            let html = '';
+            filteredMessages.forEach(msg => {
+                const readClass = msg.read ? 'read' : 'unread';
+                const importantBadge = msg.important ? '<span class="badge bg-danger ms-2">Important</span>' : '';
+                html += `
+                    <div class="card mb-3" style="background: rgba(255, 255, 255, 0.1);">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <h5 class="card-title">
+                                    ${msg.read ? '' : '<i class="fas fa-circle text-primary me-2" style="font-size: 8px;"></i>'}
+                                    ${msg.subject}
+                                    ${importantBadge}
+                                </h5>
+                                <small class="text-muted">${msg.date}</small>
+                            </div>
+                            <h6 class="card-subtitle mb-2 text-muted">From: ${msg.from}</h6>
+                            <p class="card-text">${msg.message}</p>
+                        </div>
                     </div>
                 `;
-                addNotification('Research completed', 'success');
+            });
+            
+            document.getElementById('studentInboxContainer').innerHTML = html || '<p class="text-center">No messages found</p>';
+        }
+        
+        function searchStudentInbox() {
+            const searchTerm = document.getElementById('studentInboxSearch').value.toLowerCase();
+            // In a real implementation, this would filter messages
+            loadStudentInbox();
+        }
+        
+        // Load Student Upload Work
+        function loadStudentUploadWork() {
+            if (!currentUser || currentUser.role !== 'student') return;
+            
+            // Mock work submissions data
+            const submissions = [
+                { 
+                    assignment: 'Math Homework Chapter 5',
+                    subject: 'Mathematics',
+                    submittedDate: '2025-11-10',
+                    status: 'Graded',
+                    grade: 'A',
+                    feedback: 'Excellent work! All answers correct.'
+                },
+                { 
+                    assignment: 'English Essay - My Hero',
+                    subject: 'English',
+                    submittedDate: '2025-11-12',
+                    status: 'Graded',
+                    grade: 'B+',
+                    feedback: 'Good structure, but watch your grammar.'
+                },
+                { 
+                    assignment: 'Science Lab Report',
+                    subject: 'Science',
+                    submittedDate: '2025-11-14',
+                    status: 'Under Review',
+                    grade: '-',
+                    feedback: 'Being reviewed by teacher'
+                },
+            ];
+            
+            // Update metrics
+            const submitted = submissions.length;
+            const graded = submissions.filter(s => s.status === 'Graded').length;
+            const pending = submissions.filter(s => s.status === 'Under Review').length;
+            
+            document.getElementById('studentSubmittedWork').textContent = submitted;
+            document.getElementById('studentPendingWork').textContent = pending;
+            document.getElementById('studentGradedWork').textContent = graded;
+            
+            // Render submissions table
+            let html = '';
+            submissions.forEach(sub => {
+                const statusClass = sub.status === 'Graded' ? 'success' : 'warning';
+                html += `<tr>
+                    <td>${sub.assignment}</td>
+                    <td>${sub.subject}</td>
+                    <td>${sub.submittedDate}</td>
+                    <td><span class="badge bg-${statusClass}">${sub.status}</span></td>
+                    <td>${sub.grade}</td>
+                    <td>${sub.feedback}</td>
+                </tr>`;
+            });
+            
+            document.getElementById('studentWorkTable').innerHTML = html || '<tr><td colspan="6" class="text-center">No submissions yet</td></tr>';
+        }
+        
+        // Enhanced AI Research
+        let researchHistory = [];
+        
+        function researchWithAI() {
+            const query = document.getElementById('researchQuery').value.trim();
+            const category = document.getElementById('researchCategory').value;
+            
+            if (!query) {
+                addNotification('Please enter a research question', 'warning');
+                return;
             }
+            
+            // Save to history
+            const researchItem = {
+                id: Date.now(),
+                query: query,
+                category: category,
+                timestamp: new Date().toLocaleString()
+            };
+            researchHistory.unshift(researchItem);
+            localStorage.setItem('researchHistory', JSON.stringify(researchHistory));
+            
+            // Generate enhanced AI response based on category
+            let response = generateEnhancedAIResponse(query, category);
+            
+            document.getElementById('researchResults').innerHTML = `
+                <div class="card mb-3" style="background: rgba(255, 255, 255, 0.15);">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <h4><i class="fas fa-brain me-2"></i>Research Results</h4>
+                            <span class="badge bg-primary">${category}</span>
+                        </div>
+                        <h5 class="text-info mb-3">"${query}"</h5>
+                        ${response}
+                        <hr>
+                        <div class="mt-3">
+                            <h6><i class="fas fa-lightbulb me-2"></i>Related Topics to Explore:</h6>
+                            <div class="d-flex flex-wrap gap-2">
+                                ${generateRelatedTopics(query, category)}
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <small class="text-muted"><i class="fas fa-clock me-1"></i>Researched on: ${new Date().toLocaleString()}</small>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            loadResearchHistory();
+            addNotification('Research completed successfully!', 'success');
+        }
+        
+        function generateEnhancedAIResponse(query, category) {
+            // Enhanced AI response with category-specific content
+            const responses = {
+                science: {
+                    intro: 'Based on scientific research and educational databases:',
+                    points: [
+                        'Scientific principles and theories related to your question',
+                        'Real-world applications and examples',
+                        'Key scientists and their contributions',
+                        'Current research and developments in this area',
+                        'Recommended experiments or observations to learn more'
+                    ],
+                    sources: ['National Science Database', 'Scientific Research Journals', 'Educational Science Resources']
+                },
+                mathematics: {
+                    intro: 'Mathematical analysis and explanations:',
+                    points: [
+                        'Core mathematical concepts and formulas',
+                        'Step-by-step problem-solving approaches',
+                        'Real-world applications of these concepts',
+                        'Common mistakes to avoid',
+                        'Practice problems and exercises'
+                    ],
+                    sources: ['Mathematics Education Database', 'Khan Academy Resources', 'Mathematical References']
+                },
+                history: {
+                    intro: 'Historical context and information:',
+                    points: [
+                        'Historical background and timeline',
+                        'Key figures and their roles',
+                        'Causes and effects of historical events',
+                        'Historical significance and impact',
+                        'Primary and secondary sources'
+                    ],
+                    sources: ['Historical Archives', 'Educational History Resources', 'Academic Historical Journals']
+                },
+                literature: {
+                    intro: 'Literary analysis and insights:',
+                    points: [
+                        'Literary themes and motifs',
+                        'Character analysis and development',
+                        'Writing style and techniques',
+                        'Historical and cultural context',
+                        'Critical interpretations and perspectives'
+                    ],
+                    sources: ['Literary Databases', 'Classic Literature Archives', 'Literary Criticism Resources']
+                },
+                geography: {
+                    intro: 'Geographic information and analysis:',
+                    points: [
+                        'Geographic features and characteristics',
+                        'Climate and environmental factors',
+                        'Population and demographics',
+                        'Economic and cultural significance',
+                        'Current geographic trends and changes'
+                    ],
+                    sources: ['Geographic Information Systems', 'World Atlas Database', 'Geographic Education Resources']
+                },
+                technology: {
+                    intro: 'Technology insights and information:',
+                    points: [
+                        'Current technological developments',
+                        'How the technology works',
+                        'Applications and use cases',
+                        'Future trends and implications',
+                        'Learning resources and tutorials'
+                    ],
+                    sources: ['Technology Research Database', 'Tech Education Platforms', 'Innovation Journals']
+                },
+                general: {
+                    intro: 'Comprehensive research findings:',
+                    points: [
+                        'Overview and background information',
+                        'Key concepts and definitions',
+                        'Multiple perspectives and viewpoints',
+                        'Practical applications and examples',
+                        'Further reading and resources'
+                    ],
+                    sources: ['Educational Databases', 'Academic Resources', 'Research Libraries']
+                }
+            };
+            
+            const categoryData = responses[category] || responses.general;
+            
+            let html = `
+                <div class="alert alert-light text-dark">
+                    <p><strong>${categoryData.intro}</strong></p>
+                    <ul class="mb-3">
+                        ${categoryData.points.map(point => `<li>${point}</li>`).join('')}
+                    </ul>
+                    <div class="mt-3">
+                        <h6><i class="fas fa-book me-2"></i>Sources & References:</h6>
+                        <ul>
+                            ${categoryData.sources.map(source => `<li>${source}</li>`).join('')}
+                        </ul>
+                    </div>
+                    <div class="alert alert-info mt-3">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Note:</strong> This is an enhanced educational AI assistant. In a production system, 
+                        this would integrate with advanced AI APIs (like GPT-4, Grok, or Claude) to provide real-time, 
+                        accurate research results with verified sources and citations.
+                    </div>
+                </div>
+            `;
+            
+            return html;
+        }
+        
+        function generateRelatedTopics(query, category) {
+            const topics = {
+                science: ['Physics Principles', 'Chemical Reactions', 'Biology Systems', 'Scientific Method'],
+                mathematics: ['Algebra', 'Geometry', 'Calculus', 'Statistics', 'Problem Solving'],
+                history: ['Ancient Civilizations', 'World Wars', 'Cultural Movements', 'Political History'],
+                literature: ['Poetry Analysis', 'Novel Studies', 'Drama', 'Literary Devices', 'Author Studies'],
+                geography: ['World Regions', 'Climate Zones', 'Natural Resources', 'Population Studies'],
+                technology: ['Programming', 'Artificial Intelligence', 'Cybersecurity', 'Web Development'],
+                general: ['Critical Thinking', 'Research Methods', 'Study Skills', 'Time Management']
+            };
+            
+            const categoryTopics = topics[category] || topics.general;
+            return categoryTopics.map(topic => 
+                `<button class="btn btn-sm btn-outline-light" onclick="document.getElementById('researchQuery').value='${topic}'; researchWithAI();">${topic}</button>`
+            ).join('');
+        }
+        
+        function loadResearchHistory() {
+            researchHistory = JSON.parse(localStorage.getItem('researchHistory') || '[]');
+            
+            if (researchHistory.length === 0) {
+                document.getElementById('researchHistory').innerHTML = '';
+                return;
+            }
+            
+            let html = `
+                <div class="card" style="background: rgba(255, 255, 255, 0.1);">
+                    <div class="card-header">
+                        <h5><i class="fas fa-history me-2"></i>Research History</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="list-group">
+            `;
+            
+            researchHistory.slice(0, 5).forEach(item => {
+                html += `
+                    <div class="list-group-item" style="background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.1);">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="mb-1">${item.query}</h6>
+                                <small class="text-muted">
+                                    <span class="badge bg-secondary">${item.category}</span>
+                                    <i class="fas fa-clock ms-2 me-1"></i>${item.timestamp}
+                                </small>
+                            </div>
+                            <button class="btn btn-sm btn-outline-light" onclick="document.getElementById('researchQuery').value='${item.query}'; document.getElementById('researchCategory').value='${item.category}'; researchWithAI();">
+                                <i class="fas fa-redo"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += `
+                        </div>
+                        ${researchHistory.length > 5 ? `<div class="text-center mt-3"><small class="text-muted">Showing 5 of ${researchHistory.length} searches</small></div>` : ''}
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('researchHistory').innerHTML = html;
+        }
+        
+        function clearResearch() {
+            document.getElementById('researchQuery').value = '';
+            document.getElementById('researchResults').innerHTML = '';
+            document.getElementById('researchCategory').value = 'general';
         }
 
         // Utility: Log audit
