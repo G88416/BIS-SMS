@@ -364,6 +364,12 @@
                     <li class="nav-item">
                         <a class="nav-link" data-bs-toggle="tab" href="#calendar" onclick="renderCalendar()">Calendar</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#hr-services" onclick="renderHRServices()">HR Services</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#employee-wellness" onclick="renderEmployeeWellness()">Employee Wellness</a>
+                    </li>
                 </ul>
                 <div class="tab-content">
                     <div class="tab-pane fade show active" id="lesson-plans">
@@ -439,6 +445,152 @@
                         <h5>Upcoming Events</h5>
                         <div id="upcomingEventsList"></div>
                     </div>
+                    <div class="tab-pane fade" id="hr-services">
+                        <h4>HR Services - Apply for Leave</h4>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="card card-metric p-3">
+                                    <h5>Leave Balance</h5>
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <small>Annual Leave</small>
+                                            <h4 id="annualLeaveBalance">15</h4>
+                                        </div>
+                                        <div class="col-6">
+                                            <small>Sick Leave</small>
+                                            <h4 id="sickLeaveBalance">10</h4>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <button class="btn btn-primary" onclick="showApplyLeaveModal()">
+                                    <i class="fas fa-plus me-2"></i>Apply for Leave
+                                </button>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <h5>Leave Calendar</h5>
+                                <div class="mb-3">
+                                    <input type="month" id="leaveCalendarMonth" class="form-control" onchange="renderLeaveCalendar()">
+                                </div>
+                                <div id="leaveCalendarView"></div>
+                            </div>
+                        </div>
+                        <hr>
+                        <h5>My Leave Requests</h5>
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Leave Type</th>
+                                    <th>Start Date</th>
+                                    <th>End Date</th>
+                                    <th>Days</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="myLeaveRequestsTable"></tbody>
+                        </table>
+                    </div>
+                    <div class="tab-pane fade" id="employee-wellness">
+                        <h4>Advanced Employee Wellness Program</h4>
+                        <div class="row mb-3">
+                            <div class="col-md-3">
+                                <div class="card card-metric p-3 text-center">
+                                    <i class="fas fa-heartbeat fa-2x mb-2"></i>
+                                    <h5>Wellness Score</h5>
+                                    <h3 id="wellnessScore">85%</h3>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card card-metric p-3 text-center">
+                                    <i class="fas fa-running fa-2x mb-2"></i>
+                                    <h5>Activities</h5>
+                                    <h3 id="activitiesCount">12</h3>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card card-metric p-3 text-center">
+                                    <i class="fas fa-apple-alt fa-2x mb-2"></i>
+                                    <h5>Health Tips</h5>
+                                    <h3 id="healthTipsCount">8</h3>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card card-metric p-3 text-center">
+                                    <i class="fas fa-calendar-check fa-2x mb-2"></i>
+                                    <h5>Check-ins</h5>
+                                    <h3 id="checkInsCount">5</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <div class="card card-metric p-3">
+                                    <h5>Wellness Resources</h5>
+                                    <ul class="nav nav-pills mb-3" id="wellnessTabs">
+                                        <li class="nav-item">
+                                            <a class="nav-link active" data-bs-toggle="pill" href="#wellness-activities">Activities</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link" data-bs-toggle="pill" href="#wellness-tips">Health Tips</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link" data-bs-toggle="pill" href="#wellness-tracking">Tracking</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link" data-bs-toggle="pill" href="#wellness-support">Support</a>
+                                        </li>
+                                    </ul>
+                                    <div class="tab-content">
+                                        <div class="tab-pane fade show active" id="wellness-activities">
+                                            <h6>Available Wellness Activities</h6>
+                                            <button class="btn btn-primary btn-sm mb-3" onclick="showAddWellnessActivityModal()">
+                                                <i class="fas fa-plus me-2"></i>Log Activity
+                                            </button>
+                                            <div id="wellnessActivitiesList"></div>
+                                        </div>
+                                        <div class="tab-pane fade" id="wellness-tips">
+                                            <h6>Daily Health Tips</h6>
+                                            <div id="healthTipsList"></div>
+                                        </div>
+                                        <div class="tab-pane fade" id="wellness-tracking">
+                                            <h6>Wellness Tracking</h6>
+                                            <div class="mb-3">
+                                                <label class="form-label">Weight (kg)</label>
+                                                <input type="number" id="weightInput" class="form-control mb-2" placeholder="Enter weight">
+                                                <label class="form-label">Mood (1-10)</label>
+                                                <input type="range" id="moodInput" class="form-range" min="1" max="10" value="7">
+                                                <span id="moodValue">7</span>
+                                                <button class="btn btn-primary mt-2" onclick="saveWellnessTracking()">
+                                                    <i class="fas fa-save me-2"></i>Save
+                                                </button>
+                                            </div>
+                                            <canvas id="wellnessTrackingChart" class="mt-4"></canvas>
+                                        </div>
+                                        <div class="tab-pane fade" id="wellness-support">
+                                            <h6>Wellness Support</h6>
+                                            <p>Contact our wellness team for support and guidance.</p>
+                                            <button class="btn btn-primary" onclick="showWellnessSupportModal()">
+                                                <i class="fas fa-phone me-2"></i>Contact Support
+                                            </button>
+                                            <div class="mt-3">
+                                                <h6>Resources</h6>
+                                                <ul>
+                                                    <li><a href="#" class="text-white">Mental Health Resources</a></li>
+                                                    <li><a href="#" class="text-white">Physical Fitness Programs</a></li>
+                                                    <li><a href="#" class="text-white">Nutrition Guidelines</a></li>
+                                                    <li><a href="#" class="text-white">Stress Management</a></li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </section>
             <!-- Examination Management -->
@@ -495,6 +647,9 @@
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" data-bs-toggle="tab" href="#hr-teachers" onclick="renderTeachersReadOnly()">Teachers Info (Read-Only)</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#hr-employee-wellness" onclick="renderEmployeeWellnessAdmin()">Advanced Employee Wellness</a>
                     </li>
                 </ul>
                 <div class="tab-content">
@@ -696,6 +851,133 @@
                                 <hr>
                                 <h5>Upcoming Events</h5>
                                 <div id="roUpcomingEventsList"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="hr-employee-wellness">
+                        <h4>Advanced Employee Wellness Management</h4>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <button class="btn btn-primary" onclick="showAddWellnessProgramModal()">
+                                    <i class="fas fa-plus me-2"></i>Add Wellness Program
+                                </button>
+                                <button class="btn btn-success ms-2" onclick="exportWellnessReport()">
+                                    <i class="fas fa-file-export me-2"></i>Export Report
+                                </button>
+                            </div>
+                            <div class="col-md-6">
+                                <input type="text" class="form-control" placeholder="Search wellness programs..." id="wellnessSearch" oninput="debounce(renderWellnessPrograms, 300)()">
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-3">
+                                <div class="card card-metric p-3 text-center">
+                                    <i class="fas fa-users fa-2x mb-2"></i>
+                                    <h5>Participants</h5>
+                                    <h3 id="totalWellnessParticipants">0</h3>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card card-metric p-3 text-center">
+                                    <i class="fas fa-project-diagram fa-2x mb-2"></i>
+                                    <h5>Programs</h5>
+                                    <h3 id="totalWellnessPrograms">0</h3>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card card-metric p-3 text-center">
+                                    <i class="fas fa-chart-line fa-2x mb-2"></i>
+                                    <h5>Avg Engagement</h5>
+                                    <h3 id="avgWellnessEngagement">0%</h3>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card card-metric p-3 text-center">
+                                    <i class="fas fa-smile fa-2x mb-2"></i>
+                                    <h5>Satisfaction</h5>
+                                    <h3 id="wellnessSatisfaction">0%</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <ul class="nav nav-pills mb-3" id="wellnessAdminTabs">
+                            <li class="nav-item">
+                                <a class="nav-link active" data-bs-toggle="pill" href="#wellness-programs" onclick="renderWellnessPrograms()">Programs</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" data-bs-toggle="pill" href="#wellness-participants" onclick="renderWellnessParticipants()">Participants</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" data-bs-toggle="pill" href="#wellness-analytics" onclick="renderWellnessAnalytics()">Analytics</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" data-bs-toggle="pill" href="#wellness-resources-admin" onclick="renderWellnessResourcesAdmin()">Resources</a>
+                            </li>
+                        </ul>
+                        <div class="tab-content">
+                            <div class="tab-pane fade show active" id="wellness-programs">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Program Name</th>
+                                            <th>Category</th>
+                                            <th>Participants</th>
+                                            <th>Start Date</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="wellnessProgramsTable"></tbody>
+                                </table>
+                            </div>
+                            <div class="tab-pane fade" id="wellness-participants">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>Department</th>
+                                            <th>Wellness Score</th>
+                                            <th>Activities</th>
+                                            <th>Last Check-in</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="wellnessParticipantsTable"></tbody>
+                                </table>
+                            </div>
+                            <div class="tab-pane fade" id="wellness-analytics">
+                                <div class="row mb-3">
+                                    <div class="col-md-12">
+                                        <h5>Wellness Trends</h5>
+                                        <canvas id="wellnessTrendsChart" class="hr-chart"></canvas>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h5>Program Participation</h5>
+                                        <canvas id="wellnessParticipationChart" class="hr-chart"></canvas>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h5>Health Score Distribution</h5>
+                                        <canvas id="wellnessScoreChart" class="hr-chart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="tab-pane fade" id="wellness-resources-admin">
+                                <button class="btn btn-primary mb-3" onclick="showAddWellnessResourceModal()">
+                                    <i class="fas fa-plus me-2"></i>Add Resource
+                                </button>
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Title</th>
+                                            <th>Type</th>
+                                            <th>Category</th>
+                                            <th>Views</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="wellnessResourcesTable"></tbody>
+                                </table>
                             </div>
                         </div>
                     </div>
@@ -2428,6 +2710,496 @@
             }
         }
 
+        // HR Services Functions for Teachers
+        function renderHRServices() {
+            renderLeaveCalendar();
+            renderMyLeaveRequests();
+        }
+
+        function renderLeaveCalendar() {
+            const monthInput = document.getElementById('leaveCalendarMonth');
+            if (!monthInput.value) {
+                monthInput.value = new Date().toISOString().slice(0, 7);
+            }
+            const currentMonth = new Date(monthInput.value + '-01');
+            
+            const year = currentMonth.getFullYear();
+            const month = currentMonth.getMonth();
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const daysInMonth = lastDay.getDate();
+            const startDay = firstDay.getDay();
+            
+            let calendarHTML = '<table class="table table-bordered">';
+            calendarHTML += '<thead><tr>';
+            ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].forEach(day => {
+                calendarHTML += `<th class="text-center">${day}</th>`;
+            });
+            calendarHTML += '</tr></thead><tbody><tr>';
+            
+            for (let i = 0; i < startDay; i++) {
+                calendarHTML += '<td></td>';
+            }
+            
+            for (let day = 1; day <= daysInMonth; day++) {
+                const currentDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const dayLeaves = leaves.filter(l => l.startDate <= currentDate && l.endDate >= currentDate && l.staff === currentUser.name);
+                
+                calendarHTML += `<td class="text-center" style="height: 80px; vertical-align: top;">`;
+                calendarHTML += `<strong>${day}</strong><br>`;
+                
+                if (dayLeaves.length > 0) {
+                    calendarHTML += `<div style="background: #FF6384; padding: 2px; margin: 2px; border-radius: 3px; font-size: 0.7rem;">Leave</div>`;
+                }
+                
+                calendarHTML += '</td>';
+                
+                if ((startDay + day) % 7 === 0) {
+                    calendarHTML += '</tr><tr>';
+                }
+            }
+            
+            const totalCells = startDay + daysInMonth;
+            const remainingCells = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
+            for (let i = 0; i < remainingCells; i++) {
+                calendarHTML += '<td></td>';
+            }
+            
+            calendarHTML += '</tr></tbody></table>';
+            document.getElementById('leaveCalendarView').innerHTML = calendarHTML;
+        }
+
+        function renderMyLeaveRequests() {
+            const myLeaves = leaves.filter(l => l.staff === currentUser.name);
+            document.getElementById('myLeaveRequestsTable').innerHTML = myLeaves.length > 0 ? myLeaves.map(l => `
+                <tr>
+                    <td>${l.type}</td>
+                    <td>${l.startDate}</td>
+                    <td>${l.endDate}</td>
+                    <td>${l.days}</td>
+                    <td><span class="badge bg-${l.status === 'Approved' ? 'success' : l.status === 'Pending' ? 'warning' : 'danger'}">${l.status}</span></td>
+                    <td>
+                        ${l.status === 'Pending' ? `<button class="btn btn-sm btn-danger" onclick="cancelLeaveRequest(${l.id})">Cancel</button>` : ''}
+                    </td>
+                </tr>
+            `).join('') : '<tr><td colspan="6" class="text-center text-muted">No leave requests found.</td></tr>';
+        }
+
+        function showApplyLeaveModal() {
+            const modalHTML = `
+                <div class="modal fade" id="applyLeaveModal" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Apply for Leave</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <label class="form-label">Leave Type</label>
+                                    <select id="leaveType" class="form-control">
+                                        <option value="Annual">Annual Leave</option>
+                                        <option value="Sick">Sick Leave</option>
+                                        <option value="Personal">Personal Leave</option>
+                                        <option value="Maternity">Maternity Leave</option>
+                                        <option value="Study">Study Leave</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Start Date</label>
+                                    <input type="date" id="leaveStartDate" class="form-control">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">End Date</label>
+                                    <input type="date" id="leaveEndDate" class="form-control">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Reason</label>
+                                    <textarea id="leaveReason" class="form-control" rows="3"></textarea>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="button" class="btn btn-primary" onclick="submitLeaveRequest()">Submit</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+            const modal = new bootstrap.Modal(document.getElementById('applyLeaveModal'));
+            modal.show();
+            document.getElementById('applyLeaveModal').addEventListener('hidden.bs.modal', function () {
+                this.remove();
+            });
+        }
+
+        function submitLeaveRequest() {
+            const type = document.getElementById('leaveType').value;
+            const startDate = document.getElementById('leaveStartDate').value;
+            const endDate = document.getElementById('leaveEndDate').value;
+            const reason = document.getElementById('leaveReason').value;
+
+            if (!startDate || !endDate || !reason) {
+                addNotification('Please fill in all fields', 'warning');
+                return;
+            }
+
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+
+            const id = Date.now();
+            leaves.push({
+                id,
+                staff: currentUser.name,
+                type,
+                startDate,
+                endDate,
+                days,
+                reason,
+                status: 'Pending',
+                appliedDate: new Date().toISOString().split('T')[0]
+            });
+
+            saveData();
+            renderHRServices();
+            bootstrap.Modal.getInstance(document.getElementById('applyLeaveModal')).hide();
+            addNotification('Leave request submitted successfully', 'success');
+        }
+
+        function cancelLeaveRequest(id) {
+            if (confirm('Are you sure you want to cancel this leave request?')) {
+                leaves = leaves.filter(l => l.id !== id);
+                saveData();
+                renderMyLeaveRequests();
+                addNotification('Leave request cancelled', 'success');
+            }
+        }
+
+        // Employee Wellness Functions for Teachers
+        function renderEmployeeWellness() {
+            renderWellnessActivities();
+            renderHealthTips();
+            updateWellnessMetrics();
+        }
+
+        function updateWellnessMetrics() {
+            // Update wellness score and metrics
+            const wellnessActivities = JSON.parse(localStorage.getItem('wellnessActivities') || '[]');
+            const userActivities = wellnessActivities.filter(a => a.user === currentUser.name);
+            
+            document.getElementById('wellnessScore').textContent = Math.min(100, 70 + userActivities.length * 2) + '%';
+            document.getElementById('activitiesCount').textContent = userActivities.length;
+            document.getElementById('healthTipsCount').textContent = '8';
+            document.getElementById('checkInsCount').textContent = userActivities.filter(a => a.type === 'check-in').length;
+        }
+
+        function renderWellnessActivities() {
+            const activities = [
+                { name: 'Morning Yoga', category: 'Fitness', description: '30 minutes yoga session', icon: 'fa-spa' },
+                { name: 'Team Walk', category: 'Fitness', description: 'Group walking activity', icon: 'fa-walking' },
+                { name: 'Healthy Lunch Workshop', category: 'Nutrition', description: 'Learn healthy eating', icon: 'fa-apple-alt' },
+                { name: 'Mental Health Support', category: 'Mental Health', description: 'Counseling session', icon: 'fa-brain' },
+                { name: 'Meditation Session', category: 'Mental Health', description: 'Guided meditation', icon: 'fa-om' },
+                { name: 'Fitness Challenge', category: 'Fitness', description: 'Monthly step challenge', icon: 'fa-running' }
+            ];
+
+            document.getElementById('wellnessActivitiesList').innerHTML = activities.map(a => `
+                <div class="card mb-2" style="background: rgba(255, 255, 255, 0.1);">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6><i class="fas ${a.icon} me-2"></i>${a.name}</h6>
+                                <p class="mb-0"><small>${a.description}</small></p>
+                                <span class="badge bg-secondary">${a.category}</span>
+                            </div>
+                            <button class="btn btn-sm btn-primary" onclick="enrollInActivity('${a.name}')">Enroll</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderHealthTips() {
+            const tips = [
+                'Stay hydrated - drink at least 8 glasses of water daily',
+                'Take regular breaks during work to reduce stress',
+                'Practice good posture while working',
+                'Get 7-8 hours of sleep each night',
+                'Include fruits and vegetables in every meal',
+                'Exercise for at least 30 minutes daily',
+                'Practice mindfulness or meditation',
+                'Maintain work-life balance'
+            ];
+
+            document.getElementById('healthTipsList').innerHTML = tips.map((tip, idx) => `
+                <div class="alert alert-light text-dark mb-2">
+                    <i class="fas fa-lightbulb me-2"></i>${tip}
+                </div>
+            `).join('');
+        }
+
+        function enrollInActivity(activityName) {
+            const wellnessActivities = JSON.parse(localStorage.getItem('wellnessActivities') || '[]');
+            wellnessActivities.push({
+                user: currentUser.name,
+                activity: activityName,
+                date: new Date().toISOString().split('T')[0],
+                type: 'enrollment'
+            });
+            localStorage.setItem('wellnessActivities', JSON.stringify(wellnessActivities));
+            addNotification('Enrolled in ' + activityName, 'success');
+            updateWellnessMetrics();
+        }
+
+        function showAddWellnessActivityModal() {
+            const modalHTML = `
+                <div class="modal fade" id="addWellnessActivityModal" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Log Wellness Activity</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <label class="form-label">Activity</label>
+                                    <input type="text" id="activityName" class="form-control">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Duration (minutes)</label>
+                                    <input type="number" id="activityDuration" class="form-control">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Date</label>
+                                    <input type="date" id="activityDate" class="form-control" value="${new Date().toISOString().split('T')[0]}">
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="button" class="btn btn-primary" onclick="saveWellnessActivity()">Save</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+            const modal = new bootstrap.Modal(document.getElementById('addWellnessActivityModal'));
+            modal.show();
+            document.getElementById('addWellnessActivityModal').addEventListener('hidden.bs.modal', function () {
+                this.remove();
+            });
+        }
+
+        function saveWellnessActivity() {
+            const name = document.getElementById('activityName').value;
+            const duration = document.getElementById('activityDuration').value;
+            const date = document.getElementById('activityDate').value;
+
+            if (!name || !duration) {
+                addNotification('Please fill in all fields', 'warning');
+                return;
+            }
+
+            const wellnessActivities = JSON.parse(localStorage.getItem('wellnessActivities') || '[]');
+            wellnessActivities.push({
+                user: currentUser.name,
+                activity: name,
+                duration,
+                date,
+                type: 'logged'
+            });
+            localStorage.setItem('wellnessActivities', JSON.stringify(wellnessActivities));
+            
+            bootstrap.Modal.getInstance(document.getElementById('addWellnessActivityModal')).hide();
+            addNotification('Activity logged successfully', 'success');
+            updateWellnessMetrics();
+        }
+
+        function saveWellnessTracking() {
+            const weight = document.getElementById('weightInput').value;
+            const mood = document.getElementById('moodInput').value;
+
+            if (!weight) {
+                addNotification('Please enter your weight', 'warning');
+                return;
+            }
+
+            const wellnessTracking = JSON.parse(localStorage.getItem('wellnessTracking') || '[]');
+            wellnessTracking.push({
+                user: currentUser.name,
+                weight,
+                mood,
+                date: new Date().toISOString().split('T')[0]
+            });
+            localStorage.setItem('wellnessTracking', JSON.stringify(wellnessTracking));
+            
+            addNotification('Wellness data saved', 'success');
+        }
+
+        function showWellnessSupportModal() {
+            const modalHTML = `
+                <div class="modal fade" id="wellnessSupportModal" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Wellness Support</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <h6>Contact Information</h6>
+                                <p><i class="fas fa-phone me-2"></i>Phone: 123-456-7890</p>
+                                <p><i class="fas fa-envelope me-2"></i>Email: wellness@school.com</p>
+                                <hr>
+                                <div class="mb-3">
+                                    <label class="form-label">Your Message</label>
+                                    <textarea id="supportMessage" class="form-control" rows="4"></textarea>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                <button type="button" class="btn btn-primary" onclick="sendWellnessSupport()">Send</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+            const modal = new bootstrap.Modal(document.getElementById('wellnessSupportModal'));
+            modal.show();
+            document.getElementById('wellnessSupportModal').addEventListener('hidden.bs.modal', function () {
+                this.remove();
+            });
+        }
+
+        function sendWellnessSupport() {
+            const message = document.getElementById('supportMessage').value;
+            if (!message) {
+                addNotification('Please enter a message', 'warning');
+                return;
+            }
+            bootstrap.Modal.getInstance(document.getElementById('wellnessSupportModal')).hide();
+            addNotification('Support request sent successfully', 'success');
+        }
+
+        // Employee Wellness Admin Functions
+        function renderEmployeeWellnessAdmin() {
+            renderWellnessPrograms();
+        }
+
+        function renderWellnessPrograms() {
+            const programs = [
+                { id: 1, name: 'Fitness Challenge 2024', category: 'Fitness', participants: 45, startDate: '2024-01-01', status: 'Active' },
+                { id: 2, name: 'Mental Health Week', category: 'Mental Health', participants: 67, startDate: '2024-02-15', status: 'Active' },
+                { id: 3, name: 'Nutrition Workshop Series', category: 'Nutrition', participants: 32, startDate: '2024-03-01', status: 'Active' },
+                { id: 4, name: 'Yoga Sessions', category: 'Fitness', participants: 28, startDate: '2024-01-15', status: 'Active' }
+            ];
+
+            document.getElementById('wellnessProgramsTable').innerHTML = programs.map(p => `
+                <tr>
+                    <td>${p.name}</td>
+                    <td>${p.category}</td>
+                    <td>${p.participants}</td>
+                    <td>${p.startDate}</td>
+                    <td><span class="badge bg-success">${p.status}</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-primary" onclick="viewWellnessProgram(${p.id})">View</button>
+                        <button class="btn btn-sm btn-warning" onclick="editWellnessProgram(${p.id})">Edit</button>
+                    </td>
+                </tr>
+            `).join('');
+
+            // Update metrics
+            document.getElementById('totalWellnessParticipants').textContent = programs.reduce((sum, p) => sum + p.participants, 0);
+            document.getElementById('totalWellnessPrograms').textContent = programs.length;
+            document.getElementById('avgWellnessEngagement').textContent = '78%';
+            document.getElementById('wellnessSatisfaction').textContent = '92%';
+        }
+
+        function renderWellnessParticipants() {
+            const participants = staff.map(s => ({
+                name: s.name,
+                department: s.department || 'General',
+                score: Math.floor(Math.random() * 30) + 70,
+                activities: Math.floor(Math.random() * 15) + 5,
+                lastCheckIn: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+            }));
+
+            document.getElementById('wellnessParticipantsTable').innerHTML = participants.map(p => `
+                <tr>
+                    <td>${p.name}</td>
+                    <td>${p.department}</td>
+                    <td><span class="badge bg-${p.score >= 80 ? 'success' : 'warning'}">${p.score}%</span></td>
+                    <td>${p.activities}</td>
+                    <td>${p.lastCheckIn}</td>
+                    <td>
+                        <button class="btn btn-sm btn-primary" onclick="viewParticipantDetails('${p.name}')">View</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function renderWellnessAnalytics() {
+            // Placeholder for wellness analytics charts
+            addNotification('Wellness analytics loaded', 'info');
+        }
+
+        function renderWellnessResourcesAdmin() {
+            const resources = [
+                { title: 'Healthy Eating Guide', type: 'PDF', category: 'Nutrition', views: 145 },
+                { title: 'Stress Management Tips', type: 'Video', category: 'Mental Health', views: 289 },
+                { title: 'Fitness Program Guide', type: 'PDF', category: 'Fitness', views: 203 }
+            ];
+
+            document.getElementById('wellnessResourcesTable').innerHTML = resources.map(r => `
+                <tr>
+                    <td>${r.title}</td>
+                    <td>${r.type}</td>
+                    <td>${r.category}</td>
+                    <td>${r.views}</td>
+                    <td>
+                        <button class="btn btn-sm btn-primary">Edit</button>
+                        <button class="btn btn-sm btn-danger">Delete</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function showAddWellnessProgramModal() {
+            addNotification('Add Wellness Program modal', 'info');
+        }
+
+        function showAddWellnessResourceModal() {
+            addNotification('Add Wellness Resource modal', 'info');
+        }
+
+        function exportWellnessReport() {
+            addNotification('Wellness report exported', 'success');
+        }
+
+        function viewWellnessProgram(id) {
+            addNotification('Viewing wellness program ' + id, 'info');
+        }
+
+        function editWellnessProgram(id) {
+            addNotification('Editing wellness program ' + id, 'info');
+        }
+
+        function viewParticipantDetails(name) {
+            addNotification('Viewing details for ' + name, 'info');
+        }
+
+        // Update mood value display
+        document.addEventListener('DOMContentLoaded', function() {
+            const moodInput = document.getElementById('moodInput');
+            if (moodInput) {
+                moodInput.addEventListener('input', function() {
+                    document.getElementById('moodValue').textContent = this.value;
+                });
+            }
+        });
+
         // Other functions remain the same as before...
         // (Include all other functions from the previous code, like renderAdmissions, saveAdmission, etc.)
         // For brevity, assuming they are included as in the initial code.
@@ -2442,6 +3214,8 @@
                 if (target === '#student-progress') renderStudentProgress();
                 if (target === '#upload-work') renderUploadWork();
                 if (target === '#calendar') renderCalendar();
+                if (target === '#hr-services') renderHRServices();
+                if (target === '#employee-wellness') renderEmployeeWellness();
             });
             const hrTabs = document.querySelector('#hrTabs');
             hrTabs.addEventListener('shown.bs.tab', e => {
@@ -2452,6 +3226,7 @@
                 if (target === '#hr-performance') renderReviews();
                 if (target === '#hr-recruitment') renderJobs();
                 if (target === '#hr-audit') renderAudit();
+                if (target === '#hr-employee-wellness') renderEmployeeWellnessAdmin();
             });
             if (users.length === 0) {
                 users = [
