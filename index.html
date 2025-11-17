@@ -353,6 +353,12 @@
                     <li class="nav-item">
                         <a class="nav-link" data-bs-toggle="tab" href="#student-progress" onclick="renderStudentProgress()">Student Progress</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#upload-work" onclick="renderUploadWork()">Upload Work</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#calendar" onclick="renderCalendar()">Calendar</a>
+                    </li>
                 </ul>
                 <div class="tab-content">
                     <div class="tab-pane fade show active" id="lesson-plans">
@@ -379,6 +385,54 @@
                         </select>
                         <canvas id="progressChart" class="mt-4"></canvas>
                         <div id="progressDetails"></div>
+                    </div>
+                    <div class="tab-pane fade" id="upload-work">
+                        <h4>Upload Work Files</h4>
+                        <p>Upload student assignments, work, and documents in CSV, PDF, Word, or Excel formats.</p>
+                        <div class="mb-3">
+                            <label class="form-label">Select File(s)</label>
+                            <input type="file" id="workFileUpload" class="form-control" multiple accept=".csv,.pdf,.doc,.docx,.xls,.xlsx">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Assignment/Work Title</label>
+                            <input type="text" id="workTitle" class="form-control" placeholder="Enter title">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Class/Grade</label>
+                            <select id="workClass" class="form-control">
+                                <option value="">Select Class</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea id="workDescription" class="form-control" rows="3" placeholder="Enter description"></textarea>
+                        </div>
+                        <button class="btn btn-primary mb-3" onclick="uploadWorkFile()">
+                            <i class="fas fa-upload me-2"></i>Upload Work
+                        </button>
+                        <hr>
+                        <h5>Uploaded Work Files</h5>
+                        <div id="uploadedWorkList"></div>
+                    </div>
+                    <div class="tab-pane fade" id="calendar">
+                        <h4>Teacher's Calendar</h4>
+                        <div class="row mb-3">
+                            <div class="col-md-8">
+                                <button class="btn btn-primary mb-3" onclick="showAddCalendarEventModal()">
+                                    <i class="fas fa-plus me-2"></i>Add Event
+                                </button>
+                                <button class="btn btn-secondary mb-3 ms-2" onclick="renderCalendar()">
+                                    <i class="fas fa-sync me-2"></i>Refresh
+                                </button>
+                            </div>
+                            <div class="col-md-4">
+                                <input type="month" id="calendarMonth" class="form-control" onchange="renderCalendar()">
+                            </div>
+                        </div>
+                        <div id="calendarView"></div>
+                        <hr>
+                        <h5>Upcoming Events</h5>
+                        <div id="upcomingEventsList"></div>
                     </div>
                 </div>
             </section>
@@ -1219,6 +1273,33 @@
                     </div>
                 </div>
             </div>
+            <!-- Add Calendar Event Modal -->
+            <div class="modal fade" id="addCalendarEventModal">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Add Calendar Event</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <input type="text" id="eventTitle" class="form-control mb-2" placeholder="Event Title">
+                            <input type="date" id="eventDate" class="form-control mb-2">
+                            <input type="time" id="eventTime" class="form-control mb-2">
+                            <select id="eventType" class="form-control mb-2">
+                                <option value="Class">Class</option>
+                                <option value="Meeting">Meeting</option>
+                                <option value="Exam">Exam</option>
+                                <option value="Event">Event</option>
+                                <option value="Deadline">Deadline</option>
+                            </select>
+                            <textarea id="eventDescription" class="form-control mb-2" rows="3" placeholder="Event Description"></textarea>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-primary" onclick="saveCalendarEvent()">Save</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <!-- Notifications Modal -->
             <div class="modal fade" id="notificationsModal">
                 <div class="modal-dialog modal-lg">
@@ -1263,6 +1344,8 @@
         var lessonPlans = [];
         var grades = [];
         var resources = [];
+        var uploadedWork = [];
+        var calendarEvents = [];
         var dashboardChart = null;
         var leaveChart = null;
         var performanceChart = null;
@@ -1339,6 +1422,8 @@
             lessonPlans = JSON.parse(localStorage.getItem('lessonPlans') || '[]');
             grades = JSON.parse(localStorage.getItem('grades') || '[]');
             resources = JSON.parse(localStorage.getItem('resources') || '[]');
+            uploadedWork = JSON.parse(localStorage.getItem('uploadedWork') || '[]');
+            calendarEvents = JSON.parse(localStorage.getItem('calendarEvents') || '[]');
             integrateEducatorsAsStaff();
             if (students.length === 0) generateDemoData();
         }
@@ -1397,6 +1482,8 @@
             localStorage.setItem('lessonPlans', JSON.stringify(lessonPlans));
             localStorage.setItem('grades', JSON.stringify(grades));
             localStorage.setItem('resources', JSON.stringify(resources));
+            localStorage.setItem('uploadedWork', JSON.stringify(uploadedWork));
+            localStorage.setItem('calendarEvents', JSON.stringify(calendarEvents));
         }
         // Login function
         function login() {
@@ -1788,6 +1875,265 @@
         function loadStudentProgress() {
             renderStudentProgress();
         }
+
+        // Upload Work Functions
+        function renderUploadWork() {
+            // Populate classes
+            const classes = [...new Set(students.map(s => s.grade))];
+            document.getElementById('workClass').innerHTML = '<option value="">Select Class</option>' + 
+                classes.map(c => `<option value="${c}">${c}</option>`).join('');
+            
+            // Display uploaded work
+            document.getElementById('uploadedWorkList').innerHTML = uploadedWork.length > 0 ? 
+                uploadedWork.map(w => `
+                    <div class="report-card mb-2">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6><i class="fas fa-file me-2"></i>${w.title}</h6>
+                                <p class="mb-1"><small>Class: ${w.class} | Uploaded: ${w.uploadDate}</small></p>
+                                <p class="mb-1"><small>${w.description}</small></p>
+                                <p class="mb-0"><small>Files: ${w.files.map(f => f.name).join(', ')}</small></p>
+                            </div>
+                            <button class="btn btn-sm btn-danger" onclick="deleteWorkFile(${w.id})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `).join('') : 
+                '<p class="text-muted">No uploaded work files yet.</p>';
+        }
+
+        function uploadWorkFile() {
+            const files = document.getElementById('workFileUpload').files;
+            const title = document.getElementById('workTitle').value;
+            const workClass = document.getElementById('workClass').value;
+            const description = document.getElementById('workDescription').value;
+
+            if (!files || files.length === 0) {
+                addNotification('Please select at least one file', 'warning');
+                return;
+            }
+            if (!title) {
+                addNotification('Please enter a title', 'warning');
+                return;
+            }
+
+            const fileList = [];
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                // Check file type
+                const validTypes = ['.csv', '.pdf', '.doc', '.docx', '.xls', '.xlsx'];
+                const fileExt = '.' + file.name.split('.').pop().toLowerCase();
+                if (!validTypes.includes(fileExt)) {
+                    addNotification(`Invalid file type: ${file.name}. Please use CSV, PDF, Word, or Excel files.`, 'danger');
+                    continue;
+                }
+                fileList.push({
+                    name: file.name,
+                    size: file.size,
+                    type: file.type
+                });
+            }
+
+            if (fileList.length === 0) {
+                addNotification('No valid files to upload', 'danger');
+                return;
+            }
+
+            const id = Date.now();
+            uploadedWork.push({
+                id,
+                title,
+                class: workClass,
+                description,
+                files: fileList,
+                uploadDate: new Date().toLocaleDateString(),
+                uploadedBy: currentUser.name
+            });
+
+            saveData();
+            renderUploadWork();
+
+            // Clear form
+            document.getElementById('workFileUpload').value = '';
+            document.getElementById('workTitle').value = '';
+            document.getElementById('workClass').value = '';
+            document.getElementById('workDescription').value = '';
+
+            addNotification(`Uploaded ${fileList.length} file(s) successfully`, 'success');
+        }
+
+        function deleteWorkFile(id) {
+            if (confirm('Are you sure you want to delete this work file?')) {
+                uploadedWork = uploadedWork.filter(w => w.id !== id);
+                saveData();
+                renderUploadWork();
+                addNotification('Work file deleted', 'success');
+            }
+        }
+
+        // Calendar Functions
+        function renderCalendar() {
+            const monthInput = document.getElementById('calendarMonth').value;
+            const currentMonth = monthInput ? new Date(monthInput + '-01') : new Date();
+            
+            // Generate calendar
+            const year = currentMonth.getFullYear();
+            const month = currentMonth.getMonth();
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const daysInMonth = lastDay.getDate();
+            const startDay = firstDay.getDay();
+            
+            let calendarHTML = '<table class="table table-bordered">';
+            calendarHTML += '<thead><tr>';
+            ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].forEach(day => {
+                calendarHTML += `<th class="text-center">${day}</th>`;
+            });
+            calendarHTML += '</tr></thead><tbody><tr>';
+            
+            // Empty cells for days before start of month
+            for (let i = 0; i < startDay; i++) {
+                calendarHTML += '<td></td>';
+            }
+            
+            // Days of the month
+            for (let day = 1; day <= daysInMonth; day++) {
+                const currentDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const dayEvents = calendarEvents.filter(e => e.date === currentDate);
+                
+                calendarHTML += `<td class="timetable-cell" style="height: 100px; vertical-align: top; cursor: pointer;" onclick="showDayEvents('${currentDate}')">`;
+                calendarHTML += `<strong>${day}</strong><br>`;
+                
+                if (dayEvents.length > 0) {
+                    dayEvents.forEach(e => {
+                        const colors = {
+                            'Class': '#36A2EB',
+                            'Meeting': '#FFCE56',
+                            'Exam': '#FF6384',
+                            'Event': '#4BC0C0',
+                            'Deadline': '#FF9F40'
+                        };
+                        const color = colors[e.type] || '#cccccc';
+                        calendarHTML += `<div style="background: ${color}; padding: 2px; margin: 2px 0; border-radius: 3px; font-size: 0.75rem;" title="${e.title} - ${e.time}">
+                            ${e.title}
+                        </div>`;
+                    });
+                }
+                
+                calendarHTML += '</td>';
+                
+                if ((startDay + day) % 7 === 0) {
+                    calendarHTML += '</tr><tr>';
+                }
+            }
+            
+            // Fill remaining cells
+            const totalCells = startDay + daysInMonth;
+            const remainingCells = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
+            for (let i = 0; i < remainingCells; i++) {
+                calendarHTML += '<td></td>';
+            }
+            
+            calendarHTML += '</tr></tbody></table>';
+            document.getElementById('calendarView').innerHTML = calendarHTML;
+            
+            // Render upcoming events
+            const today = new Date().toISOString().split('T')[0];
+            const upcoming = calendarEvents
+                .filter(e => e.date >= today)
+                .sort((a, b) => a.date.localeCompare(b.date))
+                .slice(0, 5);
+            
+            document.getElementById('upcomingEventsList').innerHTML = upcoming.length > 0 ?
+                upcoming.map(e => `
+                    <div class="report-card mb-2">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6><span class="badge" style="background: ${getEventColor(e.type)}">${e.type}</span> ${e.title}</h6>
+                                <p class="mb-1"><small><i class="fas fa-calendar me-1"></i>${e.date} at ${e.time}</small></p>
+                                <p class="mb-0"><small>${e.description}</small></p>
+                            </div>
+                            <button class="btn btn-sm btn-danger" onclick="deleteCalendarEvent(${e.id})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `).join('') :
+                '<p class="text-muted">No upcoming events.</p>';
+        }
+
+        function getEventColor(type) {
+            const colors = {
+                'Class': '#36A2EB',
+                'Meeting': '#FFCE56',
+                'Exam': '#FF6384',
+                'Event': '#4BC0C0',
+                'Deadline': '#FF9F40'
+            };
+            return colors[type] || '#cccccc';
+        }
+
+        function showDayEvents(date) {
+            const dayEvents = calendarEvents.filter(e => e.date === date);
+            if (dayEvents.length === 0) {
+                addNotification(`No events on ${date}`, 'info');
+            } else {
+                let message = `Events on ${date}:\n`;
+                dayEvents.forEach(e => {
+                    message += `\n${e.time} - ${e.title} (${e.type})`;
+                });
+                alert(message);
+            }
+        }
+
+        function showAddCalendarEventModal() {
+            document.getElementById('eventTitle').value = '';
+            document.getElementById('eventDate').value = '';
+            document.getElementById('eventTime').value = '';
+            document.getElementById('eventType').value = 'Class';
+            document.getElementById('eventDescription').value = '';
+            new bootstrap.Modal(document.getElementById('addCalendarEventModal')).show();
+        }
+
+        function saveCalendarEvent() {
+            const title = document.getElementById('eventTitle').value;
+            const date = document.getElementById('eventDate').value;
+            const time = document.getElementById('eventTime').value;
+            const type = document.getElementById('eventType').value;
+            const description = document.getElementById('eventDescription').value;
+
+            if (!title || !date || !time) {
+                addNotification('Please fill in all required fields', 'warning');
+                return;
+            }
+
+            const id = Date.now();
+            calendarEvents.push({
+                id,
+                title,
+                date,
+                time,
+                type,
+                description,
+                createdBy: currentUser.name
+            });
+
+            saveData();
+            renderCalendar();
+            bootstrap.Modal.getInstance(document.getElementById('addCalendarEventModal')).hide();
+            addNotification('Calendar event added', 'success');
+        }
+
+        function deleteCalendarEvent(id) {
+            if (confirm('Are you sure you want to delete this event?')) {
+                calendarEvents = calendarEvents.filter(e => e.id !== id);
+                saveData();
+                renderCalendar();
+                addNotification('Calendar event deleted', 'success');
+            }
+        }
+
         // Other functions remain the same as before...
         // (Include all other functions from the previous code, like renderAdmissions, saveAdmission, etc.)
         // For brevity, assuming they are included as in the initial code.
@@ -1800,6 +2146,8 @@
                 if (target === '#grading') renderGrading();
                 if (target === '#resources') renderResources();
                 if (target === '#student-progress') renderStudentProgress();
+                if (target === '#upload-work') renderUploadWork();
+                if (target === '#calendar') renderCalendar();
             });
             const hrTabs = document.querySelector('#hrTabs');
             hrTabs.addEventListener('shown.bs.tab', e => {
@@ -3142,6 +3490,9 @@
         populateSelects();
         document.getElementById('payrollMonthFilter').value = new Date().toISOString().slice(0,7);
         document.getElementById('bulkAttendanceDate').value = new Date().toISOString().split('T')[0];
+        if (document.getElementById('calendarMonth')) {
+            document.getElementById('calendarMonth').value = new Date().toISOString().slice(0,7);
+        }
     </script>
 </body>
 </html>
