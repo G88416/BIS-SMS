@@ -1812,11 +1812,13 @@
         function updateVisibility() {
             if (!currentUser) return;
             const role = currentUser.role.toLowerCase();
+            // First, show/hide based on non-student class
+            document.querySelectorAll('.non-student').forEach(el => el.style.display = role !== 'student' ? 'block' : 'none');
+            // Then apply specific role restrictions (these override non-student)
             document.querySelectorAll('.admin-only').forEach(el => el.style.display = role === 'admin' ? 'block' : 'none');
             document.querySelectorAll('.teacher-only').forEach(el => el.style.display = role === 'teacher' ? 'block' : 'none');
             document.querySelectorAll('.parent-only').forEach(el => el.style.display = role === 'parent' ? 'block' : 'none');
             document.querySelectorAll('.student-only').forEach(el => el.style.display = role === 'student' ? 'block' : 'none');
-            document.querySelectorAll('.non-student').forEach(el => el.style.display = role !== 'student' ? 'block' : 'none');
         }
         // Show section
         function showSection(section) {
