@@ -287,6 +287,7 @@
                 </div>
                 <button class="btn btn-success mb-3" onclick="showBulkAttendanceModal()">Bulk Mark Attendance</button>
                 <button class="btn btn-info mb-3" onclick="syncBiometricAttendance()">Sync Biometric Attendance</button>
+                <button class="btn btn-danger mb-3" onclick="resetAttendance()">Reset Attendance (Save to Vault)</button>
                 <table class="table table-striped">
                     <thead><tr><th>ID</th><th>Name</th><th>Status</th><th>Actions</th></tr></thead>
                     <tbody id="attendanceTable"></tbody>
@@ -713,6 +714,28 @@
                 <div class="mt-4">
                     <button class="btn btn-secondary" onclick="backupData()">Backup Data</button>
                     <button class="btn btn-warning ms-2" onclick="restoreData()">Restore Data</button>
+                </div>
+                <div class="mt-4">
+                    <h5>Data Vault</h5>
+                    <p>The vault stores all reset and archived data for recovery purposes.</p>
+                    <div class="row mb-3">
+                        <div class="col-md-3"><div class="card card-metric p-3"><h5>Total Items</h5><h3 id="vaultTotalItems">0</h3></div></div>
+                        <div class="col-md-3"><div class="card card-metric p-3"><h5>Attendance Resets</h5><h3 id="vaultAttendanceResets">0</h3></div></div>
+                        <div class="col-md-3"><div class="card card-metric p-3"><h5>Student Resets</h5><h3 id="vaultStudentResets">0</h3></div></div>
+                        <div class="col-md-3"><div class="card card-metric p-3"><h5>Admission Resets</h5><h3 id="vaultAdmissionResets">0</h3></div></div>
+                    </div>
+                    <button class="btn btn-info mb-3" onclick="showVaultViewer()">View Vault Contents</button>
+                    <button class="btn btn-warning mb-3" onclick="exportVault()">Export Vault</button>
+                    <button class="btn btn-danger mb-3" onclick="clearVault()">Clear Vault</button>
+                    <div id="vaultContent" class="d-none mt-3">
+                        <h6>Vault Contents</h6>
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead><tr><th>Timestamp</th><th>Type</th><th>Description</th><th>Actions</th></tr></thead>
+                                <tbody id="vaultTable"></tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </section>
             <!-- Parent Portal -->
@@ -1350,6 +1373,7 @@
         var leaveChart = null;
         var performanceChart = null;
         var progressChart = null;
+        var dataVault = [];
         // MX-4051 PDF Data
         var mx4051Data = [
             { class: '1A', accession: '2890', surname: 'CHAUKE', first_name: 'Nobule', educator: 'K MOGANE' },
@@ -1424,6 +1448,7 @@
             resources = JSON.parse(localStorage.getItem('resources') || '[]');
             uploadedWork = JSON.parse(localStorage.getItem('uploadedWork') || '[]');
             calendarEvents = JSON.parse(localStorage.getItem('calendarEvents') || '[]');
+            dataVault = JSON.parse(localStorage.getItem('dataVault') || '[]');
             integrateEducatorsAsStaff();
             if (students.length === 0) generateDemoData();
         }
@@ -1484,6 +1509,7 @@
             localStorage.setItem('resources', JSON.stringify(resources));
             localStorage.setItem('uploadedWork', JSON.stringify(uploadedWork));
             localStorage.setItem('calendarEvents', JSON.stringify(calendarEvents));
+            localStorage.setItem('dataVault', JSON.stringify(dataVault));
         }
         // Login function
         function login() {
@@ -1551,7 +1577,7 @@
                 case 'communication': renderMessages(); break;
                 case 'content': renderContents(); break;
                 case 'reports': break;
-                case 'settings': loadSettings(); break;
+                case 'settings': loadSettings(); updateVaultMetrics(); break;
                 case 'parentPortal': loadParentPortal(); break;
                 case 'aiResearch': break;
             }
@@ -2277,31 +2303,107 @@
         }
         function uploadBulkAdmissions() {
             const file = document.getElementById('admissionsFile').files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, {type: 'array'});
-                    const sheet = workbook.Sheets[workbook.SheetNames[0]];
-                    const json = XLSX.utils.sheet_to_json(sheet);
-                    json.forEach(row => {
-                        if (row.name && row.grade) {
-                            const id = Date.now() + Math.random();
-                            admissions.push({
-                                id,
-                                name: row.name,
-                                grade: row.grade,
-                                status: row.status || 'Pending'
-                            });
+            if (!file) {
+                addNotification('Please select a file', 'warning');
+                return;
+            }
+            
+            const fileExt = file.name.split('.').pop().toLowerCase();
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                try {
+                    let jsonData = [];
+                    
+                    // Handle different file formats
+                    if (fileExt === 'csv' || fileExt === 'xlsx' || fileExt === 'xls') {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, {type: 'array'});
+                        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                        jsonData = XLSX.utils.sheet_to_json(sheet);
+                    } else if (fileExt === 'pdf') {
+                        addNotification('PDF parsing simulated - please use CSV/Excel for best results', 'info');
+                        jsonData = [];
+                    } else if (fileExt === 'doc' || fileExt === 'docx') {
+                        addNotification('Word document parsing simulated - please use CSV/Excel for best results', 'info');
+                        jsonData = [];
+                    }
+                    
+                    // Validate and preview data
+                    const validRecords = [];
+                    const invalidRecords = [];
+                    
+                    jsonData.forEach((row, index) => {
+                        const record = {
+                            name: row.name || row.Name || row.NAME || row.first_name || row['First Name'] || '',
+                            grade: row.grade || row.Grade || row.GRADE || row.class || row.Class || '',
+                            status: row.status || row.Status || 'Pending',
+                            username: row.username || row.Username || '',
+                            password: row.password || row.Password || ''
+                        };
+                        
+                        if (record.name && record.grade) {
+                            validRecords.push(record);
+                        } else {
+                            invalidRecords.push({row: index + 1, reason: 'Missing name or grade'});
                         }
                     });
-                    saveData();
-                    renderAdmissions();
-                    addNotification('Bulk admissions imported', 'success');
-                };
-                reader.readAsArrayBuffer(file);
-            }
+                    
+                    // Display preview
+                    let previewHTML = `<div class="alert alert-info">
+                        <strong>Preview:</strong><br>
+                        Valid records: ${validRecords.length}<br>
+                        Invalid records: ${invalidRecords.length}
+                    </div>`;
+                    
+                    if (invalidRecords.length > 0) {
+                        previewHTML += `<div class="alert alert-warning">
+                            <strong>Invalid Records:</strong><br>
+                            ${invalidRecords.map(r => `Row ${r.row}: ${r.reason}`).join('<br>')}
+                        </div>`;
+                    }
+                    
+                    if (validRecords.length > 0) {
+                        previewHTML += `<div class="table-responsive" style="max-height: 200px; overflow-y: auto;">
+                            <table class="table table-sm">
+                                <thead><tr><th>Name</th><th>Grade</th><th>Status</th></tr></thead>
+                                <tbody>
+                                    ${validRecords.slice(0, 10).map(r => `<tr><td>${r.name}</td><td>${r.grade}</td><td>${r.status}</td></tr>`).join('')}
+                                    ${validRecords.length > 10 ? `<tr><td colspan="3">...and ${validRecords.length - 10} more</td></tr>` : ''}
+                                </tbody>
+                            </table>
+                        </div>`;
+                        previewHTML += `<button class="btn btn-primary mt-2" onclick="confirmAdmissionImport(${JSON.stringify(validRecords).replace(/"/g, '&quot;')})">Import ${validRecords.length} Records</button>`;
+                    }
+                    
+                    document.getElementById('admissionsPreview').innerHTML = previewHTML;
+                    
+                } catch (error) {
+                    addNotification('Error parsing file: ' + error.message, 'danger');
+                    console.error(error);
+                }
+            };
+            
+            reader.readAsArrayBuffer(file);
+        }
+        
+        function confirmAdmissionImport(records) {
+            records.forEach(record => {
+                const id = Date.now() + Math.random();
+                admissions.push({
+                    id,
+                    name: record.name,
+                    grade: record.grade,
+                    status: record.status,
+                    username: record.username,
+                    password: record.password
+                });
+            });
+            saveData();
+            renderAdmissions();
             bootstrap.Modal.getInstance(document.getElementById('bulkAdmissionModal')).hide();
+            addNotification(`Successfully imported ${records.length} admissions`, 'success');
+            logAudit('Bulk Import', `Imported ${records.length} admissions`, 'Low');
         }
 
         // Student Management
@@ -2393,35 +2495,113 @@
         }
         function uploadBulkStudents() {
             const file = document.getElementById('studentFile').files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, {type: 'array'});
-                    const sheet = workbook.Sheets[workbook.SheetNames[0]];
-                    const json = XLSX.utils.sheet_to_json(sheet);
-                    json.forEach(row => {
-                        if (row.name && row.grade) {
-                            const id = Date.now() + Math.random();
-                            students.push({
-                                id,
-                                name: row.name,
-                                grade: row.grade,
-                                parent: row.parent || 'Unknown',
-                                status: 'Active',
-                                accession: row.accession || '',
-                                educator: row.educator || 'Unknown'
-                            });
+            if (!file) {
+                addNotification('Please select a file', 'warning');
+                return;
+            }
+            
+            const fileExt = file.name.split('.').pop().toLowerCase();
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                try {
+                    let jsonData = [];
+                    
+                    // Handle different file formats
+                    if (fileExt === 'csv' || fileExt === 'xlsx' || fileExt === 'xls') {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, {type: 'array'});
+                        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                        jsonData = XLSX.utils.sheet_to_json(sheet);
+                    } else if (fileExt === 'pdf') {
+                        addNotification('PDF parsing simulated - please use CSV/Excel for best results', 'info');
+                        jsonData = [];
+                    } else if (fileExt === 'doc' || fileExt === 'docx') {
+                        addNotification('Word document parsing simulated - please use CSV/Excel for best results', 'info');
+                        jsonData = [];
+                    }
+                    
+                    // Validate and preview data
+                    const validRecords = [];
+                    const invalidRecords = [];
+                    
+                    jsonData.forEach((row, index) => {
+                        const record = {
+                            name: row.name || row.Name || row.NAME || 
+                                  (row.first_name && row.surname ? `${row.first_name} ${row.surname}` : '') ||
+                                  (row['First Name'] && row['Surname'] ? `${row['First Name']} ${row['Surname']}` : ''),
+                            grade: row.grade || row.Grade || row.GRADE || row.class || row.Class || '',
+                            parent: row.parent || row.Parent || row.PARENT || 'Unknown',
+                            accession: row.accession || row.Accession || row.ACCESSION || '',
+                            educator: row.educator || row.Educator || row.EDUCATOR || 'Unknown',
+                            status: row.status || row.Status || 'Active'
+                        };
+                        
+                        if (record.name && record.grade) {
+                            validRecords.push(record);
+                        } else {
+                            invalidRecords.push({row: index + 1, reason: 'Missing name or grade'});
                         }
                     });
-                    saveData();
-                    renderStudents();
-                    integrateEducatorsAsStaff();
-                    addNotification('Bulk students imported', 'success');
-                };
-                reader.readAsArrayBuffer(file);
-            }
+                    
+                    // Display preview
+                    let previewHTML = `<div class="alert alert-info">
+                        <strong>Preview:</strong><br>
+                        Valid records: ${validRecords.length}<br>
+                        Invalid records: ${invalidRecords.length}
+                    </div>`;
+                    
+                    if (invalidRecords.length > 0) {
+                        previewHTML += `<div class="alert alert-warning">
+                            <strong>Invalid Records:</strong><br>
+                            ${invalidRecords.slice(0, 5).map(r => `Row ${r.row}: ${r.reason}`).join('<br>')}
+                            ${invalidRecords.length > 5 ? `<br>...and ${invalidRecords.length - 5} more` : ''}
+                        </div>`;
+                    }
+                    
+                    if (validRecords.length > 0) {
+                        previewHTML += `<div class="table-responsive" style="max-height: 200px; overflow-y: auto;">
+                            <table class="table table-sm">
+                                <thead><tr><th>Name</th><th>Grade</th><th>Parent</th><th>Accession</th><th>Educator</th></tr></thead>
+                                <tbody>
+                                    ${validRecords.slice(0, 10).map(r => `<tr><td>${r.name}</td><td>${r.grade}</td><td>${r.parent}</td><td>${r.accession}</td><td>${r.educator}</td></tr>`).join('')}
+                                    ${validRecords.length > 10 ? `<tr><td colspan="5">...and ${validRecords.length - 10} more</td></tr>` : ''}
+                                </tbody>
+                            </table>
+                        </div>`;
+                        previewHTML += `<button class="btn btn-primary mt-2" onclick="confirmStudentImport(${JSON.stringify(validRecords).replace(/"/g, '&quot;')})">Import ${validRecords.length} Students</button>`;
+                    }
+                    
+                    document.getElementById('studentPreview').innerHTML = previewHTML;
+                    
+                } catch (error) {
+                    addNotification('Error parsing file: ' + error.message, 'danger');
+                    console.error(error);
+                }
+            };
+            
+            reader.readAsArrayBuffer(file);
+        }
+        
+        function confirmStudentImport(records) {
+            records.forEach(record => {
+                const id = Date.now() + Math.random();
+                students.push({
+                    id,
+                    name: record.name,
+                    grade: record.grade,
+                    parent: record.parent,
+                    status: record.status,
+                    accession: record.accession,
+                    educator: record.educator
+                });
+            });
+            saveData();
+            renderStudents();
+            integrateEducatorsAsStaff();
             bootstrap.Modal.getInstance(document.getElementById('bulkStudentModal')).hide();
+            addNotification(`Successfully imported ${records.length} students`, 'success');
+            logAudit('Bulk Import', `Imported ${records.length} students`, 'Low');
         }
         function resetAllStudents() {
             if (confirm('Are you sure you want to reset ALL students? This will permanently delete all student records. This action cannot be undone.')) {
@@ -2499,6 +2679,32 @@
             });
             saveData();
             loadAttendance();
+        }
+        
+        function resetAttendance() {
+            if (confirm('Are you sure you want to reset attendance? All attendance records will be saved to the vault and cleared from the system.')) {
+                if (confirm('This is your final warning. Attendance data will be moved to vault. Continue?')) {
+                    // Save to vault
+                    const vaultEntry = {
+                        id: Date.now(),
+                        timestamp: new Date().toISOString(),
+                        type: 'Attendance Reset',
+                        description: `Reset ${Object.keys(attendanceRecords).length} days of attendance records`,
+                        data: JSON.parse(JSON.stringify(attendanceRecords)),
+                        user: currentUser ? currentUser.name : 'Unknown'
+                    };
+                    dataVault.push(vaultEntry);
+                    
+                    // Clear attendance
+                    attendanceRecords = {};
+                    
+                    saveData();
+                    loadAttendance();
+                    updateVaultMetrics();
+                    addNotification('Attendance reset and saved to vault', 'warning');
+                    logAudit('Attendance Reset', 'Reset all attendance records to vault', 'Medium');
+                }
+            }
         }
 
         // Fee Management
@@ -3427,6 +3633,110 @@
             if (confirm('Restore will overwrite data?')) {
                 // Implement file upload and restore
                 addNotification('Data restored (mock)', 'success');
+            }
+        }
+        
+        // Vault Functions
+        function updateVaultMetrics() {
+            document.getElementById('vaultTotalItems').textContent = dataVault.length;
+            document.getElementById('vaultAttendanceResets').textContent = dataVault.filter(v => v.type === 'Attendance Reset').length;
+            document.getElementById('vaultStudentResets').textContent = dataVault.filter(v => v.type === 'Student Reset').length;
+            document.getElementById('vaultAdmissionResets').textContent = dataVault.filter(v => v.type === 'Admission Reset').length;
+        }
+        
+        function showVaultViewer() {
+            const vaultContent = document.getElementById('vaultContent');
+            if (vaultContent.classList.contains('d-none')) {
+                vaultContent.classList.remove('d-none');
+                renderVaultTable();
+            } else {
+                vaultContent.classList.add('d-none');
+            }
+        }
+        
+        function renderVaultTable() {
+            const tbody = document.getElementById('vaultTable');
+            tbody.innerHTML = dataVault.slice().reverse().map(item => `
+                <tr>
+                    <td>${new Date(item.timestamp).toLocaleString()}</td>
+                    <td><span class="badge bg-info">${item.type}</span></td>
+                    <td>${item.description}<br><small class="text-muted">By: ${item.user}</small></td>
+                    <td>
+                        <button class="btn btn-sm btn-primary" onclick="viewVaultItem(${item.id})">View</button>
+                        <button class="btn btn-sm btn-success" onclick="restoreVaultItem(${item.id})">Restore</button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteVaultItem(${item.id})">Delete</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        function viewVaultItem(id) {
+            const item = dataVault.find(v => v.id === id);
+            if (item) {
+                const dataPreview = JSON.stringify(item.data, null, 2).substring(0, 500) + '...';
+                alert(`Vault Item Details:\n\nType: ${item.type}\nTimestamp: ${new Date(item.timestamp).toLocaleString()}\nDescription: ${item.description}\nUser: ${item.user}\n\nData Preview:\n${dataPreview}`);
+            }
+        }
+        
+        function restoreVaultItem(id) {
+            const item = dataVault.find(v => v.id === id);
+            if (!item) return;
+            
+            if (confirm(`Restore ${item.type}? This will overwrite current data.`)) {
+                switch(item.type) {
+                    case 'Attendance Reset':
+                        attendanceRecords = JSON.parse(JSON.stringify(item.data));
+                        loadAttendance();
+                        addNotification('Attendance data restored from vault', 'success');
+                        break;
+                    case 'Student Reset':
+                        students = JSON.parse(JSON.stringify(item.data));
+                        renderStudents();
+                        addNotification('Student data restored from vault', 'success');
+                        break;
+                    case 'Admission Reset':
+                        admissions = JSON.parse(JSON.stringify(item.data));
+                        renderAdmissions();
+                        addNotification('Admission data restored from vault', 'success');
+                        break;
+                }
+                saveData();
+                logAudit('Vault Restore', `Restored ${item.type} from vault`, 'Medium');
+            }
+        }
+        
+        function deleteVaultItem(id) {
+            if (confirm('Delete this vault item permanently?')) {
+                dataVault = dataVault.filter(v => v.id !== id);
+                saveData();
+                renderVaultTable();
+                updateVaultMetrics();
+                addNotification('Vault item deleted', 'warning');
+                logAudit('Vault Delete', 'Deleted vault item', 'Low');
+            }
+        }
+        
+        function exportVault() {
+            const blob = new Blob([JSON.stringify(dataVault, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `vault-export-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            addNotification('Vault exported successfully', 'success');
+            logAudit('Vault Export', 'Exported vault data', 'Low');
+        }
+        
+        function clearVault() {
+            if (confirm('Clear all vault data? This cannot be undone.')) {
+                if (confirm('Final warning: All vault items will be permanently deleted.')) {
+                    dataVault = [];
+                    saveData();
+                    renderVaultTable();
+                    updateVaultMetrics();
+                    addNotification('Vault cleared', 'danger');
+                    logAudit('Vault Clear', 'Cleared all vault data', 'High');
+                }
             }
         }
 
