@@ -253,7 +253,7 @@
                     <button class="btn btn-outline-secondary" onclick="searchAdmissions()">Search</button>
                 </div>
                 <table class="table table-striped">
-                    <thead><tr><th>ID</th><th>Name</th><th>Grade</th><th>Status</th><th>Documents</th><th>Actions</th></tr></thead>
+                    <thead><tr><th>Number</th><th>Accession Number</th><th>Surname</th><th>First Name</th><th>Grade</th><th>Status</th><th>Documents</th><th>Actions</th></tr></thead>
                     <tbody id="admissionTable"></tbody>
                 </table>
             </section>
@@ -268,7 +268,7 @@
                     <button class="btn btn-outline-secondary" onclick="searchStudents()">Search</button>
                 </div>
                 <table class="table table-striped">
-                    <thead><tr><th>ID</th><th>Name</th><th>Grade</th><th>Parent</th><th>Status</th><th>Documents</th><th>Actions</th></tr></thead>
+                    <thead><tr><th>Number</th><th>Accession Number</th><th>Surname</th><th>First Name</th><th>Grade</th><th>Parent</th><th>Status</th><th>Documents</th><th>Actions</th></tr></thead>
                     <tbody id="studentTable"></tbody>
                 </table>
             </section>
@@ -782,7 +782,9 @@
                             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                         </div>
                         <div class="modal-body">
-                            <input type="text" id="admissionName" class="form-control mb-2" placeholder="Name">
+                            <input type="text" id="admissionAccession" class="form-control mb-2" placeholder="Accession Number">
+                            <input type="text" id="admissionSurname" class="form-control mb-2" placeholder="Surname">
+                            <input type="text" id="admissionFirstName" class="form-control mb-2" placeholder="First Name">
                             <input type="text" id="admissionGrade" class="form-control mb-2" placeholder="Grade">
                             <input type="text" id="admissionUsername" class="form-control mb-2" placeholder="Student Username">
                             <input type="password" id="admissionPassword" class="form-control mb-2" placeholder="Student Password">
@@ -806,10 +808,11 @@
                             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                         </div>
                         <div class="modal-body">
-                            <input type="text" id="studentName" class="form-control mb-2" placeholder="Full Name">
+                            <input type="text" id="studentAccession" class="form-control mb-2" placeholder="Accession Number">
+                            <input type="text" id="studentSurname" class="form-control mb-2" placeholder="Surname">
+                            <input type="text" id="studentFirstName" class="form-control mb-2" placeholder="First Name">
                             <input type="text" id="studentGrade" class="form-control mb-2" placeholder="Grade">
                             <input type="text" id="studentParent" class="form-control mb-2" placeholder="Parent Name">
-                            <input type="text" id="studentAccession" class="form-control mb-2" placeholder="Accession Number">
                             <input type="text" id="studentEducator" class="form-control mb-2" placeholder="Educator">
                             <select id="studentStatus" class="form-control mb-2">
                                 <option value="Active">Active</option>
@@ -2224,13 +2227,25 @@
         }
         function renderAdmissions() {
             const search = document.getElementById('admissionSearch').value.toLowerCase();
-            const filtered = admissions.filter(a => 
-                a.name.toLowerCase().includes(search) || a.grade.toLowerCase().includes(search)
-            );
-            document.getElementById('admissionTable').innerHTML = filtered.map(a => `
+            const filtered = admissions.filter(a => {
+                const surname = a.surname || a.name?.split(' ')[0] || '';
+                const firstName = a.firstName || a.name?.split(' ').slice(1).join(' ') || '';
+                const accession = a.accession || '';
+                return surname.toLowerCase().includes(search) || 
+                       firstName.toLowerCase().includes(search) || 
+                       accession.toLowerCase().includes(search) ||
+                       a.grade.toLowerCase().includes(search);
+            });
+            document.getElementById('admissionTable').innerHTML = filtered.map(a => {
+                const surname = a.surname || a.name?.split(' ')[0] || '';
+                const firstName = a.firstName || a.name?.split(' ').slice(1).join(' ') || '';
+                const accession = a.accession || '';
+                return `
                 <tr>
                     <td>${a.id}</td>
-                    <td>${a.name}</td>
+                    <td>${accession}</td>
+                    <td>${surname}</td>
+                    <td>${firstName}</td>
                     <td>${a.grade}</td>
                     <td><span class="badge bg-${a.status === 'Approved' ? 'success' : 'warning'}">${a.status}</span></td>
                     <td><button class="btn btn-sm btn-info" onclick="viewAdmissionDocuments(${a.id})">View</button></td>
@@ -2239,17 +2254,20 @@
                         <button class="btn btn-sm btn-danger" onclick="deleteAdmission(${a.id})">Delete</button>
                     </td>
                 </tr>
-            `).join('');
+            `}).join('');
         }
         function saveAdmission() {
-            const name = document.getElementById('admissionName').value;
+            const accession = document.getElementById('admissionAccession').value;
+            const surname = document.getElementById('admissionSurname').value;
+            const firstName = document.getElementById('admissionFirstName').value;
             const grade = document.getElementById('admissionGrade').value;
             const username = document.getElementById('admissionUsername').value;
             const password = document.getElementById('admissionPassword').value;
             const status = document.getElementById('admissionStatus').value;
-            if (name && grade) {
+            if (surname && firstName && grade) {
                 const id = Date.now();
-                admissions.push({ id, name, grade, username, password, status });
+                const name = surname + ' ' + firstName;
+                admissions.push({ id, name, surname, firstName, accession, grade, username, password, status });
                 users.push({ username, password, name, role: 'Student' });
                 saveData();
                 renderAdmissions();
@@ -2260,7 +2278,9 @@
         function editAdmission(id) {
             const adm = admissions.find(a => a.id === id);
             if (adm) {
-                document.getElementById('admissionName').value = adm.name;
+                document.getElementById('admissionAccession').value = adm.accession || '';
+                document.getElementById('admissionSurname').value = adm.surname || adm.name?.split(' ')[0] || '';
+                document.getElementById('admissionFirstName').value = adm.firstName || adm.name?.split(' ').slice(1).join(' ') || '';
                 document.getElementById('admissionGrade').value = adm.grade;
                 document.getElementById('admissionUsername').value = adm.username;
                 document.getElementById('admissionPassword').value = adm.password;
@@ -2269,7 +2289,10 @@
                 const saveBtn = document.querySelector('#addAdmissionModal .btn-primary');
                 saveBtn.textContent = 'Update';
                 saveBtn.onclick = () => {
-                    adm.name = document.getElementById('admissionName').value;
+                    adm.accession = document.getElementById('admissionAccession').value;
+                    adm.surname = document.getElementById('admissionSurname').value;
+                    adm.firstName = document.getElementById('admissionFirstName').value;
+                    adm.name = adm.surname + ' ' + adm.firstName;
                     adm.grade = document.getElementById('admissionGrade').value;
                     adm.username = document.getElementById('admissionUsername').value;
                     adm.password = document.getElementById('admissionPassword').value;
@@ -2412,13 +2435,25 @@
         }
         function renderStudents() {
             const search = document.getElementById('studentSearch').value.toLowerCase();
-            const filtered = students.filter(s => 
-                s.name.toLowerCase().includes(search) || s.grade.toLowerCase().includes(search)
-            );
-            document.getElementById('studentTable').innerHTML = filtered.map(s => `
+            const filtered = students.filter(s => {
+                const surname = s.surname || s.name?.split(' ')[0] || '';
+                const firstName = s.firstName || s.name?.split(' ').slice(1).join(' ') || '';
+                const accession = s.accession || '';
+                return surname.toLowerCase().includes(search) || 
+                       firstName.toLowerCase().includes(search) || 
+                       accession.toLowerCase().includes(search) ||
+                       s.grade.toLowerCase().includes(search);
+            });
+            document.getElementById('studentTable').innerHTML = filtered.map(s => {
+                const surname = s.surname || s.name?.split(' ')[0] || '';
+                const firstName = s.firstName || s.name?.split(' ').slice(1).join(' ') || '';
+                const accession = s.accession || '';
+                return `
                 <tr>
-                    <td>${s.accession || s.id}</td>
-                    <td>${s.name}</td>
+                    <td>${s.id}</td>
+                    <td>${accession}</td>
+                    <td>${surname}</td>
+                    <td>${firstName}</td>
                     <td>${s.grade}</td>
                     <td>${s.parent}</td>
                     <td><span class="badge bg-${s.status === 'Active' ? 'success' : 'warning'}">${s.status}</span></td>
@@ -2428,18 +2463,20 @@
                         <button class="btn btn-sm btn-danger" onclick="deleteStudent(${s.id})">Delete</button>
                     </td>
                 </tr>
-            `).join('');
+            `}).join('');
         }
         function saveStudent() {
-            const name = document.getElementById('studentName').value;
+            const accession = document.getElementById('studentAccession').value;
+            const surname = document.getElementById('studentSurname').value;
+            const firstName = document.getElementById('studentFirstName').value;
             const grade = document.getElementById('studentGrade').value;
             const parent = document.getElementById('studentParent').value;
-            const accession = document.getElementById('studentAccession').value;
             const educator = document.getElementById('studentEducator').value;
             const status = document.getElementById('studentStatus').value;
-            if (name && grade) {
+            if (surname && firstName && grade) {
                 const id = Date.now();
-                students.push({ id, name, grade, parent, status, accession, educator });
+                const name = surname + ' ' + firstName;
+                students.push({ id, name, surname, firstName, accession, grade, parent, status, educator });
                 saveData();
                 renderStudents();
                 integrateEducatorsAsStaff();
@@ -2450,20 +2487,23 @@
         function editStudent(id) {
             const stu = students.find(s => s.id === id);
             if (stu) {
-                document.getElementById('studentName').value = stu.name;
+                document.getElementById('studentAccession').value = stu.accession || '';
+                document.getElementById('studentSurname').value = stu.surname || stu.name?.split(' ')[0] || '';
+                document.getElementById('studentFirstName').value = stu.firstName || stu.name?.split(' ').slice(1).join(' ') || '';
                 document.getElementById('studentGrade').value = stu.grade;
                 document.getElementById('studentParent').value = stu.parent;
-                document.getElementById('studentAccession').value = stu.accession;
                 document.getElementById('studentEducator').value = stu.educator;
                 document.getElementById('studentStatus').value = stu.status;
                 // Override save to update
                 const saveBtn = document.querySelector('#addStudentModal .btn-primary');
                 saveBtn.textContent = 'Update';
                 saveBtn.onclick = () => {
-                    stu.name = document.getElementById('studentName').value;
+                    stu.accession = document.getElementById('studentAccession').value;
+                    stu.surname = document.getElementById('studentSurname').value;
+                    stu.firstName = document.getElementById('studentFirstName').value;
+                    stu.name = stu.surname + ' ' + stu.firstName;
                     stu.grade = document.getElementById('studentGrade').value;
                     stu.parent = document.getElementById('studentParent').value;
-                    stu.accession = document.getElementById('studentAccession').value;
                     stu.educator = document.getElementById('studentEducator').value;
                     stu.status = document.getElementById('studentStatus').value;
                     saveData();
