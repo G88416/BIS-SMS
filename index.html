@@ -286,6 +286,7 @@
                     </div>
                 </div>
                 <button class="btn btn-success mb-3" onclick="showBulkAttendanceModal()">Bulk Mark Attendance</button>
+                <button class="btn btn-secondary mb-3" onclick="showImportAttendanceModal()">Import Attendance (CSV/Excel)</button>
                 <button class="btn btn-info mb-3" onclick="syncBiometricAttendance()">Sync Biometric Attendance</button>
                 <button class="btn btn-danger mb-3" onclick="resetAttendance()">Reset Attendance (Save to Vault)</button>
                 <table class="table table-striped">
@@ -495,6 +496,7 @@
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <button class="btn btn-primary" onclick="showAddStaffModal()">Add Staff</button>
+                                <button class="btn btn-success ms-2" onclick="showBulkStaffModal()">Bulk Import Staff</button>
                                 <button class="btn btn-secondary ms-2" onclick="syncStaffBiometric()">Sync Biometric</button>
                                 <button class="btn btn-info ms-2" onclick="generateStaffReport()">Generate Report</button>
                             </div>
@@ -892,6 +894,24 @@
                     </div>
                 </div>
             </div>
+            <!-- Import Attendance Modal -->
+            <div class="modal fade" id="importAttendanceModal">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Import Attendance (CSV/Excel/PDF/Word)</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <input type="file" id="attendanceFile" class="form-control" accept=".csv,.xlsx,.pdf,.doc,.docx">
+                            <div id="attendancePreview" class="mt-3"></div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-primary" onclick="uploadBulkAttendance()">Import</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <!-- Generate Invoice Modal -->
             <div class="modal fade" id="generateInvoiceModal">
                 <div class="modal-dialog">
@@ -1076,6 +1096,24 @@
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-primary" onclick="uploadBulkAdmissions()">Import</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Bulk Staff Import Modal -->
+            <div class="modal fade" id="bulkStaffModal">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Bulk Import Staff (CSV/Excel/PDF/Word)</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <input type="file" id="staffFile" class="form-control" accept=".csv,.xlsx,.pdf,.doc,.docx">
+                            <div id="staffPreview" class="mt-3"></div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-primary" onclick="uploadBulkStaff()">Import</button>
                         </div>
                     </div>
                 </div>
@@ -2324,6 +2362,103 @@
         function showBulkAdmissionModal() {
             new bootstrap.Modal(document.getElementById('bulkAdmissionModal')).show();
         }
+        
+        // Advanced Import Algorithm - Intelligently handles missing data and flexible field mapping
+        function advancedImportParser(jsonData, fieldMappings, requiredFields = [], autoFillDefaults = {}) {
+            const validRecords = [];
+            const invalidRecords = [];
+            const warnings = [];
+            
+            jsonData.forEach((row, index) => {
+                const record = {};
+                let missingRequired = [];
+                
+                // Apply field mappings with flexible column name recognition
+                for (const [targetField, possibleColumns] of Object.entries(fieldMappings)) {
+                    let value = null;
+                    
+                    // Try each possible column name variant
+                    for (const col of possibleColumns) {
+                        if (row[col] !== undefined && row[col] !== null && row[col] !== '') {
+                            value = row[col];
+                            break;
+                        }
+                    }
+                    
+                    // Apply auto-fill defaults for missing non-required fields
+                    if ((value === null || value === '') && autoFillDefaults[targetField] !== undefined) {
+                        value = autoFillDefaults[targetField];
+                        warnings.push({row: index + 1, field: targetField, message: `Auto-filled with default: ${value}`});
+                    }
+                    
+                    // Auto-generate values for certain fields if missing
+                    if ((value === null || value === '') && targetField === 'accession') {
+                        value = `AUTO-${Date.now()}-${index}`;
+                        warnings.push({row: index + 1, field: targetField, message: 'Auto-generated accession number'});
+                    }
+                    
+                    if ((value === null || value === '') && targetField === 'username') {
+                        const name = record.name || record.firstName || '';
+                        if (name) {
+                            value = name.toLowerCase().replace(/\s+/g, '') + Math.floor(Math.random() * 1000);
+                            warnings.push({row: index + 1, field: targetField, message: `Auto-generated username: ${value}`});
+                        }
+                    }
+                    
+                    if ((value === null || value === '') && targetField === 'password') {
+                        value = 'temp' + Math.floor(Math.random() * 10000);
+                        warnings.push({row: index + 1, field: targetField, message: 'Auto-generated temporary password'});
+                    }
+                    
+                    record[targetField] = value || '';
+                    
+                    // Track missing required fields
+                    if (requiredFields.includes(targetField) && (!value || value === '')) {
+                        missingRequired.push(targetField);
+                    }
+                }
+                
+                // Smart name handling - combine first and last if full name not provided
+                if (!record.name && (record.firstName || record.surname)) {
+                    record.name = `${record.surname || ''} ${record.firstName || ''}`.trim();
+                    if (record.name) {
+                        warnings.push({row: index + 1, field: 'name', message: 'Combined from first and last name'});
+                    }
+                }
+                
+                // Split name if first and last not provided but name is
+                if (!record.firstName && !record.surname && record.name) {
+                    const nameParts = record.name.split(' ');
+                    record.surname = nameParts[0] || '';
+                    record.firstName = nameParts.slice(1).join(' ') || '';
+                    warnings.push({row: index + 1, field: 'name', message: 'Split into first and last name'});
+                }
+                
+                // Validate and categorize record
+                if (missingRequired.length === 0) {
+                    validRecords.push(record);
+                } else {
+                    invalidRecords.push({
+                        row: index + 1,
+                        reason: `Missing required fields: ${missingRequired.join(', ')}`,
+                        data: record
+                    });
+                }
+            });
+            
+            return {
+                validRecords,
+                invalidRecords,
+                warnings,
+                summary: {
+                    total: jsonData.length,
+                    valid: validRecords.length,
+                    invalid: invalidRecords.length,
+                    warnings: warnings.length
+                }
+            };
+        }
+        
         function uploadBulkAdmissions() {
             const file = document.getElementById('admissionsFile').files[0];
             if (!file) {
@@ -2352,51 +2487,66 @@
                         jsonData = [];
                     }
                     
-                    // Validate and preview data
-                    const validRecords = [];
-                    const invalidRecords = [];
+                    if (jsonData.length === 0) {
+                        addNotification('No data found in file', 'warning');
+                        return;
+                    }
                     
-                    jsonData.forEach((row, index) => {
-                        const record = {
-                            name: row.name || row.Name || row.NAME || row.first_name || row['First Name'] || '',
-                            grade: row.grade || row.Grade || row.GRADE || row.class || row.Class || '',
-                            status: row.status || row.Status || 'Pending',
-                            username: row.username || row.Username || '',
-                            password: row.password || row.Password || ''
-                        };
-                        
-                        if (record.name && record.grade) {
-                            validRecords.push(record);
-                        } else {
-                            invalidRecords.push({row: index + 1, reason: 'Missing name or grade'});
-                        }
-                    });
+                    // Use advanced import algorithm
+                    const fieldMappings = {
+                        name: ['name', 'Name', 'NAME', 'full_name', 'Full Name', 'fullname'],
+                        surname: ['surname', 'Surname', 'SURNAME', 'last_name', 'Last Name', 'lastname', 'LastName'],
+                        firstName: ['firstname', 'FirstName', 'firstName', 'first_name', 'First Name', 'FIRST_NAME', 'given_name'],
+                        accession: ['accession', 'Accession', 'ACCESSION', 'accession_number', 'Accession Number', 'id', 'ID', 'student_id'],
+                        grade: ['grade', 'Grade', 'GRADE', 'class', 'Class', 'CLASS', 'level', 'Level'],
+                        status: ['status', 'Status', 'STATUS', 'state', 'State'],
+                        username: ['username', 'Username', 'USERNAME', 'user', 'User', 'login'],
+                        password: ['password', 'Password', 'PASSWORD', 'pass', 'Pass']
+                    };
                     
-                    // Display preview
+                    const requiredFields = ['grade'];
+                    const autoFillDefaults = {
+                        status: 'Pending'
+                    };
+                    
+                    const result = advancedImportParser(jsonData, fieldMappings, requiredFields, autoFillDefaults);
+                    
+                    // Display preview with advanced information
                     let previewHTML = `<div class="alert alert-info">
-                        <strong>Preview:</strong><br>
-                        Valid records: ${validRecords.length}<br>
-                        Invalid records: ${invalidRecords.length}
+                        <strong>🚀 Advanced Import Analysis:</strong><br>
+                        Total records: ${result.summary.total}<br>
+                        ✅ Valid records: ${result.summary.valid}<br>
+                        ❌ Invalid records: ${result.summary.invalid}<br>
+                        ⚠️ Auto-corrections applied: ${result.summary.warnings}
                     </div>`;
                     
-                    if (invalidRecords.length > 0) {
+                    if (result.warnings.length > 0) {
                         previewHTML += `<div class="alert alert-warning">
-                            <strong>Invalid Records:</strong><br>
-                            ${invalidRecords.map(r => `Row ${r.row}: ${r.reason}`).join('<br>')}
+                            <strong>⚠️ Auto-Corrections Applied:</strong><br>
+                            ${result.warnings.slice(0, 10).map(w => `Row ${w.row}, ${w.field}: ${w.message}`).join('<br>')}
+                            ${result.warnings.length > 10 ? `<br>...and ${result.warnings.length - 10} more auto-corrections` : ''}
                         </div>`;
                     }
                     
-                    if (validRecords.length > 0) {
+                    if (result.invalidRecords.length > 0) {
+                        previewHTML += `<div class="alert alert-danger">
+                            <strong>❌ Invalid Records (will be skipped):</strong><br>
+                            ${result.invalidRecords.slice(0, 5).map(r => `Row ${r.row}: ${r.reason}`).join('<br>')}
+                            ${result.invalidRecords.length > 5 ? `<br>...and ${result.invalidRecords.length - 5} more invalid records` : ''}
+                        </div>`;
+                    }
+                    
+                    if (result.validRecords.length > 0) {
                         previewHTML += `<div class="table-responsive" style="max-height: 200px; overflow-y: auto;">
                             <table class="table table-sm">
-                                <thead><tr><th>Name</th><th>Grade</th><th>Status</th></tr></thead>
+                                <thead><tr><th>Name</th><th>Accession</th><th>Grade</th><th>Status</th><th>Username</th></tr></thead>
                                 <tbody>
-                                    ${validRecords.slice(0, 10).map(r => `<tr><td>${r.name}</td><td>${r.grade}</td><td>${r.status}</td></tr>`).join('')}
-                                    ${validRecords.length > 10 ? `<tr><td colspan="3">...and ${validRecords.length - 10} more</td></tr>` : ''}
+                                    ${result.validRecords.slice(0, 10).map(r => `<tr><td>${r.name || (r.surname + ' ' + r.firstName)}</td><td>${r.accession}</td><td>${r.grade}</td><td>${r.status}</td><td>${r.username}</td></tr>`).join('')}
+                                    ${result.validRecords.length > 10 ? `<tr><td colspan="5">...and ${result.validRecords.length - 10} more</td></tr>` : ''}
                                 </tbody>
                             </table>
                         </div>`;
-                        previewHTML += `<button class="btn btn-primary mt-2" onclick="confirmAdmissionImport(${JSON.stringify(validRecords).replace(/"/g, '&quot;')})">Import ${validRecords.length} Records</button>`;
+                        previewHTML += `<button class="btn btn-primary mt-2" onclick='confirmAdmissionImport(${JSON.stringify(result.validRecords)})'>Import ${result.validRecords.length} Records</button>`;
                     }
                     
                     document.getElementById('admissionsPreview').innerHTML = previewHTML;
@@ -2413,20 +2563,34 @@
         function confirmAdmissionImport(records) {
             records.forEach(record => {
                 const id = Date.now() + Math.random();
+                const name = record.name || `${record.surname} ${record.firstName}`.trim();
                 admissions.push({
                     id,
-                    name: record.name,
+                    name: name,
+                    surname: record.surname || name.split(' ')[0],
+                    firstName: record.firstName || name.split(' ').slice(1).join(' '),
+                    accession: record.accession,
                     grade: record.grade,
                     status: record.status,
                     username: record.username,
                     password: record.password
                 });
+                
+                // Create user account if username and password provided
+                if (record.username && record.password) {
+                    users.push({ 
+                        username: record.username, 
+                        password: record.password, 
+                        name: name, 
+                        role: 'Student' 
+                    });
+                }
             });
             saveData();
             renderAdmissions();
             bootstrap.Modal.getInstance(document.getElementById('bulkAdmissionModal')).hide();
-            addNotification(`Successfully imported ${records.length} admissions`, 'success');
-            logAudit('Bulk Import', `Imported ${records.length} admissions`, 'Low');
+            addNotification(`✅ Successfully imported ${records.length} admissions with advanced algorithm`, 'success');
+            logAudit('Bulk Import', `Imported ${records.length} admissions using advanced algorithm`, 'Low');
         }
 
         // Student Management
@@ -2561,55 +2725,68 @@
                         jsonData = [];
                     }
                     
-                    // Validate and preview data
-                    const validRecords = [];
-                    const invalidRecords = [];
+                    if (jsonData.length === 0) {
+                        addNotification('No data found in file', 'warning');
+                        return;
+                    }
                     
-                    jsonData.forEach((row, index) => {
-                        const record = {
-                            name: row.name || row.Name || row.NAME || 
-                                  (row.first_name && row.surname ? `${row.first_name} ${row.surname}` : '') ||
-                                  (row['First Name'] && row['Surname'] ? `${row['First Name']} ${row['Surname']}` : ''),
-                            grade: row.grade || row.Grade || row.GRADE || row.class || row.Class || '',
-                            parent: row.parent || row.Parent || row.PARENT || 'Unknown',
-                            accession: row.accession || row.Accession || row.ACCESSION || '',
-                            educator: row.educator || row.Educator || row.EDUCATOR || 'Unknown',
-                            status: row.status || row.Status || 'Active'
-                        };
-                        
-                        if (record.name && record.grade) {
-                            validRecords.push(record);
-                        } else {
-                            invalidRecords.push({row: index + 1, reason: 'Missing name or grade'});
-                        }
-                    });
+                    // Use advanced import algorithm
+                    const fieldMappings = {
+                        name: ['name', 'Name', 'NAME', 'full_name', 'Full Name', 'fullname', 'student_name'],
+                        surname: ['surname', 'Surname', 'SURNAME', 'last_name', 'Last Name', 'lastname', 'LastName'],
+                        firstName: ['firstname', 'FirstName', 'firstName', 'first_name', 'First Name', 'FIRST_NAME', 'given_name'],
+                        accession: ['accession', 'Accession', 'ACCESSION', 'accession_number', 'Accession Number', 'id', 'ID', 'student_id', 'StudentID'],
+                        grade: ['grade', 'Grade', 'GRADE', 'class', 'Class', 'CLASS', 'level', 'Level'],
+                        parent: ['parent', 'Parent', 'PARENT', 'guardian', 'Guardian', 'parent_name', 'Parent Name'],
+                        educator: ['educator', 'Educator', 'EDUCATOR', 'teacher', 'Teacher', 'TEACHER', 'class_teacher'],
+                        status: ['status', 'Status', 'STATUS', 'state', 'State', 'active']
+                    };
                     
-                    // Display preview
+                    const requiredFields = ['grade'];
+                    const autoFillDefaults = {
+                        status: 'Active',
+                        parent: 'Unknown',
+                        educator: 'Unassigned'
+                    };
+                    
+                    const result = advancedImportParser(jsonData, fieldMappings, requiredFields, autoFillDefaults);
+                    
+                    // Display preview with advanced information
                     let previewHTML = `<div class="alert alert-info">
-                        <strong>Preview:</strong><br>
-                        Valid records: ${validRecords.length}<br>
-                        Invalid records: ${invalidRecords.length}
+                        <strong>🚀 Advanced Import Analysis:</strong><br>
+                        Total records: ${result.summary.total}<br>
+                        ✅ Valid records: ${result.summary.valid}<br>
+                        ❌ Invalid records: ${result.summary.invalid}<br>
+                        ⚠️ Auto-corrections applied: ${result.summary.warnings}
                     </div>`;
                     
-                    if (invalidRecords.length > 0) {
+                    if (result.warnings.length > 0) {
                         previewHTML += `<div class="alert alert-warning">
-                            <strong>Invalid Records:</strong><br>
-                            ${invalidRecords.slice(0, 5).map(r => `Row ${r.row}: ${r.reason}`).join('<br>')}
-                            ${invalidRecords.length > 5 ? `<br>...and ${invalidRecords.length - 5} more` : ''}
+                            <strong>⚠️ Auto-Corrections Applied:</strong><br>
+                            ${result.warnings.slice(0, 10).map(w => `Row ${w.row}, ${w.field}: ${w.message}`).join('<br>')}
+                            ${result.warnings.length > 10 ? `<br>...and ${result.warnings.length - 10} more auto-corrections` : ''}
                         </div>`;
                     }
                     
-                    if (validRecords.length > 0) {
+                    if (result.invalidRecords.length > 0) {
+                        previewHTML += `<div class="alert alert-danger">
+                            <strong>❌ Invalid Records (will be skipped):</strong><br>
+                            ${result.invalidRecords.slice(0, 5).map(r => `Row ${r.row}: ${r.reason}`).join('<br>')}
+                            ${result.invalidRecords.length > 5 ? `<br>...and ${result.invalidRecords.length - 5} more invalid records` : ''}
+                        </div>`;
+                    }
+                    
+                    if (result.validRecords.length > 0) {
                         previewHTML += `<div class="table-responsive" style="max-height: 200px; overflow-y: auto;">
                             <table class="table table-sm">
                                 <thead><tr><th>Name</th><th>Grade</th><th>Parent</th><th>Accession</th><th>Educator</th></tr></thead>
                                 <tbody>
-                                    ${validRecords.slice(0, 10).map(r => `<tr><td>${r.name}</td><td>${r.grade}</td><td>${r.parent}</td><td>${r.accession}</td><td>${r.educator}</td></tr>`).join('')}
-                                    ${validRecords.length > 10 ? `<tr><td colspan="5">...and ${validRecords.length - 10} more</td></tr>` : ''}
+                                    ${result.validRecords.slice(0, 10).map(r => `<tr><td>${r.name || (r.surname + ' ' + r.firstName)}</td><td>${r.grade}</td><td>${r.parent}</td><td>${r.accession}</td><td>${r.educator}</td></tr>`).join('')}
+                                    ${result.validRecords.length > 10 ? `<tr><td colspan="5">...and ${result.validRecords.length - 10} more</td></tr>` : ''}
                                 </tbody>
                             </table>
                         </div>`;
-                        previewHTML += `<button class="btn btn-primary mt-2" onclick="confirmStudentImport(${JSON.stringify(validRecords).replace(/"/g, '&quot;')})">Import ${validRecords.length} Students</button>`;
+                        previewHTML += `<button class="btn btn-primary mt-2" onclick='confirmStudentImport(${JSON.stringify(result.validRecords)})'>Import ${result.validRecords.length} Students</button>`;
                     }
                     
                     document.getElementById('studentPreview').innerHTML = previewHTML;
@@ -2626,9 +2803,12 @@
         function confirmStudentImport(records) {
             records.forEach(record => {
                 const id = Date.now() + Math.random();
+                const name = record.name || `${record.surname} ${record.firstName}`.trim();
                 students.push({
                     id,
-                    name: record.name,
+                    name: name,
+                    surname: record.surname || name.split(' ')[0],
+                    firstName: record.firstName || name.split(' ').slice(1).join(' '),
                     grade: record.grade,
                     parent: record.parent,
                     status: record.status,
@@ -2640,8 +2820,8 @@
             renderStudents();
             integrateEducatorsAsStaff();
             bootstrap.Modal.getInstance(document.getElementById('bulkStudentModal')).hide();
-            addNotification(`Successfully imported ${records.length} students`, 'success');
-            logAudit('Bulk Import', `Imported ${records.length} students`, 'Low');
+            addNotification(`✅ Successfully imported ${records.length} students with advanced algorithm`, 'success');
+            logAudit('Bulk Import', `Imported ${records.length} students using advanced algorithm`, 'Low');
         }
         function resetAllStudents() {
             if (confirm('Are you sure you want to reset ALL students? This will permanently delete all student records. This action cannot be undone.')) {
@@ -2706,6 +2886,160 @@
             loadAttendance();
             bootstrap.Modal.getInstance(document.getElementById('bulkAttendanceModal')).hide();
             addNotification('Bulk attendance marked', 'success');
+        }
+        
+        function showImportAttendanceModal() {
+            new bootstrap.Modal(document.getElementById('importAttendanceModal')).show();
+        }
+        
+        function uploadBulkAttendance() {
+            const file = document.getElementById('attendanceFile').files[0];
+            if (!file) {
+                addNotification('Please select a file', 'warning');
+                return;
+            }
+            
+            const fileExt = file.name.split('.').pop().toLowerCase();
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                try {
+                    let jsonData = [];
+                    
+                    // Handle different file formats
+                    if (fileExt === 'csv' || fileExt === 'xlsx' || fileExt === 'xls') {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, {type: 'array'});
+                        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                        jsonData = XLSX.utils.sheet_to_json(sheet);
+                    } else if (fileExt === 'pdf') {
+                        addNotification('PDF parsing simulated - please use CSV/Excel for best results', 'info');
+                        jsonData = [];
+                    } else if (fileExt === 'doc' || fileExt === 'docx') {
+                        addNotification('Word document parsing simulated - please use CSV/Excel for best results', 'info');
+                        jsonData = [];
+                    }
+                    
+                    if (jsonData.length === 0) {
+                        addNotification('No data found in file', 'warning');
+                        return;
+                    }
+                    
+                    // Use advanced import algorithm
+                    const fieldMappings = {
+                        studentId: ['studentId', 'student_id', 'StudentID', 'id', 'ID', 'student_number'],
+                        studentName: ['studentName', 'student_name', 'name', 'Name', 'NAME', 'student', 'Student'],
+                        accession: ['accession', 'Accession', 'ACCESSION', 'accession_number'],
+                        date: ['date', 'Date', 'DATE', 'attendance_date', 'Attendance Date'],
+                        status: ['status', 'Status', 'STATUS', 'attendance', 'Attendance', 'present', 'Present'],
+                        notes: ['notes', 'Notes', 'NOTES', 'remarks', 'Remarks', 'comment', 'Comment']
+                    };
+                    
+                    const requiredFields = ['date', 'status'];
+                    const autoFillDefaults = {
+                        status: 'Present',
+                        notes: '',
+                        date: new Date().toISOString().split('T')[0]
+                    };
+                    
+                    const result = advancedImportParser(jsonData, fieldMappings, requiredFields, autoFillDefaults);
+                    
+                    // Match students by name or accession if studentId not provided
+                    result.validRecords.forEach(record => {
+                        if (!record.studentId) {
+                            const student = students.find(s => 
+                                (s.name && record.studentName && s.name.toLowerCase() === record.studentName.toLowerCase()) ||
+                                (s.accession && record.accession && s.accession === record.accession)
+                            );
+                            if (student) {
+                                record.studentId = student.id;
+                                record.matched = true;
+                            } else {
+                                record.matched = false;
+                            }
+                        } else {
+                            record.matched = true;
+                        }
+                    });
+                    
+                    const matchedRecords = result.validRecords.filter(r => r.matched);
+                    const unmatchedRecords = result.validRecords.filter(r => !r.matched);
+                    
+                    // Display preview with advanced information
+                    let previewHTML = `<div class="alert alert-info">
+                        <strong>🚀 Advanced Import Analysis:</strong><br>
+                        Total records: ${result.summary.total}<br>
+                        ✅ Matched students: ${matchedRecords.length}<br>
+                        ❓ Unmatched students: ${unmatchedRecords.length}<br>
+                        ❌ Invalid records: ${result.summary.invalid}<br>
+                        ⚠️ Auto-corrections applied: ${result.summary.warnings}
+                    </div>`;
+                    
+                    if (result.warnings.length > 0) {
+                        previewHTML += `<div class="alert alert-warning">
+                            <strong>⚠️ Auto-Corrections Applied:</strong><br>
+                            ${result.warnings.slice(0, 10).map(w => `Row ${w.row}, ${w.field}: ${w.message}`).join('<br>')}
+                            ${result.warnings.length > 10 ? `<br>...and ${result.warnings.length - 10} more auto-corrections` : ''}
+                        </div>`;
+                    }
+                    
+                    if (unmatchedRecords.length > 0) {
+                        previewHTML += `<div class="alert alert-warning">
+                            <strong>❓ Unmatched Students (will be skipped):</strong><br>
+                            ${unmatchedRecords.slice(0, 5).map(r => `${r.studentName || r.accession || 'Unknown'}`).join('<br>')}
+                            ${unmatchedRecords.length > 5 ? `<br>...and ${unmatchedRecords.length - 5} more` : ''}
+                        </div>`;
+                    }
+                    
+                    if (result.invalidRecords.length > 0) {
+                        previewHTML += `<div class="alert alert-danger">
+                            <strong>❌ Invalid Records (will be skipped):</strong><br>
+                            ${result.invalidRecords.slice(0, 5).map(r => `Row ${r.row}: ${r.reason}`).join('<br>')}
+                            ${result.invalidRecords.length > 5 ? `<br>...and ${result.invalidRecords.length - 5} more invalid records` : ''}
+                        </div>`;
+                    }
+                    
+                    if (matchedRecords.length > 0) {
+                        previewHTML += `<div class="table-responsive" style="max-height: 200px; overflow-y: auto;">
+                            <table class="table table-sm">
+                                <thead><tr><th>Student</th><th>Date</th><th>Status</th><th>Notes</th></tr></thead>
+                                <tbody>
+                                    ${matchedRecords.slice(0, 10).map(r => `<tr><td>${r.studentName || 'ID: ' + r.studentId}</td><td>${r.date}</td><td>${r.status}</td><td>${r.notes}</td></tr>`).join('')}
+                                    ${matchedRecords.length > 10 ? `<tr><td colspan="4">...and ${matchedRecords.length - 10} more</td></tr>` : ''}
+                                </tbody>
+                            </table>
+                        </div>`;
+                        previewHTML += `<button class="btn btn-primary mt-2" onclick='confirmAttendanceImport(${JSON.stringify(matchedRecords)})'>Import ${matchedRecords.length} Attendance Records</button>`;
+                    }
+                    
+                    document.getElementById('attendancePreview').innerHTML = previewHTML;
+                    
+                } catch (error) {
+                    addNotification('Error parsing file: ' + error.message, 'danger');
+                    console.error(error);
+                }
+            };
+            
+            reader.readAsArrayBuffer(file);
+        }
+        
+        function confirmAttendanceImport(records) {
+            let importedCount = 0;
+            records.forEach(record => {
+                if (!attendanceRecords[record.date]) {
+                    attendanceRecords[record.date] = {};
+                }
+                attendanceRecords[record.date][record.studentId] = {
+                    status: record.status,
+                    notes: record.notes
+                };
+                importedCount++;
+            });
+            saveData();
+            loadAttendance();
+            bootstrap.Modal.getInstance(document.getElementById('importAttendanceModal')).hide();
+            addNotification(`✅ Successfully imported ${importedCount} attendance records with advanced algorithm`, 'success');
+            logAudit('Bulk Import', `Imported ${importedCount} attendance records using advanced algorithm`, 'Low');
         }
         function syncBiometricAttendance() {
             addNotification('Biometric sync simulated', 'info');
@@ -3136,6 +3470,153 @@
             const doc = new jsPDF();
             doc.text('Staff Report', 10, 10);
             doc.save('staff-report.pdf');
+        }
+        
+        function showBulkStaffModal() {
+            new bootstrap.Modal(document.getElementById('bulkStaffModal')).show();
+        }
+        
+        function uploadBulkStaff() {
+            const file = document.getElementById('staffFile').files[0];
+            if (!file) {
+                addNotification('Please select a file', 'warning');
+                return;
+            }
+            
+            const fileExt = file.name.split('.').pop().toLowerCase();
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                try {
+                    let jsonData = [];
+                    
+                    // Handle different file formats
+                    if (fileExt === 'csv' || fileExt === 'xlsx' || fileExt === 'xls') {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, {type: 'array'});
+                        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                        jsonData = XLSX.utils.sheet_to_json(sheet);
+                    } else if (fileExt === 'pdf') {
+                        addNotification('PDF parsing simulated - please use CSV/Excel for best results', 'info');
+                        jsonData = [];
+                    } else if (fileExt === 'doc' || fileExt === 'docx') {
+                        addNotification('Word document parsing simulated - please use CSV/Excel for best results', 'info');
+                        jsonData = [];
+                    }
+                    
+                    if (jsonData.length === 0) {
+                        addNotification('No data found in file', 'warning');
+                        return;
+                    }
+                    
+                    // Use advanced import algorithm
+                    const fieldMappings = {
+                        name: ['name', 'Name', 'NAME', 'full_name', 'Full Name', 'fullname', 'employee_name', 'staff_name'],
+                        role: ['role', 'Role', 'ROLE', 'position', 'Position', 'job_title', 'Job Title'],
+                        department: ['department', 'Department', 'DEPARTMENT', 'dept', 'Dept'],
+                        salary: ['salary', 'Salary', 'SALARY', 'wage', 'Wage', 'pay', 'Pay', 'compensation'],
+                        taxNumber: ['taxNumber', 'tax_number', 'Tax Number', 'TAX_NUMBER', 'tax', 'Tax', 'tax_id'],
+                        uifNumber: ['uifNumber', 'uif_number', 'UIF Number', 'UIF_NUMBER', 'uif', 'UIF'],
+                        certExpiry: ['certExpiry', 'cert_expiry', 'Cert Expiry', 'certificate_expiry', 'expiry_date', 'expiry'],
+                        status: ['status', 'Status', 'STATUS', 'state', 'State', 'employment_status'],
+                        username: ['username', 'Username', 'USERNAME', 'user', 'User', 'login'],
+                        password: ['password', 'Password', 'PASSWORD', 'pass', 'Pass']
+                    };
+                    
+                    const requiredFields = ['name', 'role'];
+                    const autoFillDefaults = {
+                        status: 'Active',
+                        department: 'General',
+                        salary: 0,
+                        taxNumber: 'Not Provided',
+                        uifNumber: 'Not Provided',
+                        certExpiry: new Date(Date.now() + 365*24*60*60*1000).toISOString().split('T')[0]
+                    };
+                    
+                    const result = advancedImportParser(jsonData, fieldMappings, requiredFields, autoFillDefaults);
+                    
+                    // Display preview with advanced information
+                    let previewHTML = `<div class="alert alert-info">
+                        <strong>🚀 Advanced Import Analysis:</strong><br>
+                        Total records: ${result.summary.total}<br>
+                        ✅ Valid records: ${result.summary.valid}<br>
+                        ❌ Invalid records: ${result.summary.invalid}<br>
+                        ⚠️ Auto-corrections applied: ${result.summary.warnings}
+                    </div>`;
+                    
+                    if (result.warnings.length > 0) {
+                        previewHTML += `<div class="alert alert-warning">
+                            <strong>⚠️ Auto-Corrections Applied:</strong><br>
+                            ${result.warnings.slice(0, 10).map(w => `Row ${w.row}, ${w.field}: ${w.message}`).join('<br>')}
+                            ${result.warnings.length > 10 ? `<br>...and ${result.warnings.length - 10} more auto-corrections` : ''}
+                        </div>`;
+                    }
+                    
+                    if (result.invalidRecords.length > 0) {
+                        previewHTML += `<div class="alert alert-danger">
+                            <strong>❌ Invalid Records (will be skipped):</strong><br>
+                            ${result.invalidRecords.slice(0, 5).map(r => `Row ${r.row}: ${r.reason}`).join('<br>')}
+                            ${result.invalidRecords.length > 5 ? `<br>...and ${result.invalidRecords.length - 5} more invalid records` : ''}
+                        </div>`;
+                    }
+                    
+                    if (result.validRecords.length > 0) {
+                        previewHTML += `<div class="table-responsive" style="max-height: 200px; overflow-y: auto;">
+                            <table class="table table-sm">
+                                <thead><tr><th>Name</th><th>Role</th><th>Department</th><th>Salary</th><th>Status</th></tr></thead>
+                                <tbody>
+                                    ${result.validRecords.slice(0, 10).map(r => `<tr><td>${r.name}</td><td>${r.role}</td><td>${r.department}</td><td>R${r.salary ? parseFloat(r.salary).toLocaleString() : '0'}</td><td>${r.status}</td></tr>`).join('')}
+                                    ${result.validRecords.length > 10 ? `<tr><td colspan="5">...and ${result.validRecords.length - 10} more</td></tr>` : ''}
+                                </tbody>
+                            </table>
+                        </div>`;
+                        previewHTML += `<button class="btn btn-primary mt-2" onclick='confirmStaffImport(${JSON.stringify(result.validRecords)})'>Import ${result.validRecords.length} Staff Members</button>`;
+                    }
+                    
+                    document.getElementById('staffPreview').innerHTML = previewHTML;
+                    
+                } catch (error) {
+                    addNotification('Error parsing file: ' + error.message, 'danger');
+                    console.error(error);
+                }
+            };
+            
+            reader.readAsArrayBuffer(file);
+        }
+        
+        function confirmStaffImport(records) {
+            records.forEach(record => {
+                const id = Date.now() + Math.random();
+                const newStaff = {
+                    id,
+                    name: record.name,
+                    role: record.role,
+                    department: record.department,
+                    salary: parseFloat(record.salary) || 0,
+                    taxNumber: record.taxNumber,
+                    uifNumber: record.uifNumber,
+                    certExpiry: record.certExpiry,
+                    status: record.status
+                };
+                
+                // Create user account if username and password provided
+                if (record.username && record.password) {
+                    newStaff.username = record.username;
+                    users.push({ 
+                        username: record.username, 
+                        password: record.password, 
+                        name: record.name, 
+                        role: record.role 
+                    });
+                }
+                
+                staff.push(newStaff);
+            });
+            saveData();
+            renderStaff();
+            bootstrap.Modal.getInstance(document.getElementById('bulkStaffModal')).hide();
+            addNotification(`✅ Successfully imported ${records.length} staff members with advanced algorithm`, 'success');
+            logAudit('Bulk Import', `Imported ${records.length} staff members using advanced algorithm`, 'Low');
         }
         function renderPayrolls() {
             const monthFilter = document.getElementById('payrollMonthFilter').value;
