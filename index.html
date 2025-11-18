@@ -256,7 +256,7 @@
                     <button class="btn btn-outline-secondary" onclick="searchAdmissions()">Search</button>
                 </div>
                 <table class="table table-striped">
-                    <thead><tr><th>Number</th><th>Accession Number</th><th>Surname</th><th>First Name</th><th>Grade</th><th>Status</th><th>Documents</th><th>Actions</th></tr></thead>
+                    <thead><tr><th>Name</th><th>Surname</th><th>Grade</th></tr></thead>
                     <tbody id="admissionTable"></tbody>
                 </table>
             </section>
@@ -303,6 +303,7 @@
                 <button class="btn btn-primary mb-3" onclick="showGenerateInvoiceModal()">Generate Invoice</button>
                 <button class="btn btn-secondary mb-3" onclick="showBulkUploadFeesModal()">Bulk Import (CSV/PDF/Word)</button>
                 <button class="btn btn-warning mb-3" onclick="sendFeeReminders()">Send Reminders</button>
+                <button class="btn btn-danger mb-3" onclick="resetFees()">Reset Fees (Save to Vault)</button>
                 <div class="row mb-3">
                     <div class="col-md-3"><div class="card card-metric p-3"><h5>Total Collected</h5><h3 id="totalCollected">R0</h3></div></div>
                     <div class="col-md-3"><div class="card card-metric p-3"><h5>Outstanding</h5><h3 id="outstandingFees">R0</h3></div></div>
@@ -1054,6 +1055,24 @@
                         <button class="btn btn-primary" onclick="updateHRSettings()">Update HR Settings</button>
                     </div>
                 </div>
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <h5>AI Integration (ChatGPT-4 API)</h5>
+                        <div class="mb-3">
+                            <label>API Key</label>
+                            <input type="password" id="chatGPTApiKey" class="form-control" placeholder="Enter ChatGPT-4 API Key">
+                        </div>
+                        <div class="mb-3">
+                            <label>Model</label>
+                            <select id="chatGPTModel" class="form-control">
+                                <option value="gpt-4">GPT-4</option>
+                                <option value="gpt-4-turbo">GPT-4 Turbo</option>
+                                <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary" onclick="saveChatGPTSettings()">Save AI Settings</button>
+                    </div>
+                </div>
                 <div class="mt-4">
                     <button class="btn btn-secondary" onclick="backupData()">Backup Data</button>
                     <button class="btn btn-warning ms-2" onclick="restoreData()">Restore Data</button>
@@ -1065,7 +1084,7 @@
                         <div class="col-md-3"><div class="card card-metric p-3"><h5>Total Items</h5><h3 id="vaultTotalItems">0</h3></div></div>
                         <div class="col-md-3"><div class="card card-metric p-3"><h5>Attendance Resets</h5><h3 id="vaultAttendanceResets">0</h3></div></div>
                         <div class="col-md-3"><div class="card card-metric p-3"><h5>Student Resets</h5><h3 id="vaultStudentResets">0</h3></div></div>
-                        <div class="col-md-3"><div class="card card-metric p-3"><h5>Admission Resets</h5><h3 id="vaultAdmissionResets">0</h3></div></div>
+                        <div class="col-md-3"><div class="card card-metric p-3"><h5>Fee Resets</h5><h3 id="vaultFeeResets">0</h3></div></div>
                     </div>
                     <button class="btn btn-info mb-3" onclick="showVaultViewer()">View Vault Contents</button>
                     <button class="btn btn-warning mb-3" onclick="exportVault()">Export Vault</button>
@@ -1905,6 +1924,7 @@
         var users = [];
         var hrSettings = { annualLeaveDays: 21, uifRate: 0.01 };
         var smsSettings = { username: '', password: '', senderId: 'BophelongSchool' };
+        var chatGPTSettings = { apiKey: '', model: 'gpt-4', enabled: false };
         var attendanceRecords = {};
         var lessonPlans = [];
         var grades = [];
@@ -3270,29 +3290,20 @@
             const filtered = admissions.filter(a => {
                 const surname = a.surname || a.name?.split(' ')[0] || '';
                 const firstName = a.firstName || a.name?.split(' ').slice(1).join(' ') || '';
-                const accession = a.accession || '';
+                const fullName = firstName + ' ' + surname;
                 return surname.toLowerCase().includes(search) || 
                        firstName.toLowerCase().includes(search) || 
-                       accession.toLowerCase().includes(search) ||
+                       fullName.toLowerCase().includes(search) ||
                        a.grade.toLowerCase().includes(search);
             });
             document.getElementById('admissionTable').innerHTML = filtered.map(a => {
                 const surname = a.surname || a.name?.split(' ')[0] || '';
                 const firstName = a.firstName || a.name?.split(' ').slice(1).join(' ') || '';
-                const accession = a.accession || '';
                 return `
                 <tr>
-                    <td>${a.id}</td>
-                    <td>${accession}</td>
-                    <td>${surname}</td>
                     <td>${firstName}</td>
+                    <td>${surname}</td>
                     <td>${a.grade}</td>
-                    <td><span class="badge bg-${a.status === 'Approved' ? 'success' : 'warning'}">${a.status}</span></td>
-                    <td><button class="btn btn-sm btn-info" onclick="viewAdmissionDocuments(${a.id})">View</button></td>
-                    <td>
-                        <button class="btn btn-sm btn-primary" onclick="editAdmission(${a.id})">Edit</button>
-                        <button class="btn btn-sm btn-danger" onclick="deleteAdmission(${a.id})">Delete</button>
-                    </td>
                 </tr>
             `}).join('');
         }
@@ -3826,12 +3837,27 @@
             logAudit('Bulk Import', `Imported ${records.length} students using advanced algorithm`, 'Low');
         }
         function resetAllStudents() {
-            if (confirm('Are you sure you want to reset ALL students? This will permanently delete all student records. This action cannot be undone.')) {
-                if (confirm('This is your final warning. All student data will be lost. Continue?')) {
+            if (confirm('Are you sure you want to reset ALL students? All student records will be saved to the vault and cleared from the system.')) {
+                if (confirm('This is your final warning. Student data will be moved to vault. Continue?')) {
+                    // Save to vault
+                    const vaultEntry = {
+                        id: Date.now(),
+                        timestamp: new Date().toISOString(),
+                        type: 'Student Reset',
+                        description: `Reset ${students.length} student records`,
+                        data: JSON.parse(JSON.stringify(students)),
+                        user: currentUser ? currentUser.name : 'Unknown'
+                    };
+                    dataVault.push(vaultEntry);
+                    
+                    // Clear students
                     students = [];
+                    
                     saveData();
                     renderStudents();
-                    addNotification('All students have been reset', 'warning');
+                    updateVaultMetrics();
+                    addNotification('All students reset and saved to vault', 'warning');
+                    logAudit('Student Reset', 'Reset all student records to vault', 'Medium');
                 }
             }
         }
@@ -4181,6 +4207,32 @@
                 addNotification(overdue.length + ' reminders sent', 'info');
             } else {
                 addNotification('No overdue fees', 'info');
+            }
+        }
+        
+        function resetFees() {
+            if (confirm('Are you sure you want to reset all fees? All fee records will be saved to the vault and cleared from the system.')) {
+                if (confirm('This is your final warning. Fee data will be moved to vault. Continue?')) {
+                    // Save to vault
+                    const vaultEntry = {
+                        id: Date.now(),
+                        timestamp: new Date().toISOString(),
+                        type: 'Fee Reset',
+                        description: `Reset ${fees.length} fee records`,
+                        data: JSON.parse(JSON.stringify(fees)),
+                        user: currentUser ? currentUser.name : 'Unknown'
+                    };
+                    dataVault.push(vaultEntry);
+                    
+                    // Clear fees
+                    fees = [];
+                    
+                    saveData();
+                    renderFees();
+                    updateVaultMetrics();
+                    addNotification('Fees reset and saved to vault', 'warning');
+                    logAudit('Fee Reset', 'Reset all fee records to vault', 'Medium');
+                }
             }
         }
 
@@ -5129,6 +5181,10 @@
             document.getElementById('smsPassword').value = smsSettings.password;
             document.getElementById('annualLeaveDays').value = hrSettings.annualLeaveDays;
             document.getElementById('uifRate').value = hrSettings.uifRate * 100;
+            if (document.getElementById('chatGPTApiKey')) {
+                document.getElementById('chatGPTApiKey').value = chatGPTSettings.apiKey;
+                document.getElementById('chatGPTModel').value = chatGPTSettings.model;
+            }
         }
         function saveSMSSettings() {
             smsSettings.username = document.getElementById('smsUsername').value;
@@ -5141,6 +5197,14 @@
             hrSettings.uifRate = parseFloat(document.getElementById('uifRate').value) / 100;
             saveData();
             addNotification('HR settings updated', 'success');
+        }
+        
+        function saveChatGPTSettings() {
+            chatGPTSettings.apiKey = document.getElementById('chatGPTApiKey').value;
+            chatGPTSettings.model = document.getElementById('chatGPTModel').value;
+            chatGPTSettings.enabled = chatGPTSettings.apiKey.length > 0;
+            saveData();
+            addNotification('ChatGPT API settings saved', 'success');
         }
         function backupData() {
             const data = { ...window }; // Mock full backup
@@ -5164,7 +5228,7 @@
             document.getElementById('vaultTotalItems').textContent = dataVault.length;
             document.getElementById('vaultAttendanceResets').textContent = dataVault.filter(v => v.type === 'Attendance Reset').length;
             document.getElementById('vaultStudentResets').textContent = dataVault.filter(v => v.type === 'Student Reset').length;
-            document.getElementById('vaultAdmissionResets').textContent = dataVault.filter(v => v.type === 'Admission Reset').length;
+            document.getElementById('vaultFeeResets').textContent = dataVault.filter(v => v.type === 'Fee Reset').length;
         }
         
         function showVaultViewer() {
@@ -5221,6 +5285,11 @@
                         admissions = JSON.parse(JSON.stringify(item.data));
                         renderAdmissions();
                         addNotification('Admission data restored from vault', 'success');
+                        break;
+                    case 'Fee Reset':
+                        fees = JSON.parse(JSON.stringify(item.data));
+                        renderFees();
+                        addNotification('Fee data restored from vault', 'success');
                         break;
                 }
                 saveData();
@@ -5518,7 +5587,7 @@
         // Enhanced AI Research
         let researchHistory = [];
         
-        function researchWithAI() {
+        async function researchWithAI() {
             const query = document.getElementById('researchQuery').value.trim();
             const category = document.getElementById('researchCategory').value;
             
@@ -5537,8 +5606,33 @@
             researchHistory.unshift(researchItem);
             localStorage.setItem('researchHistory', JSON.stringify(researchHistory));
             
-            // Generate enhanced AI response based on category
-            let response = generateEnhancedAIResponse(query, category);
+            // Show loading state
+            document.getElementById('researchResults').innerHTML = `
+                <div class="card mb-3" style="background: rgba(255, 255, 255, 0.15);">
+                    <div class="card-body text-center">
+                        <div class="spinner-border text-light mb-3" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p>Researching your question...</p>
+                    </div>
+                </div>
+            `;
+            
+            let response;
+            
+            // Check if ChatGPT API is configured and enabled
+            if (chatGPTSettings.enabled && chatGPTSettings.apiKey) {
+                try {
+                    response = await callChatGPTAPI(query, category);
+                } catch (error) {
+                    console.error('ChatGPT API Error:', error);
+                    addNotification('API Error: ' + error.message + '. Using fallback mode.', 'warning');
+                    response = generateEnhancedAIResponse(query, category);
+                }
+            } else {
+                // Use mock response if API not configured
+                response = generateEnhancedAIResponse(query, category);
+            }
             
             document.getElementById('researchResults').innerHTML = `
                 <div class="card mb-3" style="background: rgba(255, 255, 255, 0.15);">
@@ -5565,6 +5659,56 @@
             
             loadResearchHistory();
             addNotification('Research completed successfully!', 'success');
+        }
+        
+        async function callChatGPTAPI(query, category) {
+            const apiKey = chatGPTSettings.apiKey;
+            const model = chatGPTSettings.model;
+            
+            const systemPrompt = `You are an educational AI assistant helping a student with their research. 
+The student is researching in the category: ${category}. 
+Provide accurate, educational, and age-appropriate information. 
+Include relevant examples, explanations, and suggest further areas of study.`;
+            
+            const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiKey}`
+                },
+                body: JSON.stringify({
+                    model: model,
+                    messages: [
+                        { role: 'system', content: systemPrompt },
+                        { role: 'user', content: query }
+                    ],
+                    temperature: 0.7,
+                    max_tokens: 1000
+                })
+            });
+            
+            if (!response.ok) {
+                throw new Error(`API request failed with status ${response.status}`);
+            }
+            
+            const data = await response.json();
+            const aiResponse = data.choices[0].message.content;
+            
+            return `
+                <div class="alert alert-success text-dark">
+                    <div class="d-flex align-items-start mb-2">
+                        <i class="fas fa-robot fa-2x me-3"></i>
+                        <div>
+                            <h6><strong>ChatGPT-4 Response:</strong></h6>
+                            <p style="white-space: pre-wrap;">${aiResponse}</p>
+                        </div>
+                    </div>
+                    <div class="alert alert-info mt-3 mb-0">
+                        <i class="fas fa-check-circle me-2"></i>
+                        <strong>Powered by ChatGPT-4 API</strong> - This response was generated using OpenAI's advanced AI model.
+                    </div>
+                </div>
+            `;
         }
         
         function generateEnhancedAIResponse(query, category) {
