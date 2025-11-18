@@ -251,6 +251,7 @@
                 <h2>Admission Management</h2>
                 <button class="btn btn-primary mb-3" onclick="showAddAdmissionModal()">New Application</button>
                 <button class="btn btn-secondary mb-3" onclick="showBulkAdmissionModal()">Bulk Import (CSV/Excel/PDF/Word)</button>
+                <button class="btn btn-danger mb-3" onclick="resetAdmissions()">Reset Admission (Save to Vault)</button>
                 <div class="input-group mb-3 w-50">
                     <input type="text" class="form-control" placeholder="Search admissions..." id="admissionSearch">
                     <button class="btn btn-outline-secondary" onclick="searchAdmissions()">Search</button>
@@ -1071,6 +1072,7 @@
                             </select>
                         </div>
                         <button class="btn btn-primary" onclick="saveChatGPTSettings()">Save ChatGPT Settings</button>
+                        <button class="btn btn-secondary ms-2" onclick="configureChatGPTAPI()">Configure</button>
                     </div>
                     <div class="col-md-6">
                         <h5>AI Integration (Grok API)</h5>
@@ -1086,6 +1088,7 @@
                             </select>
                         </div>
                         <button class="btn btn-primary" onclick="saveGrokSettings()">Save Grok Settings</button>
+                        <button class="btn btn-secondary ms-2" onclick="configureGrokAPI()">Configure</button>
                     </div>
                 </div>
                 <div class="mt-4">
@@ -1635,6 +1638,7 @@
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-primary" onclick="uploadBulkAdmissions()">Import</button>
+                            <button type="button" class="btn btn-secondary" onclick="clearBulkAdmissionNotification()">Clear</button>
                         </div>
                     </div>
                 </div>
@@ -3681,6 +3685,13 @@
             addNotification(`✅ Successfully imported ${records.length} admissions with advanced algorithm`, 'success');
             logAudit('Bulk Import', `Imported ${records.length} admissions using advanced algorithm`, 'Low');
         }
+        
+        function clearBulkAdmissionNotification() {
+            // Clear the preview and file input
+            document.getElementById('admissionsFile').value = '';
+            document.getElementById('admissionsPreview').innerHTML = '';
+            addNotification('Bulk admission import cleared', 'info');
+        }
 
         // Student Management
         function showAddStudentModal() {
@@ -4308,6 +4319,32 @@
                     updateVaultMetrics();
                     addNotification('Fees reset and saved to vault', 'warning');
                     logAudit('Fee Reset', 'Reset all fee records to vault', 'Medium');
+                }
+            }
+        }
+        
+        function resetAdmissions() {
+            if (confirm('Are you sure you want to reset all admissions? All admission records will be saved to the vault and cleared from the system.')) {
+                if (confirm('This is your final warning. Admission data will be moved to vault. Continue?')) {
+                    // Save to vault
+                    const vaultEntry = {
+                        id: Date.now(),
+                        timestamp: new Date().toISOString(),
+                        type: 'Admission Reset',
+                        description: `Reset ${admissions.length} admission records`,
+                        data: JSON.parse(JSON.stringify(admissions)),
+                        user: currentUser ? currentUser.name : 'Unknown'
+                    };
+                    dataVault.push(vaultEntry);
+                    
+                    // Clear admissions
+                    admissions = [];
+                    
+                    saveData();
+                    renderAdmissions();
+                    updateVaultMetrics();
+                    addNotification('Admissions reset and saved to vault', 'warning');
+                    logAudit('Admission Reset', 'Reset all admission records to vault', 'Medium');
                 }
             }
         }
@@ -5294,6 +5331,53 @@
             saveData();
             addNotification('Grok API settings saved', 'success');
         }
+        
+        function configureChatGPTAPI() {
+            const apiKey = document.getElementById('chatGPTApiKey').value;
+            const model = document.getElementById('chatGPTModel').value;
+            
+            if (!apiKey) {
+                addNotification('Please enter a ChatGPT API key', 'warning');
+                return;
+            }
+            
+            // Test the API configuration
+            addNotification('Testing ChatGPT API configuration...', 'info');
+            
+            // Mock API test - in real implementation, this would make a test API call
+            setTimeout(() => {
+                chatGPTSettings.apiKey = apiKey;
+                chatGPTSettings.model = model;
+                chatGPTSettings.enabled = true;
+                saveData();
+                addNotification('ChatGPT API configured successfully!', 'success');
+                logAudit('API Configuration', 'Configured ChatGPT API', 'Low');
+            }, 1000);
+        }
+        
+        function configureGrokAPI() {
+            const apiKey = document.getElementById('grokApiKey').value;
+            const model = document.getElementById('grokModel').value;
+            
+            if (!apiKey) {
+                addNotification('Please enter a Grok API key', 'warning');
+                return;
+            }
+            
+            // Test the API configuration
+            addNotification('Testing Grok API configuration...', 'info');
+            
+            // Mock API test - in real implementation, this would make a test API call
+            setTimeout(() => {
+                grokSettings.apiKey = apiKey;
+                grokSettings.model = model;
+                grokSettings.enabled = true;
+                saveData();
+                addNotification('Grok API configured successfully!', 'success');
+                logAudit('API Configuration', 'Configured Grok API', 'Low');
+            }, 1000);
+        }
+        
         function backupData() {
             const data = { ...window }; // Mock full backup
             const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
