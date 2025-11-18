@@ -1070,7 +1070,22 @@
                                 <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
                             </select>
                         </div>
-                        <button class="btn btn-primary" onclick="saveChatGPTSettings()">Save AI Settings</button>
+                        <button class="btn btn-primary" onclick="saveChatGPTSettings()">Save ChatGPT Settings</button>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>AI Integration (Grok API)</h5>
+                        <div class="mb-3">
+                            <label>API Key</label>
+                            <input type="password" id="grokApiKey" class="form-control" placeholder="Enter Grok API Key">
+                        </div>
+                        <div class="mb-3">
+                            <label>Model</label>
+                            <select id="grokModel" class="form-control">
+                                <option value="grok-beta">Grok Beta</option>
+                                <option value="grok-1">Grok-1</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary" onclick="saveGrokSettings()">Save Grok Settings</button>
                     </div>
                 </div>
                 <div class="mt-4">
@@ -1266,6 +1281,10 @@
                         <textarea id="researchQuery" class="form-control" rows="3" placeholder="Ask a detailed research question or describe what you'd like to learn..."></textarea>
                     </div>
                     <div class="col-md-4">
+                        <select id="aiProvider" class="form-control mb-2">
+                            <option value="chatgpt">ChatGPT</option>
+                            <option value="grok">Grok</option>
+                        </select>
                         <select id="researchCategory" class="form-control mb-2">
                             <option value="general">General Research</option>
                             <option value="science">Science</option>
@@ -1925,6 +1944,7 @@
         var hrSettings = { annualLeaveDays: 21, uifRate: 0.01 };
         var smsSettings = { username: '', password: '', senderId: 'BophelongSchool' };
         var chatGPTSettings = { apiKey: '', model: 'gpt-4', enabled: false };
+        var grokSettings = { apiKey: '', model: 'grok-beta', enabled: false };
         var attendanceRecords = {};
         var lessonPlans = [];
         var grades = [];
@@ -3423,6 +3443,37 @@
                         warnings.push({row: index + 1, field: targetField, message: 'Auto-generated temporary password'});
                     }
                     
+                    // Enhanced: Infer grade from other fields if missing
+                    if ((value === null || value === '') && targetField === 'grade') {
+                        // Try to infer from class, level, year fields
+                        const gradeFields = ['class', 'level', 'year', 'form'];
+                        for (const field of gradeFields) {
+                            if (row[field] !== undefined && row[field] !== null && row[field] !== '') {
+                                value = row[field];
+                                warnings.push({row: index + 1, field: targetField, message: `Inferred grade from '${field}' field: ${value}`});
+                                break;
+                            }
+                        }
+                    }
+                    
+                    // Enhanced: Handle date formats flexibly
+                    if (targetField.includes('date') || targetField.includes('Date')) {
+                        if (value && typeof value === 'number') {
+                            // Excel date serial number conversion
+                            const excelEpoch = new Date(1900, 0, 1);
+                            const date = new Date(excelEpoch.getTime() + (value - 2) * 86400000);
+                            value = date.toISOString().split('T')[0];
+                            warnings.push({row: index + 1, field: targetField, message: 'Converted Excel date format'});
+                        }
+                    }
+                    
+                    // Enhanced: Clean and normalize text values
+                    if (value && typeof value === 'string') {
+                        value = value.trim();
+                        // Remove extra whitespace
+                        value = value.replace(/\s+/g, ' ');
+                    }
+                    
                     record[targetField] = value || '';
                     
                     // Track missing required fields
@@ -3447,15 +3498,40 @@
                     warnings.push({row: index + 1, field: 'name', message: 'Split into first and last name'});
                 }
                 
+                // Enhanced: Try to populate missing required fields with available data
+                for (const reqField of requiredFields) {
+                    if (!record[reqField] || record[reqField] === '') {
+                        // If name is required but missing, try other name fields
+                        if (reqField === 'name' && (record.firstName || record.surname)) {
+                            record.name = `${record.surname || ''} ${record.firstName || ''}`.trim();
+                            if (record.name) {
+                                warnings.push({row: index + 1, field: reqField, message: 'Generated name from available fields'});
+                                missingRequired = missingRequired.filter(f => f !== reqField);
+                            }
+                        }
+                        // Add more smart inference rules as needed
+                    }
+                }
+                
                 // Validate and categorize record
                 if (missingRequired.length === 0) {
                     validRecords.push(record);
                 } else {
-                    invalidRecords.push({
-                        row: index + 1,
-                        reason: `Missing required fields: ${missingRequired.join(', ')}`,
-                        data: record
-                    });
+                    // Enhanced: Try to import with partial data if at least name or identifier exists
+                    if (record.name || record.accession || record.firstName) {
+                        validRecords.push(record);
+                        warnings.push({
+                            row: index + 1, 
+                            field: 'import', 
+                            message: `Imported with missing fields (${missingRequired.join(', ')}) - using available information`
+                        });
+                    } else {
+                        invalidRecords.push({
+                            row: index + 1,
+                            reason: `Missing required fields: ${missingRequired.join(', ')} and no identifying information`,
+                            data: record
+                        });
+                    }
                 }
             });
             
@@ -5185,6 +5261,10 @@
                 document.getElementById('chatGPTApiKey').value = chatGPTSettings.apiKey;
                 document.getElementById('chatGPTModel').value = chatGPTSettings.model;
             }
+            if (document.getElementById('grokApiKey')) {
+                document.getElementById('grokApiKey').value = grokSettings.apiKey;
+                document.getElementById('grokModel').value = grokSettings.model;
+            }
         }
         function saveSMSSettings() {
             smsSettings.username = document.getElementById('smsUsername').value;
@@ -5205,6 +5285,14 @@
             chatGPTSettings.enabled = chatGPTSettings.apiKey.length > 0;
             saveData();
             addNotification('ChatGPT API settings saved', 'success');
+        }
+        
+        function saveGrokSettings() {
+            grokSettings.apiKey = document.getElementById('grokApiKey').value;
+            grokSettings.model = document.getElementById('grokModel').value;
+            grokSettings.enabled = grokSettings.apiKey.length > 0;
+            saveData();
+            addNotification('Grok API settings saved', 'success');
         }
         function backupData() {
             const data = { ...window }; // Mock full backup
@@ -5590,6 +5678,7 @@
         async function researchWithAI() {
             const query = document.getElementById('researchQuery').value.trim();
             const category = document.getElementById('researchCategory').value;
+            const provider = document.getElementById('aiProvider').value;
             
             if (!query) {
                 addNotification('Please enter a research question', 'warning');
@@ -5601,6 +5690,7 @@
                 id: Date.now(),
                 query: query,
                 category: category,
+                provider: provider,
                 timestamp: new Date().toLocaleString()
             };
             researchHistory.unshift(researchItem);
@@ -5613,25 +5703,41 @@
                         <div class="spinner-border text-light mb-3" role="status">
                             <span class="visually-hidden">Loading...</span>
                         </div>
-                        <p>Researching your question...</p>
+                        <p>Researching your question using ${provider === 'chatgpt' ? 'ChatGPT' : 'Grok'}...</p>
                     </div>
                 </div>
             `;
             
             let response;
+            let providerName = provider === 'chatgpt' ? 'ChatGPT' : 'Grok';
             
-            // Check if ChatGPT API is configured and enabled
-            if (chatGPTSettings.enabled && chatGPTSettings.apiKey) {
-                try {
-                    response = await callChatGPTAPI(query, category);
-                } catch (error) {
-                    console.error('ChatGPT API Error:', error);
-                    addNotification('API Error: ' + error.message + '. Using fallback mode.', 'warning');
-                    response = generateEnhancedAIResponse(query, category);
+            // Check which API to use based on provider selection
+            if (provider === 'chatgpt') {
+                if (chatGPTSettings.enabled && chatGPTSettings.apiKey) {
+                    try {
+                        response = await callChatGPTAPI(query, category);
+                    } catch (error) {
+                        console.error('ChatGPT API Error:', error);
+                        addNotification('ChatGPT API Error: ' + error.message + '. Using fallback mode.', 'warning');
+                        response = generateEnhancedAIResponse(query, category, 'ChatGPT');
+                    }
+                } else {
+                    addNotification('ChatGPT API not configured. Using fallback mode.', 'warning');
+                    response = generateEnhancedAIResponse(query, category, 'ChatGPT');
                 }
-            } else {
-                // Use mock response if API not configured
-                response = generateEnhancedAIResponse(query, category);
+            } else if (provider === 'grok') {
+                if (grokSettings.enabled && grokSettings.apiKey) {
+                    try {
+                        response = await callGrokAPI(query, category);
+                    } catch (error) {
+                        console.error('Grok API Error:', error);
+                        addNotification('Grok API Error: ' + error.message + '. Using fallback mode.', 'warning');
+                        response = generateEnhancedAIResponse(query, category, 'Grok');
+                    }
+                } else {
+                    addNotification('Grok API not configured. Using fallback mode.', 'warning');
+                    response = generateEnhancedAIResponse(query, category, 'Grok');
+                }
             }
             
             document.getElementById('researchResults').innerHTML = `
@@ -5639,7 +5745,10 @@
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-start mb-3">
                             <h4><i class="fas fa-brain me-2"></i>Research Results</h4>
-                            <span class="badge bg-primary">${category}</span>
+                            <div>
+                                <span class="badge bg-primary me-2">${category}</span>
+                                <span class="badge bg-success">${providerName}</span>
+                            </div>
                         </div>
                         <h5 class="text-info mb-3">"${query}"</h5>
                         ${response}
@@ -5651,14 +5760,14 @@
                             </div>
                         </div>
                         <div class="mt-3">
-                            <small class="text-muted"><i class="fas fa-clock me-1"></i>Researched on: ${new Date().toLocaleString()}</small>
+                            <small class="text-muted"><i class="fas fa-clock me-1"></i>Researched on: ${new Date().toLocaleString()} using ${providerName}</small>
                         </div>
                     </div>
                 </div>
             `;
             
             loadResearchHistory();
-            addNotification('Research completed successfully!', 'success');
+            addNotification('Research completed successfully using ' + providerName + '!', 'success');
         }
         
         async function callChatGPTAPI(query, category) {
@@ -5711,7 +5820,58 @@ Include relevant examples, explanations, and suggest further areas of study.`;
             `;
         }
         
-        function generateEnhancedAIResponse(query, category) {
+        async function callGrokAPI(query, category) {
+            const apiKey = grokSettings.apiKey;
+            const model = grokSettings.model;
+            
+            const systemPrompt = `You are an educational AI assistant helping a student with their research. 
+The student is researching in the category: ${category}. 
+Provide accurate, educational, and age-appropriate information. 
+Include relevant examples, explanations, and suggest further areas of study.`;
+            
+            const response = await fetch('https://api.x.ai/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiKey}`
+                },
+                body: JSON.stringify({
+                    model: model,
+                    messages: [
+                        { role: 'system', content: systemPrompt },
+                        { role: 'user', content: query }
+                    ],
+                    temperature: 0.7,
+                    max_tokens: 1000,
+                    stream: false
+                })
+            });
+            
+            if (!response.ok) {
+                throw new Error(`API request failed with status ${response.status}`);
+            }
+            
+            const data = await response.json();
+            const aiResponse = data.choices[0].message.content;
+            
+            return `
+                <div class="alert alert-success text-dark">
+                    <div class="d-flex align-items-start mb-2">
+                        <i class="fas fa-robot fa-2x me-3"></i>
+                        <div>
+                            <h6><strong>Grok Response:</strong></h6>
+                            <p style="white-space: pre-wrap;">${aiResponse}</p>
+                        </div>
+                    </div>
+                    <div class="alert alert-info mt-3 mb-0">
+                        <i class="fas fa-check-circle me-2"></i>
+                        <strong>Powered by Grok API</strong> - This response was generated using xAI's advanced AI model.
+                    </div>
+                </div>
+            `;
+        }
+        
+        function generateEnhancedAIResponse(query, category, provider = 'AI') {
             // Enhanced AI response with category-specific content
             const responses = {
                 science: {
@@ -5809,9 +5969,9 @@ Include relevant examples, explanations, and suggest further areas of study.`;
                     </div>
                     <div class="alert alert-info mt-3">
                         <i class="fas fa-info-circle me-2"></i>
-                        <strong>Note:</strong> This is an enhanced educational AI assistant. In a production system, 
-                        this would integrate with advanced AI APIs (like GPT-4, Grok, or Claude) to provide real-time, 
-                        accurate research results with verified sources and citations.
+                        <strong>Note:</strong> ${provider} API is not configured or encountered an error. 
+                        This is fallback mode with enhanced educational content. 
+                        Configure the ${provider} API in Settings for real-time AI-powered research results.
                     </div>
                 </div>
             `;
@@ -5854,6 +6014,7 @@ Include relevant examples, explanations, and suggest further areas of study.`;
             `;
             
             researchHistory.slice(0, 5).forEach(item => {
+                const providerBadge = item.provider ? `<span class="badge bg-success ms-1">${item.provider === 'chatgpt' ? 'ChatGPT' : 'Grok'}</span>` : '';
                 html += `
                     <div class="list-group-item" style="background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.1);">
                         <div class="d-flex justify-content-between align-items-start">
@@ -5861,10 +6022,11 @@ Include relevant examples, explanations, and suggest further areas of study.`;
                                 <h6 class="mb-1">${item.query}</h6>
                                 <small class="text-muted">
                                     <span class="badge bg-secondary">${item.category}</span>
+                                    ${providerBadge}
                                     <i class="fas fa-clock ms-2 me-1"></i>${item.timestamp}
                                 </small>
                             </div>
-                            <button class="btn btn-sm btn-outline-light" onclick="document.getElementById('researchQuery').value='${item.query}'; document.getElementById('researchCategory').value='${item.category}'; researchWithAI();">
+                            <button class="btn btn-sm btn-outline-light" onclick="document.getElementById('researchQuery').value='${item.query}'; document.getElementById('researchCategory').value='${item.category}'; ${item.provider ? `document.getElementById('aiProvider').value='${item.provider}';` : ''} researchWithAI();">
                                 <i class="fas fa-redo"></i>
                             </button>
                         </div>
