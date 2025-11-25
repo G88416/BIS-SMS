@@ -1112,6 +1112,40 @@
             color: #4CAF50;
             font-weight: 600;
         }
+        
+        /* System Management Portal - Enhanced Table Visibility */
+        #systemManagement .table {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        #systemManagement .table th {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff;
+            font-weight: 600;
+            padding: 12px;
+            border: none;
+        }
+        
+        #systemManagement .table td {
+            color: #333;
+            padding: 10px 12px;
+            border-color: rgba(0, 0, 0, 0.1);
+            background: rgba(255, 255, 255, 0.9);
+        }
+        
+        #systemManagement .table-striped tbody tr:nth-of-type(odd) td {
+            background: rgba(102, 126, 234, 0.1);
+        }
+        
+        #systemManagement .table-striped tbody tr:hover td {
+            background: rgba(102, 126, 234, 0.2);
+        }
+        
+        #systemManagement .table .badge {
+            font-weight: 500;
+        }
     </style>
 </head>
 <body>
@@ -1190,7 +1224,7 @@
                 <li class="admin-only non-student"><a href="#fees" class="nav-link" onclick="showSection('fees')"><i class="fas fa-money-bill-wave me-2"></i><span class="nav-text">Finance Management</span></a></li>
                 <li class="teacher-only non-student"><a href="#timetable" class="nav-link" onclick="showSection('timetable')"><i class="fas fa-calendar-alt me-2"></i><span class="nav-text">Timetable</span></a></li>
                 <li class="teacher-only non-student"><a href="#teachers" class="nav-link" onclick="showSection('teachers')"><i class="fas fa-chalkboard-teacher me-2"></i><span class="nav-text">Advanced Teachers</span></a></li>
-                <li class="teacher-only non-student"><a href="#exams" class="nav-link" onclick="showSection('exams')"><i class="fas fa-file-alt me-2"></i><span class="nav-text">Examinations</span></a></li>
+                <li class="teacher-only non-student"><a href="#exams" class="nav-link" onclick="showSection('exams')"><i class="fas fa-file-alt me-2"></i><span class="nav-text">Assessment</span></a></li>
                 <li class="admin-only non-student"><a href="#hr" class="nav-link" onclick="showSection('hr')"><i class="fas fa-user-tie me-2"></i><span class="nav-text">HR Management</span></a></li>
                 <li class="non-student"><a href="#communication" class="nav-link" onclick="showSection('communication')"><i class="fas fa-comments me-2"></i><span class="nav-text">Communication</span></a></li>
                 <li class="admin-only non-student"><a href="#eventsManagement" class="nav-link" onclick="showSection('eventsManagement')"><i class="fas fa-calendar-check me-2"></i><span class="nav-text">Events Management</span></a></li>
@@ -3548,10 +3582,10 @@
                             <a class="nav-link active" data-bs-toggle="tab" href="#parent-overview">Overview</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" data-bs-toggle="tab" href="#parent-progress">Student Progress</a>
+                            <a class="nav-link" data-bs-toggle="tab" href="#parent-timetable">Time Table</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" data-bs-toggle="tab" href="#parent-attendance">Attendance</a>
+                            <a class="nav-link" data-bs-toggle="tab" href="#parent-assessment">Assessment</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" data-bs-toggle="tab" href="#parent-communication">Communication</a>
@@ -3565,8 +3599,8 @@
                         <div id="parentChildInfo"></div>
                         <div class="row mt-4">
                             <div class="col-md-6">
-                                <h4>Attendance</h4>
-                                <div id="parentAttendance"></div>
+                                <h4>Time Table</h4>
+                                <div id="parentTimeTableOverview"></div>
                             </div>
                             <div class="col-md-6">
                                 <h4>Fees</h4>
@@ -3575,8 +3609,8 @@
                         </div>
                         <div class="row mt-4">
                             <div class="col-md-6">
-                                <h4>Grades</h4>
-                                <div id="parentGrades"></div>
+                                <h4>Assessment</h4>
+                                <div id="parentAssessmentOverview"></div>
                             </div>
                             <div class="col-md-6">
                                 <h4>Announcements</h4>
@@ -3584,82 +3618,176 @@
                             </div>
                         </div>
                     </div>
-                    <div class="tab-pane fade" id="parent-progress">
-                        <h4>Student Progress Report</h4>
+                    <div class="tab-pane fade" id="parent-timetable">
+                        <h4>Student Time Table (Read-Only)</h4>
                         <div class="alert alert-warning">
-                            <i class="fas fa-eye me-2"></i><strong>Read-Only:</strong> View detailed progress reports for your child. No edits allowed.
+                            <i class="fas fa-eye me-2"></i><strong>Read-Only:</strong> View your child's class schedule and timetable. No edits allowed.
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <div class="card card-metric p-3">
+                                    <h5>Total Classes</h5>
+                                    <h3 id="parentTotalClasses">0</h3>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card card-metric p-3">
+                                    <h5>Subjects</h5>
+                                    <h3 id="parentTotalSubjects">0</h3>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card card-metric p-3">
+                                    <h5>Today's Classes</h5>
+                                    <h3 id="parentTodayClasses">0</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Time</th>
+                                        <th>Monday</th>
+                                        <th>Tuesday</th>
+                                        <th>Wednesday</th>
+                                        <th>Thursday</th>
+                                        <th>Friday</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="parentTimeTableBody">
+                                    <tr>
+                                        <td>08:00 - 08:45</td>
+                                        <td>Mathematics</td>
+                                        <td>English</td>
+                                        <td>Science</td>
+                                        <td>History</td>
+                                        <td>Geography</td>
+                                    </tr>
+                                    <tr>
+                                        <td>08:45 - 09:30</td>
+                                        <td>English</td>
+                                        <td>Mathematics</td>
+                                        <td>Geography</td>
+                                        <td>Science</td>
+                                        <td>Art</td>
+                                    </tr>
+                                    <tr>
+                                        <td>09:45 - 10:30</td>
+                                        <td>Science</td>
+                                        <td>History</td>
+                                        <td>Mathematics</td>
+                                        <td>English</td>
+                                        <td>Music</td>
+                                    </tr>
+                                    <tr>
+                                        <td>10:45 - 11:30</td>
+                                        <td>History</td>
+                                        <td>Science</td>
+                                        <td>English</td>
+                                        <td>Geography</td>
+                                        <td>Physical Education</td>
+                                    </tr>
+                                    <tr>
+                                        <td>11:45 - 12:30</td>
+                                        <td>Geography</td>
+                                        <td>Art</td>
+                                        <td>History</td>
+                                        <td>Mathematics</td>
+                                        <td>Science</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="parent-assessment">
+                        <h4>Student Assessment (Read-Only)</h4>
+                        <div class="alert alert-warning">
+                            <i class="fas fa-eye me-2"></i><strong>Read-Only:</strong> View your child's assessment records and grades. No edits allowed.
                         </div>
                         <div class="row mb-3">
                             <div class="col-md-4">
                                 <div class="card card-metric p-3">
                                     <h5>Overall Average</h5>
-                                    <h3 id="parentStudentAverage">0%</h3>
+                                    <h3 id="parentOverallAverage">0%</h3>
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="card card-metric p-3">
-                                    <h5>Attendance Rate</h5>
-                                    <h3 id="parentStudentAttendance">0%</h3>
+                                    <h5>Assessments Completed</h5>
+                                    <h3 id="parentAssessmentsCompleted">0</h3>
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="card card-metric p-3">
-                                    <h5>Behavior Score</h5>
-                                    <h3 id="parentStudentBehavior">0/10</h3>
+                                    <h5>Upcoming Assessments</h5>
+                                    <h3 id="parentUpcomingAssessments">0</h3>
                                 </div>
                             </div>
                         </div>
-                        <canvas id="parentProgressChart" class="mt-4"></canvas>
-                        <div class="mt-4">
-                            <h5>Subject-wise Performance</h5>
-                            <table class="table table-striped">
-                                <thead>
-                                    <tr>
-                                        <th>Subject</th>
-                                        <th>Current Grade</th>
-                                        <th>Average Score</th>
-                                        <th>Trend</th>
-                                        <th>Teacher Comments</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="parentProgressTable"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                    <div class="tab-pane fade" id="parent-attendance">
-                        <h4>Student Attendance (Read-Only)</h4>
-                        <div class="alert alert-warning">
-                            <i class="fas fa-eye me-2"></i><strong>Read-Only:</strong> View your child's attendance records. No edits allowed.
-                        </div>
-                        <div class="row mb-3">
-                            <div class="col-md-4">
-                                <div class="card card-metric p-3">
-                                    <h5>Total Days</h5>
-                                    <h3 id="parentTotalDays">0</h3>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="card card-metric p-3">
-                                    <h5>Present</h5>
-                                    <h3 id="parentPresentDays">0</h3>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="card card-metric p-3">
-                                    <h5>Absent</h5>
-                                    <h3 id="parentAbsentDays">0</h3>
-                                </div>
-                            </div>
-                        </div>
+                        <h5>Recent Assessments</h5>
                         <table class="table table-striped">
                             <thead>
                                 <tr>
+                                    <th>Subject</th>
+                                    <th>Assessment Type</th>
                                     <th>Date</th>
-                                    <th>Status</th>
-                                    <th>Remarks</th>
+                                    <th>Score</th>
+                                    <th>Grade</th>
+                                    <th>Teacher Comments</th>
                                 </tr>
                             </thead>
-                            <tbody id="parentAttendanceTable"></tbody>
+                            <tbody id="parentAssessmentTable">
+                                <tr>
+                                    <td>Mathematics</td>
+                                    <td>Test</td>
+                                    <td>2025-01-15</td>
+                                    <td>85%</td>
+                                    <td><span class="badge bg-success">A</span></td>
+                                    <td>Excellent work!</td>
+                                </tr>
+                                <tr>
+                                    <td>English</td>
+                                    <td>Essay</td>
+                                    <td>2025-01-10</td>
+                                    <td>78%</td>
+                                    <td><span class="badge bg-primary">B</span></td>
+                                    <td>Good effort, improve grammar.</td>
+                                </tr>
+                                <tr>
+                                    <td>Science</td>
+                                    <td>Lab Report</td>
+                                    <td>2025-01-08</td>
+                                    <td>92%</td>
+                                    <td><span class="badge bg-success">A</span></td>
+                                    <td>Outstanding research!</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <h5 class="mt-4">Upcoming Assessments</h5>
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Subject</th>
+                                    <th>Assessment Type</th>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="parentUpcomingAssessmentTable">
+                                <tr>
+                                    <td>History</td>
+                                    <td>Project</td>
+                                    <td>2025-02-01</td>
+                                    <td><span class="badge bg-warning">Upcoming</span></td>
+                                </tr>
+                                <tr>
+                                    <td>Geography</td>
+                                    <td>Test</td>
+                                    <td>2025-02-05</td>
+                                    <td><span class="badge bg-warning">Upcoming</span></td>
+                                </tr>
+                            </tbody>
                         </table>
                     </div>
                     <div class="tab-pane fade" id="parent-communication">
@@ -4612,7 +4740,21 @@
                                                 <div class="poster-template-thumb" style="background-image:url('https://source.unsplash.com/random/800x1200/?sale')" onclick="loadPosterTemplate('sale')"></div>
                                                 <div class="poster-template-thumb" style="background-image:url('https://source.unsplash.com/random/800x1200/?motivation')" onclick="loadPosterTemplate('motivation')"></div>
                                             </div>
-                                            <button onclick="downloadPoster()">Download PNG</button>
+                                            <div class="poster-section">
+                                                <h3>Export & Save</h3>
+                                                <button onclick="downloadPoster()" style="background:linear-gradient(135deg, #28a745, #20c997);">
+                                                    <i class="fas fa-download" style="margin-right:8px;"></i>Download PNG
+                                                </button>
+                                                <button onclick="savePosterToStorage()" style="background:linear-gradient(135deg, #007bff, #0056b3);">
+                                                    <i class="fas fa-save" style="margin-right:8px;"></i>Save Poster
+                                                </button>
+                                                <button onclick="loadSavedPoster()" style="background:linear-gradient(135deg, #6c757d, #495057);">
+                                                    <i class="fas fa-folder-open" style="margin-right:8px;"></i>Load Saved
+                                                </button>
+                                                <button onclick="clearPosterCanvas()" style="background:linear-gradient(135deg, #dc3545, #c82333);">
+                                                    <i class="fas fa-trash" style="margin-right:8px;"></i>Clear Canvas
+                                                </button>
+                                            </div>
                                         </div>
                                         
                                         <!-- CENTER CANVAS -->
@@ -5745,6 +5887,86 @@
                                                 }
                                             }
                                             return color || '#000000';
+                                        }
+                                        
+                                        // Save poster to localStorage
+                                        function savePosterToStorage() {
+                                            if (!posterCanvas) {
+                                                addNotification('Please wait, poster creator is initializing...', 'warning');
+                                                return;
+                                            }
+                                            try {
+                                                const posterName = prompt('Enter a name for your poster:', 'My Poster ' + new Date().toLocaleDateString());
+                                                if (!posterName) return;
+                                                
+                                                const posterData = JSON.stringify(posterCanvas.toJSON());
+                                                const savedPosters = JSON.parse(localStorage.getItem('savedPosters') || '[]');
+                                                savedPosters.push({
+                                                    id: Date.now(),
+                                                    name: posterName,
+                                                    data: posterData,
+                                                    savedAt: new Date().toISOString(),
+                                                    thumbnail: posterCanvas.toDataURL({multiplier: 0.2})
+                                                });
+                                                localStorage.setItem('savedPosters', JSON.stringify(savedPosters));
+                                                addNotification('Poster "' + posterName + '" saved successfully!', 'success');
+                                            } catch (error) {
+                                                addNotification('Error saving poster: ' + error.message, 'error');
+                                            }
+                                        }
+                                        
+                                        // Load saved poster from localStorage
+                                        function loadSavedPoster() {
+                                            if (!posterCanvas) {
+                                                addNotification('Please wait, poster creator is initializing...', 'warning');
+                                                return;
+                                            }
+                                            try {
+                                                const savedPosters = JSON.parse(localStorage.getItem('savedPosters') || '[]');
+                                                if (savedPosters.length === 0) {
+                                                    addNotification('No saved posters found. Create and save a poster first!', 'info');
+                                                    return;
+                                                }
+                                                
+                                                // Create a list of saved posters
+                                                let posterList = 'Select a poster to load:\n\n';
+                                                savedPosters.forEach((poster, index) => {
+                                                    posterList += (index + 1) + '. ' + poster.name + ' (' + new Date(poster.savedAt).toLocaleDateString() + ')\n';
+                                                });
+                                                posterList += '\nEnter the number of the poster to load (or 0 to cancel):';
+                                                
+                                                const selection = prompt(posterList);
+                                                if (!selection || selection === '0') return;
+                                                
+                                                const selectedIndex = parseInt(selection) - 1;
+                                                if (selectedIndex >= 0 && selectedIndex < savedPosters.length) {
+                                                    const posterData = JSON.parse(savedPosters[selectedIndex].data);
+                                                    posterCanvas.loadFromJSON(posterData, function() {
+                                                        posterCanvas.renderAll();
+                                                        updatePosterLayers();
+                                                        addNotification('Poster "' + savedPosters[selectedIndex].name + '" loaded successfully!', 'success');
+                                                    });
+                                                } else {
+                                                    addNotification('Invalid selection. Please try again.', 'warning');
+                                                }
+                                            } catch (error) {
+                                                addNotification('Error loading poster: ' + error.message, 'error');
+                                            }
+                                        }
+                                        
+                                        // Clear the poster canvas
+                                        function clearPosterCanvas() {
+                                            if (!posterCanvas) {
+                                                addNotification('Please wait, poster creator is initializing...', 'warning');
+                                                return;
+                                            }
+                                            if (confirm('Are you sure you want to clear the canvas? All unsaved changes will be lost.')) {
+                                                posterCanvas.clear();
+                                                posterCanvas.backgroundColor = '#ffffff';
+                                                posterCanvas.renderAll();
+                                                updatePosterLayers();
+                                                addNotification('Canvas cleared!', 'info');
+                                            }
                                         }
         var selectedChatStudent = null;
         var isOnline = navigator.onLine;
@@ -11669,8 +11891,17 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
                 </div>
             `;
             
-            // Load attendance
-            loadParentAttendanceInfo(studentId);
+            // Load Time Table Overview
+            document.getElementById('parentTimeTableOverview').innerHTML = `
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <tr><td><strong>Today's Classes:</strong></td><td>5 classes</td></tr>
+                        <tr><td><strong>Next Class:</strong></td><td>Mathematics (10:00 AM)</td></tr>
+                        <tr><td><strong>Total Subjects:</strong></td><td>8 subjects</td></tr>
+                    </table>
+                    <a href="#parent-timetable" class="btn btn-sm btn-outline-light" onclick="document.querySelector('a[href=\\'#parent-timetable\\']').click();">View Full Timetable</a>
+                </div>
+            `;
             
             // Load fees
             const childFees = fees.filter(f => f.studentId === studentId);
@@ -11678,41 +11909,42 @@ ${staffMember.username ? '\nUsername: ' + staffMember.username : ''}
                 childFees.map(f => `<p>${f.description}: R${f.amount} - ${f.status}</p>`).join('') :
                 '<p class="text-muted">No fees recorded</p>';
             
-            // Load grades
+            // Load Assessment Overview (replacing grades)
             const childGrades = grades.filter(g => g.studentId === studentId);
-            document.getElementById('parentGrades').innerHTML = childGrades.length > 0 ?
-                childGrades.map(g => `<p>${g.subject}: ${g.score}%</p>`).join('') :
-                '<p class="text-muted">No grades recorded</p>';
+            document.getElementById('parentAssessmentOverview').innerHTML = `
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <tr><td><strong>Overall Average:</strong></td><td>${childGrades.length > 0 ? Math.round(childGrades.reduce((sum, g) => sum + (g.score || 0), 0) / childGrades.length) + '%' : 'N/A'}</td></tr>
+                        <tr><td><strong>Assessments Completed:</strong></td><td>${childGrades.length}</td></tr>
+                        <tr><td><strong>Upcoming Assessments:</strong></td><td>2</td></tr>
+                    </table>
+                    <a href="#parent-assessment" class="btn btn-sm btn-outline-light" onclick="document.querySelector('a[href=\\'#parent-assessment\\']').click();">View All Assessments</a>
+                </div>
+            `;
             
             // Load announcements
             document.getElementById('parentAnnouncements').innerHTML = announcements.length > 0 ?
                 announcements.slice(0, 5).map(a => `<p><strong>${a.title}</strong>: ${a.content}</p>`).join('') :
                 '<p class="text-muted">No announcements</p>';
+            
+            // Load parent portal metrics
+            loadParentPortalMetrics(studentId);
         }
         
-        function loadParentAttendanceInfo(studentId) {
-            const studentAttendance = attendance.filter(a => a.studentId === studentId);
-            const totalDays = studentAttendance.length;
-            const presentDays = studentAttendance.filter(a => a.status === 'Present').length;
-            const absentDays = totalDays - presentDays;
+        function loadParentPortalMetrics(studentId) {
+            // Load Time Table metrics
+            document.getElementById('parentTotalClasses').textContent = '25';
+            document.getElementById('parentTotalSubjects').textContent = '8';
+            document.getElementById('parentTodayClasses').textContent = '5';
             
-            document.getElementById('parentTotalDays').textContent = totalDays;
-            document.getElementById('parentPresentDays').textContent = presentDays;
-            document.getElementById('parentAbsentDays').textContent = absentDays;
+            // Load Assessment metrics
+            const childGrades = grades.filter(g => g.studentId === studentId);
+            const avgScore = childGrades.length > 0 ? 
+                Math.round(childGrades.reduce((sum, g) => sum + (g.score || 0), 0) / childGrades.length) : 0;
             
-            const attendanceHtml = studentAttendance.slice(-20).reverse().map(a => {
-                const statusBadge = a.status === 'Present' ? 'bg-success' : 'bg-danger';
-                return `
-                    <tr>
-                        <td>${a.date || 'N/A'}</td>
-                        <td><span class="badge ${statusBadge}">${a.status}</span></td>
-                        <td>${a.remarks || '-'}</td>
-                    </tr>
-                `;
-            }).join('');
-            
-            document.getElementById('parentAttendanceTable').innerHTML = attendanceHtml || 
-                '<tr><td colspan="3" class="text-center text-muted">No attendance records</td></tr>';
+            document.getElementById('parentOverallAverage').textContent = avgScore + '%';
+            document.getElementById('parentAssessmentsCompleted').textContent = childGrades.length;
+            document.getElementById('parentUpcomingAssessments').textContent = '2';
         }
         
         function sendParentMessage() {
