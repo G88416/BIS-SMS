@@ -454,7 +454,9 @@
     function generateIPs(baseIP) {
       const parts = baseIP.split('.');
       const ips = [];
-      // Start with commonly used IPs first
+      // Prioritize commonly used IPs for faster discovery:
+      // 1 = default gateway, 254 = common router, 100-101 = common DHCP range,
+      // 2 = secondary gateway, 10/50 = common static assignments
       const priority = [1, 100, 101, 254, 2, 10, 50];
       priority.forEach(i => {
         if (i < 255) ips.push(`${parts[0]}.${parts[1]}.${parts[2]}.${i}`);
@@ -528,7 +530,8 @@
       navigator.clipboard.writeText(text).then(() => {
         showNotification('✓ URL copied to clipboard: ' + text);
       }).catch(() => {
-        // Fallback for older browsers (limited support)
+        // Fallback for older browsers using deprecated execCommand
+        // Note: document.execCommand('copy') is deprecated but provides compatibility
         try {
           const textarea = document.createElement('textarea');
           textarea.value = text;
@@ -536,7 +539,7 @@
           textarea.style.opacity = '0';
           document.body.appendChild(textarea);
           textarea.select();
-          const success = document.execCommand('copy');
+          const success = document.execCommand('copy'); // Deprecated but necessary for older browsers
           document.body.removeChild(textarea);
           if (success) {
             showNotification('✓ URL copied to clipboard: ' + text);
@@ -629,15 +632,20 @@
       const totalScans = ips.length * COMMON_PORTS.length;
       let completed = 0;
 
-      // Parallel scanning with concurrency limit
+      // Parallel scanning with improved concurrency control
       const concurrency = 5; // Number of IPs to scan concurrently
-      const batchPromises = [];
+      const activePromises = new Set();
 
       for (let i = 0; i < ips.length; i++) {
         if (!scanActive) break;
         
         const ip = ips[i];
         if (ip === localIP) continue; // Skip own IP
+
+        // Wait if we've reached the concurrency limit
+        while (activePromises.size >= concurrency) {
+          await Promise.race(activePromises);
+        }
 
         // Create promise for scanning this IP across all ports
         const ipScanPromise = (async () => {
@@ -672,19 +680,13 @@
           document.getElementById('scanTime').textContent = elapsed + 's';
         })();
 
-        batchPromises.push(ipScanPromise);
-
-        // Wait for batch to complete when we reach concurrency limit
-        if (batchPromises.length >= concurrency) {
-          await Promise.all(batchPromises);
-          batchPromises.length = 0; // Clear the batch
-        }
+        // Add to active promises and remove when complete
+        activePromises.add(ipScanPromise);
+        ipScanPromise.finally(() => activePromises.delete(ipScanPromise));
       }
 
-      // Wait for any remaining promises
-      if (batchPromises.length > 0) {
-        await Promise.all(batchPromises);
-      }
+      // Wait for all remaining promises to complete
+      await Promise.all(Array.from(activePromises));
 
       // Complete scan
       const scanDuration = Math.round((Date.now() - scanStartTime) / 1000);
@@ -738,7 +740,12 @@
         return;
       }
 
-      if (!/^(\d{1,3}\.){3}\d{1,3}$/.test(ip)) {
+      // Validate IP address format and range (0-255 per octet)
+      const ipParts = ip.split('.');
+      if (ipParts.length !== 4 || !ipParts.every(part => {
+        const num = parseInt(part, 10);
+        return !isNaN(num) && num >= 0 && num <= 255 && part === num.toString();
+      })) {
         showNotification('⚠️ Invalid IP address format. Use format: 192.168.1.100');
         return;
       }
