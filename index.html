@@ -3,75 +3,425 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Local Network Server Detector</title>
+  <title>Enhanced Local Network Server Detector & Connector</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 20px; background: #f0f0f0; }
-    h1 { color: #333; }
-    #results { margin-top: 20px; }
+    * { box-sizing: border-box; }
+    body { 
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: white;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    }
+    h1 { 
+      color: #333;
+      margin-bottom: 10px;
+      font-size: 2em;
+    }
+    .subtitle {
+      color: #666;
+      margin-bottom: 25px;
+      font-size: 1.1em;
+    }
+    .controls {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+    button {
+      padding: 12px 24px;
+      font-size: 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-weight: 600;
+    }
+    button:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    .btn-secondary {
+      background: #6c757d;
+      color: white;
+    }
+    .btn-success {
+      background: #28a745;
+      color: white;
+    }
+    .info-box {
+      background: #e7f3ff;
+      border-left: 4px solid #2196F3;
+      padding: 15px;
+      margin: 15px 0;
+      border-radius: 5px;
+    }
+    .info-box strong {
+      color: #1976D2;
+    }
+    .manual-input {
+      display: flex;
+      gap: 10px;
+      margin: 15px 0;
+      flex-wrap: wrap;
+    }
+    .manual-input input {
+      padding: 10px;
+      border: 2px solid #ddd;
+      border-radius: 5px;
+      font-size: 14px;
+      flex: 1;
+      min-width: 150px;
+    }
+    .manual-input input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+    .progress-container {
+      width: 100%;
+      background: #e0e0e0;
+      border-radius: 10px;
+      height: 25px;
+      margin: 15px 0;
+      overflow: hidden;
+      display: none;
+    }
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+      width: 0%;
+      transition: width 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      font-size: 12px;
+    }
+    #results {
+      margin-top: 20px;
+    }
+    .server-card {
+      background: white;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      padding: 20px;
+      margin: 15px 0;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      transition: all 0.3s;
+    }
+    .server-card:hover {
+      border-color: #667eea;
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+    }
+    .server-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .server-url {
+      font-size: 1.3em;
+      font-weight: bold;
+      color: #667eea;
+      word-break: break-all;
+    }
+    .server-status {
+      display: inline-block;
+      padding: 5px 15px;
+      border-radius: 20px;
+      font-size: 0.9em;
+      font-weight: bold;
+    }
+    .status-online {
+      background: #d4edda;
+      color: #155724;
+    }
+    .status-checking {
+      background: #fff3cd;
+      color: #856404;
+    }
+    .server-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 15px;
+    }
+    .server-actions button {
+      padding: 8px 16px;
+      font-size: 14px;
+    }
+    .server-info {
+      margin-top: 10px;
+      padding: 10px;
+      background: #f8f9fa;
+      border-radius: 5px;
+      font-size: 0.9em;
+      color: #666;
+    }
     .found { color: green; font-weight: bold; }
     .notfound { color: #aaa; }
-    .scanning { color: orange; }
-    button { padding: 10px 20px; font-size: 16px; margin: 10px 0; }
-    pre { background: #fff; padding: 15px; border-radius: 8px; }
+    .scanning { 
+      color: #ff6b6b;
+      font-weight: bold;
+      font-size: 1.1em;
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: #999;
+    }
+    .empty-state svg {
+      width: 80px;
+      height: 80px;
+      margin-bottom: 20px;
+      opacity: 0.3;
+    }
+    .stats {
+      display: flex;
+      gap: 20px;
+      margin: 20px 0;
+      flex-wrap: wrap;
+    }
+    .stat-card {
+      flex: 1;
+      min-width: 150px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+    }
+    .stat-value {
+      font-size: 2.5em;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    .stat-label {
+      font-size: 0.9em;
+      opacity: 0.9;
+    }
+    .note {
+      background: #fff3cd;
+      border-left: 4px solid #ffc107;
+      padding: 15px;
+      margin-top: 20px;
+      border-radius: 5px;
+      font-size: 0.9em;
+    }
+    .copy-btn {
+      background: #17a2b8;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 12px;
+      margin-left: 10px;
+    }
+    .copy-btn:hover {
+      background: #138496;
+    }
+    .port-badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-size: 0.8em;
+      font-weight: bold;
+      margin-left: 10px;
+    }
+    .port-http { background: #cfe2ff; color: #084298; }
+    .port-https { background: #d1e7dd; color: #0f5132; }
+    .port-dev { background: #f8d7da; color: #842029; }
   </style>
 </head>
 <body>
-  <h1>Local Network Server Detector</h1>
-  <p>This tool scans your local network for devices responding on common web ports (80, 443, 8080, etc.).</p>
-  <button onclick="startScan()">Start Scanning Network</button>
-  <p><strong>Your Local IP:</strong> <span id="localIP">Detecting...</span></p>
+  <div class="container">
+    <h1>🔍 Enhanced Network Server Detector & Connector</h1>
+    <p class="subtitle">Discover and connect to servers on your local network</p>
 
-  <div id="results">
-    <p><em>Click the button to begin scanning...</em></p>
+    <div class="info-box">
+      <strong>Your Local IP:</strong> <span id="localIP">Detecting...</span>
+      <span id="networkInfo"></span>
+    </div>
+
+    <div class="controls">
+      <button class="btn-primary" onclick="startScan()" id="scanBtn">
+        🚀 Start Network Scan
+      </button>
+      <button class="btn-secondary" onclick="stopScan()" id="stopBtn" disabled>
+        ⏹️ Stop Scan
+      </button>
+      <button class="btn-success" onclick="exportResults()" id="exportBtn" disabled>
+        💾 Export Results
+      </button>
+    </div>
+
+    <div class="manual-input">
+      <input type="text" id="manualIP" placeholder="Enter IP (e.g., 192.168.1.100)" />
+      <input type="number" id="manualPort" placeholder="Port (e.g., 8080)" min="1" max="65535" />
+      <button class="btn-secondary" onclick="testManualConnection()">
+        🔌 Test Connection
+      </button>
+    </div>
+
+    <div class="progress-container" id="progressContainer">
+      <div class="progress-bar" id="progressBar">0%</div>
+    </div>
+
+    <div class="stats" id="stats" style="display: none;">
+      <div class="stat-card">
+        <div class="stat-value" id="scannedCount">0</div>
+        <div class="stat-label">IPs Scanned</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="foundCount">0</div>
+        <div class="stat-label">Servers Found</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="scanTime">0s</div>
+        <div class="stat-label">Scan Time</div>
+      </div>
+    </div>
+
+    <div id="results">
+      <div class="empty-state">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+        </svg>
+        <p><em>Click "Start Network Scan" to discover servers on your local network</em></p>
+        <p>Or enter an IP address manually to test a specific connection</p>
+      </div>
+    </div>
+
+    <div class="note">
+      <strong>⚠️ Important Notes:</strong>
+      <ul style="margin: 10px 0 0 0; padding-left: 20px;">
+        <li>This tool works only on your local network (same WiFi/Ethernet)</li>
+        <li>Some devices may block port scans or require authentication</li>
+        <li>Works best on Chrome/Edge. Firefox may block WebRTC IP detection</li>
+        <li>Click on any discovered server URL to connect directly in a new tab</li>
+      </ul>
+    </div>
   </div>
 
   <script>
-    // Common ports used by web servers
-    const COMMON_PORTS = [80, 443, 8080, 3000, 5000, 8000, 8008, 8081, 9000, 8888];
+    // Enhanced port list with categorization
+    const COMMON_PORTS = [
+      { port: 80, category: 'http', label: 'HTTP' },
+      { port: 443, category: 'https', label: 'HTTPS' },
+      { port: 8080, category: 'dev', label: 'HTTP Alt' },
+      { port: 3000, category: 'dev', label: 'Node/React' },
+      { port: 5000, category: 'dev', label: 'Flask/ASP.NET' },
+      { port: 8000, category: 'dev', label: 'Django/Python' },
+      { port: 8008, category: 'http', label: 'HTTP Alt' },
+      { port: 8081, category: 'dev', label: 'HTTP Alt' },
+      { port: 8443, category: 'https', label: 'HTTPS Alt' },
+      { port: 9000, category: 'dev', label: 'SonarQube' },
+      { port: 8888, category: 'dev', label: 'Jupyter' },
+      { port: 4200, category: 'dev', label: 'Angular' },
+      { port: 5173, category: 'dev', label: 'Vite' },
+      { port: 3001, category: 'dev', label: 'Node Alt' }
+    ];
 
-    // Get local IP using WebRTC (works in most browsers)
-    function getLocalIP() {
+    let scanActive = false;
+    let foundServers = [];
+    let scanStartTime = 0;
+    let scannedIPs = 0;
+
+    // Get local IP using multiple methods
+    async function getLocalIP() {
       return new Promise((resolve) => {
         const rtc = new RTCPeerConnection({ iceServers: [] });
         rtc.createDataChannel('');
-        rtc.createOffer(rtc.setLocalDescription.bind(rtc), () => {});
+        rtc.createOffer().then(offer => rtc.setLocalDescription(offer));
+        
         rtc.onicecandidate = (e) => {
           if (!e.candidate) return;
-          const ip = e.candidate.candidate.split(' ')[4];
-          if (ip && ip.includes('.')) {
-            rtc.close();
-            resolve(ip);
+          const candidate = e.candidate.candidate;
+          const ipMatch = candidate.match(/([0-9]{1,3}\.){3}[0-9]{1,3}/);
+          if (ipMatch && ipMatch[0]) {
+            const ip = ipMatch[0];
+            // Prefer private IPs
+            if (ip.startsWith('192.168.') || ip.startsWith('10.') || ip.startsWith('172.')) {
+              rtc.close();
+              resolve(ip);
+            }
           }
         };
-        // Fallback if no candidate found
+        
+        // Fallback timeout
         setTimeout(() => {
           rtc.close();
-          resolve("Unknown (WebRTC blocked)");
+          resolve(null);
         }, 3000);
       });
     }
 
-    // Try to connect to a given IP:port
-    async function checkServer(ip, port, timeout = 1500) {
+    // Enhanced server detection with multiple methods
+    async function checkServer(ip, port, timeout = 2000) {
+      const protocol = port === 443 || port === 8443 ? 'https' : 'http';
+      const url = `${protocol}://${ip}:${port}`;
+      
       return new Promise((resolve) => {
-        const img = new Image();
+        let resolved = false;
         const timer = setTimeout(() => {
-          img.src = '';
-          resolve(false);
+          if (!resolved) {
+            resolved = true;
+            resolve({ alive: false, url });
+          }
         }, timeout);
 
-        img.onload = () => { clearTimeout(timer); resolve(true); };
-        img.onerror = () => { clearTimeout(timer); resolve(true); }; // Many servers respond even on error
-
-        // Use a random parameter to avoid caching
-        img.src = `http://${ip}:${port}/?t=${Date.now()}`;
-        
-        // Also try HTTPS for port 443
-        if (port === 443) {
-          const img2 = new Image();
-          img2.onload = img2.onerror = () => { clearTimeout(timer); resolve(true); };
-          img2.src = `https://${ip}/?t=${Date.now()}`;
-        }
+        // Method 1: Try fetch with no-cors mode
+        fetch(url, { 
+          mode: 'no-cors',
+          cache: 'no-cache',
+          signal: AbortSignal.timeout(timeout - 100)
+        })
+        .then(() => {
+          if (!resolved) {
+            resolved = true;
+            clearTimeout(timer);
+            resolve({ alive: true, url, method: 'fetch' });
+          }
+        })
+        .catch(() => {
+          // Method 2: Try image loading as fallback
+          const img = new Image();
+          img.onload = img.onerror = () => {
+            if (!resolved) {
+              resolved = true;
+              clearTimeout(timer);
+              // If we get any response (even error), server is likely alive
+              resolve({ alive: true, url, method: 'image' });
+            }
+          };
+          img.src = `${url}/?probe=${Date.now()}`;
+        });
       });
     }
 
@@ -79,56 +429,319 @@
     function generateIPs(baseIP) {
       const parts = baseIP.split('.');
       const ips = [];
+      // Start with commonly used IPs first
+      const priority = [1, 100, 101, 254, 2, 10, 50];
+      priority.forEach(i => {
+        if (i < 255) ips.push(`${parts[0]}.${parts[1]}.${parts[2]}.${i}`);
+      });
+      // Then add the rest
       for (let i = 1; i < 255; i++) {
-        ips.push(`${parts[0]}.${parts[1]}.${parts[2]}.${i}`);
+        const ip = `${parts[0]}.${parts[1]}.${parts[2]}.${i}`;
+        if (!ips.includes(ip)) ips.push(ip);
       }
       return ips;
     }
 
-    async function startScan() {
-      const resultsDiv = document.getElementById('results');
-      resultsDiv.innerHTML = '<p class="scanning">Scanning your local network... This may take 1-2 minutes.</p>';
+    // Update progress bar
+    function updateProgress(current, total) {
+      const percent = Math.round((current / total) * 100);
+      const progressBar = document.getElementById('progressBar');
+      progressBar.style.width = percent + '%';
+      progressBar.textContent = `${percent}% (${current}/${total})`;
+    }
 
+    // Display server card
+    function displayServer(serverInfo) {
+      const resultsDiv = document.getElementById('results');
+      
+      // Remove empty state if it exists
+      const emptyState = resultsDiv.querySelector('.empty-state');
+      if (emptyState) emptyState.remove();
+
+      const portInfo = COMMON_PORTS.find(p => p.port === serverInfo.port);
+      const portClass = portInfo ? `port-${portInfo.category}` : 'port-dev';
+      const portLabel = portInfo ? portInfo.label : 'Custom';
+
+      const card = document.createElement('div');
+      card.className = 'server-card';
+      card.innerHTML = `
+        <div class="server-header">
+          <div>
+            <span class="server-url">${serverInfo.url}</span>
+            <span class="port-badge ${portClass}">${portLabel}</span>
+          </div>
+          <span class="server-status status-online">✓ Online</span>
+        </div>
+        <div class="server-info">
+          <strong>IP:</strong> ${serverInfo.ip} | 
+          <strong>Port:</strong> ${serverInfo.port} | 
+          <strong>Protocol:</strong> ${serverInfo.protocol.toUpperCase()}
+        </div>
+        <div class="server-actions">
+          <button class="btn-primary" onclick="connectToServer('${serverInfo.url}')">
+            🌐 Open in New Tab
+          </button>
+          <button class="btn-secondary" onclick="copyToClipboard('${serverInfo.url}')">
+            📋 Copy URL
+          </button>
+          <button class="btn-success" onclick="recheckServer('${serverInfo.ip}', ${serverInfo.port})">
+            🔄 Recheck
+          </button>
+        </div>
+      `;
+      
+      resultsDiv.appendChild(card);
+    }
+
+    // Connect to server
+    function connectToServer(url) {
+      window.open(url, '_blank');
+    }
+
+    // Copy to clipboard
+    function copyToClipboard(text) {
+      navigator.clipboard.writeText(text).then(() => {
+        alert('✓ URL copied to clipboard: ' + text);
+      }).catch(() => {
+        // Fallback for older browsers
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        alert('✓ URL copied to clipboard: ' + text);
+      });
+    }
+
+    // Recheck single server
+    async function recheckServer(ip, port) {
+      const result = await checkServer(ip, port);
+      if (result.alive) {
+        alert(`✓ Server ${ip}:${port} is still online!`);
+      } else {
+        alert(`✗ Server ${ip}:${port} is not responding.`);
+      }
+    }
+
+    // Start network scan
+    async function startScan() {
+      if (scanActive) return;
+      
+      scanActive = true;
+      foundServers = [];
+      scannedIPs = 0;
+      scanStartTime = Date.now();
+      
+      // Update UI
+      document.getElementById('scanBtn').disabled = true;
+      document.getElementById('stopBtn').disabled = false;
+      document.getElementById('exportBtn').disabled = true;
+      document.getElementById('progressContainer').style.display = 'block';
+      document.getElementById('stats').style.display = 'flex';
+      document.getElementById('results').innerHTML = '<p class="scanning">⏳ Scanning your local network... Please wait...</p>';
+      
+      // Get local IP
       const localIP = await getLocalIP();
       document.getElementById('localIP').textContent = localIP || "Could not detect";
-
-      if (!localIP || localIP.includes('Unknown')) {
-        resultsDiv.innerHTML += '<p>Could not detect local IP. WebRTC may be blocked.</p>';
+      
+      if (!localIP) {
+        document.getElementById('results').innerHTML = `
+          <div class="info-box" style="background: #f8d7da; border-color: #dc3545;">
+            <strong>❌ Error:</strong> Could not detect local IP. WebRTC may be blocked by your browser.
+            <br>Please try using Chrome/Edge or manually enter an IP address above.
+          </div>
+        `;
+        stopScan();
         return;
       }
 
-      const baseNetwork = localIP.split('.').slice(0, 3).join('.');
+      const network = localIP.split('.').slice(0, 3).join('.');
+      document.getElementById('networkInfo').textContent = ` | Network: ${network}.0/24`;
+
       const ips = generateIPs(localIP);
+      const totalScans = ips.length * COMMON_PORTS.length;
+      let completed = 0;
 
-      let found = [];
+      // Parallel scanning with concurrency limit
+      const concurrency = 10; // Scan 10 IP:port combinations at once
+      const results = [];
 
-      for (const ip of ips) {
+      for (let i = 0; i < ips.length; i++) {
+        if (!scanActive) break;
+        
+        const ip = ips[i];
         if (ip === localIP) continue; // Skip own IP
 
-        for (const port of COMMON_PORTS) {
-          const alive = await checkServer(ip, port);
-          if (alive) {
-            const protocol = port === 443 ? 'https' : 'http';
-            found.push(`<span class="found">FOUND → ${protocol}://${ip}:${port}</span>`);
-            resultsDiv.innerHTML += `<br>✓ <strong>${protocol}://${ip}:${port}</strong> is ONLINE!`;
+        // Batch port checks for this IP
+        const portChecks = COMMON_PORTS.map(async (portInfo) => {
+          if (!scanActive) return null;
+          
+          const result = await checkServer(ip, portInfo.port);
+          completed++;
+          updateProgress(completed, totalScans);
+          
+          if (result.alive) {
+            const serverInfo = {
+              ip,
+              port: portInfo.port,
+              protocol: portInfo.port === 443 || portInfo.port === 8443 ? 'https' : 'http',
+              url: result.url,
+              category: portInfo.category
+            };
+            foundServers.push(serverInfo);
+            displayServer(serverInfo);
+            
+            // Update found count
+            document.getElementById('foundCount').textContent = foundServers.length;
           }
+          
+          return result;
+        });
+
+        // Process in batches
+        if (i % concurrency === 0) {
+          await Promise.all(portChecks);
         }
+        
+        scannedIPs++;
+        document.getElementById('scannedCount').textContent = scannedIPs;
+        
+        // Update scan time
+        const elapsed = Math.round((Date.now() - scanStartTime) / 1000);
+        document.getElementById('scanTime').textContent = elapsed + 's';
       }
 
-      if (found.length === 0) {
-        resultsDiv.innerHTML += '<p><strong>No active web servers found on common ports.</strong></p>';
-        resultsDiv.innerHTML += '<p>Try checking routers, NAS, Raspberry Pi, or local dev servers (e.g., http://192.168.1.100:8080)</p>';
+      // Complete scan
+      const scanDuration = Math.round((Date.now() - scanStartTime) / 1000);
+      document.getElementById('scanTime').textContent = scanDuration + 's';
+      
+      if (foundServers.length === 0) {
+        document.getElementById('results').innerHTML = `
+          <div class="info-box" style="background: #fff3cd; border-color: #ffc107;">
+            <strong>🔍 Scan Complete:</strong> No active web servers found on common ports.
+            <br><br>
+            <strong>Suggestions:</strong>
+            <ul style="margin: 10px 0 0 0; padding-left: 20px;">
+              <li>Try manually entering an IP and port above if you know a specific server</li>
+              <li>Check if devices like routers (usually .1 or .254), NAS, or Raspberry Pi are connected</li>
+              <li>Some servers may require authentication or have firewalls blocking detection</li>
+            </ul>
+          </div>
+        `;
       } else {
-        resultsDiv.innerHTML += `<p><strong>Scan complete! Found ${found.length} active service(s).</strong></p>`;
+        const summary = document.createElement('div');
+        summary.className = 'info-box';
+        summary.style.background = '#d1e7dd';
+        summary.style.borderColor = '#28a745';
+        summary.innerHTML = `
+          <strong>✅ Scan Complete!</strong> Found ${foundServers.length} active server(s) in ${scanDuration} seconds.
+          <br>Click on any server below to connect or use the action buttons.
+        `;
+        document.getElementById('results').insertBefore(summary, document.getElementById('results').firstChild);
+      }
+      
+      stopScan();
+    }
+
+    // Stop scan
+    function stopScan() {
+      scanActive = false;
+      document.getElementById('scanBtn').disabled = false;
+      document.getElementById('stopBtn').disabled = true;
+      if (foundServers.length > 0) {
+        document.getElementById('exportBtn').disabled = false;
       }
     }
-  </script>
 
-  <hr>
-  <small>
-    <strong>Note:</strong> This tool only works on the same local WiFi/network. 
-    Some devices block port scans or require authentication. 
-    Works best on Chrome/Edge. Firefox may block WebRTC IP detection.
-  </small>
+    // Test manual connection
+    async function testManualConnection() {
+      const ip = document.getElementById('manualIP').value.trim();
+      const port = parseInt(document.getElementById('manualPort').value);
+
+      if (!ip || !port) {
+        alert('⚠️ Please enter both IP address and port number');
+        return;
+      }
+
+      if (!/^(\d{1,3}\.){3}\d{1,3}$/.test(ip)) {
+        alert('⚠️ Invalid IP address format. Use format: 192.168.1.100');
+        return;
+      }
+
+      if (port < 1 || port > 65535) {
+        alert('⚠️ Port must be between 1 and 65535');
+        return;
+      }
+
+      const resultsDiv = document.getElementById('results');
+      const testingMsg = document.createElement('div');
+      testingMsg.className = 'info-box';
+      testingMsg.innerHTML = `<strong>🔄 Testing connection to ${ip}:${port}...</strong>`;
+      resultsDiv.insertBefore(testingMsg, resultsDiv.firstChild);
+
+      const result = await checkServer(ip, port, 3000);
+      testingMsg.remove();
+
+      if (result.alive) {
+        const portInfo = COMMON_PORTS.find(p => p.port === port);
+        const serverInfo = {
+          ip,
+          port,
+          protocol: port === 443 || port === 8443 ? 'https' : 'http',
+          url: result.url,
+          category: portInfo ? portInfo.category : 'dev'
+        };
+        
+        // Check if already displayed
+        if (!foundServers.find(s => s.ip === ip && s.port === port)) {
+          foundServers.push(serverInfo);
+          displayServer(serverInfo);
+          document.getElementById('foundCount').textContent = foundServers.length;
+        }
+        
+        alert(`✅ Success! Server at ${ip}:${port} is online and responding!`);
+      } else {
+        alert(`❌ No response from ${ip}:${port}. The server may be offline, blocked by a firewall, or not exist.`);
+      }
+    }
+
+    // Export results
+    function exportResults() {
+      if (foundServers.length === 0) {
+        alert('⚠️ No servers to export');
+        return;
+      }
+
+      const data = {
+        scanDate: new Date().toISOString(),
+        localIP: document.getElementById('localIP').textContent,
+        serversFound: foundServers.length,
+        servers: foundServers
+      };
+
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `network-scan-${Date.now()}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      alert(`✅ Exported ${foundServers.length} server(s) to JSON file`);
+    }
+
+    // Initialize on page load
+    window.addEventListener('load', async () => {
+      const ip = await getLocalIP();
+      if (ip) {
+        document.getElementById('localIP').textContent = ip;
+        const network = ip.split('.').slice(0, 3).join('.');
+        document.getElementById('networkInfo').textContent = ` | Network: ${network}.0/24`;
+      }
+    });
+  </script>
 </body>
 </html>
