@@ -2725,6 +2725,280 @@
             </ul>
         </div>
         <div class="content">
+            <!-- Dashboard -->
+            <section id="dashboard" class="section">
+                <h2>School Dashboard</h2>
+                <div class="row mt-4">
+                    <div class="col-md-3"><div class="card card-metric p-3"><h5>Total Students</h5><h3 id="totalStudents">0</h3></div></div>
+                    <div class="col-md-3"><div class="card card-metric p-3"><h5>Today's Attendance</h5><h3 id="todayAttendance">0%</h3></div></div>
+                    <div class="col-md-3"><div class="card card-metric p-3"><h5>Pending Fees</h5><h3 id="pendingFees">R0</h3></div></div>
+                    <div class="col-md-3"><div class="card card-metric p-3"><h5>Upcoming Exams</h5><h3 id="upcomingExams">0</h3></div></div>
+                    <div class="col-md-3"><div class="card card-metric p-3"><h5>Total Staff</h5><h3 id="totalStaffDash">0</h3></div></div>
+                    <div class="col-md-3"><div class="card card-metric p-3"><h5>Pending Leaves</h5><h3 id="pendingLeavesDash">0</h3></div></div>
+                    <div class="col-md-3"><div class="card card-metric p-3"><h5>Open Positions</h5><h3 id="openPositionsDash">0</h3></div></div>
+                    <div class="col-md-3"><div class="card card-metric p-3"><h5>Avg Performance</h5><h3 id="avgPerformanceDash">0%</h3></div></div>
+                </div>
+                <canvas id="dashboardChart" class="mt-4"></canvas>
+            </section>
+            
+            <!-- HOD Dashboard -->
+            <section id="hodDashboard" class="section d-none hod-only">
+                <h2><i class="fas fa-user-shield me-2"></i>Head of Department Dashboard</h2>
+                <div class="row mt-4">
+                    <div class="col-md-3">
+                        <div class="card card-metric p-3">
+                            <h5><i class="fas fa-chalkboard-teacher me-2"></i>Teachers</h5>
+                            <h3 id="hodTotalTeachers">0</h3>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card card-metric p-3">
+                            <h5><i class="fas fa-check-circle me-2"></i>Active Today</h5>
+                            <h3 id="hodActiveTeachers">0</h3>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card card-metric p-3">
+                            <h5><i class="fas fa-file-alt me-2"></i>Lesson Plans</h5>
+                            <h3 id="hodTotalLessonPlans">0</h3>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card card-metric p-3">
+                            <h5><i class="fas fa-percentage me-2"></i>Avg Performance</h5>
+                            <h3 id="hodAvgPerformance">0%</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <div class="card card-metric p-3">
+                            <h5><i class="fas fa-chart-bar me-2"></i>Teacher Performance Overview</h5>
+                            <canvas id="hodPerformanceChart" style="height:300px;"></canvas>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card card-metric p-3">
+                            <h5><i class="fas fa-clock me-2"></i>Attendance Trends</h5>
+                            <canvas id="hodAttendanceChart" style="height:300px;"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-4">
+                    <div class="col-md-12">
+                        <div class="card card-metric p-3">
+                            <h5><i class="fas fa-bell me-2"></i>Recent Activities</h5>
+                            <div id="hodRecentActivities" style="max-height:300px;overflow-y:auto;"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Teacher Monitoring -->
+            <section id="teacherMonitoring" class="section d-none hod-only">
+                <h2><i class="fas fa-user-check me-2"></i>Teacher Monitoring</h2>
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <select id="monitorTeacherFilter" class="form-control" onchange="loadTeacherMonitoring()">
+                            <option value="">All Teachers</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <input type="date" id="monitorDateFilter" class="form-control" onchange="loadTeacherMonitoring()">
+                    </div>
+                    <div class="col-md-4">
+                        <button class="btn btn-primary" onclick="generateTeacherReport()">
+                            <i class="fas fa-file-pdf me-2"></i>Generate Report
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-3">
+                        <div class="card card-metric p-3 text-center">
+                            <i class="fas fa-clipboard-list fa-2x mb-2"></i>
+                            <h5>Lesson Plans Submitted</h5>
+                            <h3 id="monitorLessonPlansCount">0</h3>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card card-metric p-3 text-center">
+                            <i class="fas fa-graduation-cap fa-2x mb-2"></i>
+                            <h5>Grades Entered</h5>
+                            <h3 id="monitorGradesCount">0</h3>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card card-metric p-3 text-center">
+                            <i class="fas fa-user-clock fa-2x mb-2"></i>
+                            <h5>Attendance Marked</h5>
+                            <h3 id="monitorAttendanceCount">0</h3>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card card-metric p-3 text-center">
+                            <i class="fas fa-comments fa-2x mb-2"></i>
+                            <h5>Communications</h5>
+                            <h3 id="monitorCommCount">0</h3>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card card-metric p-3">
+                    <h5><i class="fas fa-list me-2"></i>Teacher Activity Log</h5>
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Teacher</th>
+                                <th>Activity</th>
+                                <th>Date & Time</th>
+                                <th>Details</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="teacherActivityLog"></tbody>
+                    </table>
+                </div>
+            </section>
+            
+            <!-- Teacher Portal View (Read-Only) -->
+            <section id="teacherPortalView" class="section d-none hod-only">
+                <h2><i class="fas fa-eye me-2"></i>Teacher Portal View (Read-Only)</h2>
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    This is a read-only view of the teacher portal. You can view all teacher activities but cannot make changes.
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label"><strong>Select Teacher:</strong></label>
+                        <select id="hodSelectTeacher" class="form-control" onchange="loadTeacherPortalView()">
+                            <option value="">Select a teacher to view their portal</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label"><strong>View Date Range:</strong></label>
+                        <input type="date" id="hodViewDateRange" class="form-control" onchange="loadTeacherPortalView()">
+                    </div>
+                </div>
+                
+                <div id="teacherPortalContent" class="mt-4">
+                    <p class="text-center text-muted">Select a teacher above to view their portal activities</p>
+                </div>
+                
+                <ul class="nav nav-tabs mb-3" id="teacherPortalTabs" style="display:none;">
+                    <li class="nav-item">
+                        <a class="nav-link active" data-bs-toggle="tab" href="#hodLessonPlansView">Lesson Plans</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#hodGradingView">Grading</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#hodResourcesView">Resources</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#hodStudentProgressView">Student Progress</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#hodUploadedWorkView">Uploaded Work</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#hodChatView">Chat History</a>
+                    </li>
+                </ul>
+                
+                <div class="tab-content" id="teacherPortalTabContent" style="display:none;">
+                    <div class="tab-pane fade show active" id="hodLessonPlansView">
+                        <div class="card card-metric p-3">
+                            <h5><i class="fas fa-clipboard-list me-2"></i>Lesson Plans</h5>
+                            <div id="hodLessonPlansList"></div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="hodGradingView">
+                        <div class="card card-metric p-3">
+                            <h5><i class="fas fa-graduation-cap me-2"></i>Grading Records</h5>
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Student</th>
+                                        <th>Subject</th>
+                                        <th>Grade</th>
+                                        <th>Date</th>
+                                        <th>Comments</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="hodGradingTable"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="hodResourcesView">
+                        <div class="card card-metric p-3">
+                            <h5><i class="fas fa-book me-2"></i>Resources Shared</h5>
+                            <div id="hodResourcesList"></div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="hodStudentProgressView">
+                        <div class="card card-metric p-3">
+                            <h5><i class="fas fa-chart-line me-2"></i>Student Progress Tracking</h5>
+                            <div id="hodProgressDetails"></div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="hodUploadedWorkView">
+                        <div class="card card-metric p-3">
+                            <h5><i class="fas fa-upload me-2"></i>Work Uploaded</h5>
+                            <div id="hodUploadedWorkList"></div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="hodChatView">
+                        <div class="card card-metric p-3">
+                            <h5><i class="fas fa-comments me-2"></i>Chat History</h5>
+                            <div id="hodChatHistory"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Department Reports -->
+            <section id="departmentReports" class="section d-none hod-only">
+                <h2><i class="fas fa-chart-bar me-2"></i>Department Reports</h2>
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <select id="reportType" class="form-control">
+                            <option value="performance">Teacher Performance</option>
+                            <option value="attendance">Attendance Summary</option>
+                            <option value="grading">Grading Analysis</option>
+                            <option value="lessonPlans">Lesson Plan Completion</option>
+                            <option value="comprehensive">Comprehensive Report</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <input type="month" id="reportMonth" class="form-control">
+                    </div>
+                    <div class="col-md-4">
+                        <button class="btn btn-primary" onclick="generateDepartmentReport()">
+                            <i class="fas fa-file-pdf me-2"></i>Generate Report
+                        </button>
+                        <button class="btn btn-success ms-2" onclick="exportDepartmentData()">
+                            <i class="fas fa-file-excel me-2"></i>Export Data
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="card card-metric p-3">
+                    <h5><i class="fas fa-chart-pie me-2"></i>Department Performance Overview</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <canvas id="departmentPerformanceChart" style="height:300px;"></canvas>
+                        </div>
+                        <div class="col-md-6">
+                            <canvas id="departmentActivityChart" style="height:300px;"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card card-metric p-3 mt-4">
+                    <h5><i class="fas fa-table me-2"></i>Detailed Statistics</h5>
+                    <div id="departmentStatsTable"></div>
                 </div>
             </section>
             
@@ -4003,6 +4277,73 @@
                 </div>
             </section>
             <!-- Student Examination (Read-Only) -->
+            <section id="studentExamination" class="section d-none student-only">
+                <h2>My Assessments</h2>
+                <div class="alert alert-info mb-3">
+                    <i class="fas fa-info-circle me-2"></i>View your upcoming assessments and past results.
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-3">
+                        <label class="form-label">Filter by Assessment Type:</label>
+                        <select class="form-control" id="assessmentTypeFilter" onchange="loadStudentExamination()">
+                            <option value="">All Types</option>
+                            <option value="test">Test</option>
+                            <option value="project">Project</option>
+                            <option value="exam">Exam</option>
+                            <option value="assignment">Assignment</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <div class="card card-metric p-3">
+                            <h5>Upcoming Assessments</h5>
+                            <h3 id="studentUpcomingExams">0</h3>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card card-metric p-3">
+                            <h5>Average Score</h5>
+                            <h3 id="studentAvgScore">0%</h3>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card card-metric p-3">
+                            <h5>Completed Assessments</h5>
+                            <h3 id="studentCompletedExams">0</h3>
+                        </div>
+                    </div>
+                </div>
+                <h4 class="mt-4">Upcoming Assessments</h4>
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th>Subject</th>
+                            <th>Date</th>
+                            <th>Time</th>
+                            <th>Duration</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="studentExamTable"></tbody>
+                </table>
+                <h4 class="mt-4">My Results</h4>
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th>Subject</th>
+                            <th>Assessment</th>
+                            <th>Date</th>
+                            <th>Score</th>
+                            <th>Grade</th>
+                            <th>Comments</th>
+                        </tr>
+                    </thead>
+                    <tbody id="studentResultsTable"></tbody>
+                </table>
+            </section>
             <!-- Student Inbox -->
             <section id="studentInbox" class="section d-none student-only">
                 <h2>My Inbox</h2>
