@@ -5764,52 +5764,6 @@
             }
         }
         
-        
-                
-                
-                
-                
-                try {
-                    
-                    
-                    // Check if already initialized
-                    }
-                    
-                    // Test database connection with timeout
-                    const testRef = db.ref('.info/connected');
-                    
-                    // Set a timeout for the connection test
-                    const timeoutPromise = new Promise((_, reject) => 
-                        setTimeout(() => reject(new Error('Connection timeout')), CONNECTION_CHECK_TIMEOUT)
-                    );
-                    
-                    const connectionPromise = new Promise((resolve, reject) => {
-                        testRef.once('value', 
-                            (snapshot) => {
-                                if (snapshot.val() === true) {
-                                    resolve(true);
-                                } else {
-                                    reject(new Error('Not connected'));
-                                }
-                            },
-                            (error) => reject(error)
-                        );
-                    });
-                    
-                    await Promise.race([connectionPromise, timeoutPromise]);
-                    
-                    statusEl.className = 'badge bg-success';
-                    statusEl.innerHTML = '<i class="fas fa-check-circle"></i> Connected';
-                } catch (error) {
-                    statusEl.className = 'badge bg-danger';
-                    statusEl.innerHTML = '<i class="fas fa-times-circle"></i> Connection Failed';
-                }
-            } catch (e) {
-                statusEl.className = 'badge bg-secondary';
-                statusEl.innerHTML = '<i class="fas fa-question-circle"></i> SDK Not Loaded';
-            }
-        }
-        
         // Check Video Server (WebSocket signaling server) connection
         async function checkVideoServerConnection() {
             const statusEl = document.getElementById('videoServerStatus');
