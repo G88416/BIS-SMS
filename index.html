@@ -2654,32 +2654,6 @@
                     <i class="fas fa-sign-in-alt me-2"></i>Login
                 </button>
             </form>
-            <!-- Backend/Cloud Connectivity Status -->
-            <div id="connectivityStatus" class="mt-3" style="font-size: 0.85rem;">
-                <div class="alert alert-secondary" style="padding: 12px; margin-bottom: 10px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <strong><i class="fas fa-server me-2"></i>System Status</strong>
-                        <button class="btn btn-sm btn-outline-light" onclick="checkAllConnections()" style="padding: 2px 8px;">
-                            <i class="fas fa-sync-alt"></i> Check
-                        </button>
-                    </div>
-                    <hr style="margin: 10px 0; opacity: 0.3;">
-                    <div id="connectionStatusList" style="font-size: 0.8rem;">
-                        <div style="margin: 5px 0; display: flex; align-items: center; justify-content: space-between;">
-                            <span><i class="fas fa-database me-2"></i>Local Storage:</span>
-                            <span id="localStorageStatus" class="badge bg-secondary">Checking...</span>
-                        </div>
-                        <div style="margin: 5px 0; display: flex; align-items: center; justify-content: space-between;">
-                            <span><i class="fas fa-video me-2"></i>Video Server:</span>
-                            <span id="videoServerStatus" class="badge bg-secondary">Checking...</span>
-                        </div>
-                        <div style="margin: 5px 0; display: flex; align-items: center; justify-content: space-between;">
-                            <span><i class="fas fa-wifi me-2"></i>Internet:</span>
-                            <span id="internetStatus" class="badge bg-secondary">Checking...</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
             <div class="alert alert-info mt-3" style="font-size: 0.85rem; padding: 10px;">
                 <i class="fas fa-info-circle me-2"></i>
                 <strong>Cross-Device Login:</strong> Users created by admin can login from any device with internet access. Changes sync automatically.
@@ -7274,20 +7248,6 @@
                 
                 currentUser = user;
                 
-                // ========================================
-                );
-                                    }
-                                    
-                                } catch (createError) {
-                                }
-                            } else {
-                            }
-                        }
-                    } else {
-                    }
-                } catch (error) {
-                }
-                
                 document.getElementById('loginPage').style.display = 'none';
                 document.getElementById('appContainer').style.display = 'block';
                 updateVisibility();
@@ -7311,12 +7271,7 @@
                     setupPeriodicSync();
                 }
                 
-                
-                
-                
-                                } else {
-                    addNotification('Welcome back, ' + user.name + '!', 'info');
-                }
+                addNotification('Welcome back, ' + user.name + '!', 'info');
             } else {
                 alert('Invalid credentials. Please check your username and password.');
             }
@@ -7339,42 +7294,20 @@
             
             // For students: Hide all non-student elements (including Student Info and Attendance)
             if (role === 'student') {
-                setVisibility(document.querySelectorAll('"]`);
-                const mobileLink = document.querySelector(`.mobile-nav-bar a[href="#${section}"]`);
-                if (desktopLink) desktopLink.classList.add('active');
-                if (mobileLink) mobileLink.classList.add('active');
-            }
-            // Track portal usage
-            if (currentUser) {
-                trackPortalUsage(section);
-            }
-            
-            switch (section) {
-                case 'dashboard': loadDashboard(); break;
-                case 'hodDashboard': loadHODDashboard(); break;
-                case 'teacherMonitoring': loadTeacherMonitoring(); break;
-                case 'teacherPortalView': loadTeacherPortalView(); break;
-                case 'departmentReports': loadDepartmentReports(); break;
-                case 'admission': renderAdmissions(); loadOnlineApplications(); break;
-                case 'students': renderStudents(); break;
-                case 'attendance': loadAttendance(); break;
-                case 'fees': renderFees(); break;
-                case 'timetable': loadTimetable(); break;
-                case 'teachers': renderTeachers(); break;
-                case 'exams': renderExams(); break;
-                case 'hr': renderHR(); break;
-                
-                case 'eventsManagement': loadEventsManagement(); break;
-                case 'content': renderContents(); break;
-                case 'reports': break;
-                case 'settings': loadSettings(); updateVaultMetrics(); break;
-                
-                case 'aiResearch': loadResearchHistory(); break;
-                case 'studentTimetable': loadStudentTimetable(); break;
-                case 'studentExamination': loadStudentExamination(); break;
-                case 'studentInbox': loadStudentInbox(); break;
-                case 'studentUploadWork': loadStudentUploadWork(); break;
-                
+                setVisibility(document.querySelectorAll('.admin-only, .teacher-only, .hod-only, .non-student, .parent-only'), false);
+                setVisibility(document.querySelectorAll('.student-only'), true);
+            } else if (role === 'teacher') {
+                setVisibility(document.querySelectorAll('.admin-only, .hod-only, .student-only, .parent-only'), false);
+                setVisibility(document.querySelectorAll('.teacher-only, .non-student'), true);
+            } else if (role === 'hod') {
+                setVisibility(document.querySelectorAll('.admin-only, .student-only, .teacher-only, .parent-only'), false);
+                setVisibility(document.querySelectorAll('.hod-only, .non-student'), true);
+            } else if (role === 'parent') {
+                setVisibility(document.querySelectorAll('.admin-only, .teacher-only, .hod-only, .student-only, .non-parent'), false);
+                setVisibility(document.querySelectorAll('.parent-only'), true);
+            } else if (role === 'admin') {
+                setVisibility(document.querySelectorAll('.teacher-only, .hod-only, .student-only, .parent-only'), false);
+                setVisibility(document.querySelectorAll('.admin-only, .non-student'), true);
             }
         }
         // Toggle Sidebar
