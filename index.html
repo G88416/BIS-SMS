@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>School SIS App - Inspired by Alma</title>
+  <title>Rise-Inspired Advanced School Finance - Johannesburg</title>
   
   <!-- Bootstrap 5 CSS CDN -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous"/>
@@ -11,12 +11,14 @@
   <!-- Font Awesome for icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
   
+  <!-- Chart.js for simple visuals in reports -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
   <style>
     :root {
-      --primary: #0d6efd;       /* Blue accent like many modern SIS */
-      --sidebar-bg: #1a3c6e;     /* Dark blue sidebar */
-      --sidebar-text: #e9ecef;
-      --card-bg: #ffffff;
+      --primary: #28a745;       /* Green for Rise-inspired fresh feel */
+      --sidebar-bg: #343a40;
+      --sidebar-text: #ffffff;
       --light-bg: #f8f9fa;
     }
     
@@ -43,6 +45,7 @@
       font-weight: bold;
       border-bottom: 1px solid rgba(255,255,255,0.1);
       text-align: center;
+      background: var(--primary);
     }
     
     .sidebar a {
@@ -82,11 +85,6 @@
       border: none;
       border-radius: 10px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-      transition: transform 0.2s;
-    }
-    
-    .card:hover {
-      transform: translateY(-4px);
     }
     
     .stat-icon {
@@ -100,6 +98,10 @@
     
     .section.active {
       display: block;
+    }
+    
+    table th {
+      cursor: pointer;
     }
     
     @media (max-width: 992px) {
@@ -116,21 +118,39 @@
         margin-left: 70px;
       }
     }
+    
+    @media print {
+      .sidebar, .topbar, .no-print {
+        display: none !important;
+      }
+      .main-content {
+        margin-left: 0;
+        padding: 0;
+      }
+      body {
+        background: white;
+      }
+      .print-title {
+        text-align: center;
+        margin-bottom: 2rem;
+      }
+    }
   </style>
 </head>
 <body>
 
   <!-- Sidebar -->
   <div class="sidebar">
-    <div class="brand text-white">School SIS</div>
+    <div class="brand text-white">Rise-Inspired SIS</div>
     <a data-section="dashboard" class="active"><i class="fas fa-tachometer-alt"></i> <span>Dashboard</span></a>
     <a data-section="students"><i class="fas fa-users"></i> <span>Students</span></a>
     <a data-section="teachers"><i class="fas fa-chalkboard-teacher"></i> <span>Teachers</span></a>
     <a data-section="classes"><i class="fas fa-book"></i> <span>Classes</span></a>
     <a data-section="attendance"><i class="fas fa-calendar-check"></i> <span>Attendance</span></a>
     <a data-section="grades"><i class="fas fa-graduation-cap"></i> <span>Grades</span></a>
-    <a data-section="messages"><i class="fas fa-envelope"></i> <span>Messages</span></a>
+    <a data-section="finance"><i class="fas fa-money-bill-wave"></i> <span>Advanced Finance</span></a>
     <a data-section="reports"><i class="fas fa-chart-bar"></i> <span>Reports</span></a>
+    <a data-section="messages"><i class="fas fa-envelope"></i> <span>Messages</span></a>
     <a data-section="settings"><i class="fas fa-cog"></i> <span>Settings</span></a>
   </div>
 
@@ -138,100 +158,111 @@
   <div class="main-content">
     <!-- Top Bar -->
     <div class="topbar d-flex justify-content-between align-items-center">
-      <h4 class="mb-0" id="page-title">Welcome to Dashboard</h4>
+      <h4 class="mb-0" id="page-title">Advanced Finance & Fees</h4>
       <div>
         <span class="me-3">Goodness • Johannesburg</span>
         <button class="btn btn-primary btn-sm"><i class="fas fa-bell"></i></button>
       </div>
     </div>
 
-    <!-- Dashboard Section -->
+    <!-- Dashboard Section (enhanced stats) -->
     <div id="dashboard" class="section active">
-      <!-- Stats Cards -->
       <div class="row g-4">
         <div class="col-md-6 col-lg-3">
           <div class="card h-100">
             <div class="card-body d-flex align-items-center">
               <div class="me-3 text-primary"><i class="fas fa-users stat-icon"></i></div>
               <div>
-                <h6 class="card-title mb-0">Total Students</h6>
-                <h3 class="mb-0" id="total-students">1,248</h3>
-                <small class="text-success"><i class="fas fa-arrow-up"></i> +12 this month</small>
+                <h6>Total Students</h6>
+                <h3 id="total-students">0</h3>
               </div>
             </div>
           </div>
         </div>
-        
         <div class="col-md-6 col-lg-3">
           <div class="card h-100">
             <div class="card-body d-flex align-items-center">
-              <div class="me-3 text-warning"><i class="fas fa-user-tie stat-icon"></i></div>
+              <div class="me-3 text-success"><i class="fas fa-money-bill-wave stat-icon"></i></div>
               <div>
-                <h6 class="card-title mb-0">Teachers</h6>
-                <h3 class="mb-0" id="total-teachers">87</h3>
-                <small class="text-muted">Active today: 82</small>
+                <h6>Outstanding Fees (ZAR)</h6>
+                <h3 id="outstanding-fees">R0</h3>
               </div>
             </div>
           </div>
         </div>
-        
         <div class="col-md-6 col-lg-3">
           <div class="card h-100">
             <div class="card-body d-flex align-items-center">
-              <div class="me-3 text-success"><i class="fas fa-check-circle stat-icon"></i></div>
+              <div class="me-3 text-info"><i class="fas fa-coins stat-icon"></i></div>
               <div>
-                <h6 class="card-title mb-0">Attendance Today</h6>
-                <h3 class="mb-0">94%</h3>
-                <small class="text-danger"><i class="fas fa-arrow-down"></i> -1.2% from yesterday</small>
+                <h6>Collection Rate</h6>
+                <h3 id="collection-rate">0%</h3>
               </div>
             </div>
           </div>
         </div>
-        
         <div class="col-md-6 col-lg-3">
           <div class="card h-100">
             <div class="card-body d-flex align-items-center">
-              <div class="me-3 text-info"><i class="fas fa-book-open stat-icon"></i></div>
+              <div class="me-3 text-warning"><i class="fas fa-chart-line stat-icon"></i></div>
               <div>
-                <h6 class="card-title mb-0">Total Classes</h6>
-                <h3 class="mb-0" id="total-classes">0</h3>
-                <small class="text-muted">Active classes this term</small>
+                <h6>Net Surplus (ZAR)</h6>
+                <h3 id="net-surplus">R0</h3>
               </div>
             </div>
           </div>
         </div>
       </div>
+    </div>
 
-      <!-- Recent Activity -->
-      <div class="row mt-4">
-        <div class="col-lg-8">
-          <div class="card">
-            <div class="card-header bg-primary text-white">
-              <h5 class="mb-0">Recent Student Alerts</h5>
-            </div>
-            <div class="card-body">
-              <ul class="list-group list-group-flush" id="alerts-list">
-                <li class="list-group-item">John Doe - Low attendance this week</li>
-                <li class="list-group-item">Sarah Smith - Grade improvement noted</li>
-                <li class="list-group-item">Parent message from Mr. Nkosi</li>
-                <li class="list-group-item">New enrollment: 3 students</li>
-              </ul>
-            </div>
-          </div>
+    <!-- Advanced Finance Section - Powerful Enhancements Inspired by Rise -->
+    <div id="finance" class="section">
+      <h4>Advanced Finance & School Fees Management</h4>
+      <p class="text-muted">Multi-line fees, discounts/exemptions, payment history, expenses tracking — SA school focused (ZAR).</p>
+      
+      <ul class="nav nav-tabs mb-4" id="financeTabs">
+        <li class="nav-item">
+          <a class="nav-link active" data-bs-toggle="tab" href="#fees-tab">Student Fees & Debtors</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" data-bs-toggle="tab" href="#expenses-tab">Expenses & Creditors</a>
+        </li>
+      </ul>
+      
+      <div class="tab-content">
+        <!-- Student Fees Tab -->
+        <div class="tab-pane fade show active" id="fees-tab">
+          <button class="btn btn-primary mb-3 no-print" onclick="bulkSetFeeItem()">Bulk Add Fee Item</button>
+          <table class="table table-striped table-hover">
+            <thead>
+              <tr>
+                <th onclick="sortTable(0)">Student</th>
+                <th onclick="sortTable(1)">Total Due (ZAR)</th>
+                <th onclick="sortTable(2)">Total Paid (ZAR)</th>
+                <th onclick="sortTable(3)">Balance (ZAR)</th>
+                <th class="no-print">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="fees-table"></tbody>
+          </table>
         </div>
         
-        <div class="col-lg-4">
-          <div class="card">
-            <div class="card-header bg-info text-white">
-              <h5 class="mb-0">Quick Actions</h5>
-            </div>
-            <div class="card-body">
-              <button class="btn btn-outline-primary w-100 mb-2" onclick="navigateTo('attendance')">Mark Attendance</button>
-              <button class="btn btn-outline-success w-100 mb-2" onclick="navigateTo('grades')">Enter Grades</button>
-              <button class="btn btn-outline-warning w-100 mb-2" onclick="navigateTo('messages')">Send Message</button>
-              <button class="btn btn-outline-info w-100" onclick="navigateTo('reports')">Generate Report</button>
-            </div>
-          </div>
+        <!-- Expenses Tab -->
+        <div class="tab-pane fade" id="expenses-tab">
+          <button class="btn btn-primary mb-3 no-print" data-bs-toggle="modal" data-bs-target="#addExpenseModal">Add Expense</button>
+          <table class="table table-striped">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Description</th>
+                <th>Category</th>
+                <th>Amount (ZAR)</th>
+                <th class="no-print">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="expenses-table"></tbody>
+          </table>
+          <div class="text-end fw-bold">Total Expenses: <span id="total-expenses">R0</span></div>
         </div>
       </div>
     </div>
@@ -354,9 +385,12 @@
 
     <!-- Reports Section -->
     <div id="reports" class="section">
-      <h4>Reports</h4>
-      <button class="btn btn-info mb-3" onclick="generateReport()">Generate Full School Report</button>
-      <div id="report-output" class="mt-3"></div>
+      <h4>Management Accounts & Reports</h4>
+      <button class="btn btn-info mb-3 no-print" onclick="generateAdvancedReports()">Generate Advanced Reports</button>
+      <button class="btn btn-success no-print" onclick="window.print()">Print Management Accounts</button>
+      
+      <div id="advanced-reports" class="mt-4"></div>
+      <canvas id="collectionChart" class="mt-4 no-print" height="200"></canvas>
     </div>
 
     <!-- Settings Section -->
@@ -438,6 +472,94 @@
     </div>
   </div>
 
+  <!-- Student Fee Detail Modal -->
+  <div class="modal fade" id="studentFeeModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Fee Management: <span id="modal-student-name"></span></h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <ul class="nav nav-tabs mb-3">
+            <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#items-tab">Fee Items</a></li>
+            <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#discounts-tab">Discounts/Exemptions</a></li>
+            <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#payments-tab">Payments</a></li>
+            <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#summary-tab">Summary & Invoice</a></li>
+          </ul>
+          
+          <div class="tab-content">
+            <div class="tab-pane fade show active" id="items-tab">
+              <div class="input-group mb-3">
+                <input type="text" class="form-control" id="fee-desc" placeholder="Description (e.g., Annual Tuition)">
+                <input type="number" class="form-control" id="fee-amount" placeholder="Amount (ZAR)">
+                <button class="btn btn-primary" onclick="addFeeItem(currentStudentId)">Add</button>
+              </div>
+              <table class="table"><tbody id="fee-items-list"></tbody></table>
+            </div>
+            
+            <div class="tab-pane fade" id="discounts-tab">
+              <div class="input-group mb-3">
+                <input type="text" class="form-control" id="discount-desc" placeholder="Description (e.g., Sibling Discount)">
+                <input type="number" class="form-control" id="discount-amount" placeholder="Amount (ZAR)">
+                <button class="btn btn-primary" onclick="addDiscount(currentStudentId)">Add</button>
+              </div>
+              <table class="table"><tbody id="discounts-list"></tbody></table>
+            </div>
+            
+            <div class="tab-pane fade" id="payments-tab">
+              <div class="input-group mb-3">
+                <input type="date" class="form-control" id="payment-date">
+                <input type="number" class="form-control" id="payment-amount" placeholder="Amount (ZAR)">
+                <select class="form-control" id="payment-method">
+                  <option>EFT</option>
+                  <option>Cash</option>
+                  <option>Card</option>
+                  <option>Debit Order</option>
+                </select>
+                <button class="btn btn-success" onclick="addPayment(currentStudentId)">Record</button>
+              </div>
+              <table class="table"><tbody id="payments-list"></tbody></table>
+            </div>
+            
+            <div class="tab-pane fade" id="summary-tab">
+              <div id="fee-summary"></div>
+              <button class="btn btn-info mt-3 no-print" onclick="generateStudentInvoice(currentStudentId)">Generate Printable Statement</button>
+              <div id="printable-invoice" class="mt-4 border p-4" style="display:none;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Expense Modal -->
+  <div class="modal fade" id="addExpenseModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Add Expense</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="date" class="form-control mb-2" id="expense-date">
+          <input type="text" class="form-control mb-2" id="expense-desc" placeholder="Description">
+          <select class="form-control mb-2" id="expense-category">
+            <option>Salaries</option>
+            <option>Utilities</option>
+            <option>Supplies</option>
+            <option>Maintenance</option>
+            <option>Other</option>
+          </select>
+          <input type="number" class="form-control" id="expense-amount" placeholder="Amount (ZAR)">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" onclick="addExpense()" data-bs-dismiss="modal">Add</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
@@ -456,6 +578,10 @@
     let attendance = JSON.parse(localStorage.getItem('attendance')) || {}; // { [classId]: { [studentId]: true/false } }
     let grades = JSON.parse(localStorage.getItem('grades')) || {}; // { [classId]: { [studentId]: { math: '', science: '' } } }
     let messages = JSON.parse(localStorage.getItem('messages')) || [];
+    let fees = JSON.parse(localStorage.getItem('fees')) || {}; // {studentId: {items: [], discounts: [], payments: []}}
+    let expenses = JSON.parse(localStorage.getItem('expenses')) || [];
+    let currentStudentId = null;
+    let collectionChart = null;
 
     // Navigation
     const sections = document.querySelectorAll('.section');
@@ -477,11 +603,314 @@
       if (sectionId === 'grades') { populateClassSelects(); renderGrades(); }
       if (sectionId === 'messages') renderMessages();
       if (sectionId === 'dashboard') updateDashboardStats();
+      if (sectionId === 'finance') renderFinance();
+      if (sectionId === 'reports') generateAdvancedReports();
     }
 
     navLinks.forEach(link => {
       link.addEventListener('click', () => navigateTo(link.dataset.section));
     });
+
+    // Fee Calculations
+    function calculateStudentFee(studentId) {
+      const f = fees[studentId] || {items: [], discounts: [], payments: []};
+      const itemsTotal = f.items.reduce((sum, i) => sum + (parseFloat(i.amount) || 0), 0);
+      const discountsTotal = f.discounts.reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0);
+      const netDue = itemsTotal - discountsTotal;
+      const paidTotal = f.payments.reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
+      const balance = netDue - paidTotal;
+      return {itemsTotal, discountsTotal, netDue, paidTotal, balance};
+    }
+
+    // Render Finance
+    function renderFinance() {
+      renderFeesTable();
+      renderExpensesTable();
+    }
+
+    function renderFeesTable() {
+      const table = document.getElementById('fees-table');
+      table.innerHTML = '';
+      let totalOutstanding = 0;
+      let totalDue = 0;
+      let totalPaid = 0;
+      students.forEach(stu => {
+        const calc = calculateStudentFee(stu.id);
+        totalDue += calc.netDue;
+        totalPaid += calc.paidTotal;
+        totalOutstanding += calc.balance > 0 ? calc.balance : 0;
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${stu.name}</td>
+          <td>R${calc.netDue.toLocaleString()}</td>
+          <td>R${calc.paidTotal.toLocaleString()}</td>
+          <td class="${calc.balance > 0 ? 'text-danger' : 'text-success'}">R${calc.balance.toLocaleString()}</td>
+          <td class="no-print"><button class="btn btn-sm btn-primary" onclick="openStudentFeeModal(${stu.id}, '${stu.name}')">Manage</button></td>
+        `;
+        table.appendChild(row);
+      });
+      updateDashboardStats(); // Updates outstanding & rate
+    }
+
+    function renderExpensesTable() {
+      const table = document.getElementById('expenses-table');
+      table.innerHTML = '';
+      let total = 0;
+      expenses.forEach((exp, idx) => {
+        total += parseFloat(exp.amount) || 0;
+        const row = `<tr>
+          <td>${exp.date}</td>
+          <td>${exp.desc}</td>
+          <td>${exp.category}</td>
+          <td>R${parseFloat(exp.amount).toLocaleString()}</td>
+          <td class="no-print"><button class="btn btn-sm btn-danger" onclick="deleteExpense(${idx})">Delete</button></td>
+        </tr>`;
+        table.innerHTML += row;
+      });
+      document.getElementById('total-expenses').textContent = 'R' + total.toLocaleString();
+    }
+
+    // Student Modal
+    function openStudentFeeModal(id, name) {
+      currentStudentId = id;
+      document.getElementById('modal-student-name').textContent = name;
+      renderStudentFeeDetails();
+      new bootstrap.Modal(document.getElementById('studentFeeModal')).show();
+    }
+
+    function renderStudentFeeDetails() {
+      const f = fees[currentStudentId] || {items: [], discounts: [], payments: []};
+      const calc = calculateStudentFee(currentStudentId);
+
+      // Items
+      let itemsHtml = '';
+      f.items.forEach((item, idx) => {
+        itemsHtml += `<tr><td>${item.desc}</td><td>R${parseFloat(item.amount).toLocaleString()}</td><td><button class="btn btn-sm btn-danger" onclick="deleteFeeItem(${idx})">Del</button></td></tr>`;
+      });
+      document.getElementById('fee-items-list').innerHTML = itemsHtml || '<tr><td colspan="3">No fee items</td></tr>';
+
+      // Discounts
+      let discHtml = '';
+      f.discounts.forEach((d, idx) => {
+        discHtml += `<tr><td>${d.desc}</td><td>R${parseFloat(d.amount).toLocaleString()}</td><td><button class="btn btn-sm btn-danger" onclick="deleteDiscount(${idx})">Del</button></td></tr>`;
+      });
+      document.getElementById('discounts-list').innerHTML = discHtml || '<tr><td colspan="3">No discounts</td></tr>';
+
+      // Payments
+      let payHtml = '';
+      f.payments.forEach((p, idx) => {
+        payHtml += `<tr><td>${p.date}</td><td>R${parseFloat(p.amount).toLocaleString()}</td><td>${p.method}</td><td><button class="btn btn-sm btn-danger" onclick="deletePayment(${idx})">Del</button></td></tr>`;
+      });
+      document.getElementById('payments-list').innerHTML = payHtml || '<tr><td colspan="4">No payments</td></tr>';
+
+      // Summary
+      document.getElementById('fee-summary').innerHTML = `
+        <p><strong>Total Fee Items:</strong> R${calc.itemsTotal.toLocaleString()}</p>
+        <p><strong>Total Discounts:</strong> R${calc.discountsTotal.toLocaleString()}</p>
+        <p><strong>Net Due:</strong> R${calc.netDue.toLocaleString()}</p>
+        <p><strong>Total Paid:</strong> R${calc.paidTotal.toLocaleString()}</p>
+        <p class="${calc.balance > 0 ? 'text-danger' : 'text-success'}"><strong>Balance:</strong> R${calc.balance.toLocaleString()}</p>
+      `;
+    }
+
+    function addFeeItem(id) {
+      if (!fees[id]) fees[id] = {items: [], discounts: [], payments: []};
+      const desc = document.getElementById('fee-desc').value.trim();
+      const amount = parseFloat(document.getElementById('fee-amount').value);
+      if (desc && amount > 0) {
+        fees[id].items.push({desc, amount});
+        localStorage.setItem('fees', JSON.stringify(fees));
+        renderStudentFeeDetails();
+        renderFeesTable();
+        document.getElementById('fee-desc').value = '';
+        document.getElementById('fee-amount').value = '';
+      }
+    }
+
+    function deleteFeeItem(idx) {
+      fees[currentStudentId].items.splice(idx, 1);
+      localStorage.setItem('fees', JSON.stringify(fees));
+      renderStudentFeeDetails();
+      renderFeesTable();
+    }
+
+    function addDiscount(id) {
+      if (!fees[id]) fees[id] = {items: [], discounts: [], payments: []};
+      const desc = document.getElementById('discount-desc').value.trim();
+      const amount = parseFloat(document.getElementById('discount-amount').value);
+      if (desc && amount > 0) {
+        fees[id].discounts.push({desc, amount});
+        localStorage.setItem('fees', JSON.stringify(fees));
+        renderStudentFeeDetails();
+        renderFeesTable();
+      }
+    }
+
+    function deleteDiscount(idx) {
+      fees[currentStudentId].discounts.splice(idx, 1);
+      localStorage.setItem('fees', JSON.stringify(fees));
+      renderStudentFeeDetails();
+      renderFeesTable();
+    }
+
+    function addPayment(id) {
+      if (!fees[id]) fees[id] = {items: [], discounts: [], payments: []};
+      const date = document.getElementById('payment-date').value || new Date().toISOString().split('T')[0];
+      const amount = parseFloat(document.getElementById('payment-amount').value);
+      const method = document.getElementById('payment-method').value;
+      if (amount > 0) {
+        fees[id].payments.push({date, amount, method});
+        localStorage.setItem('fees', JSON.stringify(fees));
+        renderStudentFeeDetails();
+        renderFeesTable();
+      }
+    }
+
+    function deletePayment(idx) {
+      fees[currentStudentId].payments.splice(idx, 1);
+      localStorage.setItem('fees', JSON.stringify(fees));
+      renderStudentFeeDetails();
+      renderFeesTable();
+    }
+
+    // Bulk add fee item
+    function bulkSetFeeItem() {
+      const desc = prompt('Fee Description (e.g., Term 1 Tuition):');
+      const amount = prompt('Amount per student (ZAR):');
+      if (desc && amount) {
+        students.forEach(stu => {
+          if (!fees[stu.id]) fees[stu.id] = {items: [], discounts: [], payments: []};
+          fees[stu.id].items.push({desc, amount: parseFloat(amount)});
+        });
+        localStorage.setItem('fees', JSON.stringify(fees));
+        renderFeesTable();
+      }
+    }
+
+    // Expenses
+    function addExpense() {
+      const date = document.getElementById('expense-date').value || new Date().toISOString().split('T')[0];
+      const desc = document.getElementById('expense-desc').value.trim();
+      const category = document.getElementById('expense-category').value;
+      const amount = parseFloat(document.getElementById('expense-amount').value);
+      if (desc && amount > 0) {
+        expenses.push({date, desc, category, amount});
+        localStorage.setItem('expenses', JSON.stringify(expenses));
+        renderExpensesTable();
+        updateDashboardStats();
+      }
+    }
+
+    function deleteExpense(idx) {
+      expenses.splice(idx, 1);
+      localStorage.setItem('expenses', JSON.stringify(expenses));
+      renderExpensesTable();
+      updateDashboardStats();
+    }
+
+    // Student Invoice
+    function generateStudentInvoice(id) {
+      const stu = students.find(s => s.id === id);
+      const calc = calculateStudentFee(id);
+      const f = fees[id] || {items: [], discounts: [], payments: []};
+      let itemsHtml = '';
+      f.items.forEach(i => itemsHtml += `<tr><td>${i.desc}</td><td>R${parseFloat(i.amount).toLocaleString()}</td></tr>`);
+      f.discounts.forEach(d => itemsHtml += `<tr><td>${d.desc} (Discount)</td><td>-R${parseFloat(d.amount).toLocaleString()}</td></tr>`);
+      let paymentsHtml = '';
+      f.payments.forEach(p => paymentsHtml += `<tr><td>${p.date} - ${p.method}</td><td>R${parseFloat(p.amount).toLocaleString()}</td></tr>`);
+      
+      const invoice = `
+        <div class="print-title"><h3>School Fee Statement</h3><p>Johannesburg School • Date: ${new Date().toLocaleDateString('en-ZA')}</p></div>
+        <p><strong>Student:</strong> ${stu.name}</p>
+        <table class="table table-bordered">
+          <thead><tr><th>Description</th><th>Amount (ZAR)</th></tr></thead>
+          <tbody>${itemsHtml}</tbody>
+          <tfoot>
+            <tr><td><strong>Net Due</strong></td><td><strong>R${calc.netDue.toLocaleString()}</strong></td></tr>
+            <tr><td><strong>Paid</strong></td><td><strong>R${calc.paidTotal.toLocaleString()}</strong></td></tr>
+            <tr><td><strong>Balance</strong></td><td><strong>R${calc.balance.toLocaleString()}</strong></td></tr>
+          </tfoot>
+        </table>
+        <h5>Payment History</h5>
+        <table class="table table-bordered"><tbody>${paymentsHtml}</tbody></table>
+      `;
+      document.getElementById('printable-invoice').innerHTML = invoice;
+      document.getElementById('printable-invoice').style.display = 'block';
+    }
+
+    // Dashboard Stats
+    function updateDashboardStats() {
+      document.getElementById('total-students').textContent = students.length;
+      
+      let totalDue = 0;
+      let totalPaid = 0;
+      let totalBalance = 0;
+      students.forEach(stu => {
+        const calc = calculateStudentFee(stu.id);
+        totalDue += calc.netDue;
+        totalPaid += calc.paidTotal;
+        totalBalance += calc.balance;
+      });
+      const totalExp = expenses.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
+      
+      document.getElementById('outstanding-fees').textContent = 'R' + totalBalance.toLocaleString();
+      document.getElementById('collection-rate').textContent = totalDue > 0 ? Math.round((totalPaid / totalDue) * 100) + '%' : '0%';
+      document.getElementById('net-surplus').textContent = 'R' + (totalPaid - totalExp).toLocaleString();
+    }
+
+    // Advanced Reports
+    function generateAdvancedReports() {
+      let totalDue = 0;
+      let totalPaid = 0;
+      let totalBalance = 0;
+      let debtorsList = '';
+      students.forEach(stu => {
+        const calc = calculateStudentFee(stu.id);
+        totalDue += calc.netDue;
+        totalPaid += calc.paidTotal;
+        totalBalance += calc.balance;
+        if (calc.balance > 0) {
+          debtorsList += `<li>${stu.name} - R${calc.balance.toLocaleString()}</li>`;
+        }
+      });
+      const totalExp = expenses.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
+      
+      const report = `
+        <div class="print-title"><h3>Management Accounts - ${new Date().toLocaleDateString('en-ZA')}</h3><p>Johannesburg School</p></div>
+        <h5>Income & Expenditure</h5>
+        <table class="table table-bordered">
+          <tr><td><strong>Fees Income Received</strong></td><td>R${totalPaid.toLocaleString()}</td></tr>
+          <tr><td><strong>Total Expenses</strong></td><td>R${totalExp.toLocaleString()}</td></tr>
+          <tr><td><strong>Net Surplus/Deficit</strong></td><td>R${(totalPaid - totalExp).toLocaleString()}</td></tr>
+        </table>
+        <h5>Fees Summary</h5>
+        <p>Total Due: R${totalDue.toLocaleString()} | Collection Rate: ${totalDue > 0 ? Math.round((totalPaid / totalDue) * 100) : 0}%</p>
+        <h5>Debtors (Outstanding > R0)</h5>
+        <ul>${debtorsList || '<li>No outstanding debtors</li>'}</ul>
+      `;
+      document.getElementById('advanced-reports').innerHTML = report;
+      
+      // Simple chart (mock monthly - in real, group by month)
+      if (collectionChart) collectionChart.destroy();
+      const ctx = document.getElementById('collectionChart').getContext('2d');
+      collectionChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['Fees Due', 'Paid', 'Outstanding'],
+          datasets: [{
+            label: 'ZAR',
+            data: [totalDue, totalPaid, totalBalance],
+            backgroundColor: ['#0d6efd', '#28a745', '#dc3545']
+          }]
+        },
+        options: { scales: { y: { beginAtZero: true } } }
+      });
+    }
+
+    // Simple table sort
+    function sortTable(col) {
+      // Implement basic sort if needed (advanced: use data attributes)
+    }
 
     // Populate class and teacher selects
     function populateClassSelects() {
@@ -789,13 +1218,6 @@
       output.innerHTML = report;
     }
 
-    // Dashboard stats
-    function updateDashboardStats() {
-      document.getElementById('total-students').textContent = students.length;
-      document.getElementById('total-teachers').textContent = teachers.length;
-      document.getElementById('total-classes').textContent = classes.length;
-    }
-
     // Dark mode
     function toggleDarkMode() {
       document.body.classList.toggle('dark-mode');
@@ -820,6 +1242,7 @@
     renderClasses();
     updateDashboardStats();
     renderMessages();
+    renderFinance();
   </script>
 
   <!-- Dark Mode Styles -->
