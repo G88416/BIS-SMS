@@ -193,9 +193,9 @@
             <div class="card-body d-flex align-items-center">
               <div class="me-3 text-info"><i class="fas fa-book-open stat-icon"></i></div>
               <div>
-                <h6 class="card-title mb-0">Classes Today</h6>
-                <h3 class="mb-0">142</h3>
-                <small class="text-muted">Upcoming events: 5</small>
+                <h6 class="card-title mb-0">Total Classes</h6>
+                <h3 class="mb-0" id="total-classes">0</h3>
+                <small class="text-muted">Active classes this term</small>
               </div>
             </div>
           </div>
@@ -246,6 +246,7 @@
             <th>ID</th>
             <th>Name</th>
             <th>Grade</th>
+            <th>Enrolled Classes</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -265,6 +266,7 @@
             <th>ID</th>
             <th>Name</th>
             <th>Subject</th>
+            <th>Assigned Classes</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -274,19 +276,34 @@
       </table>
     </div>
 
-    <!-- Classes Section -->
+    <!-- Classes Section - Now Fully Implemented -->
     <div id="classes" class="section">
       <h4>Classes Management</h4>
-      <p>Manage classes here. (Placeholder for full implementation)</p>
+      <p>Create and manage classes, assign teachers, and enroll students.</p>
+      <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addClassModal">Add New Class</button>
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Class Name</th>
+            <th>Grade Level</th>
+            <th>Assigned Teacher</th>
+            <th>Enrolled Students</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="classes-table">
+          <!-- Populated by JS -->
+        </tbody>
+      </table>
     </div>
 
-    <!-- Attendance Section -->
+    <!-- Attendance Section - Updated to use real classes -->
     <div id="attendance" class="section">
       <h4>Attendance Marking</h4>
       <select class="form-select mb-3" id="attendance-class">
         <option value="">Select Class</option>
-        <option value="grade1">Grade 1</option>
-        <option value="grade2">Grade 2</option>
+        <!-- Populated dynamically from classes -->
       </select>
       <table class="table table-striped">
         <thead>
@@ -302,13 +319,12 @@
       <button class="btn btn-success" onclick="saveAttendance()">Save Attendance</button>
     </div>
 
-    <!-- Grades Section -->
+    <!-- Grades Section - Updated to use real classes -->
     <div id="grades" class="section">
       <h4>Grades Entry</h4>
       <select class="form-select mb-3" id="grades-class">
         <option value="">Select Class</option>
-        <option value="grade1">Grade 1</option>
-        <option value="grade2">Grade 2</option>
+        <!-- Populated dynamically from classes -->
       </select>
       <table class="table table-striped">
         <thead>
@@ -316,6 +332,7 @@
             <th>Student</th>
             <th>Math</th>
             <th>Science</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody id="grades-table">
@@ -338,7 +355,7 @@
     <!-- Reports Section -->
     <div id="reports" class="section">
       <h4>Reports</h4>
-      <button class="btn btn-info" onclick="generateReport()">Generate Student Report</button>
+      <button class="btn btn-info mb-3" onclick="generateReport()">Generate Full School Report</button>
       <div id="report-output" class="mt-3"></div>
     </div>
 
@@ -362,12 +379,16 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
-          <input type="text" class="form-control mb-2" id="student-name" placeholder="Name">
-          <input type="text" class="form-control mb-2" id="student-grade" placeholder="Grade">
+          <input type="text" class="form-control mb-2" id="student-name" placeholder="Full Name">
+          <input type="text" class="form-control mb-2" id="student-grade" placeholder="Grade Level (e.g., 10)">
+          <select class="form-select mb-2" id="student-class" multiple size="3">
+            <!-- Populated dynamically -->
+          </select>
+          <small class="text-muted">Hold Ctrl/Cmd to select multiple classes for enrollment</small>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-          <button type="button" class="btn btn-primary" onclick="addStudent()" data-bs-dismiss="modal">Add</button>
+          <button type="button" class="btn btn-primary" onclick="addStudent()" data-bs-dismiss="modal">Add Student</button>
         </div>
       </div>
     </div>
@@ -382,12 +403,36 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
-          <input type="text" class="form-control mb-2" id="teacher-name" placeholder="Name">
-          <input type="text" class="form-control mb-2" id="teacher-subject" placeholder="Subject">
+          <input type="text" class="form-control mb-2" id="teacher-name" placeholder="Full Name">
+          <input type="text" class="form-control mb-2" id="teacher-subject" placeholder="Main Subject">
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-          <button type="button" class="btn btn-primary" onclick="addTeacher()" data-bs-dismiss="modal">Add</button>
+          <button type="button" class="btn btn-primary" onclick="addTeacher()" data-bs-dismiss="modal">Add Teacher</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Class Modal - New -->
+  <div class="modal fade" id="addClassModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Add New Class</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="text" class="form-control mb-2" id="class-name" placeholder="Class Name (e.g., Grade 10 Math)">
+          <input type="text" class="form-control mb-2" id="class-grade" placeholder="Grade Level (e.g., 10)">
+          <select class="form-select mb-2" id="class-teacher">
+            <option value="">Select Teacher</option>
+            <!-- Populated dynamically from teachers -->
+          </select>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary" onclick="addClass()" data-bs-dismiss="modal">Create Class</button>
         </div>
       </div>
     </div>
@@ -398,17 +443,18 @@
 
   <!-- App JavaScript -->
   <script>
-    // Dummy data (using localStorage for persistence)
+    // Dummy data with persistence
     let students = JSON.parse(localStorage.getItem('students')) || [
-      { id: 1, name: 'John Doe', grade: '10' },
-      { id: 2, name: 'Sarah Smith', grade: '11' }
+      { id: 1, name: 'John Doe', grade: '10', classIds: [] },
+      { id: 2, name: 'Sarah Smith', grade: '11', classIds: [] }
     ];
     let teachers = JSON.parse(localStorage.getItem('teachers')) || [
       { id: 1, name: 'Mr. Johnson', subject: 'Math' },
       { id: 2, name: 'Ms. Lee', subject: 'Science' }
     ];
-    let attendance = JSON.parse(localStorage.getItem('attendance')) || {};
-    let grades = JSON.parse(localStorage.getItem('grades')) || {};
+    let classes = JSON.parse(localStorage.getItem('classes')) || []; // { id, name, grade, teacherId, studentIds: [] }
+    let attendance = JSON.parse(localStorage.getItem('attendance')) || {}; // { [classId]: { [studentId]: true/false } }
+    let grades = JSON.parse(localStorage.getItem('grades')) || {}; // { [classId]: { [studentId]: { math: '', science: '' } } }
     let messages = JSON.parse(localStorage.getItem('messages')) || [];
 
     // Navigation
@@ -422,11 +468,13 @@
       navLinks.forEach(link => link.classList.remove('active'));
       document.querySelector(`[data-section="${sectionId}"]`).classList.add('active');
       pageTitle.textContent = sectionId.charAt(0).toUpperCase() + sectionId.slice(1);
-      
+
+      // Refresh data on navigation
       if (sectionId === 'students') renderStudents();
       if (sectionId === 'teachers') renderTeachers();
-      if (sectionId === 'attendance') renderAttendance();
-      if (sectionId === 'grades') renderGrades();
+      if (sectionId === 'classes') renderClasses();
+      if (sectionId === 'attendance') { populateClassSelects(); renderAttendance(); }
+      if (sectionId === 'grades') { populateClassSelects(); renderGrades(); }
       if (sectionId === 'messages') renderMessages();
       if (sectionId === 'dashboard') updateDashboardStats();
     }
@@ -435,66 +483,133 @@
       link.addEventListener('click', () => navigateTo(link.dataset.section));
     });
 
+    // Populate class and teacher selects
+    function populateClassSelects() {
+      const attendanceSelect = document.getElementById('attendance-class');
+      const gradesSelect = document.getElementById('grades-class');
+      const studentClassSelect = document.getElementById('student-class');
+      const classTeacherSelect = document.getElementById('class-teacher');
+
+      // Clear and populate class selects
+      [attendanceSelect, gradesSelect, studentClassSelect].forEach(select => {
+        select.innerHTML = select === studentClassSelect ? '' : '<option value="">Select Class</option>';
+        classes.forEach(cls => {
+          const opt = document.createElement('option');
+          opt.value = cls.id;
+          opt.textContent = `${cls.name} (Grade ${cls.grade})`;
+          select.appendChild(opt);
+        });
+      });
+
+      // Populate teacher select for new class
+      classTeacherSelect.innerHTML = '<option value="">No Teacher</option>';
+      teachers.forEach(tea => {
+        const opt = document.createElement('option');
+        opt.value = tea.id;
+        opt.textContent = tea.name;
+        classTeacherSelect.appendChild(opt);
+      });
+    }
+
     // Render functions
     function renderStudents() {
       const table = document.getElementById('students-table');
       table.innerHTML = '';
       students.forEach(stu => {
+        const enrolledClasses = stu.classIds.map(cid => {
+          const cls = classes.find(c => c.id === cid);
+          return cls ? cls.name : '';
+        }).join(', ') || 'None';
         const row = `<tr>
           <td>${stu.id}</td>
           <td>${stu.name}</td>
           <td>${stu.grade}</td>
+          <td>${enrolledClasses}</td>
           <td><button class="btn btn-sm btn-danger" onclick="deleteStudent(${stu.id})">Delete</button></td>
         </tr>`;
         table.innerHTML += row;
       });
+      populateClassSelects(); // Refresh available classes
     }
 
     function renderTeachers() {
       const table = document.getElementById('teachers-table');
       table.innerHTML = '';
       teachers.forEach(tea => {
+        const assignedClasses = classes.filter(c => c.teacherId === tea.id).map(c => c.name).join(', ') || 'None';
         const row = `<tr>
           <td>${tea.id}</td>
           <td>${tea.name}</td>
           <td>${tea.subject}</td>
+          <td>${assignedClasses}</td>
           <td><button class="btn btn-sm btn-danger" onclick="deleteTeacher(${tea.id})">Delete</button></td>
         </tr>`;
         table.innerHTML += row;
       });
     }
 
+    function renderClasses() {
+      const table = document.getElementById('classes-table');
+      table.innerHTML = '';
+      classes.forEach(cls => {
+        const teacher = teachers.find(t => t.id === cls.teacherId);
+        const teacherName = teacher ? teacher.name : 'None';
+        const enrolledCount = cls.studentIds ? cls.studentIds.length : 0;
+        const row = `<tr>
+          <td>${cls.id}</td>
+          <td>${cls.name}</td>
+          <td>${cls.grade}</td>
+          <td>${teacherName}</td>
+          <td>${enrolledCount}</td>
+          <td><button class="btn btn-sm btn-danger" onclick="deleteClass(${cls.id})">Delete</button></td>
+        </tr>`;
+        table.innerHTML += row;
+      });
+      populateClassSelects();
+    }
+
     function renderAttendance() {
-      const classSelect = document.getElementById('attendance-class');
+      const classId = document.getElementById('attendance-class').value;
       const table = document.getElementById('attendance-table');
       table.innerHTML = '';
-      if (classSelect.value) {
-        students.filter(stu => stu.grade === classSelect.value.replace('grade', '')).forEach(stu => {
-          const checked = attendance[stu.id] ? 'checked' : '';
-          const row = `<tr>
-            <td>${stu.name}</td>
-            <td><input type="checkbox" data-id="${stu.id}" ${checked}></td>
-          </tr>`;
-          table.innerHTML += row;
-        });
+      if (classId) {
+        const cls = classes.find(c => c.id == classId);
+        if (cls && cls.studentIds) {
+          cls.studentIds.forEach(sid => {
+            const stu = students.find(s => s.id == sid);
+            if (stu) {
+              const checked = attendance[classId]?.[sid] ? 'checked' : '';
+              table.innerHTML += `<tr>
+                <td>${stu.name}</td>
+                <td><input type="checkbox" data-class="${classId}" data-id="${sid}" ${checked}></td>
+              </tr>`;
+            }
+          });
+        }
       }
     }
 
     function renderGrades() {
-      const classSelect = document.getElementById('grades-class');
+      const classId = document.getElementById('grades-class').value;
       const table = document.getElementById('grades-table');
       table.innerHTML = '';
-      if (classSelect.value) {
-        students.filter(stu => stu.grade === classSelect.value.replace('grade', '')).forEach(stu => {
-          const math = grades[stu.id]?.math || '';
-          const science = grades[stu.id]?.science || '';
-          const row = `<tr>
-            <td>${stu.name}</td>
-            <td><input type="number" data-id="${stu.id}" data-subject="math" value="${math}"></td>
-            <td><input type="number" data-id="${stu.id}" data-subject="science" value="${science}"></td>
-          </tr>`;
-          table.innerHTML += row;
-        });
+      if (classId) {
+        const cls = classes.find(c => c.id == classId);
+        if (cls && cls.studentIds) {
+          cls.studentIds.forEach(sid => {
+            const stu = students.find(s => s.id == sid);
+            if (stu) {
+              const math = grades[classId]?.[sid]?.math || '';
+              const science = grades[classId]?.[sid]?.science || '';
+              table.innerHTML += `<tr>
+                <td>${stu.name}</td>
+                <td><input type="number" class="form-control" data-class="${classId}" data-id="${sid}" data-subject="math" value="${math}"></td>
+                <td><input type="number" class="form-control" data-class="${classId}" data-id="${sid}" data-subject="science" value="${science}"></td>
+                <td><button class="btn btn-sm btn-warning" onclick="removeStudentFromClass(${classId}, ${sid})">Remove</button></td>
+              </tr>`;
+            }
+          });
+        }
       }
     }
 
@@ -508,13 +623,25 @@
 
     // Add functions
     function addStudent() {
-      const name = document.getElementById('student-name').value;
-      const grade = document.getElementById('student-grade').value;
+      const name = document.getElementById('student-name').value.trim();
+      const grade = document.getElementById('student-grade').value.trim();
+      const selectedClasses = Array.from(document.getElementById('student-class').selectedOptions).map(opt => parseInt(opt.value));
       if (name && grade) {
-        const id = students.length + 1;
-        students.push({ id, name, grade });
+        const id = students.length ? Math.max(...students.map(s => s.id)) + 1 : 1;
+        const newStudent = { id, name, grade, classIds: selectedClasses };
+        students.push(newStudent);
+        // Enroll in selected classes
+        selectedClasses.forEach(cid => {
+          const cls = classes.find(c => c.id === cid);
+          if (cls) {
+            if (!cls.studentIds) cls.studentIds = [];
+            cls.studentIds.push(id);
+          }
+        });
         localStorage.setItem('students', JSON.stringify(students));
+        localStorage.setItem('classes', JSON.stringify(classes));
         renderStudents();
+        renderClasses();
         updateDashboardStats();
         document.getElementById('student-name').value = '';
         document.getElementById('student-grade').value = '';
@@ -522,59 +649,123 @@
     }
 
     function addTeacher() {
-      const name = document.getElementById('teacher-name').value;
-      const subject = document.getElementById('teacher-subject').value;
+      const name = document.getElementById('teacher-name').value.trim();
+      const subject = document.getElementById('teacher-subject').value.trim();
       if (name && subject) {
-        const id = teachers.length + 1;
+        const id = teachers.length ? Math.max(...teachers.map(t => t.id)) + 1 : 1;
         teachers.push({ id, name, subject });
         localStorage.setItem('teachers', JSON.stringify(teachers));
         renderTeachers();
+        populateClassSelects();
         updateDashboardStats();
         document.getElementById('teacher-name').value = '';
         document.getElementById('teacher-subject').value = '';
       }
     }
 
+    function addClass() {
+      const name = document.getElementById('class-name').value.trim();
+      const grade = document.getElementById('class-grade').value.trim();
+      const teacherId = parseInt(document.getElementById('class-teacher').value) || null;
+      if (name && grade) {
+        const id = classes.length ? Math.max(...classes.map(c => c.id)) + 1 : 1;
+        classes.push({ id, name, grade, teacherId, studentIds: [] });
+        localStorage.setItem('classes', JSON.stringify(classes));
+        renderClasses();
+        populateClassSelects();
+        updateDashboardStats();
+        document.getElementById('class-name').value = '';
+        document.getElementById('class-grade').value = '';
+      }
+    }
+
     // Delete functions
     function deleteStudent(id) {
       students = students.filter(stu => stu.id !== id);
+      // Remove from all classes
+      classes.forEach(cls => {
+        if (cls.studentIds) cls.studentIds = cls.studentIds.filter(sid => sid !== id);
+      });
       localStorage.setItem('students', JSON.stringify(students));
+      localStorage.setItem('classes', JSON.stringify(classes));
       renderStudents();
+      renderClasses();
       updateDashboardStats();
     }
 
     function deleteTeacher(id) {
       teachers = teachers.filter(tea => tea.id !== id);
+      // Unassign from classes
+      classes.forEach(cls => {
+        if (cls.teacherId === id) cls.teacherId = null;
+      });
       localStorage.setItem('teachers', JSON.stringify(teachers));
+      localStorage.setItem('classes', JSON.stringify(classes));
       renderTeachers();
+      renderClasses();
       updateDashboardStats();
+    }
+
+    function deleteClass(id) {
+      classes = classes.filter(cls => cls.id !== id);
+      // Remove class references from students
+      students.forEach(stu => {
+        if (stu.classIds) stu.classIds = stu.classIds.filter(cid => cid !== id);
+      });
+      localStorage.setItem('classes', JSON.stringify(classes));
+      localStorage.setItem('students', JSON.stringify(students));
+      renderClasses();
+      renderStudents();
+      populateClassSelects();
+      updateDashboardStats();
+    }
+
+    function removeStudentFromClass(classId, studentId) {
+      const cls = classes.find(c => c.id === classId);
+      if (cls && cls.studentIds) {
+        cls.studentIds = cls.studentIds.filter(sid => sid !== studentId);
+        localStorage.setItem('classes', JSON.stringify(classes));
+      }
+      const stu = students.find(s => s.id === studentId);
+      if (stu && stu.classIds) {
+        stu.classIds = stu.classIds.filter(cid => cid !== classId);
+        localStorage.setItem('students', JSON.stringify(students));
+      }
+      renderGrades();
+      renderClasses();
     }
 
     // Save functions
     function saveAttendance() {
+      const classId = document.getElementById('attendance-class').value;
+      if (!classId) return alert('Select a class first');
+      if (!attendance[classId]) attendance[classId] = {};
       const checkboxes = document.querySelectorAll('#attendance-table input[type="checkbox"]');
       checkboxes.forEach(box => {
-        attendance[box.dataset.id] = box.checked;
+        attendance[classId][box.dataset.id] = box.checked;
       });
       localStorage.setItem('attendance', JSON.stringify(attendance));
       alert('Attendance saved!');
     }
 
     function saveGrades() {
+      const classId = document.getElementById('grades-class').value;
+      if (!classId) return alert('Select a class first');
+      if (!grades[classId]) grades[classId] = {};
       const inputs = document.querySelectorAll('#grades-table input[type="number"]');
       inputs.forEach(input => {
-        const id = input.dataset.id;
+        const sid = input.dataset.id;
         const subject = input.dataset.subject;
-        if (!grades[id]) grades[id] = {};
-        grades[id][subject] = input.value;
+        if (!grades[classId][sid]) grades[classId][sid] = {};
+        grades[classId][sid][subject] = input.value;
       });
       localStorage.setItem('grades', JSON.stringify(grades));
       alert('Grades saved!');
     }
 
-    // Message function
+    // Message & Report
     function sendMessage() {
-      const text = document.getElementById('message-text').value;
+      const text = document.getElementById('message-text').value.trim();
       if (text) {
         messages.push(text);
         localStorage.setItem('messages', JSON.stringify(messages));
@@ -583,59 +774,76 @@
       }
     }
 
-    // Report function (simple example)
     function generateReport() {
       const output = document.getElementById('report-output');
-      output.innerHTML = '<h5>Sample Report</h5><p>Total Students: ' + students.length + '</p><p>Total Teachers: ' + teachers.length + '</p>';
+      let report = `<h5>School Report - ${new Date().toLocaleDateString()}</h5>
+        <p><strong>Total Students:</strong> ${students.length}</p>
+        <p><strong>Total Teachers:</strong> ${teachers.length}</p>
+        <p><strong>Total Classes:</strong> ${classes.length}</p>
+        <h6>Classes Overview:</h6><ul>`;
+      classes.forEach(cls => {
+        const teacher = teachers.find(t => t.id === cls.teacherId);
+        report += `<li>${cls.name} (Grade ${cls.grade}) - Teacher: ${teacher ? teacher.name : 'None'} - Students: ${cls.studentIds ? cls.studentIds.length : 0}</li>`;
+      });
+      report += `</ul>`;
+      output.innerHTML = report;
     }
 
-    // Dashboard stats update
+    // Dashboard stats
     function updateDashboardStats() {
       document.getElementById('total-students').textContent = students.length;
       document.getElementById('total-teachers').textContent = teachers.length;
+      document.getElementById('total-classes').textContent = classes.length;
     }
 
-    // Dark mode toggle
+    // Dark mode
     function toggleDarkMode() {
       document.body.classList.toggle('dark-mode');
+      // Simple dark mode adjustments (expand as needed)
       if (document.body.classList.contains('dark-mode')) {
         document.documentElement.style.setProperty('--light-bg', '#121212');
         document.documentElement.style.setProperty('--card-bg', '#1e1e1e');
-        document.documentElement.style.setProperty('--sidebar-text', '#ffffff');
       } else {
         document.documentElement.style.setProperty('--light-bg', '#f8f9fa');
         document.documentElement.style.setProperty('--card-bg', '#ffffff');
-        document.documentElement.style.setProperty('--sidebar-text', '#e9ecef');
       }
     }
 
-    // Event listeners for dynamic rendering
+    // Event listeners
     document.getElementById('attendance-class').addEventListener('change', renderAttendance);
     document.getElementById('grades-class').addEventListener('change', renderGrades);
 
-    // Initial renders
+    // Initial load
+    populateClassSelects();
     renderStudents();
     renderTeachers();
+    renderClasses();
     updateDashboardStats();
+    renderMessages();
   </script>
-  
-  <!-- Additional Dark Mode Styles -->
+
+  <!-- Dark Mode Styles -->
   <style>
     .dark-mode {
       --light-bg: #121212;
       --card-bg: #1e1e1e;
-      --sidebar-text: #ffffff;
+      color: #ffffff;
     }
-    .dark-mode .card, .dark-mode .topbar {
+    .dark-mode .card, .dark-mode .topbar, .dark-mode .table, .dark-mode .modal-content {
       background-color: var(--card-bg) !important;
       color: #ffffff;
     }
-    .dark-mode .table {
-      color: #ffffff;
+    .dark-mode .table th, .dark-mode .table td {
+      border-color: #444;
+    }
+    .dark-mode .form-control, .dark-mode .form-select {
+      background-color: #333;
+      color: #fff;
+      border-color: #555;
     }
     .dark-mode .list-group-item {
-      background-color: #1e1e1e;
-      color: #ffffff;
+      background-color: #333;
+      color: #fff;
     }
   </style>
 </body>
