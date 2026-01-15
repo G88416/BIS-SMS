@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>School Dashboard - Inspired Layout</title>
+  <title>School SIS App - Inspired by Alma</title>
   
   <!-- Bootstrap 5 CSS CDN -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous"/>
@@ -52,6 +52,7 @@
       align-items: center;
       text-decoration: none;
       transition: background 0.2s;
+      cursor: pointer;
     }
     
     .sidebar a:hover, .sidebar a.active {
@@ -93,6 +94,14 @@
       opacity: 0.9;
     }
     
+    .section {
+      display: none;
+    }
+    
+    .section.active {
+      display: block;
+    }
+    
     @media (max-width: 992px) {
       .sidebar {
         width: 70px;
@@ -114,118 +123,520 @@
   <!-- Sidebar -->
   <div class="sidebar">
     <div class="brand text-white">School SIS</div>
-    <a href="#" class="active"><i class="fas fa-tachometer-alt"></i> <span>Dashboard</span></a>
-    <a href="#"><i class="fas fa-users"></i> <span>Students</span></a>
-    <a href="#"><i class="fas fa-chalkboard-teacher"></i> <span>Teachers</span></a>
-    <a href="#"><i class="fas fa-book"></i> <span>Classes</span></a>
-    <a href="#"><i class="fas fa-calendar-check"></i> <span>Attendance</span></a>
-    <a href="#"><i class="fas fa-graduation-cap"></i> <span>Grades</span></a>
-    <a href="#"><i class="fas fa-envelope"></i> <span>Messages</span></a>
-    <a href="#"><i class="fas fa-chart-bar"></i> <span>Reports</span></a>
-    <a href="#"><i class="fas fa-cog"></i> <span>Settings</span></a>
+    <a data-section="dashboard" class="active"><i class="fas fa-tachometer-alt"></i> <span>Dashboard</span></a>
+    <a data-section="students"><i class="fas fa-users"></i> <span>Students</span></a>
+    <a data-section="teachers"><i class="fas fa-chalkboard-teacher"></i> <span>Teachers</span></a>
+    <a data-section="classes"><i class="fas fa-book"></i> <span>Classes</span></a>
+    <a data-section="attendance"><i class="fas fa-calendar-check"></i> <span>Attendance</span></a>
+    <a data-section="grades"><i class="fas fa-graduation-cap"></i> <span>Grades</span></a>
+    <a data-section="messages"><i class="fas fa-envelope"></i> <span>Messages</span></a>
+    <a data-section="reports"><i class="fas fa-chart-bar"></i> <span>Reports</span></a>
+    <a data-section="settings"><i class="fas fa-cog"></i> <span>Settings</span></a>
   </div>
 
   <!-- Main Content -->
   <div class="main-content">
     <!-- Top Bar -->
     <div class="topbar d-flex justify-content-between align-items-center">
-      <h4 class="mb-0">Welcome to Dashboard</h4>
+      <h4 class="mb-0" id="page-title">Welcome to Dashboard</h4>
       <div>
         <span class="me-3">Goodness • Johannesburg</span>
         <button class="btn btn-primary btn-sm"><i class="fas fa-bell"></i></button>
       </div>
     </div>
 
-    <!-- Stats Cards -->
-    <div class="row g-4">
-      <div class="col-md-6 col-lg-3">
-        <div class="card h-100">
-          <div class="card-body d-flex align-items-center">
-            <div class="me-3 text-primary"><i class="fas fa-users stat-icon"></i></div>
-            <div>
-              <h6 class="card-title mb-0">Total Students</h6>
-              <h3 class="mb-0">1,248</h3>
-              <small class="text-success"><i class="fas fa-arrow-up"></i> +12 this month</small>
+    <!-- Dashboard Section -->
+    <div id="dashboard" class="section active">
+      <!-- Stats Cards -->
+      <div class="row g-4">
+        <div class="col-md-6 col-lg-3">
+          <div class="card h-100">
+            <div class="card-body d-flex align-items-center">
+              <div class="me-3 text-primary"><i class="fas fa-users stat-icon"></i></div>
+              <div>
+                <h6 class="card-title mb-0">Total Students</h6>
+                <h3 class="mb-0" id="total-students">1,248</h3>
+                <small class="text-success"><i class="fas fa-arrow-up"></i> +12 this month</small>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="col-md-6 col-lg-3">
+          <div class="card h-100">
+            <div class="card-body d-flex align-items-center">
+              <div class="me-3 text-warning"><i class="fas fa-user-tie stat-icon"></i></div>
+              <div>
+                <h6 class="card-title mb-0">Teachers</h6>
+                <h3 class="mb-0" id="total-teachers">87</h3>
+                <small class="text-muted">Active today: 82</small>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="col-md-6 col-lg-3">
+          <div class="card h-100">
+            <div class="card-body d-flex align-items-center">
+              <div class="me-3 text-success"><i class="fas fa-check-circle stat-icon"></i></div>
+              <div>
+                <h6 class="card-title mb-0">Attendance Today</h6>
+                <h3 class="mb-0">94%</h3>
+                <small class="text-danger"><i class="fas fa-arrow-down"></i> -1.2% from yesterday</small>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="col-md-6 col-lg-3">
+          <div class="card h-100">
+            <div class="card-body d-flex align-items-center">
+              <div class="me-3 text-info"><i class="fas fa-book-open stat-icon"></i></div>
+              <div>
+                <h6 class="card-title mb-0">Classes Today</h6>
+                <h3 class="mb-0">142</h3>
+                <small class="text-muted">Upcoming events: 5</small>
+              </div>
             </div>
           </div>
         </div>
       </div>
-      
-      <div class="col-md-6 col-lg-3">
-        <div class="card h-100">
-          <div class="card-body d-flex align-items-center">
-            <div class="me-3 text-warning"><i class="fas fa-user-tie stat-icon"></i></div>
-            <div>
-              <h6 class="card-title mb-0">Teachers</h6>
-              <h3 class="mb-0">87</h3>
-              <small class="text-muted">Active today: 82</small>
+
+      <!-- Recent Activity -->
+      <div class="row mt-4">
+        <div class="col-lg-8">
+          <div class="card">
+            <div class="card-header bg-primary text-white">
+              <h5 class="mb-0">Recent Student Alerts</h5>
+            </div>
+            <div class="card-body">
+              <ul class="list-group list-group-flush" id="alerts-list">
+                <li class="list-group-item">John Doe - Low attendance this week</li>
+                <li class="list-group-item">Sarah Smith - Grade improvement noted</li>
+                <li class="list-group-item">Parent message from Mr. Nkosi</li>
+                <li class="list-group-item">New enrollment: 3 students</li>
+              </ul>
             </div>
           </div>
         </div>
-      </div>
-      
-      <div class="col-md-6 col-lg-3">
-        <div class="card h-100">
-          <div class="card-body d-flex align-items-center">
-            <div class="me-3 text-success"><i class="fas fa-check-circle stat-icon"></i></div>
-            <div>
-              <h6 class="card-title mb-0">Attendance Today</h6>
-              <h3 class="mb-0">94%</h3>
-              <small class="text-danger"><i class="fas fa-arrow-down"></i> -1.2% from yesterday</small>
+        
+        <div class="col-lg-4">
+          <div class="card">
+            <div class="card-header bg-info text-white">
+              <h5 class="mb-0">Quick Actions</h5>
             </div>
-          </div>
-        </div>
-      </div>
-      
-      <div class="col-md-6 col-lg-3">
-        <div class="card h-100">
-          <div class="card-body d-flex align-items-center">
-            <div class="me-3 text-info"><i class="fas fa-book-open stat-icon"></i></div>
-            <div>
-              <h6 class="card-title mb-0">Classes Today</h6>
-              <h3 class="mb-0">142</h3>
-              <small class="text-muted">Upcoming events: 5</small>
+            <div class="card-body">
+              <button class="btn btn-outline-primary w-100 mb-2" onclick="navigateTo('attendance')">Mark Attendance</button>
+              <button class="btn btn-outline-success w-100 mb-2" onclick="navigateTo('grades')">Enter Grades</button>
+              <button class="btn btn-outline-warning w-100 mb-2" onclick="navigateTo('messages')">Send Message</button>
+              <button class="btn btn-outline-info w-100" onclick="navigateTo('reports')">Generate Report</button>
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Recent Activity / Placeholder Sections -->
-    <div class="row mt-4">
-      <div class="col-lg-8">
-        <div class="card">
-          <div class="card-header bg-primary text-white">
-            <h5 class="mb-0">Recent Student Alerts</h5>
-          </div>
-          <div class="card-body">
-            <ul class="list-group list-group-flush">
-              <li class="list-group-item">John Doe - Low attendance this week</li>
-              <li class="list-group-item">Sarah Smith - Grade improvement noted</li>
-              <li class="list-group-item">Parent message from Mr. Nkosi</li>
-              <li class="list-group-item">New enrollment: 3 students</li>
-            </ul>
-          </div>
-        </div>
+    <!-- Students Section -->
+    <div id="students" class="section">
+      <h4>Students Management</h4>
+      <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addStudentModal">Add Student</button>
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Grade</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="students-table">
+          <!-- Populated by JS -->
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Teachers Section -->
+    <div id="teachers" class="section">
+      <h4>Teachers Management</h4>
+      <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addTeacherModal">Add Teacher</button>
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Subject</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="teachers-table">
+          <!-- Populated by JS -->
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Classes Section -->
+    <div id="classes" class="section">
+      <h4>Classes Management</h4>
+      <p>Manage classes here. (Placeholder for full implementation)</p>
+    </div>
+
+    <!-- Attendance Section -->
+    <div id="attendance" class="section">
+      <h4>Attendance Marking</h4>
+      <select class="form-select mb-3" id="attendance-class">
+        <option value="">Select Class</option>
+        <option value="grade1">Grade 1</option>
+        <option value="grade2">Grade 2</option>
+      </select>
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>Student</th>
+            <th>Present</th>
+          </tr>
+        </thead>
+        <tbody id="attendance-table">
+          <!-- Populated dynamically -->
+        </tbody>
+      </table>
+      <button class="btn btn-success" onclick="saveAttendance()">Save Attendance</button>
+    </div>
+
+    <!-- Grades Section -->
+    <div id="grades" class="section">
+      <h4>Grades Entry</h4>
+      <select class="form-select mb-3" id="grades-class">
+        <option value="">Select Class</option>
+        <option value="grade1">Grade 1</option>
+        <option value="grade2">Grade 2</option>
+      </select>
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>Student</th>
+            <th>Math</th>
+            <th>Science</th>
+          </tr>
+        </thead>
+        <tbody id="grades-table">
+          <!-- Populated dynamically -->
+        </tbody>
+      </table>
+      <button class="btn btn-success" onclick="saveGrades()">Save Grades</button>
+    </div>
+
+    <!-- Messages Section -->
+    <div id="messages" class="section">
+      <h4>Messages</h4>
+      <textarea class="form-control mb-3" id="message-text" placeholder="Type message..."></textarea>
+      <button class="btn btn-primary" onclick="sendMessage()">Send</button>
+      <ul class="list-group mt-3" id="messages-list">
+        <!-- Messages appear here -->
+      </ul>
+    </div>
+
+    <!-- Reports Section -->
+    <div id="reports" class="section">
+      <h4>Reports</h4>
+      <button class="btn btn-info" onclick="generateReport()">Generate Student Report</button>
+      <div id="report-output" class="mt-3"></div>
+    </div>
+
+    <!-- Settings Section -->
+    <div id="settings" class="section">
+      <h4>Settings</h4>
+      <div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" id="darkModeSwitch" onchange="toggleDarkMode()">
+        <label class="form-check-label" for="darkModeSwitch">Enable Dark Mode</label>
       </div>
-      
-      <div class="col-lg-4">
-        <div class="card">
-          <div class="card-header bg-info text-white">
-            <h5 class="mb-0">Quick Actions</h5>
-          </div>
-          <div class="card-body">
-            <button class="btn btn-outline-primary w-100 mb-2">Mark Attendance</button>
-            <button class="btn btn-outline-success w-100 mb-2">Enter Grades</button>
-            <button class="btn btn-outline-warning w-100 mb-2">Send Message</button>
-            <button class="btn btn-outline-info w-100">Generate Report</button>
-          </div>
+    </div>
+  </div>
+
+  <!-- Modals -->
+  <!-- Add Student Modal -->
+  <div class="modal fade" id="addStudentModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Add Student</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="text" class="form-control mb-2" id="student-name" placeholder="Name">
+          <input type="text" class="form-control mb-2" id="student-grade" placeholder="Grade">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary" onclick="addStudent()" data-bs-dismiss="modal">Add</button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Bootstrap JS (optional for interactivity) -->
+  <!-- Add Teacher Modal -->
+  <div class="modal fade" id="addTeacherModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Add Teacher</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="text" class="form-control mb-2" id="teacher-name" placeholder="Name">
+          <input type="text" class="form-control mb-2" id="teacher-subject" placeholder="Subject">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary" onclick="addTeacher()" data-bs-dismiss="modal">Add</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- App JavaScript -->
+  <script>
+    // Dummy data (using localStorage for persistence)
+    let students = JSON.parse(localStorage.getItem('students')) || [
+      { id: 1, name: 'John Doe', grade: '10' },
+      { id: 2, name: 'Sarah Smith', grade: '11' }
+    ];
+    let teachers = JSON.parse(localStorage.getItem('teachers')) || [
+      { id: 1, name: 'Mr. Johnson', subject: 'Math' },
+      { id: 2, name: 'Ms. Lee', subject: 'Science' }
+    ];
+    let attendance = JSON.parse(localStorage.getItem('attendance')) || {};
+    let grades = JSON.parse(localStorage.getItem('grades')) || {};
+    let messages = JSON.parse(localStorage.getItem('messages')) || [];
+
+    // Navigation
+    const sections = document.querySelectorAll('.section');
+    const navLinks = document.querySelectorAll('.sidebar a');
+    const pageTitle = document.getElementById('page-title');
+
+    function navigateTo(sectionId) {
+      sections.forEach(sec => sec.classList.remove('active'));
+      document.getElementById(sectionId).classList.add('active');
+      navLinks.forEach(link => link.classList.remove('active'));
+      document.querySelector(`[data-section="${sectionId}"]`).classList.add('active');
+      pageTitle.textContent = sectionId.charAt(0).toUpperCase() + sectionId.slice(1);
+      
+      if (sectionId === 'students') renderStudents();
+      if (sectionId === 'teachers') renderTeachers();
+      if (sectionId === 'attendance') renderAttendance();
+      if (sectionId === 'grades') renderGrades();
+      if (sectionId === 'messages') renderMessages();
+      if (sectionId === 'dashboard') updateDashboardStats();
+    }
+
+    navLinks.forEach(link => {
+      link.addEventListener('click', () => navigateTo(link.dataset.section));
+    });
+
+    // Render functions
+    function renderStudents() {
+      const table = document.getElementById('students-table');
+      table.innerHTML = '';
+      students.forEach(stu => {
+        const row = `<tr>
+          <td>${stu.id}</td>
+          <td>${stu.name}</td>
+          <td>${stu.grade}</td>
+          <td><button class="btn btn-sm btn-danger" onclick="deleteStudent(${stu.id})">Delete</button></td>
+        </tr>`;
+        table.innerHTML += row;
+      });
+    }
+
+    function renderTeachers() {
+      const table = document.getElementById('teachers-table');
+      table.innerHTML = '';
+      teachers.forEach(tea => {
+        const row = `<tr>
+          <td>${tea.id}</td>
+          <td>${tea.name}</td>
+          <td>${tea.subject}</td>
+          <td><button class="btn btn-sm btn-danger" onclick="deleteTeacher(${tea.id})">Delete</button></td>
+        </tr>`;
+        table.innerHTML += row;
+      });
+    }
+
+    function renderAttendance() {
+      const classSelect = document.getElementById('attendance-class');
+      const table = document.getElementById('attendance-table');
+      table.innerHTML = '';
+      if (classSelect.value) {
+        students.filter(stu => stu.grade === classSelect.value.replace('grade', '')).forEach(stu => {
+          const checked = attendance[stu.id] ? 'checked' : '';
+          const row = `<tr>
+            <td>${stu.name}</td>
+            <td><input type="checkbox" data-id="${stu.id}" ${checked}></td>
+          </tr>`;
+          table.innerHTML += row;
+        });
+      }
+    }
+
+    function renderGrades() {
+      const classSelect = document.getElementById('grades-class');
+      const table = document.getElementById('grades-table');
+      table.innerHTML = '';
+      if (classSelect.value) {
+        students.filter(stu => stu.grade === classSelect.value.replace('grade', '')).forEach(stu => {
+          const math = grades[stu.id]?.math || '';
+          const science = grades[stu.id]?.science || '';
+          const row = `<tr>
+            <td>${stu.name}</td>
+            <td><input type="number" data-id="${stu.id}" data-subject="math" value="${math}"></td>
+            <td><input type="number" data-id="${stu.id}" data-subject="science" value="${science}"></td>
+          </tr>`;
+          table.innerHTML += row;
+        });
+      }
+    }
+
+    function renderMessages() {
+      const list = document.getElementById('messages-list');
+      list.innerHTML = '';
+      messages.forEach(msg => {
+        list.innerHTML += `<li class="list-group-item">${msg}</li>`;
+      });
+    }
+
+    // Add functions
+    function addStudent() {
+      const name = document.getElementById('student-name').value;
+      const grade = document.getElementById('student-grade').value;
+      if (name && grade) {
+        const id = students.length + 1;
+        students.push({ id, name, grade });
+        localStorage.setItem('students', JSON.stringify(students));
+        renderStudents();
+        updateDashboardStats();
+        document.getElementById('student-name').value = '';
+        document.getElementById('student-grade').value = '';
+      }
+    }
+
+    function addTeacher() {
+      const name = document.getElementById('teacher-name').value;
+      const subject = document.getElementById('teacher-subject').value;
+      if (name && subject) {
+        const id = teachers.length + 1;
+        teachers.push({ id, name, subject });
+        localStorage.setItem('teachers', JSON.stringify(teachers));
+        renderTeachers();
+        updateDashboardStats();
+        document.getElementById('teacher-name').value = '';
+        document.getElementById('teacher-subject').value = '';
+      }
+    }
+
+    // Delete functions
+    function deleteStudent(id) {
+      students = students.filter(stu => stu.id !== id);
+      localStorage.setItem('students', JSON.stringify(students));
+      renderStudents();
+      updateDashboardStats();
+    }
+
+    function deleteTeacher(id) {
+      teachers = teachers.filter(tea => tea.id !== id);
+      localStorage.setItem('teachers', JSON.stringify(teachers));
+      renderTeachers();
+      updateDashboardStats();
+    }
+
+    // Save functions
+    function saveAttendance() {
+      const checkboxes = document.querySelectorAll('#attendance-table input[type="checkbox"]');
+      checkboxes.forEach(box => {
+        attendance[box.dataset.id] = box.checked;
+      });
+      localStorage.setItem('attendance', JSON.stringify(attendance));
+      alert('Attendance saved!');
+    }
+
+    function saveGrades() {
+      const inputs = document.querySelectorAll('#grades-table input[type="number"]');
+      inputs.forEach(input => {
+        const id = input.dataset.id;
+        const subject = input.dataset.subject;
+        if (!grades[id]) grades[id] = {};
+        grades[id][subject] = input.value;
+      });
+      localStorage.setItem('grades', JSON.stringify(grades));
+      alert('Grades saved!');
+    }
+
+    // Message function
+    function sendMessage() {
+      const text = document.getElementById('message-text').value;
+      if (text) {
+        messages.push(text);
+        localStorage.setItem('messages', JSON.stringify(messages));
+        renderMessages();
+        document.getElementById('message-text').value = '';
+      }
+    }
+
+    // Report function (simple example)
+    function generateReport() {
+      const output = document.getElementById('report-output');
+      output.innerHTML = '<h5>Sample Report</h5><p>Total Students: ' + students.length + '</p><p>Total Teachers: ' + teachers.length + '</p>';
+    }
+
+    // Dashboard stats update
+    function updateDashboardStats() {
+      document.getElementById('total-students').textContent = students.length;
+      document.getElementById('total-teachers').textContent = teachers.length;
+    }
+
+    // Dark mode toggle
+    function toggleDarkMode() {
+      document.body.classList.toggle('dark-mode');
+      if (document.body.classList.contains('dark-mode')) {
+        document.documentElement.style.setProperty('--light-bg', '#121212');
+        document.documentElement.style.setProperty('--card-bg', '#1e1e1e');
+        document.documentElement.style.setProperty('--sidebar-text', '#ffffff');
+      } else {
+        document.documentElement.style.setProperty('--light-bg', '#f8f9fa');
+        document.documentElement.style.setProperty('--card-bg', '#ffffff');
+        document.documentElement.style.setProperty('--sidebar-text', '#e9ecef');
+      }
+    }
+
+    // Event listeners for dynamic rendering
+    document.getElementById('attendance-class').addEventListener('change', renderAttendance);
+    document.getElementById('grades-class').addEventListener('change', renderGrades);
+
+    // Initial renders
+    renderStudents();
+    renderTeachers();
+    updateDashboardStats();
+  </script>
+  
+  <!-- Additional Dark Mode Styles -->
+  <style>
+    .dark-mode {
+      --light-bg: #121212;
+      --card-bg: #1e1e1e;
+      --sidebar-text: #ffffff;
+    }
+    .dark-mode .card, .dark-mode .topbar {
+      background-color: var(--card-bg) !important;
+      color: #ffffff;
+    }
+    .dark-mode .table {
+      color: #ffffff;
+    }
+    .dark-mode .list-group-item {
+      background-color: #1e1e1e;
+      color: #ffffff;
+    }
+  </style>
 </body>
 </html>
