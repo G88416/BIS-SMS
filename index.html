@@ -338,25 +338,99 @@
       </table>
     </div>
 
-    <!-- Attendance Section - Updated to use real classes -->
+    <!-- Attendance Section - Advanced Attendance Management -->
     <div id="attendance" class="section">
-      <h4>Attendance Marking</h4>
-      <select class="form-select mb-3" id="attendance-class">
-        <option value="">Select Class</option>
-        <!-- Populated dynamically from classes -->
-      </select>
-      <table class="table table-striped">
-        <thead>
-          <tr>
-            <th>Student</th>
-            <th>Present</th>
-          </tr>
-        </thead>
-        <tbody id="attendance-table">
-          <!-- Populated dynamically -->
-        </tbody>
-      </table>
-      <button class="btn btn-success" onclick="saveAttendance()">Save Attendance</button>
+      <h4>Advanced Attendance Management</h4>
+      <p class="text-muted">Track daily attendance, view history, generate reports with statistics and visualizations.</p>
+      
+      <ul class="nav nav-tabs mb-4" id="attendanceTabs">
+        <li class="nav-item">
+          <a class="nav-link active" data-bs-toggle="tab" href="#mark-attendance-tab">Mark Attendance</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" data-bs-toggle="tab" href="#attendance-history-tab">Attendance History</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" data-bs-toggle="tab" href="#attendance-reports-tab">Reports & Statistics</a>
+        </li>
+      </ul>
+      
+      <div class="tab-content">
+        <!-- Mark Attendance Tab -->
+        <div class="tab-pane fade show active" id="mark-attendance-tab">
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label class="form-label">Select Class</label>
+              <select class="form-select" id="attendance-class" onchange="renderAttendance()">
+                <option value="">Select Class</option>
+                <!-- Populated dynamically from classes -->
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Date</label>
+              <input type="date" class="form-control" id="attendance-date" onchange="renderAttendance()">
+            </div>
+          </div>
+          
+          <div class="mb-3">
+            <button class="btn btn-sm btn-success me-2" onclick="bulkMarkAttendance('Present')">Mark All Present</button>
+            <button class="btn btn-sm btn-warning me-2" onclick="bulkMarkAttendance('Absent')">Mark All Absent</button>
+          </div>
+          
+          <table class="table table-striped table-hover">
+            <thead>
+              <tr>
+                <th>Student</th>
+                <th>Status</th>
+                <th>Notes</th>
+              </tr>
+            </thead>
+            <tbody id="attendance-table">
+              <!-- Populated dynamically -->
+            </tbody>
+          </table>
+          <button class="btn btn-success" onclick="saveAttendance()">Save Attendance</button>
+        </div>
+        
+        <!-- Attendance History Tab -->
+        <div class="tab-pane fade" id="attendance-history-tab">
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label class="form-label">Select Class</label>
+              <select class="form-select" id="history-class" onchange="renderAttendanceHistory()">
+                <option value="">Select Class</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">From Date</label>
+              <input type="date" class="form-control" id="history-from" onchange="renderAttendanceHistory()">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">To Date</label>
+              <input type="date" class="form-control" id="history-to" onchange="renderAttendanceHistory()">
+            </div>
+          </div>
+          <div id="attendance-history-content"></div>
+        </div>
+        
+        <!-- Reports & Statistics Tab -->
+        <div class="tab-pane fade" id="attendance-reports-tab">
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label class="form-label">Select Class</label>
+              <select class="form-select" id="report-class" onchange="generateAttendanceReport()">
+                <option value="">Select Class</option>
+              </select>
+            </div>
+            <div class="col-md-6 d-flex align-items-end">
+              <button class="btn btn-primary" onclick="generateAttendanceReport()">Generate Report</button>
+              <button class="btn btn-success ms-2 no-print" onclick="window.print()">Print Report</button>
+            </div>
+          </div>
+          <div id="attendance-report-content"></div>
+          <canvas id="attendanceChart" class="mt-4 no-print" height="200"></canvas>
+        </div>
+      </div>
     </div>
 
     <!-- Grades Section - Now Fully Advanced -->
@@ -626,7 +700,7 @@
       { id: 2, name: 'Ms. Lee', subject: 'Science' }
     ];
     let classes = JSON.parse(localStorage.getItem('classes')) || []; // { id, name, grade, teacherId, studentIds: [] }
-    let attendance = JSON.parse(localStorage.getItem('attendance')) || {}; // { [classId]: { [studentId]: true/false } }
+    let attendance = JSON.parse(localStorage.getItem('attendance')) || {}; // { [classId]: { [date]: { [studentId]: {status: 'Present', notes: ''} } } }
     let grades = JSON.parse(localStorage.getItem('grades')) || {}; // { [classId]: { [studentId]: { math: '', science: '' } } }
     let messages = JSON.parse(localStorage.getItem('messages')) || [];
     let fees = JSON.parse(localStorage.getItem('fees')) || {}; // {studentId: {items: [], discounts: [], payments: []}}
@@ -636,6 +710,7 @@
     let currentStudentId = null;
     let collectionChart = null;
     let gradeChart = null;
+    let attendanceChart = null;
 
     // Navigation
     const sections = document.querySelectorAll('.section');
@@ -1136,11 +1211,14 @@
     // Populate class and teacher selects
     function populateClassSelects() {
       const attendanceSelect = document.getElementById('attendance-class');
+      const historyClassSelect = document.getElementById('history-class');
+      const reportClassSelect = document.getElementById('report-class');
       const studentClassSelect = document.getElementById('student-class');
       const classTeacherSelect = document.getElementById('class-teacher');
 
       // Clear and populate class selects
-      [attendanceSelect, studentClassSelect].forEach(select => {
+      [attendanceSelect, historyClassSelect, reportClassSelect, studentClassSelect].forEach(select => {
+        if (!select) return;
         select.innerHTML = select === studentClassSelect ? '' : '<option value="">Select Class</option>';
         classes.forEach(cls => {
           const opt = document.createElement('option');
@@ -1151,13 +1229,33 @@
       });
 
       // Populate teacher select for new class
-      classTeacherSelect.innerHTML = '<option value="">No Teacher</option>';
-      teachers.forEach(tea => {
-        const opt = document.createElement('option');
-        opt.value = tea.id;
-        opt.textContent = tea.name;
-        classTeacherSelect.appendChild(opt);
-      });
+      if (classTeacherSelect) {
+        classTeacherSelect.innerHTML = '<option value="">No Teacher</option>';
+        teachers.forEach(tea => {
+          const opt = document.createElement('option');
+          opt.value = tea.id;
+          opt.textContent = tea.name;
+          classTeacherSelect.appendChild(opt);
+        });
+      }
+      
+      // Set today's date for attendance
+      const dateInput = document.getElementById('attendance-date');
+      if (dateInput && !dateInput.value) {
+        dateInput.value = new Date().toISOString().split('T')[0];
+      }
+      
+      // Set default date range for history (last 30 days)
+      const historyFrom = document.getElementById('history-from');
+      const historyTo = document.getElementById('history-to');
+      if (historyFrom && !historyFrom.value) {
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        historyFrom.value = thirtyDaysAgo.toISOString().split('T')[0];
+      }
+      if (historyTo && !historyTo.value) {
+        historyTo.value = new Date().toISOString().split('T')[0];
+      }
     }
 
     // Render functions
@@ -1219,23 +1317,51 @@
 
     function renderAttendance() {
       const classId = document.getElementById('attendance-class').value;
+      const date = document.getElementById('attendance-date').value || new Date().toISOString().split('T')[0];
       const table = document.getElementById('attendance-table');
       table.innerHTML = '';
+      
       if (classId) {
         const cls = classes.find(c => c.id == classId);
-        if (cls && cls.studentIds) {
+        if (cls && cls.studentIds && cls.studentIds.length > 0) {
           cls.studentIds.forEach(sid => {
             const stu = students.find(s => s.id == sid);
             if (stu) {
-              const checked = attendance[classId]?.[sid] ? 'checked' : '';
+              // Initialize attendance structure
+              if (!attendance[classId]) attendance[classId] = {};
+              if (!attendance[classId][date]) attendance[classId][date] = {};
+              
+              const record = attendance[classId][date][sid] || { status: 'Present', notes: '' };
+              
               table.innerHTML += `<tr>
                 <td>${stu.name}</td>
-                <td><input type="checkbox" data-class="${classId}" data-id="${sid}" ${checked}></td>
+                <td>
+                  <select class="form-select form-select-sm" data-class="${classId}" data-date="${date}" data-id="${sid}" data-type="status">
+                    <option value="Present" ${record.status === 'Present' ? 'selected' : ''}>Present</option>
+                    <option value="Absent" ${record.status === 'Absent' ? 'selected' : ''}>Absent</option>
+                    <option value="Late" ${record.status === 'Late' ? 'selected' : ''}>Late</option>
+                    <option value="Excused" ${record.status === 'Excused' ? 'selected' : ''}>Excused</option>
+                  </select>
+                </td>
+                <td>
+                  <input type="text" class="form-control form-control-sm" data-class="${classId}" data-date="${date}" data-id="${sid}" data-type="notes" value="${record.notes}" placeholder="Optional notes">
+                </td>
               </tr>`;
             }
           });
+        } else {
+          table.innerHTML = '<tr><td colspan="3">No students enrolled in this class</td></tr>';
         }
+      } else {
+        table.innerHTML = '<tr><td colspan="3">Please select a class</td></tr>';
       }
+    }
+    
+    function bulkMarkAttendance(status) {
+      const selects = document.querySelectorAll('#attendance-table select[data-type="status"]');
+      selects.forEach(select => {
+        select.value = status;
+      });
     }
 
     function renderMessages() {
@@ -1363,14 +1489,35 @@
     // Save functions
     function saveAttendance() {
       const classId = document.getElementById('attendance-class').value;
+      const date = document.getElementById('attendance-date').value || new Date().toISOString().split('T')[0];
+      
       if (!classId) return alert('Select a class first');
+      
       if (!attendance[classId]) attendance[classId] = {};
-      const checkboxes = document.querySelectorAll('#attendance-table input[type="checkbox"]');
-      checkboxes.forEach(box => {
-        attendance[classId][box.dataset.id] = box.checked;
+      if (!attendance[classId][date]) attendance[classId][date] = {};
+      
+      // Get all inputs
+      const selects = document.querySelectorAll('#attendance-table select[data-type="status"]');
+      const inputs = document.querySelectorAll('#attendance-table input[data-type="notes"]');
+      
+      selects.forEach(select => {
+        const sid = select.dataset.id;
+        if (!attendance[classId][date][sid]) {
+          attendance[classId][date][sid] = {};
+        }
+        attendance[classId][date][sid].status = select.value;
       });
+      
+      inputs.forEach(input => {
+        const sid = input.dataset.id;
+        if (!attendance[classId][date][sid]) {
+          attendance[classId][date][sid] = {};
+        }
+        attendance[classId][date][sid].notes = input.value;
+      });
+      
       localStorage.setItem('attendance', JSON.stringify(attendance));
-      alert('Attendance saved!');
+      alert('Attendance saved successfully!');
     }
 
     function saveGrades() {
@@ -1396,6 +1543,179 @@
       localStorage.setItem('gradesData', JSON.stringify(gradesData));
       alert('Grades saved successfully!');
       renderGradesTable(); // Refresh averages
+    }
+    
+    // Attendance History
+    function renderAttendanceHistory() {
+      const classId = document.getElementById('history-class').value;
+      const fromDate = document.getElementById('history-from').value;
+      const toDate = document.getElementById('history-to').value;
+      const content = document.getElementById('attendance-history-content');
+      
+      if (!classId) {
+        content.innerHTML = '<p>Please select a class</p>';
+        return;
+      }
+      
+      const cls = classes.find(c => c.id == classId);
+      if (!cls || !cls.studentIds || cls.studentIds.length === 0) {
+        content.innerHTML = '<p>No students enrolled in this class</p>';
+        return;
+      }
+      
+      // Get all dates in range
+      const dates = [];
+      if (attendance[classId]) {
+        for (let date in attendance[classId]) {
+          if ((!fromDate || date >= fromDate) && (!toDate || date <= toDate)) {
+            dates.push(date);
+          }
+        }
+      }
+      
+      dates.sort();
+      
+      if (dates.length === 0) {
+        content.innerHTML = '<p>No attendance records found for the selected date range</p>';
+        return;
+      }
+      
+      // Build table
+      let html = '<div class="table-responsive"><table class="table table-bordered table-sm">';
+      html += '<thead><tr><th>Student</th>';
+      dates.forEach(date => {
+        html += `<th>${new Date(date).toLocaleDateString('en-ZA', {month: 'short', day: 'numeric'})}</th>`;
+      });
+      html += '<th>Present</th><th>Absent</th><th>Late</th><th>Excused</th><th>Rate</th></tr></thead><tbody>';
+      
+      cls.studentIds.forEach(sid => {
+        const stu = students.find(s => s.id == sid);
+        if (!stu) return;
+        
+        let counts = { Present: 0, Absent: 0, Late: 0, Excused: 0 };
+        html += `<tr><td>${stu.name}</td>`;
+        
+        dates.forEach(date => {
+          const record = attendance[classId][date]?.[sid];
+          const status = record?.status || 'N/A';
+          if (counts[status] !== undefined) counts[status]++;
+          
+          let cellClass = '';
+          if (status === 'Present') cellClass = 'table-success';
+          else if (status === 'Absent') cellClass = 'table-danger';
+          else if (status === 'Late') cellClass = 'table-warning';
+          else if (status === 'Excused') cellClass = 'table-info';
+          
+          html += `<td class="${cellClass}" title="${record?.notes || ''}">${status.charAt(0)}</td>`;
+        });
+        
+        const totalDays = dates.length;
+        const presentDays = counts.Present + counts.Late; // Count late as present
+        const rate = totalDays > 0 ? ((presentDays / totalDays) * 100).toFixed(1) : 0;
+        
+        html += `<td>${counts.Present}</td><td>${counts.Absent}</td><td>${counts.Late}</td><td>${counts.Excused}</td>`;
+        html += `<td><strong>${rate}%</strong></td></tr>`;
+      });
+      
+      html += '</tbody></table></div>';
+      content.innerHTML = html;
+    }
+    
+    // Attendance Report
+    function generateAttendanceReport() {
+      const classId = document.getElementById('report-class').value;
+      const content = document.getElementById('attendance-report-content');
+      
+      if (!classId) {
+        content.innerHTML = '<p>Please select a class</p>';
+        return;
+      }
+      
+      const cls = classes.find(c => c.id == classId);
+      if (!cls || !cls.studentIds || cls.studentIds.length === 0) {
+        content.innerHTML = '<p>No students enrolled in this class</p>';
+        return;
+      }
+      
+      // Calculate statistics
+      let stats = [];
+      let totalPresent = 0, totalAbsent = 0, totalLate = 0, totalExcused = 0;
+      
+      cls.studentIds.forEach(sid => {
+        const stu = students.find(s => s.id == sid);
+        if (!stu) return;
+        
+        let counts = { Present: 0, Absent: 0, Late: 0, Excused: 0, total: 0 };
+        
+        if (attendance[classId]) {
+          for (let date in attendance[classId]) {
+            if (attendance[classId][date][sid]) {
+              const status = attendance[classId][date][sid].status;
+              if (counts[status] !== undefined) counts[status]++;
+              counts.total++;
+            }
+          }
+        }
+        
+        totalPresent += counts.Present;
+        totalAbsent += counts.Absent;
+        totalLate += counts.Late;
+        totalExcused += counts.Excused;
+        
+        const presentDays = counts.Present + counts.Late;
+        const rate = counts.total > 0 ? ((presentDays / counts.total) * 100).toFixed(1) : 0;
+        
+        stats.push({
+          name: stu.name,
+          ...counts,
+          rate: parseFloat(rate)
+        });
+      });
+      
+      // Sort by attendance rate
+      stats.sort((a, b) => b.rate - a.rate);
+      
+      // Generate report
+      let html = `<div class="print-title"><h3>Attendance Report - ${cls.name}</h3><p>Johannesburg School • ${new Date().toLocaleDateString('en-ZA')}</p></div>`;
+      
+      html += '<div class="row mb-4">';
+      html += `<div class="col-md-3"><div class="card"><div class="card-body text-center"><h6>Total Present</h6><h3 class="text-success">${totalPresent}</h3></div></div></div>`;
+      html += `<div class="col-md-3"><div class="card"><div class="card-body text-center"><h6>Total Absent</h6><h3 class="text-danger">${totalAbsent}</h3></div></div></div>`;
+      html += `<div class="col-md-3"><div class="card"><div class="card-body text-center"><h6>Total Late</h6><h3 class="text-warning">${totalLate}</h3></div></div></div>`;
+      html += `<div class="col-md-3"><div class="card"><div class="card-body text-center"><h6>Total Excused</h6><h3 class="text-info">${totalExcused}</h3></div></div></div>`;
+      html += '</div>';
+      
+      html += '<h5>Student Attendance Summary</h5>';
+      html += '<table class="table table-striped"><thead><tr><th>Student</th><th>Present</th><th>Absent</th><th>Late</th><th>Excused</th><th>Total Days</th><th>Attendance Rate</th></tr></thead><tbody>';
+      
+      stats.forEach(s => {
+        const rateClass = s.rate >= 90 ? 'text-success' : s.rate >= 75 ? 'text-warning' : 'text-danger';
+        html += `<tr><td>${s.name}</td><td>${s.Present}</td><td>${s.Absent}</td><td>${s.Late}</td><td>${s.Excused}</td><td>${s.total}</td><td class="${rateClass}"><strong>${s.rate}%</strong></td></tr>`;
+      });
+      
+      html += '</tbody></table>';
+      content.innerHTML = html;
+      
+      // Generate chart
+      if (attendanceChart) attendanceChart.destroy();
+      const ctx = document.getElementById('attendanceChart').getContext('2d');
+      attendanceChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: stats.map(s => s.name),
+          datasets: [{
+            label: 'Attendance Rate (%)',
+            data: stats.map(s => s.rate),
+            backgroundColor: stats.map(s => s.rate >= 90 ? '#28a745' : s.rate >= 75 ? '#ffc107' : '#dc3545')
+          }]
+        },
+        options: {
+          scales: { y: { beginAtZero: true, max: 100 } },
+          plugins: {
+            legend: { display: false }
+          }
+        }
+      });
     }
 
     // Message & Report
