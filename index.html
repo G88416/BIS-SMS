@@ -160,6 +160,12 @@
     <a data-section="finance"><i class="fas fa-money-bill-wave"></i> <span>Finance</span></a>
     <a data-section="reports"><i class="fas fa-chart-bar"></i> <span>Reports</span></a>
     <a data-section="messages"><i class="fas fa-envelope"></i> <span>Messages</span></a>
+    <hr style="border-color: rgba(255,255,255,0.2); margin: 0.5rem 1rem;">
+    <div style="padding: 0.5rem 1.2rem; color: rgba(255,255,255,0.5); font-size: 0.75rem; text-transform: uppercase;">Portals</div>
+    <a data-section="student-portal"><i class="fas fa-user-graduate"></i> <span>Student Portal</span></a>
+    <a data-section="teacher-portal"><i class="fas fa-chalkboard-user"></i> <span>Teacher Portal</span></a>
+    <a data-section="parent-portal"><i class="fas fa-user-friends"></i> <span>Parent Portal</span></a>
+    <hr style="border-color: rgba(255,255,255,0.2); margin: 0.5rem 1rem;">
     <a data-section="settings"><i class="fas fa-cog"></i> <span>Settings</span></a>
   </div>
 
@@ -279,63 +285,140 @@
     <!-- Students Section -->
     <div id="students" class="section">
       <h4>Students Management</h4>
-      <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addStudentModal">Add Student</button>
-      <table class="table table-striped">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Grade</th>
-            <th>Enrolled Classes</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="students-table">
-          <!-- Populated by JS -->
-        </tbody>
-      </table>
+      <p class="text-muted">Comprehensive student management with search, filtering, and bulk operations</p>
+      
+      <!-- Enhanced Controls -->
+      <div class="row mb-3">
+        <div class="col-md-4">
+          <input type="text" class="form-control" id="student-search" placeholder="Search by name or ID..." onkeyup="filterStudents()">
+        </div>
+        <div class="col-md-3">
+          <select class="form-select" id="student-grade-filter" onchange="filterStudents()">
+            <option value="">All Grades</option>
+            <option value="8">Grade 8</option>
+            <option value="9">Grade 9</option>
+            <option value="10">Grade 10</option>
+            <option value="11">Grade 11</option>
+            <option value="12">Grade 12</option>
+          </select>
+        </div>
+        <div class="col-md-5 text-end">
+          <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addStudentModal"><i class="fas fa-plus"></i> Add Student</button>
+          <button class="btn btn-success" onclick="exportStudentsCSV()"><i class="fas fa-download"></i> Export CSV</button>
+        </div>
+      </div>
+      
+      <div class="table-responsive">
+        <table class="table table-striped table-hover">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Grade</th>
+              <th>Parent/Guardian</th>
+              <th>Contact</th>
+              <th>Enrolled Classes</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="students-table">
+            <!-- Populated by JS -->
+          </tbody>
+        </table>
+      </div>
+      <div id="student-count" class="mt-2 text-muted"></div>
     </div>
 
     <!-- Teachers Section -->
     <div id="teachers" class="section">
       <h4>Teachers Management</h4>
-      <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addTeacherModal">Add Teacher</button>
-      <table class="table table-striped">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Subject</th>
-            <th>Assigned Classes</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="teachers-table">
-          <!-- Populated by JS -->
-        </tbody>
-      </table>
+      <p class="text-muted">Manage teaching staff, qualifications, and class assignments</p>
+      
+      <!-- Enhanced Controls -->
+      <div class="row mb-3">
+        <div class="col-md-4">
+          <input type="text" class="form-control" id="teacher-search" placeholder="Search by name or subject..." onkeyup="filterTeachers()">
+        </div>
+        <div class="col-md-3">
+          <select class="form-select" id="teacher-status-filter" onchange="filterTeachers()">
+            <option value="">All Status</option>
+            <option value="Active">Active</option>
+            <option value="On Leave">On Leave</option>
+          </select>
+        </div>
+        <div class="col-md-5 text-end">
+          <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addTeacherModal"><i class="fas fa-plus"></i> Add Teacher</button>
+          <button class="btn btn-success" onclick="exportTeachersCSV()"><i class="fas fa-download"></i> Export CSV</button>
+        </div>
+      </div>
+      
+      <div class="table-responsive">
+        <table class="table table-striped table-hover">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Subject</th>
+              <th>Qualification</th>
+              <th>Status</th>
+              <th>Assigned Classes</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="teachers-table">
+            <!-- Populated by JS -->
+          </tbody>
+        </table>
+      </div>
+      <div id="teacher-count" class="mt-2 text-muted"></div>
     </div>
 
     <!-- Classes Section - Now Fully Implemented -->
     <div id="classes" class="section">
       <h4>Classes Management</h4>
-      <p>Create and manage classes, assign teachers, and enroll students.</p>
-      <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addClassModal">Add New Class</button>
-      <table class="table table-striped">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Class Name</th>
-            <th>Grade Level</th>
-            <th>Assigned Teacher</th>
-            <th>Enrolled Students</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="classes-table">
-          <!-- Populated by JS -->
-        </tbody>
-      </table>
+      <p class="text-muted">Create and manage classes, assign teachers, set capacity, and schedule</p>
+      
+      <!-- Enhanced Controls -->
+      <div class="row mb-3">
+        <div class="col-md-4">
+          <input type="text" class="form-control" id="class-search" placeholder="Search by class name or grade..." onkeyup="filterClasses()">
+        </div>
+        <div class="col-md-3">
+          <select class="form-select" id="class-grade-filter" onchange="filterClasses()">
+            <option value="">All Grades</option>
+            <option value="8">Grade 8</option>
+            <option value="9">Grade 9</option>
+            <option value="10">Grade 10</option>
+            <option value="11">Grade 11</option>
+            <option value="12">Grade 12</option>
+          </select>
+        </div>
+        <div class="col-md-5 text-end">
+          <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addClassModal"><i class="fas fa-plus"></i> Add New Class</button>
+          <button class="btn btn-info" onclick="viewClassSchedule()"><i class="fas fa-calendar"></i> View Schedule</button>
+        </div>
+      </div>
+      
+      <div class="table-responsive">
+        <table class="table table-striped table-hover">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Class Name</th>
+              <th>Grade Level</th>
+              <th>Assigned Teacher</th>
+              <th>Capacity</th>
+              <th>Enrolled Students</th>
+              <th>Schedule</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="classes-table">
+            <!-- Populated by JS -->
+          </tbody>
+        </table>
+      </div>
+      <div id="class-count" class="mt-2 text-muted"></div>
     </div>
 
     <!-- Attendance Section - Advanced Attendance Management -->
@@ -506,6 +589,438 @@
         <label class="form-check-label" for="darkModeSwitch">Enable Dark Mode</label>
       </div>
     </div>
+
+    <!-- Student Portal Section -->
+    <div id="student-portal" class="section">
+      <h4>Student Portal</h4>
+      <p class="text-muted">Student login and personalized dashboard</p>
+      
+      <!-- Login Form -->
+      <div id="student-login-form" class="card" style="max-width: 500px; margin: 2rem auto;">
+        <div class="card-body">
+          <h5 class="card-title text-center mb-4">Student Login</h5>
+          <div class="mb-3">
+            <label class="form-label">Student ID</label>
+            <input type="text" class="form-control" id="student-login-id" placeholder="Enter your Student ID">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Password</label>
+            <input type="password" class="form-control" id="student-login-password" placeholder="Enter your password">
+          </div>
+          <button class="btn btn-primary w-100" onclick="studentLogin()">Login</button>
+          <p class="text-muted text-center mt-3 small">Demo: Use any student ID (1 or 2) with password "student123"</p>
+        </div>
+      </div>
+      
+      <!-- Student Dashboard (Hidden until login) -->
+      <div id="student-dashboard" style="display: none;">
+        <div class="row mb-4">
+          <div class="col-md-12">
+            <div class="card">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                  <div>
+                    <h5 id="student-portal-name" class="mb-1"></h5>
+                    <p class="text-muted mb-0">Grade <span id="student-portal-grade"></span> | Student ID: <span id="student-portal-id"></span></p>
+                  </div>
+                  <button class="btn btn-outline-danger btn-sm" onclick="studentLogout()">Logout</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="row g-4 mb-4">
+          <div class="col-md-3">
+            <div class="card">
+              <div class="card-body text-center">
+                <i class="fas fa-graduation-cap text-primary stat-icon"></i>
+                <h6 class="mt-2">Average Grade</h6>
+                <h3 id="student-avg-grade">-</h3>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card">
+              <div class="card-body text-center">
+                <i class="fas fa-calendar-check text-success stat-icon"></i>
+                <h6 class="mt-2">Attendance Rate</h6>
+                <h3 id="student-attendance-rate">-</h3>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card">
+              <div class="card-body text-center">
+                <i class="fas fa-book text-info stat-icon"></i>
+                <h6 class="mt-2">Enrolled Classes</h6>
+                <h3 id="student-classes-count">-</h3>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card">
+              <div class="card-body text-center">
+                <i class="fas fa-money-bill-wave text-warning stat-icon"></i>
+                <h6 class="mt-2">Fee Balance</h6>
+                <h3 id="student-fee-balance">-</h3>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <ul class="nav nav-tabs mb-4">
+          <li class="nav-item">
+            <a class="nav-link active" data-bs-toggle="tab" href="#student-grades-tab">My Grades</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" data-bs-toggle="tab" href="#student-attendance-tab">My Attendance</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" data-bs-toggle="tab" href="#student-classes-tab">My Classes</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" data-bs-toggle="tab" href="#student-fees-tab">Fee Statement</a>
+          </li>
+        </ul>
+        
+        <div class="tab-content">
+          <div class="tab-pane fade show active" id="student-grades-tab">
+            <div class="card">
+              <div class="card-body">
+                <h5>My Grades</h5>
+                <div id="student-grades-content"></div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="tab-pane fade" id="student-attendance-tab">
+            <div class="card">
+              <div class="card-body">
+                <h5>My Attendance Record</h5>
+                <div id="student-attendance-content"></div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="tab-pane fade" id="student-classes-tab">
+            <div class="card">
+              <div class="card-body">
+                <h5>My Classes</h5>
+                <div id="student-classes-content"></div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="tab-pane fade" id="student-fees-tab">
+            <div class="card">
+              <div class="card-body">
+                <h5>Fee Statement</h5>
+                <div id="student-fees-content"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Teacher Portal Section -->
+    <div id="teacher-portal" class="section">
+      <h4>Teacher Portal</h4>
+      <p class="text-muted">Teacher login and classroom management</p>
+      
+      <!-- Login Form -->
+      <div id="teacher-login-form" class="card" style="max-width: 500px; margin: 2rem auto;">
+        <div class="card-body">
+          <h5 class="card-title text-center mb-4">Teacher Login</h5>
+          <div class="mb-3">
+            <label class="form-label">Teacher ID</label>
+            <input type="text" class="form-control" id="teacher-login-id" placeholder="Enter your Teacher ID">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Password</label>
+            <input type="password" class="form-control" id="teacher-login-password" placeholder="Enter your password">
+          </div>
+          <button class="btn btn-primary w-100" onclick="teacherLogin()">Login</button>
+          <p class="text-muted text-center mt-3 small">Demo: Use any teacher ID (1 or 2) with password "teacher123"</p>
+        </div>
+      </div>
+      
+      <!-- Teacher Dashboard (Hidden until login) -->
+      <div id="teacher-dashboard" style="display: none;">
+        <div class="row mb-4">
+          <div class="col-md-12">
+            <div class="card">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                  <div>
+                    <h5 id="teacher-portal-name" class="mb-1"></h5>
+                    <p class="text-muted mb-0"><span id="teacher-portal-subject"></span> | Teacher ID: <span id="teacher-portal-id"></span></p>
+                  </div>
+                  <button class="btn btn-outline-danger btn-sm" onclick="teacherLogout()">Logout</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="row g-4 mb-4">
+          <div class="col-md-4">
+            <div class="card">
+              <div class="card-body text-center">
+                <i class="fas fa-book text-primary stat-icon"></i>
+                <h6 class="mt-2">My Classes</h6>
+                <h3 id="teacher-classes-count">-</h3>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card">
+              <div class="card-body text-center">
+                <i class="fas fa-users text-success stat-icon"></i>
+                <h6 class="mt-2">Total Students</h6>
+                <h3 id="teacher-students-count">-</h3>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card">
+              <div class="card-body text-center">
+                <i class="fas fa-graduation-cap text-info stat-icon"></i>
+                <h6 class="mt-2">Class Average</h6>
+                <h3 id="teacher-class-average">-</h3>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <ul class="nav nav-tabs mb-4">
+          <li class="nav-item">
+            <a class="nav-link active" data-bs-toggle="tab" href="#teacher-classes-tab">My Classes</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" data-bs-toggle="tab" href="#teacher-grades-tab">Grade Entry</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" data-bs-toggle="tab" href="#teacher-attendance-tab">Take Attendance</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" data-bs-toggle="tab" href="#teacher-reports-tab">Reports</a>
+          </li>
+        </ul>
+        
+        <div class="tab-content">
+          <div class="tab-pane fade show active" id="teacher-classes-tab">
+            <div class="card">
+              <div class="card-body">
+                <h5>My Classes</h5>
+                <div id="teacher-classes-content"></div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="tab-pane fade" id="teacher-grades-tab">
+            <div class="card">
+              <div class="card-body">
+                <h5>Grade Entry</h5>
+                <div class="mb-3">
+                  <label class="form-label">Select Class</label>
+                  <select class="form-select" id="teacher-grade-class" onchange="loadTeacherGradeEntry()">
+                    <option value="">Choose a class...</option>
+                  </select>
+                </div>
+                <div id="teacher-grades-content"></div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="tab-pane fade" id="teacher-attendance-tab">
+            <div class="card">
+              <div class="card-body">
+                <h5>Take Attendance</h5>
+                <div class="mb-3">
+                  <label class="form-label">Select Class</label>
+                  <select class="form-select" id="teacher-attendance-class" onchange="loadTeacherAttendance()">
+                    <option value="">Choose a class...</option>
+                  </select>
+                </div>
+                <div id="teacher-attendance-content"></div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="tab-pane fade" id="teacher-reports-tab">
+            <div class="card">
+              <div class="card-body">
+                <h5>Class Reports</h5>
+                <div id="teacher-reports-content"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Parent Portal Section -->
+    <div id="parent-portal" class="section">
+      <h4>Parent Portal</h4>
+      <p class="text-muted">Parent/Guardian login to monitor child's progress</p>
+      
+      <!-- Login Form -->
+      <div id="parent-login-form" class="card" style="max-width: 500px; margin: 2rem auto;">
+        <div class="card-body">
+          <h5 class="card-title text-center mb-4">Parent/Guardian Login</h5>
+          <div class="mb-3">
+            <label class="form-label">Student ID (Your Child)</label>
+            <input type="text" class="form-control" id="parent-login-student-id" placeholder="Enter your child's Student ID">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Parent Access Code</label>
+            <input type="password" class="form-control" id="parent-login-code" placeholder="Enter your access code">
+          </div>
+          <button class="btn btn-primary w-100" onclick="parentLogin()">Login</button>
+          <p class="text-muted text-center mt-3 small">Demo: Use any student ID (1 or 2) with code "parent123"</p>
+        </div>
+      </div>
+      
+      <!-- Parent Dashboard (Hidden until login) -->
+      <div id="parent-dashboard" style="display: none;">
+        <div class="row mb-4">
+          <div class="col-md-12">
+            <div class="card">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                  <div>
+                    <h5>Monitoring: <span id="parent-child-name"></span></h5>
+                    <p class="text-muted mb-0">Grade <span id="parent-child-grade"></span> | Student ID: <span id="parent-child-id"></span></p>
+                  </div>
+                  <button class="btn btn-outline-danger btn-sm" onclick="parentLogout()">Logout</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="row g-4 mb-4">
+          <div class="col-md-3">
+            <div class="card">
+              <div class="card-body text-center">
+                <i class="fas fa-graduation-cap text-primary stat-icon"></i>
+                <h6 class="mt-2">Average Grade</h6>
+                <h3 id="parent-child-avg-grade">-</h3>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card">
+              <div class="card-body text-center">
+                <i class="fas fa-calendar-check text-success stat-icon"></i>
+                <h6 class="mt-2">Attendance Rate</h6>
+                <h3 id="parent-child-attendance">-</h3>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card">
+              <div class="card-body text-center">
+                <i class="fas fa-book text-info stat-icon"></i>
+                <h6 class="mt-2">Enrolled Classes</h6>
+                <h3 id="parent-child-classes">-</h3>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card">
+              <div class="card-body text-center">
+                <i class="fas fa-money-bill-wave text-warning stat-icon"></i>
+                <h6 class="mt-2">Fee Balance</h6>
+                <h3 id="parent-child-fees">-</h3>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <ul class="nav nav-tabs mb-4">
+          <li class="nav-item">
+            <a class="nav-link active" data-bs-toggle="tab" href="#parent-overview-tab">Overview</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" data-bs-toggle="tab" href="#parent-grades-tab">Academic Progress</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" data-bs-toggle="tab" href="#parent-attendance-tab">Attendance</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" data-bs-toggle="tab" href="#parent-fees-tab">Fees & Payments</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" data-bs-toggle="tab" href="#parent-contact-tab">Contact Teachers</a>
+          </li>
+        </ul>
+        
+        <div class="tab-content">
+          <div class="tab-pane fade show active" id="parent-overview-tab">
+            <div class="card">
+              <div class="card-body">
+                <h5>Student Overview</h5>
+                <div id="parent-overview-content"></div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="tab-pane fade" id="parent-grades-tab">
+            <div class="card">
+              <div class="card-body">
+                <h5>Academic Progress & Grades</h5>
+                <div id="parent-grades-content"></div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="tab-pane fade" id="parent-attendance-tab">
+            <div class="card">
+              <div class="card-body">
+                <h5>Attendance Record</h5>
+                <div id="parent-attendance-content"></div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="tab-pane fade" id="parent-fees-tab">
+            <div class="card">
+              <div class="card-body">
+                <h5>Fee Statement & Payment History</h5>
+                <div id="parent-fees-content"></div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="tab-pane fade" id="parent-contact-tab">
+            <div class="card">
+              <div class="card-body">
+                <h5>Contact Teachers</h5>
+                <div id="parent-contact-content">
+                  <div class="mb-3">
+                    <label class="form-label">Select Teacher</label>
+                    <select class="form-select" id="parent-teacher-select">
+                      <option value="">Choose teacher...</option>
+                    </select>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">Message</label>
+                    <textarea class="form-control" id="parent-message" rows="4" placeholder="Type your message..."></textarea>
+                  </div>
+                  <button class="btn btn-primary" onclick="sendParentMessage()">Send Message</button>
+                  <hr>
+                  <h6>Message History</h6>
+                  <div id="parent-messages-list"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- Modals -->
@@ -520,6 +1035,8 @@
         <div class="modal-body">
           <input type="text" class="form-control mb-2" id="student-name" placeholder="Full Name">
           <input type="text" class="form-control mb-2" id="student-grade" placeholder="Grade Level (e.g., 10)">
+          <input type="text" class="form-control mb-2" id="student-parent" placeholder="Parent/Guardian Name">
+          <input type="text" class="form-control mb-2" id="student-contact" placeholder="Contact Number">
           <select class="form-select mb-2" id="student-class" multiple size="3">
             <!-- Populated dynamically -->
           </select>
@@ -544,6 +1061,11 @@
         <div class="modal-body">
           <input type="text" class="form-control mb-2" id="teacher-name" placeholder="Full Name">
           <input type="text" class="form-control mb-2" id="teacher-subject" placeholder="Main Subject">
+          <input type="text" class="form-control mb-2" id="teacher-qualification" placeholder="Qualification (e.g., B.Ed, M.Sc)">
+          <select class="form-select mb-2" id="teacher-status">
+            <option value="Active">Active</option>
+            <option value="On Leave">On Leave</option>
+          </select>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -564,6 +1086,8 @@
         <div class="modal-body">
           <input type="text" class="form-control mb-2" id="class-name" placeholder="Class Name (e.g., Grade 10 Math)">
           <input type="text" class="form-control mb-2" id="class-grade" placeholder="Grade Level (e.g., 10)">
+          <input type="number" class="form-control mb-2" id="class-capacity" placeholder="Capacity (e.g., 30)" value="30">
+          <input type="text" class="form-control mb-2" id="class-schedule" placeholder="Schedule (e.g., Mon/Wed/Fri 9:00-10:00)">
           <select class="form-select mb-2" id="class-teacher">
             <option value="">Select Teacher</option>
             <!-- Populated dynamically from teachers -->
@@ -692,14 +1216,14 @@
   <script>
     // Dummy data with persistence
     let students = JSON.parse(localStorage.getItem('students')) || [
-      { id: 1, name: 'John Doe', grade: '10', classIds: [] },
-      { id: 2, name: 'Sarah Smith', grade: '11', classIds: [] }
+      { id: 1, name: 'John Doe', grade: '10', parent: 'Jane Doe', contact: '+27 11 234 5678', classIds: [] },
+      { id: 2, name: 'Sarah Smith', grade: '11', parent: 'Mike Smith', contact: '+27 11 876 5432', classIds: [] }
     ];
     let teachers = JSON.parse(localStorage.getItem('teachers')) || [
-      { id: 1, name: 'Mr. Johnson', subject: 'Math' },
-      { id: 2, name: 'Ms. Lee', subject: 'Science' }
+      { id: 1, name: 'Mr. Johnson', subject: 'Math', qualification: 'B.Ed Mathematics', status: 'Active' },
+      { id: 2, name: 'Ms. Lee', subject: 'Science', qualification: 'M.Sc Physics', status: 'Active' }
     ];
-    let classes = JSON.parse(localStorage.getItem('classes')) || []; // { id, name, grade, teacherId, studentIds: [] }
+    let classes = JSON.parse(localStorage.getItem('classes')) || []; // { id, name, grade, teacherId, studentIds: [], capacity: 30, schedule: '' }
     let attendance = JSON.parse(localStorage.getItem('attendance')) || {}; // { [classId]: { [date]: { [studentId]: {status: 'Present', notes: ''} } } }
     let grades = JSON.parse(localStorage.getItem('grades')) || {}; // { [classId]: { [studentId]: { math: '', science: '' } } }
     let messages = JSON.parse(localStorage.getItem('messages')) || [];
@@ -708,6 +1232,9 @@
     let gradesData = JSON.parse(localStorage.getItem('gradesData')) || {}; // {classId: {term: {studentId: {subject: score, comment: ''}}}}
     let subjects = JSON.parse(localStorage.getItem('subjects')) || {}; // {classId: [{name: 'Math', weight: 25}, ...]}
     let currentStudentId = null;
+    let loggedInStudent = null;
+    let loggedInTeacher = null;
+    let loggedInParent = null;
     let collectionChart = null;
     let gradeChart = null;
     let attendanceChart = null;
@@ -1262,7 +1789,18 @@
     function renderStudents() {
       const table = document.getElementById('students-table');
       table.innerHTML = '';
-      students.forEach(stu => {
+      
+      // Apply filters
+      const searchTerm = document.getElementById('student-search')?.value.toLowerCase() || '';
+      const gradeFilter = document.getElementById('student-grade-filter')?.value || '';
+      
+      let filteredStudents = students.filter(stu => {
+        const matchesSearch = !searchTerm || stu.name.toLowerCase().includes(searchTerm) || stu.id.toString().includes(searchTerm);
+        const matchesGrade = !gradeFilter || stu.grade === gradeFilter;
+        return matchesSearch && matchesGrade;
+      });
+      
+      filteredStudents.forEach(stu => {
         const enrolledClasses = stu.classIds.map(cid => {
           const cls = classes.find(c => c.id === cid);
           return cls ? cls.name : '';
@@ -1271,47 +1809,101 @@
           <td>${stu.id}</td>
           <td>${stu.name}</td>
           <td>${stu.grade}</td>
+          <td>${stu.parent || 'N/A'}</td>
+          <td>${stu.contact || 'N/A'}</td>
           <td>${enrolledClasses}</td>
-          <td><button class="btn btn-sm btn-danger" onclick="deleteStudent(${stu.id})">Delete</button></td>
+          <td>
+            <button class="btn btn-sm btn-info" onclick="viewStudentDetails(${stu.id})"><i class="fas fa-eye"></i></button>
+            <button class="btn btn-sm btn-danger" onclick="deleteStudent(${stu.id})"><i class="fas fa-trash"></i></button>
+          </td>
         </tr>`;
         table.innerHTML += row;
       });
+      
+      const countDiv = document.getElementById('student-count');
+      if (countDiv) {
+        countDiv.textContent = `Showing ${filteredStudents.length} of ${students.length} students`;
+      }
       populateClassSelects(); // Refresh available classes
     }
 
     function renderTeachers() {
       const table = document.getElementById('teachers-table');
       table.innerHTML = '';
-      teachers.forEach(tea => {
+      
+      // Apply filters
+      const searchTerm = document.getElementById('teacher-search')?.value.toLowerCase() || '';
+      const statusFilter = document.getElementById('teacher-status-filter')?.value || '';
+      
+      let filteredTeachers = teachers.filter(tea => {
+        const matchesSearch = !searchTerm || tea.name.toLowerCase().includes(searchTerm) || tea.subject.toLowerCase().includes(searchTerm);
+        const matchesStatus = !statusFilter || tea.status === statusFilter;
+        return matchesSearch && matchesStatus;
+      });
+      
+      filteredTeachers.forEach(tea => {
         const assignedClasses = classes.filter(c => c.teacherId === tea.id).map(c => c.name).join(', ') || 'None';
         const row = `<tr>
           <td>${tea.id}</td>
           <td>${tea.name}</td>
           <td>${tea.subject}</td>
+          <td>${tea.qualification || 'N/A'}</td>
+          <td><span class="badge bg-${tea.status === 'Active' ? 'success' : 'warning'}">${tea.status || 'Active'}</span></td>
           <td>${assignedClasses}</td>
-          <td><button class="btn btn-sm btn-danger" onclick="deleteTeacher(${tea.id})">Delete</button></td>
+          <td>
+            <button class="btn btn-sm btn-info" onclick="viewTeacherDetails(${tea.id})"><i class="fas fa-eye"></i></button>
+            <button class="btn btn-sm btn-danger" onclick="deleteTeacher(${tea.id})"><i class="fas fa-trash"></i></button>
+          </td>
         </tr>`;
         table.innerHTML += row;
       });
+      
+      const countDiv = document.getElementById('teacher-count');
+      if (countDiv) {
+        countDiv.textContent = `Showing ${filteredTeachers.length} of ${teachers.length} teachers`;
+      }
     }
 
     function renderClasses() {
       const table = document.getElementById('classes-table');
       table.innerHTML = '';
-      classes.forEach(cls => {
+      
+      // Apply filters
+      const searchTerm = document.getElementById('class-search')?.value.toLowerCase() || '';
+      const gradeFilter = document.getElementById('class-grade-filter')?.value || '';
+      
+      let filteredClasses = classes.filter(cls => {
+        const matchesSearch = !searchTerm || cls.name.toLowerCase().includes(searchTerm) || cls.grade.includes(searchTerm);
+        const matchesGrade = !gradeFilter || cls.grade === gradeFilter;
+        return matchesSearch && matchesGrade;
+      });
+      
+      filteredClasses.forEach(cls => {
         const teacher = teachers.find(t => t.id === cls.teacherId);
         const teacherName = teacher ? teacher.name : 'None';
         const enrolledCount = cls.studentIds ? cls.studentIds.length : 0;
+        const capacity = cls.capacity || 30;
+        const capacityColor = enrolledCount >= capacity ? 'danger' : enrolledCount >= capacity * 0.8 ? 'warning' : 'success';
         const row = `<tr>
           <td>${cls.id}</td>
           <td>${cls.name}</td>
           <td>${cls.grade}</td>
           <td>${teacherName}</td>
-          <td>${enrolledCount}</td>
-          <td><button class="btn btn-sm btn-danger" onclick="deleteClass(${cls.id})">Delete</button></td>
+          <td><span class="badge bg-${capacityColor}">${capacity}</span></td>
+          <td>${enrolledCount}/${capacity}</td>
+          <td><small>${cls.schedule || 'Not set'}</small></td>
+          <td>
+            <button class="btn btn-sm btn-info" onclick="viewClassDetails(${cls.id})"><i class="fas fa-eye"></i></button>
+            <button class="btn btn-sm btn-danger" onclick="deleteClass(${cls.id})"><i class="fas fa-trash"></i></button>
+          </td>
         </tr>`;
         table.innerHTML += row;
       });
+      
+      const countDiv = document.getElementById('class-count');
+      if (countDiv) {
+        countDiv.textContent = `Showing ${filteredClasses.length} of ${classes.length} classes`;
+      }
       populateClassSelects();
     }
 
@@ -1376,10 +1968,12 @@
     function addStudent() {
       const name = document.getElementById('student-name').value.trim();
       const grade = document.getElementById('student-grade').value.trim();
+      const parent = document.getElementById('student-parent').value.trim();
+      const contact = document.getElementById('student-contact').value.trim();
       const selectedClasses = Array.from(document.getElementById('student-class').selectedOptions).map(opt => parseInt(opt.value));
       if (name && grade) {
         const id = students.length ? Math.max(...students.map(s => s.id)) + 1 : 1;
-        const newStudent = { id, name, grade, classIds: selectedClasses };
+        const newStudent = { id, name, grade, parent, contact, classIds: selectedClasses };
         students.push(newStudent);
         // Enroll in selected classes
         selectedClasses.forEach(cid => {
@@ -1396,37 +1990,46 @@
         updateDashboardStats();
         document.getElementById('student-name').value = '';
         document.getElementById('student-grade').value = '';
+        document.getElementById('student-parent').value = '';
+        document.getElementById('student-contact').value = '';
       }
     }
 
     function addTeacher() {
       const name = document.getElementById('teacher-name').value.trim();
       const subject = document.getElementById('teacher-subject').value.trim();
+      const qualification = document.getElementById('teacher-qualification').value.trim();
+      const status = document.getElementById('teacher-status').value;
       if (name && subject) {
         const id = teachers.length ? Math.max(...teachers.map(t => t.id)) + 1 : 1;
-        teachers.push({ id, name, subject });
+        teachers.push({ id, name, subject, qualification, status });
         localStorage.setItem('teachers', JSON.stringify(teachers));
         renderTeachers();
         populateClassSelects();
         updateDashboardStats();
         document.getElementById('teacher-name').value = '';
         document.getElementById('teacher-subject').value = '';
+        document.getElementById('teacher-qualification').value = '';
       }
     }
 
     function addClass() {
       const name = document.getElementById('class-name').value.trim();
       const grade = document.getElementById('class-grade').value.trim();
+      const capacity = parseInt(document.getElementById('class-capacity').value) || 30;
+      const schedule = document.getElementById('class-schedule').value.trim();
       const teacherId = parseInt(document.getElementById('class-teacher').value) || null;
       if (name && grade) {
         const id = classes.length ? Math.max(...classes.map(c => c.id)) + 1 : 1;
-        classes.push({ id, name, grade, teacherId, studentIds: [] });
+        classes.push({ id, name, grade, teacherId, capacity, schedule, studentIds: [] });
         localStorage.setItem('classes', JSON.stringify(classes));
         renderClasses();
         populateClassSelects();
         updateDashboardStats();
         document.getElementById('class-name').value = '';
         document.getElementById('class-grade').value = '';
+        document.getElementById('class-capacity').value = '30';
+        document.getElementById('class-schedule').value = '';
       }
     }
 
@@ -1762,6 +2365,564 @@
     
     // Attach manage subjects button
     document.querySelector('[data-bs-target="#manageSubjectsModal"]').onclick = openManageSubjects;
+
+    // Filter functions
+    function filterStudents() {
+      renderStudents();
+    }
+    
+    function filterTeachers() {
+      renderTeachers();
+    }
+    
+    function filterClasses() {
+      renderClasses();
+    }
+    
+    // Export functions
+    function exportStudentsCSV() {
+      let csv = 'ID,Name,Grade,Parent/Guardian,Contact,Enrolled Classes\n';
+      students.forEach(stu => {
+        const enrolledClasses = stu.classIds.map(cid => {
+          const cls = classes.find(c => c.id === cid);
+          return cls ? cls.name : '';
+        }).join(';');
+        csv += `${stu.id},"${stu.name}",${stu.grade},"${stu.parent || 'N/A'}","${stu.contact || 'N/A'}","${enrolledClasses}"\n`;
+      });
+      downloadCSV(csv, 'students.csv');
+    }
+    
+    function exportTeachersCSV() {
+      let csv = 'ID,Name,Subject,Qualification,Status,Assigned Classes\n';
+      teachers.forEach(tea => {
+        const assignedClasses = classes.filter(c => c.teacherId === tea.id).map(c => c.name).join(';');
+        csv += `${tea.id},"${tea.name}","${tea.subject}","${tea.qualification || 'N/A'}","${tea.status || 'Active'}","${assignedClasses}"\n`;
+      });
+      downloadCSV(csv, 'teachers.csv');
+    }
+    
+    function downloadCSV(csv, filename) {
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+      window.URL.revokeObjectURL(url);
+    }
+    
+    // View details functions
+    function viewStudentDetails(id) {
+      const student = students.find(s => s.id === id);
+      if (student) {
+        const details = `Student Details:\n\nID: ${student.id}\nName: ${student.name}\nGrade: ${student.grade}\nParent/Guardian: ${student.parent || 'N/A'}\nContact: ${student.contact || 'N/A'}\nEnrolled Classes: ${student.classIds.length}`;
+        alert(details);
+      }
+    }
+    
+    function viewTeacherDetails(id) {
+      const teacher = teachers.find(t => t.id === id);
+      if (teacher) {
+        const assignedClasses = classes.filter(c => c.teacherId === teacher.id);
+        const details = `Teacher Details:\n\nID: ${teacher.id}\nName: ${teacher.name}\nSubject: ${teacher.subject}\nQualification: ${teacher.qualification || 'N/A'}\nStatus: ${teacher.status || 'Active'}\nAssigned Classes: ${assignedClasses.length}`;
+        alert(details);
+      }
+    }
+    
+    function viewClassDetails(id) {
+      const cls = classes.find(c => c.id === id);
+      if (cls) {
+        const teacher = teachers.find(t => t.id === cls.teacherId);
+        const details = `Class Details:\n\nID: ${cls.id}\nName: ${cls.name}\nGrade: ${cls.grade}\nTeacher: ${teacher ? teacher.name : 'None'}\nCapacity: ${cls.capacity || 30}\nEnrolled: ${cls.studentIds ? cls.studentIds.length : 0}\nSchedule: ${cls.schedule || 'Not set'}`;
+        alert(details);
+      }
+    }
+    
+    function viewClassSchedule() {
+      if (classes.length === 0) {
+        alert('No classes available. Please create some classes first.');
+        return;
+      }
+      let schedule = 'CLASS SCHEDULE\n\n';
+      classes.forEach(cls => {
+        const teacher = teachers.find(t => t.id === cls.teacherId);
+        schedule += `${cls.name} (Grade ${cls.grade})\nTeacher: ${teacher ? teacher.name : 'N/A'}\nSchedule: ${cls.schedule || 'Not set'}\n\n`;
+      });
+      alert(schedule);
+    }
+
+    // Student Portal Functions
+    function studentLogin() {
+      const id = parseInt(document.getElementById('student-login-id').value);
+      const password = document.getElementById('student-login-password').value;
+      
+      // Simple demo authentication
+      if (password === 'student123') {
+        const student = students.find(s => s.id === id);
+        if (student) {
+          loggedInStudent = student;
+          document.getElementById('student-login-form').style.display = 'none';
+          document.getElementById('student-dashboard').style.display = 'block';
+          loadStudentPortal();
+        } else {
+          alert('Student ID not found!');
+        }
+      } else {
+        alert('Incorrect password!');
+      }
+    }
+    
+    function studentLogout() {
+      loggedInStudent = null;
+      document.getElementById('student-login-form').style.display = 'block';
+      document.getElementById('student-dashboard').style.display = 'none';
+      document.getElementById('student-login-id').value = '';
+      document.getElementById('student-login-password').value = '';
+    }
+    
+    function loadStudentPortal() {
+      if (!loggedInStudent) return;
+      
+      // Update header
+      document.getElementById('student-portal-name').textContent = loggedInStudent.name;
+      document.getElementById('student-portal-grade').textContent = loggedInStudent.grade;
+      document.getElementById('student-portal-id').textContent = loggedInStudent.id;
+      
+      // Calculate stats
+      const feeCalc = calculateStudentFee(loggedInStudent.id);
+      document.getElementById('student-fee-balance').textContent = 'R' + feeCalc.balance.toLocaleString();
+      document.getElementById('student-classes-count').textContent = loggedInStudent.classIds.length;
+      
+      // Calculate average grade
+      let totalGrade = 0, gradeCount = 0;
+      loggedInStudent.classIds.forEach(cid => {
+        const classGrades = gradesData[cid];
+        if (classGrades) {
+          for (let term in classGrades) {
+            const studentGrades = classGrades[term][loggedInStudent.id];
+            if (studentGrades && subjects[cid]) {
+              subjects[cid].forEach(sub => {
+                const score = parseFloat(studentGrades[sub.name]);
+                if (score) {
+                  totalGrade += score;
+                  gradeCount++;
+                }
+              });
+            }
+          }
+        }
+      });
+      const avgGrade = gradeCount > 0 ? (totalGrade / gradeCount).toFixed(1) : 'N/A';
+      document.getElementById('student-avg-grade').textContent = avgGrade + '%';
+      
+      // Calculate attendance rate
+      let presentCount = 0, totalDays = 0;
+      loggedInStudent.classIds.forEach(cid => {
+        if (attendance[cid]) {
+          for (let date in attendance[cid]) {
+            if (attendance[cid][date][loggedInStudent.id]) {
+              totalDays++;
+              if (attendance[cid][date][loggedInStudent.id].status === 'Present') {
+                presentCount++;
+              }
+            }
+          }
+        }
+      });
+      const attendanceRate = totalDays > 0 ? ((presentCount / totalDays) * 100).toFixed(1) : 'N/A';
+      document.getElementById('student-attendance-rate').textContent = attendanceRate + '%';
+      
+      // Load grades content
+      loadStudentGrades();
+      loadStudentAttendance();
+      loadStudentClasses();
+      loadStudentFees();
+    }
+    
+    function loadStudentGrades() {
+      let html = '<div class="table-responsive"><table class="table table-striped"><thead><tr><th>Class</th><th>Subject</th><th>Grade</th><th>Comment</th></tr></thead><tbody>';
+      
+      loggedInStudent.classIds.forEach(cid => {
+        const cls = classes.find(c => c.id === cid);
+        if (cls && gradesData[cid]) {
+          for (let term in gradesData[cid]) {
+            const studentGrades = gradesData[cid][term][loggedInStudent.id];
+            if (studentGrades && subjects[cid]) {
+              subjects[cid].forEach(sub => {
+                const score = studentGrades[sub.name] || 'N/A';
+                html += `<tr><td>${cls.name} (${term})</td><td>${sub.name}</td><td>${score}%</td><td>${studentGrades.comment || '-'}</td></tr>`;
+              });
+            }
+          }
+        }
+      });
+      
+      html += '</tbody></table></div>';
+      document.getElementById('student-grades-content').innerHTML = html || '<p>No grades available yet.</p>';
+    }
+    
+    function loadStudentAttendance() {
+      let html = '<div class="table-responsive"><table class="table table-striped"><thead><tr><th>Date</th><th>Class</th><th>Status</th><th>Notes</th></tr></thead><tbody>';
+      
+      loggedInStudent.classIds.forEach(cid => {
+        const cls = classes.find(c => c.id === cid);
+        if (cls && attendance[cid]) {
+          for (let date in attendance[cid]) {
+            if (attendance[cid][date][loggedInStudent.id]) {
+              const record = attendance[cid][date][loggedInStudent.id];
+              html += `<tr><td>${date}</td><td>${cls.name}</td><td><span class="badge bg-${record.status === 'Present' ? 'success' : 'danger'}">${record.status}</span></td><td>${record.notes || '-'}</td></tr>`;
+            }
+          }
+        }
+      });
+      
+      html += '</tbody></table></div>';
+      document.getElementById('student-attendance-content').innerHTML = html || '<p>No attendance records yet.</p>';
+    }
+    
+    function loadStudentClasses() {
+      let html = '<div class="table-responsive"><table class="table table-striped"><thead><tr><th>Class</th><th>Grade Level</th><th>Teacher</th><th>Schedule</th></tr></thead><tbody>';
+      
+      loggedInStudent.classIds.forEach(cid => {
+        const cls = classes.find(c => c.id === cid);
+        if (cls) {
+          const teacher = teachers.find(t => t.id === cls.teacherId);
+          html += `<tr><td>${cls.name}</td><td>${cls.grade}</td><td>${teacher ? teacher.name : 'N/A'}</td><td>${cls.schedule || 'Not set'}</td></tr>`;
+        }
+      });
+      
+      html += '</tbody></table></div>';
+      document.getElementById('student-classes-content').innerHTML = html || '<p>Not enrolled in any classes yet.</p>';
+    }
+    
+    function loadStudentFees() {
+      const feeCalc = calculateStudentFee(loggedInStudent.id);
+      const f = fees[loggedInStudent.id] || {items: [], discounts: [], payments: []};
+      
+      let html = `<div class="mb-4">
+        <h6>Fee Summary</h6>
+        <p><strong>Total Due:</strong> R${feeCalc.netDue.toLocaleString()}</p>
+        <p><strong>Total Paid:</strong> R${feeCalc.paidTotal.toLocaleString()}</p>
+        <p class="${feeCalc.balance > 0 ? 'text-danger' : 'text-success'}"><strong>Balance:</strong> R${feeCalc.balance.toLocaleString()}</p>
+      </div>`;
+      
+      html += '<h6>Payment History</h6><table class="table table-sm"><thead><tr><th>Date</th><th>Amount</th><th>Method</th></tr></thead><tbody>';
+      f.payments.forEach(p => {
+        html += `<tr><td>${p.date}</td><td>R${parseFloat(p.amount).toLocaleString()}</td><td>${p.method}</td></tr>`;
+      });
+      html += '</tbody></table>';
+      
+      document.getElementById('student-fees-content').innerHTML = html;
+    }
+
+    // Teacher Portal Functions
+    function teacherLogin() {
+      const id = parseInt(document.getElementById('teacher-login-id').value);
+      const password = document.getElementById('teacher-login-password').value;
+      
+      if (password === 'teacher123') {
+        const teacher = teachers.find(t => t.id === id);
+        if (teacher) {
+          loggedInTeacher = teacher;
+          document.getElementById('teacher-login-form').style.display = 'none';
+          document.getElementById('teacher-dashboard').style.display = 'block';
+          loadTeacherPortal();
+        } else {
+          alert('Teacher ID not found!');
+        }
+      } else {
+        alert('Incorrect password!');
+      }
+    }
+    
+    function teacherLogout() {
+      loggedInTeacher = null;
+      document.getElementById('teacher-login-form').style.display = 'block';
+      document.getElementById('teacher-dashboard').style.display = 'none';
+      document.getElementById('teacher-login-id').value = '';
+      document.getElementById('teacher-login-password').value = '';
+    }
+    
+    function loadTeacherPortal() {
+      if (!loggedInTeacher) return;
+      
+      document.getElementById('teacher-portal-name').textContent = loggedInTeacher.name;
+      document.getElementById('teacher-portal-subject').textContent = loggedInTeacher.subject;
+      document.getElementById('teacher-portal-id').textContent = loggedInTeacher.id;
+      
+      const teacherClasses = classes.filter(c => c.teacherId === loggedInTeacher.id);
+      document.getElementById('teacher-classes-count').textContent = teacherClasses.length;
+      
+      let totalStudents = 0;
+      teacherClasses.forEach(cls => {
+        totalStudents += cls.studentIds ? cls.studentIds.length : 0;
+      });
+      document.getElementById('teacher-students-count').textContent = totalStudents;
+      
+      document.getElementById('teacher-class-average').textContent = 'N/A';
+      
+      loadTeacherClasses();
+      populateTeacherSelects();
+    }
+    
+    function loadTeacherClasses() {
+      const teacherClasses = classes.filter(c => c.teacherId === loggedInTeacher.id);
+      let html = '<div class="table-responsive"><table class="table table-striped"><thead><tr><th>Class</th><th>Grade</th><th>Students</th><th>Schedule</th></tr></thead><tbody>';
+      
+      teacherClasses.forEach(cls => {
+        const studentCount = cls.studentIds ? cls.studentIds.length : 0;
+        html += `<tr><td>${cls.name}</td><td>${cls.grade}</td><td>${studentCount}</td><td>${cls.schedule || 'Not set'}</td></tr>`;
+      });
+      
+      html += '</tbody></table></div>';
+      document.getElementById('teacher-classes-content').innerHTML = html || '<p>No classes assigned yet.</p>';
+    }
+    
+    function populateTeacherSelects() {
+      if (!loggedInTeacher) return;
+      
+      const teacherClasses = classes.filter(c => c.teacherId === loggedInTeacher.id);
+      const gradeSelect = document.getElementById('teacher-grade-class');
+      const attendanceSelect = document.getElementById('teacher-attendance-class');
+      
+      [gradeSelect, attendanceSelect].forEach(select => {
+        if (select) {
+          select.innerHTML = '<option value="">Choose a class...</option>';
+          teacherClasses.forEach(cls => {
+            const opt = document.createElement('option');
+            opt.value = cls.id;
+            opt.textContent = `${cls.name} (Grade ${cls.grade})`;
+            select.appendChild(opt);
+          });
+        }
+      });
+    }
+    
+    function loadTeacherGradeEntry() {
+      const classId = document.getElementById('teacher-grade-class').value;
+      if (!classId) {
+        document.getElementById('teacher-grades-content').innerHTML = '<p>Please select a class.</p>';
+        return;
+      }
+      
+      const cls = classes.find(c => c.id === parseInt(classId));
+      if (!cls || !cls.studentIds || cls.studentIds.length === 0) {
+        document.getElementById('teacher-grades-content').innerHTML = '<p>No students enrolled in this class.</p>';
+        return;
+      }
+      
+      let html = '<p class="alert alert-info">Use the main "Advanced Grades" section for full grade entry features.</p>';
+      html += `<p><strong>Quick Link:</strong> Select this class in the main Grades section to enter grades for ${cls.name}.</p>`;
+      html += '<button class="btn btn-primary" onclick="navigateTo(\'grades\')">Go to Grades Section</button>';
+      
+      document.getElementById('teacher-grades-content').innerHTML = html;
+    }
+    
+    function loadTeacherAttendance() {
+      const classId = document.getElementById('teacher-attendance-class').value;
+      if (!classId) {
+        document.getElementById('teacher-attendance-content').innerHTML = '<p>Please select a class.</p>';
+        return;
+      }
+      
+      const cls = classes.find(c => c.id === parseInt(classId));
+      if (!cls || !cls.studentIds || cls.studentIds.length === 0) {
+        document.getElementById('teacher-attendance-content').innerHTML = '<p>No students enrolled in this class.</p>';
+        return;
+      }
+      
+      let html = '<p class="alert alert-info">Use the main "Attendance" section for full attendance features.</p>';
+      html += `<p><strong>Quick Link:</strong> Select this class in the main Attendance section to mark attendance for ${cls.name}.</p>`;
+      html += '<button class="btn btn-primary" onclick="navigateTo(\'attendance\')">Go to Attendance Section</button>';
+      
+      document.getElementById('teacher-attendance-content').innerHTML = html;
+    }
+
+    // Parent Portal Functions
+    function parentLogin() {
+      const studentId = parseInt(document.getElementById('parent-login-student-id').value);
+      const code = document.getElementById('parent-login-code').value;
+      
+      if (code === 'parent123') {
+        const student = students.find(s => s.id === studentId);
+        if (student) {
+          loggedInParent = student;
+          document.getElementById('parent-login-form').style.display = 'none';
+          document.getElementById('parent-dashboard').style.display = 'block';
+          loadParentPortal();
+        } else {
+          alert('Student ID not found!');
+        }
+      } else {
+        alert('Incorrect access code!');
+      }
+    }
+    
+    function parentLogout() {
+      loggedInParent = null;
+      document.getElementById('parent-login-form').style.display = 'block';
+      document.getElementById('parent-dashboard').style.display = 'none';
+      document.getElementById('parent-login-student-id').value = '';
+      document.getElementById('parent-login-code').value = '';
+    }
+    
+    function loadParentPortal() {
+      if (!loggedInParent) return;
+      
+      document.getElementById('parent-child-name').textContent = loggedInParent.name;
+      document.getElementById('parent-child-grade').textContent = loggedInParent.grade;
+      document.getElementById('parent-child-id').textContent = loggedInParent.id;
+      
+      // Calculate stats (same as student portal)
+      const feeCalc = calculateStudentFee(loggedInParent.id);
+      document.getElementById('parent-child-fees').textContent = 'R' + feeCalc.balance.toLocaleString();
+      document.getElementById('parent-child-classes').textContent = loggedInParent.classIds.length;
+      
+      let totalGrade = 0, gradeCount = 0;
+      loggedInParent.classIds.forEach(cid => {
+        const classGrades = gradesData[cid];
+        if (classGrades) {
+          for (let term in classGrades) {
+            const studentGrades = classGrades[term][loggedInParent.id];
+            if (studentGrades && subjects[cid]) {
+              subjects[cid].forEach(sub => {
+                const score = parseFloat(studentGrades[sub.name]);
+                if (score) {
+                  totalGrade += score;
+                  gradeCount++;
+                }
+              });
+            }
+          }
+        }
+      });
+      const avgGrade = gradeCount > 0 ? (totalGrade / gradeCount).toFixed(1) : 'N/A';
+      document.getElementById('parent-child-avg-grade').textContent = avgGrade + '%';
+      
+      let presentCount = 0, totalDays = 0;
+      loggedInParent.classIds.forEach(cid => {
+        if (attendance[cid]) {
+          for (let date in attendance[cid]) {
+            if (attendance[cid][date][loggedInParent.id]) {
+              totalDays++;
+              if (attendance[cid][date][loggedInParent.id].status === 'Present') {
+                presentCount++;
+              }
+            }
+          }
+        }
+      });
+      const attendanceRate = totalDays > 0 ? ((presentCount / totalDays) * 100).toFixed(1) : 'N/A';
+      document.getElementById('parent-child-attendance').textContent = attendanceRate + '%';
+      
+      loadParentContent();
+    }
+    
+    function loadParentContent() {
+      // Overview
+      let overview = `<p><strong>Student:</strong> ${loggedInParent.name}</p>`;
+      overview += `<p><strong>Grade:</strong> ${loggedInParent.grade}</p>`;
+      overview += `<p><strong>Parent/Guardian:</strong> ${loggedInParent.parent || 'N/A'}</p>`;
+      overview += `<p><strong>Contact:</strong> ${loggedInParent.contact || 'N/A'}</p>`;
+      document.getElementById('parent-overview-content').innerHTML = overview;
+      
+      // Grades (same as student portal)
+      let gradesHtml = '<div class="table-responsive"><table class="table table-striped"><thead><tr><th>Class</th><th>Subject</th><th>Grade</th><th>Comment</th></tr></thead><tbody>';
+      loggedInParent.classIds.forEach(cid => {
+        const cls = classes.find(c => c.id === cid);
+        if (cls && gradesData[cid]) {
+          for (let term in gradesData[cid]) {
+            const studentGrades = gradesData[cid][term][loggedInParent.id];
+            if (studentGrades && subjects[cid]) {
+              subjects[cid].forEach(sub => {
+                const score = studentGrades[sub.name] || 'N/A';
+                gradesHtml += `<tr><td>${cls.name} (${term})</td><td>${sub.name}</td><td>${score}%</td><td>${studentGrades.comment || '-'}</td></tr>`;
+              });
+            }
+          }
+        }
+      });
+      gradesHtml += '</tbody></table></div>';
+      document.getElementById('parent-grades-content').innerHTML = gradesHtml || '<p>No grades available yet.</p>';
+      
+      // Attendance
+      let attendanceHtml = '<div class="table-responsive"><table class="table table-striped"><thead><tr><th>Date</th><th>Class</th><th>Status</th></tr></thead><tbody>';
+      loggedInParent.classIds.forEach(cid => {
+        const cls = classes.find(c => c.id === cid);
+        if (cls && attendance[cid]) {
+          for (let date in attendance[cid]) {
+            if (attendance[cid][date][loggedInParent.id]) {
+              const record = attendance[cid][date][loggedInParent.id];
+              attendanceHtml += `<tr><td>${date}</td><td>${cls.name}</td><td><span class="badge bg-${record.status === 'Present' ? 'success' : 'danger'}">${record.status}</span></td></tr>`;
+            }
+          }
+        }
+      });
+      attendanceHtml += '</tbody></table></div>';
+      document.getElementById('parent-attendance-content').innerHTML = attendanceHtml || '<p>No attendance records yet.</p>';
+      
+      // Fees
+      const feeCalc = calculateStudentFee(loggedInParent.id);
+      const f = fees[loggedInParent.id] || {items: [], discounts: [], payments: []};
+      let feesHtml = `<div class="mb-4">
+        <h6>Fee Summary</h6>
+        <p><strong>Total Due:</strong> R${feeCalc.netDue.toLocaleString()}</p>
+        <p><strong>Total Paid:</strong> R${feeCalc.paidTotal.toLocaleString()}</p>
+        <p class="${feeCalc.balance > 0 ? 'text-danger' : 'text-success'}"><strong>Balance:</strong> R${feeCalc.balance.toLocaleString()}</p>
+      </div>`;
+      feesHtml += '<h6>Payment History</h6><table class="table table-sm"><thead><tr><th>Date</th><th>Amount</th><th>Method</th></tr></thead><tbody>';
+      f.payments.forEach(p => {
+        feesHtml += `<tr><td>${p.date}</td><td>R${parseFloat(p.amount).toLocaleString()}</td><td>${p.method}</td></tr>`;
+      });
+      feesHtml += '</tbody></table>';
+      document.getElementById('parent-fees-content').innerHTML = feesHtml;
+      
+      // Populate teacher select for messaging
+      const teacherSelect = document.getElementById('parent-teacher-select');
+      teacherSelect.innerHTML = '<option value="">Choose teacher...</option>';
+      const childClasses = loggedInParent.classIds.map(cid => classes.find(c => c.id === cid)).filter(c => c);
+      const teacherIds = [...new Set(childClasses.map(c => c.teacherId))];
+      teacherIds.forEach(tid => {
+        const teacher = teachers.find(t => t.id === tid);
+        if (teacher) {
+          const opt = document.createElement('option');
+          opt.value = tid;
+          opt.textContent = `${teacher.name} (${teacher.subject})`;
+          teacherSelect.appendChild(opt);
+        }
+      });
+    }
+    
+    function sendParentMessage() {
+      const teacherId = document.getElementById('parent-teacher-select').value;
+      const message = document.getElementById('parent-message').value.trim();
+      
+      if (!teacherId || !message) {
+        alert('Please select a teacher and enter a message.');
+        return;
+      }
+      
+      const teacher = teachers.find(t => t.id === parseInt(teacherId));
+      alert(`Message sent to ${teacher.name}!`);
+      document.getElementById('parent-message').value = '';
+      
+      // Add to message history
+      const messagesList = document.getElementById('parent-messages-list');
+      const msgDiv = document.createElement('div');
+      msgDiv.className = 'card mb-2';
+      const cardBody = document.createElement('div');
+      cardBody.className = 'card-body';
+      const timestamp = document.createElement('small');
+      timestamp.className = 'text-muted';
+      timestamp.textContent = `To: ${teacher.name} - ${new Date().toLocaleString()}`;
+      const messageText = document.createElement('p');
+      messageText.className = 'mb-0';
+      messageText.textContent = message;
+      cardBody.appendChild(timestamp);
+      cardBody.appendChild(messageText);
+      msgDiv.appendChild(cardBody);
+      messagesList.insertBefore(msgDiv, messagesList.firstChild);
+    }
 
     // Initial load
     populateClassSelects();
