@@ -2413,27 +2413,42 @@
     
     // View details functions
     function viewStudentDetails(id) {
-      alert('Student details view - Feature coming soon!');
+      const student = students.find(s => s.id === id);
+      if (student) {
+        const details = `Student Details:\n\nID: ${student.id}\nName: ${student.name}\nGrade: ${student.grade}\nParent/Guardian: ${student.parent || 'N/A'}\nContact: ${student.contact || 'N/A'}\nEnrolled Classes: ${student.classIds.length}`;
+        alert(details);
+      }
     }
     
     function viewTeacherDetails(id) {
-      alert('Teacher details view - Feature coming soon!');
+      const teacher = teachers.find(t => t.id === id);
+      if (teacher) {
+        const assignedClasses = classes.filter(c => c.teacherId === teacher.id);
+        const details = `Teacher Details:\n\nID: ${teacher.id}\nName: ${teacher.name}\nSubject: ${teacher.subject}\nQualification: ${teacher.qualification || 'N/A'}\nStatus: ${teacher.status || 'Active'}\nAssigned Classes: ${assignedClasses.length}`;
+        alert(details);
+      }
     }
     
     function viewClassDetails(id) {
-      alert('Class details view - Feature coming soon!');
+      const cls = classes.find(c => c.id === id);
+      if (cls) {
+        const teacher = teachers.find(t => t.id === cls.teacherId);
+        const details = `Class Details:\n\nID: ${cls.id}\nName: ${cls.name}\nGrade: ${cls.grade}\nTeacher: ${teacher ? teacher.name : 'None'}\nCapacity: ${cls.capacity || 30}\nEnrolled: ${cls.studentIds ? cls.studentIds.length : 0}\nSchedule: ${cls.schedule || 'Not set'}`;
+        alert(details);
+      }
     }
     
     function viewClassSchedule() {
-      let schedule = '<h5>Class Schedule</h5><table class="table table-bordered">';
-      schedule += '<thead><tr><th>Class</th><th>Grade</th><th>Teacher</th><th>Schedule</th></tr></thead><tbody>';
+      if (classes.length === 0) {
+        alert('No classes available. Please create some classes first.');
+        return;
+      }
+      let schedule = 'CLASS SCHEDULE\n\n';
       classes.forEach(cls => {
         const teacher = teachers.find(t => t.id === cls.teacherId);
-        schedule += `<tr><td>${cls.name}</td><td>${cls.grade}</td><td>${teacher ? teacher.name : 'N/A'}</td><td>${cls.schedule || 'Not set'}</td></tr>`;
+        schedule += `${cls.name} (Grade ${cls.grade})\nTeacher: ${teacher ? teacher.name : 'N/A'}\nSchedule: ${cls.schedule || 'Not set'}\n\n`;
       });
-      schedule += '</tbody></table>';
-      alert('Schedule view - Check console for HTML');
-      console.log(schedule);
+      alert(schedule);
     }
 
     // Student Portal Functions
@@ -2690,7 +2705,17 @@
         return;
       }
       
-      document.getElementById('teacher-grades-content').innerHTML = '<p>Grade entry interface - Link to main grades section</p>';
+      const cls = classes.find(c => c.id == classId);
+      if (!cls || !cls.studentIds || cls.studentIds.length === 0) {
+        document.getElementById('teacher-grades-content').innerHTML = '<p>No students enrolled in this class.</p>';
+        return;
+      }
+      
+      let html = '<p class="alert alert-info">Use the main "Advanced Grades" section for full grade entry features.</p>';
+      html += `<p><strong>Quick Link:</strong> Select this class in the main Grades section to enter grades for ${cls.name}.</p>`;
+      html += '<button class="btn btn-primary" onclick="navigateTo(\'grades\')">Go to Grades Section</button>';
+      
+      document.getElementById('teacher-grades-content').innerHTML = html;
     }
     
     function loadTeacherAttendance() {
@@ -2700,7 +2725,17 @@
         return;
       }
       
-      document.getElementById('teacher-attendance-content').innerHTML = '<p>Attendance taking interface - Link to main attendance section</p>';
+      const cls = classes.find(c => c.id == classId);
+      if (!cls || !cls.studentIds || cls.studentIds.length === 0) {
+        document.getElementById('teacher-attendance-content').innerHTML = '<p>No students enrolled in this class.</p>';
+        return;
+      }
+      
+      let html = '<p class="alert alert-info">Use the main "Attendance" section for full attendance features.</p>';
+      html += `<p><strong>Quick Link:</strong> Select this class in the main Attendance section to mark attendance for ${cls.name}.</p>`;
+      html += '<button class="btn btn-primary" onclick="navigateTo(\'attendance\')">Go to Attendance Section</button>';
+      
+      document.getElementById('teacher-attendance-content').innerHTML = html;
     }
 
     // Parent Portal Functions
@@ -2867,7 +2902,7 @@
         return;
       }
       
-      const teacher = teachers.find(t => t.id == teacherId);
+      const teacher = teachers.find(t => t.id === parseInt(teacherId));
       alert(`Message sent to ${teacher.name}!`);
       document.getElementById('parent-message').value = '';
       
@@ -2875,7 +2910,17 @@
       const messagesList = document.getElementById('parent-messages-list');
       const msgDiv = document.createElement('div');
       msgDiv.className = 'card mb-2';
-      msgDiv.innerHTML = `<div class="card-body"><small class="text-muted">To: ${teacher.name} - ${new Date().toLocaleString()}</small><p class="mb-0">${message}</p></div>`;
+      const cardBody = document.createElement('div');
+      cardBody.className = 'card-body';
+      const timestamp = document.createElement('small');
+      timestamp.className = 'text-muted';
+      timestamp.textContent = `To: ${teacher.name} - ${new Date().toLocaleString()}`;
+      const messageText = document.createElement('p');
+      messageText.className = 'mb-0';
+      messageText.textContent = message;
+      cardBody.appendChild(timestamp);
+      cardBody.appendChild(messageText);
+      msgDiv.appendChild(cardBody);
       messagesList.insertBefore(msgDiv, messagesList.firstChild);
     }
 
