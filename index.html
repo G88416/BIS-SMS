@@ -127,6 +127,88 @@
             display: none;
         }
 
+        .info-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .info-link a {
+            color: rgba(255, 255, 255, 0.9);
+            text-decoration: none;
+            font-size: 14px;
+            cursor: pointer;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+            transition: all 0.3s ease;
+        }
+
+        .info-link a:hover {
+            color: white;
+            border-bottom: 1px solid white;
+        }
+
+        .credentials-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background: rgba(255, 255, 255, 0.95);
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            color: #333;
+        }
+
+        .modal-content h2 {
+            color: #2c3e50;
+            margin-top: 0;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+
+        .modal-content h3 {
+            color: #34495e;
+            margin-top: 20px;
+        }
+
+        .credential-box {
+            background: #f8f9fa;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+
+        .credential-box strong {
+            color: #2c3e50;
+        }
+
+        .close-modal {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 20px;
+        }
+
+        .close-modal:hover,
+        .close-modal:focus {
+            color: #000;
+        }
+
         /* Responsive adjustments */
         @media (max-width: 480px) {
             .login-box {
@@ -192,10 +274,66 @@
                 </div>
                 <button type="submit">Login</button>
             </form>
+            <div class="info-link">
+                <a onclick="showCredentials()" onkeypress="if(event.key==='Enter') showCredentials()" tabindex="0" role="button">View Login Credentials</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Credentials Modal -->
+    <div id="credentialsModal" class="credentials-modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeCredentials()">&times;</span>
+            <h2>BIS-SMS Login Credentials</h2>
+            
+            <h3>👤 Parent/Guardian Login</h3>
+            <div class="credential-box">
+                <strong>Child ID:</strong> C112<br>
+                <strong>Access Code:</strong> parent123
+            </div>
+            <p><em>Parents log in using the specific child ID "C112" along with the parent access code.</em></p>
+
+            <h3>👨‍💼 Administrator</h3>
+            <div class="credential-box">
+                <strong>Username:</strong> admin<br>
+                <strong>Password:</strong> admin123
+            </div>
+
+            <h3>👨‍🏫 Teacher</h3>
+            <div class="credential-box">
+                <strong>Teacher ID:</strong> Any teacher ID (e.g., 1 or 2)<br>
+                <strong>Password:</strong> teacher123
+            </div>
+
+            <h3>👨‍🎓 Student</h3>
+            <div class="credential-box">
+                <strong>Student ID:</strong> Any student ID (e.g., 1 or 2)<br>
+                <strong>Password:</strong> student123
+            </div>
+
+            <p style="margin-top: 20px; padding: 15px; background: #fff3cd; border-radius: 5px; border-left: 4px solid #ffc107;">
+                <strong>⚠️ Note:</strong> These are demo credentials for testing purposes. In production, use secure, unique credentials for each user.
+            </p>
         </div>
     </div>
 
     <script>
+        function showCredentials() {
+            document.getElementById('credentialsModal').style.display = 'block';
+        }
+
+        function closeCredentials() {
+            document.getElementById('credentialsModal').style.display = 'none';
+        }
+
+        // Close modal when clicking outside of it
+        document.addEventListener('click', function(event) {
+            const modal = document.getElementById('credentialsModal');
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+
         function handleLogin(event) {
             event.preventDefault();
             
@@ -237,8 +375,8 @@
                     break;
                     
                 case 'parent':
-                    // Parent login - accepts any student ID with password "parent123"
-                    if (password === 'parent123') {
+                    // Parent login - specific child ID "C112" with password "parent123"
+                    if (username === 'C112' && password === 'parent123') {
                         isValid = true;
                         redirectUrl = `admin.html#parent-portal?id=${username}`;
                     }
