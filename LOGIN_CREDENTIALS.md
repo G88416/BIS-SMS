@@ -33,7 +33,7 @@ The system can be accessed through two entry points:
 - **Password**: `teacher123`
 
 **Demo Teacher IDs**:
-- ID `1`: Mr. Johnson (Mathematics)
+- ID `1`: Mr. Johnson (Math)
 - ID `2`: Ms. Lee (Science)
 
 **Access**: From the main login page (`index.html`), select "Teacher" as user type, or access the teacher portal directly in the admin dashboard.
@@ -163,6 +163,3 @@ The system can be accessed through two entry points:
 ## Support
 
 For additional assistance or to report issues, please contact the system administrator or refer to the repository documentation.
-
-**System Version**: BIS-SMS v1.0  
-**Last Updated**: 2026-01-18
