@@ -3547,10 +3547,10 @@
         if (urlParams) {
           const params = new URLSearchParams(urlParams);
           const studentId = params.get('id');
-          if (studentId) {
-            // Auto-fill student login form
-            document.getElementById('student-login-id').value = studentId;
-            // Auto-login for student portal
+          
+          // If user is coming from unified portal (has sessionStorage), skip login form
+          if (studentId && userType === 'student' && userId == studentId) {
+            // Auto-login for student portal - bypass second login
             const student = students.find(s => s.id == studentId);
             if (student) {
               loggedInStudent = student;
@@ -3558,6 +3558,9 @@
               document.getElementById('student-dashboard').style.display = 'block';
               loadStudentPortal();
             }
+          } else if (studentId) {
+            // Direct access without unified portal login - show login form with pre-filled ID
+            document.getElementById('student-login-id').value = studentId;
           }
         }
         navigateTo('student-portal');
@@ -3570,9 +3573,10 @@
         if (urlParams) {
           const params = new URLSearchParams(urlParams);
           const teacherId = params.get('id');
-          if (teacherId) {
-            document.getElementById('teacher-login-id').value = teacherId;
-            // Auto-login for teacher portal
+          
+          // If user is coming from unified portal (has sessionStorage), skip login form
+          if (teacherId && userType === 'teacher' && userId == teacherId) {
+            // Auto-login for teacher portal - bypass second login
             const teacher = teachers.find(t => t.id == teacherId);
             if (teacher) {
               loggedInTeacher = teacher;
@@ -3580,6 +3584,9 @@
               document.getElementById('teacher-dashboard').style.display = 'block';
               loadTeacherPortal();
             }
+          } else if (teacherId) {
+            // Direct access without unified portal login - show login form with pre-filled ID
+            document.getElementById('teacher-login-id').value = teacherId;
           }
         }
         navigateTo('teacher-portal');
@@ -3592,9 +3599,10 @@
         if (urlParams) {
           const params = new URLSearchParams(urlParams);
           const studentId = params.get('id');
-          if (studentId) {
-            document.getElementById('parent-login-student-id').value = studentId;
-            // Auto-login for parent portal
+          
+          // If user is coming from unified portal (has sessionStorage), skip login form
+          if (studentId && userType === 'parent' && userId == studentId) {
+            // Auto-login for parent portal - bypass second login
             const student = students.find(s => s.id == studentId);
             if (student) {
               loggedInParent = student;
@@ -3602,6 +3610,9 @@
               document.getElementById('parent-dashboard').style.display = 'block';
               loadParentPortal();
             }
+          } else if (studentId) {
+            // Direct access without unified portal login - show login form with pre-filled ID
+            document.getElementById('parent-login-student-id').value = studentId;
           }
         }
         navigateTo('parent-portal');
