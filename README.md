@@ -33,7 +33,7 @@ For detailed login information for all user types, see **[LOGIN_CREDENTIALS.md](
 - **Administrator**: Username `admin`, Password `admin123`
 - **Teacher**: Any Teacher ID (e.g., `1` or `2`), Password `teacher123`
 - **Student**: Any Student ID (e.g., `1` or `2`), Password `student123`
-- **Parent**: Child ID `C112`, Access Code `parent123`
+- **Parent**: Child ID `C331`, Access Code `parent321`
 
 ## System Requirements
 
