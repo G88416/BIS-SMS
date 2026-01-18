@@ -65,12 +65,12 @@ The system can be accessed through two main files:
 **Purpose**: Access to parent portal to monitor child's academic progress, attendance, fees, and communicate with teachers.
 
 **Login Details**:
-- **Child ID**: `C112`
-- **Parent Access Code**: `parent123`
+- **Child ID**: `C331`
+- **Parent Access Code**: `parent321`
 
 **Access**: From the main login page (`index.html`), select "Parent/Guardian" as user type, or access the parent portal directly in the admin dashboard.
 
-**Note**: Parents log in using the specific child ID "C112" along with the parent access code "parent123".
+**Note**: Parents log in using the specific child ID "C331" along with the parent access code "parent321".
 
 ---
 
@@ -81,7 +81,7 @@ The system can be accessed through two main files:
 | **Administrator** | `admin` | `admin123` | Full system access |
 | **Teacher** | `1`, `2`, or any teacher ID | `teacher123` | Teacher portal access |
 | **Student** | `1`, `2`, or any student ID | `student123` | Student portal access |
-| **Parent/Guardian** | `C112` | `parent123` | Parent portal access (specific child ID) |
+| **Parent/Guardian** | `C331` | `parent321` | Parent portal access (specific child ID) |
 
 ---
 
