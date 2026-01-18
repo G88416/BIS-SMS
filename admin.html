@@ -945,16 +945,31 @@
             <a class="nav-link active" data-bs-toggle="tab" href="#parent-overview-tab">Overview</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" data-bs-toggle="tab" href="#parent-grades-tab">Academic Progress</a>
+            <a class="nav-link" data-bs-toggle="tab" href="#parent-attendance-tab">Attendance Tracking</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" data-bs-toggle="tab" href="#parent-attendance-tab">Attendance</a>
+            <a class="nav-link" data-bs-toggle="tab" href="#parent-grades-tab">Academic Performance</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" data-bs-toggle="tab" href="#parent-fees-tab">Fees & Payments</a>
+            <a class="nav-link" data-bs-toggle="tab" href="#parent-homework-tab">Homework & Assignments</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" data-bs-toggle="tab" href="#parent-contact-tab">Contact Teachers</a>
+            <a class="nav-link" data-bs-toggle="tab" href="#parent-fees-tab">Fee Management</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" data-bs-toggle="tab" href="#parent-timetable-tab">Timetable & Schedule</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" data-bs-toggle="tab" href="#parent-announcements-tab">Announcements</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" data-bs-toggle="tab" href="#parent-contact-tab">Communication</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" data-bs-toggle="tab" href="#parent-profile-tab">Student Profile</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" data-bs-toggle="tab" href="#parent-calendar-tab">Event Calendar</a>
           </li>
         </ul>
         
@@ -968,20 +983,64 @@
             </div>
           </div>
           
-          <div class="tab-pane fade" id="parent-grades-tab">
+          <div class="tab-pane fade" id="parent-attendance-tab">
             <div class="card">
               <div class="card-body">
-                <h5>Academic Progress & Grades</h5>
-                <div id="parent-grades-content"></div>
+                <h5>Attendance Tracking</h5>
+                <p class="text-muted">View daily, monthly, or period-based attendance records with alerts for absences.</p>
+                <div class="row mb-3">
+                  <div class="col-md-4">
+                    <label class="form-label">View Mode</label>
+                    <select class="form-select" id="parent-attendance-mode" onchange="loadParentAttendance()">
+                      <option value="daily">Daily View</option>
+                      <option value="monthly" selected>Monthly View</option>
+                      <option value="period">Period-Based View</option>
+                    </select>
+                  </div>
+                  <div class="col-md-4">
+                    <label class="form-label">From Date</label>
+                    <input type="date" class="form-control" id="parent-attendance-from" onchange="loadParentAttendance()">
+                  </div>
+                  <div class="col-md-4">
+                    <label class="form-label">To Date</label>
+                    <input type="date" class="form-control" id="parent-attendance-to" onchange="loadParentAttendance()">
+                  </div>
+                </div>
+                <div id="parent-attendance-alerts" class="mb-3"></div>
+                <div id="parent-attendance-content"></div>
               </div>
             </div>
           </div>
           
-          <div class="tab-pane fade" id="parent-attendance-tab">
+          <div class="tab-pane fade" id="parent-grades-tab">
             <div class="card">
               <div class="card-body">
-                <h5>Attendance Record</h5>
-                <div id="parent-attendance-content"></div>
+                <h5>Academic Performance</h5>
+                <p class="text-muted">Access grades, report cards, progress reports, and exam results.</p>
+                <div class="mb-3">
+                  <button class="btn btn-primary me-2" onclick="generateParentReportCard()"><i class="fas fa-file-pdf"></i> Generate Report Card</button>
+                  <button class="btn btn-info" onclick="downloadProgressReport()"><i class="fas fa-download"></i> Download Progress Report</button>
+                </div>
+                <div id="parent-grades-content"></div>
+                <div id="parent-report-card" class="mt-4"></div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="tab-pane fade" id="parent-homework-tab">
+            <div class="card">
+              <div class="card-body">
+                <h5>Homework & Assignments</h5>
+                <p class="text-muted">View assigned tasks, due dates, and submission status.</p>
+                <div class="mb-3">
+                  <select class="form-select" id="parent-homework-filter" onchange="loadParentHomework()">
+                    <option value="all">All Assignments</option>
+                    <option value="pending">Pending</option>
+                    <option value="submitted">Submitted</option>
+                    <option value="overdue">Overdue</option>
+                  </select>
+                </div>
+                <div id="parent-homework-content"></div>
               </div>
             </div>
           </div>
@@ -989,8 +1048,62 @@
           <div class="tab-pane fade" id="parent-fees-tab">
             <div class="card">
               <div class="card-body">
-                <h5>Fee Statement & Payment History</h5>
+                <h5>Fee Management</h5>
+                <p class="text-muted">Check invoices, payment history, due dates, and online payment options.</p>
+                <div class="mb-3">
+                  <button class="btn btn-success me-2" onclick="makeOnlinePayment()"><i class="fas fa-credit-card"></i> Make Online Payment</button>
+                  <button class="btn btn-info" onclick="downloadFeeInvoice()"><i class="fas fa-file-invoice"></i> Download Invoice</button>
+                </div>
                 <div id="parent-fees-content"></div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="tab-pane fade" id="parent-timetable-tab">
+            <div class="card">
+              <div class="card-body">
+                <h5>Timetable & Schedule</h5>
+                <p class="text-muted">View class schedules, exam timetables, and daily routines.</p>
+                <ul class="nav nav-pills mb-3">
+                  <li class="nav-item">
+                    <a class="nav-link active" data-bs-toggle="tab" href="#parent-class-schedule">Class Schedule</a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link" data-bs-toggle="tab" href="#parent-exam-timetable">Exam Timetable</a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link" data-bs-toggle="tab" href="#parent-daily-routine">Daily Routine</a>
+                  </li>
+                </ul>
+                <div class="tab-content">
+                  <div class="tab-pane fade show active" id="parent-class-schedule">
+                    <div id="parent-class-schedule-content"></div>
+                  </div>
+                  <div class="tab-pane fade" id="parent-exam-timetable">
+                    <div id="parent-exam-timetable-content"></div>
+                  </div>
+                  <div class="tab-pane fade" id="parent-daily-routine">
+                    <div id="parent-daily-routine-content"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="tab-pane fade" id="parent-announcements-tab">
+            <div class="card">
+              <div class="card-body">
+                <h5>Announcements & News</h5>
+                <p class="text-muted">Receive school notices, events, and circulars.</p>
+                <div class="mb-3">
+                  <select class="form-select" id="parent-announcement-filter" onchange="loadParentAnnouncements()">
+                    <option value="all">All Announcements</option>
+                    <option value="urgent">Urgent</option>
+                    <option value="general">General</option>
+                    <option value="events">Events</option>
+                  </select>
+                </div>
+                <div id="parent-announcements-content"></div>
               </div>
             </div>
           </div>
@@ -998,7 +1111,33 @@
           <div class="tab-pane fade" id="parent-contact-tab">
             <div class="card">
               <div class="card-body">
-                <h5>Contact Teachers</h5>
+                <h5>Communication Tools</h5>
+                <p class="text-muted">Send/receive messages to teachers, view notifications, and email/SMS alerts.</p>
+                <div class="row mb-3">
+                  <div class="col-md-6">
+                    <div class="card bg-light">
+                      <div class="card-body">
+                        <h6><i class="fas fa-bell"></i> Notifications</h6>
+                        <div id="parent-notifications-list"></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="card bg-light">
+                      <div class="card-body">
+                        <h6><i class="fas fa-envelope"></i> Email/SMS Alerts</h6>
+                        <div class="form-check form-switch">
+                          <input class="form-check-input" type="checkbox" id="parent-email-alerts" checked>
+                          <label class="form-check-label">Email Alerts</label>
+                        </div>
+                        <div class="form-check form-switch">
+                          <input class="form-check-input" type="checkbox" id="parent-sms-alerts" checked>
+                          <label class="form-check-label">SMS Alerts</label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
                 <div id="parent-contact-content">
                   <div class="mb-3">
                     <label class="form-label">Select Teacher</label>
@@ -1015,6 +1154,29 @@
                   <h6>Message History</h6>
                   <div id="parent-messages-list"></div>
                 </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="tab-pane fade" id="parent-profile-tab">
+            <div class="card">
+              <div class="card-body">
+                <h5>Student Profile</h5>
+                <p class="text-muted">View personal details, health records, and achievements.</p>
+                <div id="parent-profile-content"></div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="tab-pane fade" id="parent-calendar-tab">
+            <div class="card">
+              <div class="card-body">
+                <h5>Event Calendar</h5>
+                <p class="text-muted">Track school events, holidays, and parent-teacher meetings.</p>
+                <div class="mb-3">
+                  <button class="btn btn-primary" onclick="addToPersonalCalendar()"><i class="fas fa-calendar-plus"></i> Sync to Personal Calendar</button>
+                </div>
+                <div id="parent-calendar-content"></div>
               </div>
             </div>
           </div>
@@ -1238,6 +1400,57 @@
     let collectionChart = null;
     let gradeChart = null;
     let attendanceChart = null;
+    
+    // New data structures for parent portal modules
+    let homework = JSON.parse(localStorage.getItem('homework')) || {}; // {classId: [{id, title, dueDate, description, status}]}
+    let announcements = JSON.parse(localStorage.getItem('announcements')) || [
+      {id: 1, title: 'School Reopening', date: '2026-01-15', category: 'general', content: 'School will reopen on January 20th, 2026.', priority: 'normal'},
+      {id: 2, title: 'Parent-Teacher Meeting', date: '2026-01-25', category: 'events', content: 'Annual parent-teacher meeting scheduled for January 25th.', priority: 'urgent'},
+      {id: 3, title: 'Sports Day', date: '2026-02-10', category: 'events', content: 'Annual sports day on February 10th. All students must participate.', priority: 'normal'}
+    ];
+    
+    // Initialize announcements in localStorage if not already present
+    if (!localStorage.getItem('announcements')) {
+      localStorage.setItem('announcements', JSON.stringify(announcements));
+    }
+    
+    let events = JSON.parse(localStorage.getItem('events')) || [
+      {id: 1, title: 'School Holiday', date: '2026-01-16', type: 'holiday', description: 'Public Holiday'},
+      {id: 2, title: 'Parent-Teacher Meeting', date: '2026-01-25', type: 'meeting', description: 'Annual PTM - 2:00 PM to 5:00 PM'},
+      {id: 3, title: 'Sports Day', date: '2026-02-10', type: 'event', description: 'Annual Inter-House Sports Competition'},
+      {id: 4, title: 'Mid-Term Exams', date: '2026-02-15', type: 'exam', description: 'Mid-term examinations begin'}
+    ];
+    
+    // Initialize events in localStorage if not already present
+    if (!localStorage.getItem('events')) {
+      localStorage.setItem('events', JSON.stringify(events));
+    }
+    
+    let healthRecords = JSON.parse(localStorage.getItem('healthRecords')) || {}; // {studentId: {bloodGroup, allergies, medications, emergencyContact}}
+    let achievements = JSON.parse(localStorage.getItem('achievements')) || {}; // {studentId: [{title, date, description, category}]}
+    let examTimetable = JSON.parse(localStorage.getItem('examTimetable')) || [
+      {date: '2026-02-15', subject: 'Mathematics', time: '9:00 AM - 11:00 AM', venue: 'Exam Hall A'},
+      {date: '2026-02-16', subject: 'English', time: '9:00 AM - 11:00 AM', venue: 'Exam Hall B'},
+      {date: '2026-02-17', subject: 'Science', time: '9:00 AM - 11:00 AM', venue: 'Exam Hall A'}
+    ];
+    
+    // Initialize examTimetable in localStorage if not already present
+    if (!localStorage.getItem('examTimetable')) {
+      localStorage.setItem('examTimetable', JSON.stringify(examTimetable));
+    }
+    
+    let dailyRoutine = [
+      {time: '7:30 AM - 8:00 AM', activity: 'Assembly'},
+      {time: '8:00 AM - 9:00 AM', activity: 'Period 1'},
+      {time: '9:00 AM - 10:00 AM', activity: 'Period 2'},
+      {time: '10:00 AM - 10:30 AM', activity: 'Break'},
+      {time: '10:30 AM - 11:30 AM', activity: 'Period 3'},
+      {time: '11:30 AM - 12:30 PM', activity: 'Period 4'},
+      {time: '12:30 PM - 1:30 PM', activity: 'Lunch Break'},
+      {time: '1:30 PM - 2:30 PM', activity: 'Period 5'},
+      {time: '2:30 PM - 3:30 PM', activity: 'Period 6 / Extra Curricular'}
+    ];
+    let notifications = JSON.parse(localStorage.getItem('notifications')) || [];
 
     // Navigation
     const sections = document.querySelectorAll('.section');
@@ -2841,56 +3054,16 @@
       overview += `<p><strong>Contact:</strong> ${loggedInParent.contact || 'N/A'}</p>`;
       document.getElementById('parent-overview-content').innerHTML = overview;
       
-      // Grades (same as student portal)
-      let gradesHtml = '<div class="table-responsive"><table class="table table-striped"><thead><tr><th>Class</th><th>Subject</th><th>Grade</th><th>Comment</th></tr></thead><tbody>';
-      loggedInParent.classIds.forEach(cid => {
-        const cls = classes.find(c => c.id === cid);
-        if (cls && gradesData[cid]) {
-          for (let term in gradesData[cid]) {
-            const studentGrades = gradesData[cid][term][loggedInParent.id];
-            if (studentGrades && subjects[cid]) {
-              subjects[cid].forEach(sub => {
-                const score = studentGrades[sub.name] || 'N/A';
-                gradesHtml += `<tr><td>${cls.name} (${term})</td><td>${sub.name}</td><td>${score}%</td><td>${studentGrades.comment || '-'}</td></tr>`;
-              });
-            }
-          }
-        }
-      });
-      gradesHtml += '</tbody></table></div>';
-      document.getElementById('parent-grades-content').innerHTML = gradesHtml || '<p>No grades available yet.</p>';
-      
-      // Attendance
-      let attendanceHtml = '<div class="table-responsive"><table class="table table-striped"><thead><tr><th>Date</th><th>Class</th><th>Status</th></tr></thead><tbody>';
-      loggedInParent.classIds.forEach(cid => {
-        const cls = classes.find(c => c.id === cid);
-        if (cls && attendance[cid]) {
-          for (let date in attendance[cid]) {
-            if (attendance[cid][date][loggedInParent.id]) {
-              const record = attendance[cid][date][loggedInParent.id];
-              attendanceHtml += `<tr><td>${date}</td><td>${cls.name}</td><td><span class="badge bg-${record.status === 'Present' ? 'success' : 'danger'}">${record.status}</span></td></tr>`;
-            }
-          }
-        }
-      });
-      attendanceHtml += '</tbody></table></div>';
-      document.getElementById('parent-attendance-content').innerHTML = attendanceHtml || '<p>No attendance records yet.</p>';
-      
-      // Fees
-      const feeCalc = calculateStudentFee(loggedInParent.id);
-      const f = fees[loggedInParent.id] || {items: [], discounts: [], payments: []};
-      let feesHtml = `<div class="mb-4">
-        <h6>Fee Summary</h6>
-        <p><strong>Total Due:</strong> R${feeCalc.netDue.toLocaleString()}</p>
-        <p><strong>Total Paid:</strong> R${feeCalc.paidTotal.toLocaleString()}</p>
-        <p class="${feeCalc.balance > 0 ? 'text-danger' : 'text-success'}"><strong>Balance:</strong> R${feeCalc.balance.toLocaleString()}</p>
-      </div>`;
-      feesHtml += '<h6>Payment History</h6><table class="table table-sm"><thead><tr><th>Date</th><th>Amount</th><th>Method</th></tr></thead><tbody>';
-      f.payments.forEach(p => {
-        feesHtml += `<tr><td>${p.date}</td><td>R${parseFloat(p.amount).toLocaleString()}</td><td>${p.method}</td></tr>`;
-      });
-      feesHtml += '</tbody></table>';
-      document.getElementById('parent-fees-content').innerHTML = feesHtml;
+      // Load all tabs
+      loadParentGrades();
+      loadParentAttendance();
+      loadParentHomework();
+      loadParentFees();
+      loadParentTimetable();
+      loadParentAnnouncements();
+      loadParentProfile();
+      loadParentCalendar();
+      loadParentNotifications();
       
       // Populate teacher select for messaging
       const teacherSelect = document.getElementById('parent-teacher-select');
@@ -2906,6 +3079,416 @@
           teacherSelect.appendChild(opt);
         }
       });
+    }
+    
+    function loadParentGrades() {
+      let gradesHtml = '<div class="table-responsive"><table class="table table-striped"><thead><tr><th>Class</th><th>Subject</th><th>Grade</th><th>Term</th><th>Comment</th></tr></thead><tbody>';
+      loggedInParent.classIds.forEach(cid => {
+        const cls = classes.find(c => c.id === cid);
+        if (cls && gradesData[cid]) {
+          for (let term in gradesData[cid]) {
+            const studentGrades = gradesData[cid][term][loggedInParent.id];
+            if (studentGrades && subjects[cid]) {
+              subjects[cid].forEach(sub => {
+                const score = studentGrades[sub.name] || 'N/A';
+                gradesHtml += `<tr><td>${cls.name}</td><td>${sub.name}</td><td><span class="badge bg-${score >= 70 ? 'success' : score >= 50 ? 'warning' : 'danger'}">${score}%</span></td><td>${term}</td><td>${studentGrades.comment || '-'}</td></tr>`;
+              });
+            }
+          }
+        }
+      });
+      gradesHtml += '</tbody></table></div>';
+      document.getElementById('parent-grades-content').innerHTML = gradesHtml || '<p>No grades available yet.</p>';
+    }
+    
+    function loadParentAttendance() {
+      const mode = document.getElementById('parent-attendance-mode')?.value || 'monthly';
+      const fromDate = document.getElementById('parent-attendance-from')?.value;
+      const toDate = document.getElementById('parent-attendance-to')?.value;
+      
+      // Check for absence alerts
+      let absentCount = 0;
+      let alertsHtml = '';
+      
+      loggedInParent.classIds.forEach(cid => {
+        if (attendance[cid]) {
+          for (let date in attendance[cid]) {
+            if (attendance[cid][date][loggedInParent.id]) {
+              const status = attendance[cid][date][loggedInParent.id].status;
+              if (status === 'Absent') {
+                absentCount++;
+              }
+            }
+          }
+        }
+      });
+      
+      if (absentCount > 3) {
+        alertsHtml = `<div class="alert alert-warning"><i class="fas fa-exclamation-triangle"></i> <strong>Alert:</strong> Your child has been absent ${absentCount} times. Please ensure regular attendance.</div>`;
+      } else if (absentCount > 0) {
+        alertsHtml = `<div class="alert alert-info"><i class="fas fa-info-circle"></i> Total absences: ${absentCount}</div>`;
+      }
+      
+      document.getElementById('parent-attendance-alerts').innerHTML = alertsHtml;
+      
+      let attendanceHtml = '<div class="table-responsive"><table class="table table-striped table-hover"><thead><tr><th>Date</th><th>Class</th><th>Status</th><th>Notes</th></tr></thead><tbody>';
+      let recordCount = 0;
+      
+      loggedInParent.classIds.forEach(cid => {
+        const cls = classes.find(c => c.id === cid);
+        if (cls && attendance[cid]) {
+          for (let date in attendance[cid]) {
+            // Apply date filters
+            if (fromDate && date < fromDate) continue;
+            if (toDate && date > toDate) continue;
+            
+            if (attendance[cid][date][loggedInParent.id]) {
+              const record = attendance[cid][date][loggedInParent.id];
+              const statusClass = record.status === 'Present' ? 'success' : record.status === 'Late' ? 'warning' : 'danger';
+              attendanceHtml += `<tr>
+                <td>${new Date(date).toLocaleDateString('en-ZA')}</td>
+                <td>${cls.name}</td>
+                <td><span class="badge bg-${statusClass}">${record.status}</span></td>
+                <td>${record.notes || '-'}</td>
+              </tr>`;
+              recordCount++;
+            }
+          }
+        }
+      });
+      
+      attendanceHtml += '</tbody></table></div>';
+      
+      if (recordCount === 0) {
+        attendanceHtml = '<p class="text-muted">No attendance records found for the selected period.</p>';
+      }
+      
+      document.getElementById('parent-attendance-content').innerHTML = attendanceHtml;
+    }
+    
+    function loadParentHomework() {
+      const filter = document.getElementById('parent-homework-filter')?.value || 'all';
+      
+      // Initialize homework for demo if empty
+      if (Object.keys(homework).length === 0 && loggedInParent.classIds.length > 0) {
+        loggedInParent.classIds.forEach(cid => {
+          homework[cid] = [
+            {id: 1, title: 'Math Exercise 5.2', dueDate: '2026-01-20', description: 'Complete all problems from exercise 5.2', status: 'pending', subject: 'Mathematics'},
+            {id: 2, title: 'Science Lab Report', dueDate: '2026-01-18', description: 'Write a report on the chemistry experiment', status: 'submitted', subject: 'Science'},
+            {id: 3, title: 'English Essay', dueDate: '2026-01-15', description: 'Write a 500-word essay on climate change', status: 'overdue', subject: 'English'}
+          ];
+        });
+        localStorage.setItem('homework', JSON.stringify(homework));
+      }
+      
+      let homeworkHtml = '<div class="list-group">';
+      let count = 0;
+      
+      loggedInParent.classIds.forEach(cid => {
+        const cls = classes.find(c => c.id === cid);
+        if (cls && homework[cid]) {
+          homework[cid].forEach(hw => {
+            // Apply filter
+            if (filter !== 'all' && hw.status !== filter) return;
+            
+            const today = new Date().toISOString().split('T')[0];
+            const isOverdue = new Date(hw.dueDate) < new Date(today) && hw.status === 'pending';
+            const statusBadge = hw.status === 'submitted' ? 'success' : isOverdue ? 'danger' : 'warning';
+            const statusText = hw.status === 'submitted' ? 'Submitted' : isOverdue ? 'Overdue' : 'Pending';
+            
+            homeworkHtml += `<div class="list-group-item">
+              <div class="d-flex w-100 justify-content-between">
+                <h6 class="mb-1">${hw.title}</h6>
+                <small class="text-muted">${cls.name}</small>
+              </div>
+              <p class="mb-1">${hw.description}</p>
+              <small><strong>Due Date:</strong> ${new Date(hw.dueDate).toLocaleDateString('en-ZA')} | <strong>Status:</strong> <span class="badge bg-${statusBadge}">${statusText}</span></small>
+            </div>`;
+            count++;
+          });
+        }
+      });
+      
+      homeworkHtml += '</div>';
+      
+      if (count === 0) {
+        homeworkHtml = '<p class="text-muted">No homework assignments found.</p>';
+      }
+      
+      document.getElementById('parent-homework-content').innerHTML = homeworkHtml;
+    }
+    
+    function loadParentFees() {
+      const feeCalc = calculateStudentFee(loggedInParent.id);
+      const f = fees[loggedInParent.id] || {items: [], discounts: [], payments: []};
+      
+      // Calculate next due date (simplified - 1st of next month)
+      const nextDueDate = new Date();
+      nextDueDate.setMonth(nextDueDate.getMonth() + 1);
+      nextDueDate.setDate(1);
+      
+      let feesHtml = `<div class="row mb-4">
+        <div class="col-md-3">
+          <div class="card bg-light">
+            <div class="card-body text-center">
+              <small class="text-muted">Total Due</small>
+              <h4 class="text-primary">R${feeCalc.netDue.toLocaleString()}</h4>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card bg-light">
+            <div class="card-body text-center">
+              <small class="text-muted">Total Paid</small>
+              <h4 class="text-success">R${feeCalc.paidTotal.toLocaleString()}</h4>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card bg-light">
+            <div class="card-body text-center">
+              <small class="text-muted">Balance</small>
+              <h4 class="${feeCalc.balance > 0 ? 'text-danger' : 'text-success'}">R${feeCalc.balance.toLocaleString()}</h4>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card bg-light">
+            <div class="card-body text-center">
+              <small class="text-muted">Next Due Date</small>
+              <h6>${nextDueDate.toLocaleDateString('en-ZA')}</h6>
+            </div>
+          </div>
+        </div>
+      </div>`;
+      
+      feesHtml += '<h6>Payment History</h6><table class="table table-sm table-striped"><thead><tr><th>Date</th><th>Amount</th><th>Method</th><th>Reference</th></tr></thead><tbody>';
+      f.payments.forEach((p, idx) => {
+        feesHtml += `<tr><td>${p.date}</td><td>R${parseFloat(p.amount).toLocaleString()}</td><td>${p.method}</td><td>REF-${1000 + idx}</td></tr>`;
+      });
+      feesHtml += '</tbody></table>';
+      
+      document.getElementById('parent-fees-content').innerHTML = feesHtml;
+    }
+    
+    function loadParentTimetable() {
+      // Class Schedule
+      let scheduleHtml = '<div class="table-responsive"><table class="table table-bordered"><thead><tr><th>Class</th><th>Teacher</th><th>Schedule</th></tr></thead><tbody>';
+      loggedInParent.classIds.forEach(cid => {
+        const cls = classes.find(c => c.id === cid);
+        if (cls) {
+          const teacher = teachers.find(t => t.id === cls.teacherId);
+          scheduleHtml += `<tr><td>${cls.name}</td><td>${teacher ? teacher.name : 'N/A'}</td><td>${cls.schedule || 'Not set'}</td></tr>`;
+        }
+      });
+      scheduleHtml += '</tbody></table></div>';
+      document.getElementById('parent-class-schedule-content').innerHTML = scheduleHtml;
+      
+      // Exam Timetable
+      let examHtml = '<div class="table-responsive"><table class="table table-striped"><thead><tr><th>Date</th><th>Subject</th><th>Time</th><th>Venue</th></tr></thead><tbody>';
+      examTimetable.forEach(exam => {
+        examHtml += `<tr><td>${new Date(exam.date).toLocaleDateString('en-ZA')}</td><td>${exam.subject}</td><td>${exam.time}</td><td>${exam.venue}</td></tr>`;
+      });
+      examHtml += '</tbody></table></div>';
+      document.getElementById('parent-exam-timetable-content').innerHTML = examHtml;
+      
+      // Daily Routine
+      let routineHtml = '<div class="table-responsive"><table class="table table-striped"><thead><tr><th>Time</th><th>Activity</th></tr></thead><tbody>';
+      dailyRoutine.forEach(item => {
+        routineHtml += `<tr><td>${item.time}</td><td>${item.activity}</td></tr>`;
+      });
+      routineHtml += '</tbody></table></div>';
+      document.getElementById('parent-daily-routine-content').innerHTML = routineHtml;
+    }
+    
+    function loadParentAnnouncements() {
+      const filter = document.getElementById('parent-announcement-filter')?.value || 'all';
+      
+      let announcementsHtml = '<div class="list-group">';
+      let filteredAnnouncements = announcements.filter(a => filter === 'all' || a.category === filter);
+      
+      filteredAnnouncements.sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(ann => {
+        const priorityClass = ann.priority === 'urgent' ? 'danger' : 'info';
+        const icon = ann.category === 'events' ? 'fa-calendar' : ann.category === 'urgent' ? 'fa-exclamation-circle' : 'fa-info-circle';
+        
+        announcementsHtml += `<div class="list-group-item">
+          <div class="d-flex w-100 justify-content-between">
+            <h6 class="mb-1"><i class="fas ${icon}"></i> ${ann.title}</h6>
+            <small class="text-muted">${new Date(ann.date).toLocaleDateString('en-ZA')}</small>
+          </div>
+          <p class="mb-1">${ann.content}</p>
+          ${ann.priority === 'urgent' ? '<span class="badge bg-danger">Urgent</span>' : ''}
+        </div>`;
+      });
+      
+      announcementsHtml += '</div>';
+      document.getElementById('parent-announcements-content').innerHTML = announcementsHtml;
+    }
+    
+    function loadParentProfile() {
+      // Initialize health records if not exists
+      if (!healthRecords[loggedInParent.id]) {
+        healthRecords[loggedInParent.id] = {
+          bloodGroup: 'O+',
+          allergies: 'None',
+          medications: 'None',
+          emergencyContact: loggedInParent.contact || 'N/A',
+          medicalAidNumber: 'N/A'
+        };
+      }
+      
+      // Initialize achievements if not exists
+      if (!achievements[loggedInParent.id]) {
+        achievements[loggedInParent.id] = [
+          {title: 'Academic Excellence Award', date: '2025-12-10', description: 'Top performer in Grade ' + loggedInParent.grade, category: 'Academic'},
+          {title: 'Sports Achievement', date: '2025-11-15', description: 'First place in 100m sprint', category: 'Sports'}
+        ];
+      }
+      
+      const health = healthRecords[loggedInParent.id];
+      const studentAchievements = achievements[loggedInParent.id] || [];
+      
+      let profileHtml = `
+        <h6>Personal Details</h6>
+        <table class="table table-bordered">
+          <tr><th>Student ID</th><td>${loggedInParent.id}</td></tr>
+          <tr><th>Full Name</th><td>${loggedInParent.name}</td></tr>
+          <tr><th>Grade Level</th><td>${loggedInParent.grade}</td></tr>
+          <tr><th>Parent/Guardian</th><td>${loggedInParent.parent || 'N/A'}</td></tr>
+          <tr><th>Contact Number</th><td>${loggedInParent.contact || 'N/A'}</td></tr>
+        </table>
+        
+        <h6 class="mt-4">Health Records</h6>
+        <table class="table table-bordered">
+          <tr><th>Blood Group</th><td>${health.bloodGroup}</td></tr>
+          <tr><th>Known Allergies</th><td>${health.allergies}</td></tr>
+          <tr><th>Current Medications</th><td>${health.medications}</td></tr>
+          <tr><th>Emergency Contact</th><td>${health.emergencyContact}</td></tr>
+          <tr><th>Medical Aid Number</th><td>${health.medicalAidNumber}</td></tr>
+        </table>
+        
+        <h6 class="mt-4">Achievements & Awards</h6>
+        <div class="list-group">`;
+      
+      studentAchievements.forEach(ach => {
+        profileHtml += `<div class="list-group-item">
+          <div class="d-flex w-100 justify-content-between">
+            <h6 class="mb-1"><i class="fas fa-trophy text-warning"></i> ${ach.title}</h6>
+            <small class="text-muted">${new Date(ach.date).toLocaleDateString('en-ZA')}</small>
+          </div>
+          <p class="mb-1">${ach.description}</p>
+          <small><span class="badge bg-info">${ach.category}</span></small>
+        </div>`;
+      });
+      
+      profileHtml += '</div>';
+      document.getElementById('parent-profile-content').innerHTML = profileHtml;
+    }
+    
+    function loadParentCalendar() {
+      let calendarHtml = '<div class="row">';
+      
+      // Group events by month
+      const eventsByMonth = {};
+      events.forEach(evt => {
+        const month = new Date(evt.date).toLocaleDateString('en-ZA', {year: 'numeric', month: 'long'});
+        if (!eventsByMonth[month]) eventsByMonth[month] = [];
+        eventsByMonth[month].push(evt);
+      });
+      
+      // Display events
+      for (let month in eventsByMonth) {
+        calendarHtml += `<div class="col-12 mb-3"><h6>${month}</h6><div class="list-group">`;
+        
+        eventsByMonth[month].sort((a, b) => new Date(a.date) - new Date(b.date)).forEach(evt => {
+          const icon = evt.type === 'holiday' ? 'fa-umbrella-beach' : evt.type === 'meeting' ? 'fa-users' : evt.type === 'exam' ? 'fa-pen' : 'fa-calendar';
+          const badgeColor = evt.type === 'holiday' ? 'success' : evt.type === 'meeting' ? 'warning' : evt.type === 'exam' ? 'danger' : 'info';
+          
+          calendarHtml += `<div class="list-group-item">
+            <div class="d-flex w-100 justify-content-between">
+              <h6 class="mb-1"><i class="fas ${icon}"></i> ${evt.title}</h6>
+              <small class="text-muted">${new Date(evt.date).toLocaleDateString('en-ZA')}</small>
+            </div>
+            <p class="mb-1">${evt.description}</p>
+            <span class="badge bg-${badgeColor}">${evt.type.charAt(0).toUpperCase() + evt.type.slice(1)}</span>
+          </div>`;
+        });
+        
+        calendarHtml += '</div></div>';
+      }
+      
+      calendarHtml += '</div>';
+      document.getElementById('parent-calendar-content').innerHTML = calendarHtml;
+    }
+    
+    function loadParentNotifications() {
+      // Generate notifications based on recent activity
+      if (notifications.length === 0) {
+        notifications = [
+          {id: 1, message: 'New homework assignment posted for Mathematics', date: new Date().toISOString(), read: false},
+          {id: 2, message: 'Parent-Teacher meeting scheduled for Jan 25', date: new Date(Date.now() - 86400000).toISOString(), read: false},
+          {id: 3, message: 'School fees payment reminder', date: new Date(Date.now() - 172800000).toISOString(), read: true}
+        ];
+        localStorage.setItem('notifications', JSON.stringify(notifications));
+      }
+      
+      let notifHtml = '<div class="list-group list-group-flush">';
+      notifications.slice(0, 5).forEach(notif => {
+        notifHtml += `<div class="list-group-item p-2 ${notif.read ? '' : 'bg-light'}">
+          <small>${notif.message}</small>
+          <br><small class="text-muted">${new Date(notif.date).toLocaleDateString('en-ZA')}</small>
+        </div>`;
+      });
+      notifHtml += '</div>';
+      
+      document.getElementById('parent-notifications-list').innerHTML = notifHtml;
+    }
+    
+    // Additional parent portal action functions
+    function generateParentReportCard() {
+      alert('Generating report card for ' + loggedInParent.name + '...\n\nThis will be available for download shortly.');
+      // In a real system, this would generate a PDF report card
+    }
+    
+    function downloadProgressReport() {
+      alert('Downloading progress report for ' + loggedInParent.name + '...');
+      // In a real system, this would download a detailed progress report
+    }
+    
+    function makeOnlinePayment() {
+      const feeCalc = calculateStudentFee(loggedInParent.id);
+      if (feeCalc.balance <= 0) {
+        alert('No outstanding fees to pay.');
+        return;
+      }
+      
+      const amount = prompt(`Outstanding balance: R${feeCalc.balance.toLocaleString()}\n\nEnter amount to pay (R):`);
+      if (amount && parseFloat(amount) > 0) {
+        // Simulate payment
+        if (!fees[loggedInParent.id]) {
+          fees[loggedInParent.id] = {items: [], discounts: [], payments: []};
+        }
+        
+        fees[loggedInParent.id].payments.push({
+          date: new Date().toISOString().split('T')[0],
+          amount: parseFloat(amount),
+          method: 'Online Payment'
+        });
+        
+        localStorage.setItem('fees', JSON.stringify(fees));
+        alert(`Payment of R${parseFloat(amount).toLocaleString()} processed successfully!\n\nTransaction Reference: TXN-${Date.now()}`);
+        loadParentFees();
+      }
+    }
+    
+    function downloadFeeInvoice() {
+      alert('Downloading fee invoice for ' + loggedInParent.name + '...');
+      // In a real system, this would download a PDF invoice
+    }
+    
+    function addToPersonalCalendar() {
+      alert('Exporting calendar events...\n\nYou can sync these events to Google Calendar, Outlook, or Apple Calendar.');
+      // In a real system, this would generate an iCal file or provide calendar sync options
     }
     
     function sendParentMessage() {
