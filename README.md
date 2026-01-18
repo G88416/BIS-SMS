@@ -70,4 +70,4 @@ For questions or issues, please refer to the [LOGIN_CREDENTIALS.md](LOGIN_CREDEN
 
 ## License
 
-Copyright © 2026 Bophelong Independent School
+This project is part of the Bophelong Independent School system.

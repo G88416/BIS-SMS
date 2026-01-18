@@ -4,9 +4,9 @@ This document contains the login credentials for all user types in the Bophelong
 
 ## System Access
 
-The system can be accessed through two entry points:
-- **Main Login Page**: `index.html` - Unified login for all user types
-- **Admin Dashboard**: `admin.html` - Direct access to portals after login
+The system can be accessed through two main files:
+- **Main Login Page**: `index.html` - Unified login interface for all user types
+- **Application Dashboard**: `admin.html` - Main application interface (accessed after login)
 
 ---
 
