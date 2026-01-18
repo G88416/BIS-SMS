@@ -861,328 +861,235 @@
       </div>
     </div>
 
-    <!-- Parent Portal Section -->
-    <div id="parent-portal" class="section">
-      <h4>Parent Portal</h4>
-      <p class="text-muted">Parent/Guardian login to monitor child's progress</p>
-      
-      <!-- Login Form -->
-      <div id="parent-login-form" class="card" style="max-width: 500px; margin: 2rem auto;">
-        <div class="card-body">
-          <h5 class="card-title text-center mb-4">Parent/Guardian Login</h5>
-          <div class="mb-3">
-            <label class="form-label">Student ID (Your Child)</label>
-            <input type="text" class="form-control" id="parent-login-student-id" placeholder="Enter your child's Student ID">
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Parent Access Code</label>
-            <input type="password" class="form-control" id="parent-login-code" placeholder="Enter your access code">
-          </div>
-          <button class="btn btn-primary w-100" onclick="parentLogin()">Login</button>
-          <p class="text-muted text-center mt-3 small">Demo: Use any student ID (1 or 2) with code "parent123"</p>
-        </div>
+    <!-- Updated Parent Portal Section - Fully Enhanced with All Requested Modules -->
+<div id="parent-portal" class="section">
+  <h4>Parent Portal</h4>
+  <p class="text-muted">Secure parent login with full access to child's academic and school information</p>
+  
+  <!-- Parent Login Form -->
+  <div id="parent-login-form" class="card mx-auto" style="max-width: 500px; margin: 3rem auto;">
+    <div class="card-body">
+      <h5 class="card-title text-center mb-4">Parent Portal Login</h5>
+      <div class="mb-3">
+        <label class="form-label">Student ID (Your Child)</label>
+        <input type="text" class="form-control" id="parent-login-student-id" placeholder="Enter your child's Student ID">
       </div>
-      
-      <!-- Parent Dashboard (Hidden until login) -->
-      <div id="parent-dashboard" style="display: none;">
-        <div class="row mb-4">
-          <div class="col-md-12">
-            <div class="card">
-              <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                  <div>
-                    <h5>Monitoring: <span id="parent-child-name"></span></h5>
-                    <p class="text-muted mb-0">Grade <span id="parent-child-grade"></span> | Student ID: <span id="parent-child-id"></span></p>
-                  </div>
-                  <button class="btn btn-outline-danger btn-sm" onclick="parentLogout()">Logout</button>
-                </div>
-              </div>
+      <div class="mb-3">
+        <label class="form-label">Parent Password</label>
+        <input type="password" class="form-control" id="parent-login-password" placeholder="Enter password">
+      </div>
+      <button class="btn btn-primary w-100" onclick="parentLogin()">Login</button>
+      <p class="text-muted text-center mt-3 small">Demo: Use Student ID "1" or "2" with password "parent123"</p>
+    </div>
+  </div>
+  
+  <!-- Parent Dashboard (Hidden until login) -->
+  <div id="parent-dashboard" style="display: none;">
+    <!-- Welcome Header -->
+    <div class="row mb-4">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-body d-flex justify-content-between align-items-center">
+            <div>
+              <h4 class="mb-1">Welcome, Parent of <span id="parent-student-name"></span></h4>
+              <p class="text-muted mb-0">Grade <span id="parent-student-grade"></span> • Student ID: <span id="parent-student-id"></span> • Johannesburg</p>
             </div>
-          </div>
-        </div>
-        
-        <div class="row g-4 mb-4">
-          <div class="col-md-3">
-            <div class="card">
-              <div class="card-body text-center">
-                <i class="fas fa-graduation-cap text-primary stat-icon"></i>
-                <h6 class="mt-2">Average Grade</h6>
-                <h3 id="parent-child-avg-grade">-</h3>
-              </div>
-            </div>
-          </div>
-          <div class="col-md-3">
-            <div class="card">
-              <div class="card-body text-center">
-                <i class="fas fa-calendar-check text-success stat-icon"></i>
-                <h6 class="mt-2">Attendance Rate</h6>
-                <h3 id="parent-child-attendance">-</h3>
-              </div>
-            </div>
-          </div>
-          <div class="col-md-3">
-            <div class="card">
-              <div class="card-body text-center">
-                <i class="fas fa-book text-info stat-icon"></i>
-                <h6 class="mt-2">Enrolled Classes</h6>
-                <h3 id="parent-child-classes">-</h3>
-              </div>
-            </div>
-          </div>
-          <div class="col-md-3">
-            <div class="card">
-              <div class="card-body text-center">
-                <i class="fas fa-money-bill-wave text-warning stat-icon"></i>
-                <h6 class="mt-2">Fee Balance</h6>
-                <h3 id="parent-child-fees">-</h3>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <ul class="nav nav-tabs mb-4">
-          <li class="nav-item">
-            <a class="nav-link active" data-bs-toggle="tab" href="#parent-overview-tab">Overview</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" data-bs-toggle="tab" href="#parent-attendance-tab">Attendance Tracking</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" data-bs-toggle="tab" href="#parent-grades-tab">Academic Performance</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" data-bs-toggle="tab" href="#parent-homework-tab">Homework & Assignments</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" data-bs-toggle="tab" href="#parent-fees-tab">Fee Management</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" data-bs-toggle="tab" href="#parent-timetable-tab">Timetable & Schedule</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" data-bs-toggle="tab" href="#parent-announcements-tab">Announcements</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" data-bs-toggle="tab" href="#parent-contact-tab">Communication</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" data-bs-toggle="tab" href="#parent-profile-tab">Student Profile</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" data-bs-toggle="tab" href="#parent-calendar-tab">Event Calendar</a>
-          </li>
-        </ul>
-        
-        <div class="tab-content">
-          <div class="tab-pane fade show active" id="parent-overview-tab">
-            <div class="card">
-              <div class="card-body">
-                <h5>Student Overview</h5>
-                <div id="parent-overview-content"></div>
-              </div>
-            </div>
-          </div>
-          
-          <div class="tab-pane fade" id="parent-attendance-tab">
-            <div class="card">
-              <div class="card-body">
-                <h5>Attendance Tracking</h5>
-                <p class="text-muted">View daily, monthly, or period-based attendance records with alerts for absences.</p>
-                <div class="row mb-3">
-                  <div class="col-md-4">
-                    <label class="form-label">View Mode</label>
-                    <select class="form-select" id="parent-attendance-mode" onchange="loadParentAttendance()">
-                      <option value="daily">Daily View</option>
-                      <option value="monthly" selected>Monthly View</option>
-                      <option value="period">Period-Based View</option>
-                    </select>
-                  </div>
-                  <div class="col-md-4">
-                    <label class="form-label">From Date</label>
-                    <input type="date" class="form-control" id="parent-attendance-from" onchange="loadParentAttendance()">
-                  </div>
-                  <div class="col-md-4">
-                    <label class="form-label">To Date</label>
-                    <input type="date" class="form-control" id="parent-attendance-to" onchange="loadParentAttendance()">
-                  </div>
-                </div>
-                <div id="parent-attendance-alerts" class="mb-3"></div>
-                <div id="parent-attendance-content"></div>
-              </div>
-            </div>
-          </div>
-          
-          <div class="tab-pane fade" id="parent-grades-tab">
-            <div class="card">
-              <div class="card-body">
-                <h5>Academic Performance</h5>
-                <p class="text-muted">Access grades, report cards, progress reports, and exam results.</p>
-                <div class="mb-3">
-                  <button class="btn btn-primary me-2" onclick="generateParentReportCard()"><i class="fas fa-file-pdf"></i> Generate Report Card</button>
-                  <button class="btn btn-info" onclick="downloadProgressReport()"><i class="fas fa-download"></i> Download Progress Report</button>
-                </div>
-                <div id="parent-grades-content"></div>
-                <div id="parent-report-card" class="mt-4"></div>
-              </div>
-            </div>
-          </div>
-          
-          <div class="tab-pane fade" id="parent-homework-tab">
-            <div class="card">
-              <div class="card-body">
-                <h5>Homework & Assignments</h5>
-                <p class="text-muted">View assigned tasks, due dates, and submission status.</p>
-                <div class="mb-3">
-                  <select class="form-select" id="parent-homework-filter" onchange="loadParentHomework()">
-                    <option value="all">All Assignments</option>
-                    <option value="pending">Pending</option>
-                    <option value="submitted">Submitted</option>
-                    <option value="overdue">Overdue</option>
-                  </select>
-                </div>
-                <div id="parent-homework-content"></div>
-              </div>
-            </div>
-          </div>
-          
-          <div class="tab-pane fade" id="parent-fees-tab">
-            <div class="card">
-              <div class="card-body">
-                <h5>Fee Management</h5>
-                <p class="text-muted">Check invoices, payment history, due dates, and online payment options.</p>
-                <div class="mb-3">
-                  <button class="btn btn-success me-2" onclick="makeOnlinePayment()"><i class="fas fa-credit-card"></i> Make Online Payment</button>
-                  <button class="btn btn-info" onclick="downloadFeeInvoice()"><i class="fas fa-file-invoice"></i> Download Invoice</button>
-                </div>
-                <div id="parent-fees-content"></div>
-              </div>
-            </div>
-          </div>
-          
-          <div class="tab-pane fade" id="parent-timetable-tab">
-            <div class="card">
-              <div class="card-body">
-                <h5>Timetable & Schedule</h5>
-                <p class="text-muted">View class schedules, exam timetables, and daily routines.</p>
-                <ul class="nav nav-pills mb-3">
-                  <li class="nav-item">
-                    <a class="nav-link active" data-bs-toggle="tab" href="#parent-class-schedule">Class Schedule</a>
-                  </li>
-                  <li class="nav-item">
-                    <a class="nav-link" data-bs-toggle="tab" href="#parent-exam-timetable">Exam Timetable</a>
-                  </li>
-                  <li class="nav-item">
-                    <a class="nav-link" data-bs-toggle="tab" href="#parent-daily-routine">Daily Routine</a>
-                  </li>
-                </ul>
-                <div class="tab-content">
-                  <div class="tab-pane fade show active" id="parent-class-schedule">
-                    <div id="parent-class-schedule-content"></div>
-                  </div>
-                  <div class="tab-pane fade" id="parent-exam-timetable">
-                    <div id="parent-exam-timetable-content"></div>
-                  </div>
-                  <div class="tab-pane fade" id="parent-daily-routine">
-                    <div id="parent-daily-routine-content"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <div class="tab-pane fade" id="parent-announcements-tab">
-            <div class="card">
-              <div class="card-body">
-                <h5>Announcements & News</h5>
-                <p class="text-muted">Receive school notices, events, and circulars.</p>
-                <div class="mb-3">
-                  <select class="form-select" id="parent-announcement-filter" onchange="loadParentAnnouncements()">
-                    <option value="all">All Announcements</option>
-                    <option value="urgent">Urgent</option>
-                    <option value="general">General</option>
-                    <option value="events">Events</option>
-                  </select>
-                </div>
-                <div id="parent-announcements-content"></div>
-              </div>
-            </div>
-          </div>
-          
-          <div class="tab-pane fade" id="parent-contact-tab">
-            <div class="card">
-              <div class="card-body">
-                <h5>Communication Tools</h5>
-                <p class="text-muted">Send/receive messages to teachers, view notifications, and email/SMS alerts.</p>
-                <div class="row mb-3">
-                  <div class="col-md-6">
-                    <div class="card bg-light">
-                      <div class="card-body">
-                        <h6><i class="fas fa-bell"></i> Notifications</h6>
-                        <div id="parent-notifications-list"></div>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="col-md-6">
-                    <div class="card bg-light">
-                      <div class="card-body">
-                        <h6><i class="fas fa-envelope"></i> Email/SMS Alerts</h6>
-                        <div class="form-check form-switch">
-                          <input class="form-check-input" type="checkbox" id="parent-email-alerts" checked>
-                          <label class="form-check-label">Email Alerts</label>
-                        </div>
-                        <div class="form-check form-switch">
-                          <input class="form-check-input" type="checkbox" id="parent-sms-alerts" checked>
-                          <label class="form-check-label">SMS Alerts</label>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div id="parent-contact-content">
-                  <div class="mb-3">
-                    <label class="form-label">Select Teacher</label>
-                    <select class="form-select" id="parent-teacher-select">
-                      <option value="">Choose teacher...</option>
-                    </select>
-                  </div>
-                  <div class="mb-3">
-                    <label class="form-label">Message</label>
-                    <textarea class="form-control" id="parent-message" rows="4" placeholder="Type your message..."></textarea>
-                  </div>
-                  <button class="btn btn-primary" onclick="sendParentMessage()">Send Message</button>
-                  <hr>
-                  <h6>Message History</h6>
-                  <div id="parent-messages-list"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <div class="tab-pane fade" id="parent-profile-tab">
-            <div class="card">
-              <div class="card-body">
-                <h5>Student Profile</h5>
-                <p class="text-muted">View personal details, health records, and achievements.</p>
-                <div id="parent-profile-content"></div>
-              </div>
-            </div>
-          </div>
-          
-          <div class="tab-pane fade" id="parent-calendar-tab">
-            <div class="card">
-              <div class="card-body">
-                <h5>Event Calendar</h5>
-                <p class="text-muted">Track school events, holidays, and parent-teacher meetings.</p>
-                <div class="mb-3">
-                  <button class="btn btn-primary" onclick="addToPersonalCalendar()"><i class="fas fa-calendar-plus"></i> Sync to Personal Calendar</button>
-                </div>
-                <div id="parent-calendar-content"></div>
-              </div>
-            </div>
+            <button class="btn btn-outline-danger btn-sm" onclick="parentLogout()">Logout</button>
           </div>
         </div>
       </div>
     </div>
+
+    <!-- Quick Stats Row -->
+    <div class="row g-4 mb-5">
+      <div class="col-md-3 col-sm-6">
+        <div class="card text-center h-100">
+          <div class="card-body">
+            <i class="fas fa-graduation-cap text-primary stat-icon"></i>
+            <h6 class="mt-2">Average Grade</h6>
+            <h4 id="parent-avg-grade">-</h4>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3 col-sm-6">
+        <div class="card text-center h-100">
+          <div class="card-body">
+            <i class="fas fa-calendar-check text-success stat-icon"></i>
+            <h6 class="mt-2">Attendance Rate</h6>
+            <h4 id="parent-attendance-rate">-</h4>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3 col-sm-6">
+        <div class="card text-center h-100">
+          <div class="card-body">
+            <i class="fas fa-tasks text-info stat-icon"></i>
+            <h6 class="mt-2">Pending Homework</h6>
+            <h4 id="parent-pending-homework">0</h4>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3 col-sm-6">
+        <div class="card text-center h-100">
+          <div class="card-body">
+            <i class="fas fa-file-invoice-dollar text-warning stat-icon"></i>
+            <h6 class="mt-2">Fee Balance (ZAR)</h6>
+            <h4 id="parent-fee-balance">R0</h4>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Module Tabs -->
+    <ul class="nav nav-tabs mb-4" id="parentTabs">
+      <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#parent-overview">Overview</a></li>
+      <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#parent-grades">Academic Performance</a></li>
+      <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#parent-attendance">Attendance Tracking</a></li>
+      <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#parent-homework">Homework & Assignments</a></li>
+      <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#parent-fees">Fee Management</a></li>
+      <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#parent-timetable">Timetable & Schedule</a></li>
+      <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#parent-announcements">Announcements & News</a></li>
+      <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#parent-communication">Communication Tools</a></li>
+      <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#parent-profile">Student Profile</a></li>
+      <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#parent-calendar">Event Calendar</a></li>
+    </ul>
+
+    <div class="tab-content">
+      <!-- Overview Tab -->
+      <div class="tab-pane fade show active" id="parent-overview">
+        <h5>Recent Activity & Notifications</h5>
+        <div id="parent-notifications-list" class="list-group"></div>
+      </div>
+
+      <!-- Academic Performance Tab -->
+      <div class="tab-pane fade" id="parent-grades">
+        <div class="d-flex justify-content-between mb-3">
+          <h5>Grades & Report Cards</h5>
+          <div>
+            <button class="btn btn-info btn-sm me-2 no-print" onclick="generateParentReportCard()">Generate Report Card</button>
+            <button class="btn btn-success btn-sm no-print" onclick="downloadProgressReport()">Download Progress Report</button>
+          </div>
+        </div>
+        <div id="parent-grades-content"></div>
+      </div>
+
+      <!-- Attendance Tracking Tab -->
+      <div class="tab-pane fade" id="parent-attendance">
+        <h5>Attendance Records</h5>
+        <div class="row mb-3">
+          <div class="col-md-4">
+            <label class="form-label">From Date</label>
+            <input type="date" class="form-control" id="parent-attendance-from">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">To Date</label>
+            <input type="date" class="form-control" id="parent-attendance-to">
+          </div>
+          <div class="col-md-4 d-flex align-items-end">
+            <button class="btn btn-primary" onclick="loadParentAttendance()">Apply Filter</button>
+          </div>
+        </div>
+        <div id="parent-attendance-content"></div>
+      </div>
+
+      <!-- Homework & Assignments Tab -->
+      <div class="tab-pane fade" id="parent-homework">
+        <div class="d-flex justify-content-between mb-3">
+          <h5>Homework & Assignments</h5>
+          <select class="form-select w-auto" id="parent-homework-filter" onchange="loadParentHomework()">
+            <option value="all">All</option>
+            <option value="pending">Pending</option>
+            <option value="submitted">Submitted</option>
+            <option value="overdue">Overdue</option>
+          </select>
+        </div>
+        <div id="parent-homework-content"></div>
+      </div>
+
+      <!-- Fee Management Tab -->
+      <div class="tab-pane fade" id="parent-fees">
+        <div class="d-flex justify-content-between mb-3">
+          <h5>School Fees</h5>
+          <div>
+            <button class="btn btn-primary btn-sm me-2" onclick="makeOnlinePayment()">Make Payment</button>
+            <button class="btn btn-info btn-sm no-print" onclick="downloadFeeInvoice()">Download Invoice</button>
+          </div>
+        </div>
+        <div id="parent-fees-content"></div>
+      </div>
+
+      <!-- Timetable & Schedule Tab -->
+      <div class="tab-pane fade" id="parent-timetable">
+        <ul class="nav nav-pills mb-4">
+          <li class="nav-item"><a class="nav-link active" data-bs-toggle="pill" href="#parent-class-schedule">Class Schedule</a></li>
+          <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#parent-exam-timetable">Exam Timetable</a></li>
+          <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#parent-daily-routine">Daily Routine</a></li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane fade show active" id="parent-class-schedule">
+            <h6>Class Timetable</h6>
+            <div id="parent-class-schedule-content"></div>
+          </div>
+          <div class="tab-pane fade" id="parent-exam-timetable">
+            <h6>Upcoming Exams</h6>
+            <div id="parent-exam-timetable-content"></div>
+          </div>
+          <div class="tab-pane fade" id="parent-daily-routine">
+            <h6>Daily School Routine</h6>
+            <div id="parent-daily-routine-content"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Announcements & News Tab -->
+      <div class="tab-pane fade" id="parent-announcements">
+        <div class="d-flex justify-content-between mb-3">
+          <h5>School Announcements</h5>
+          <select class="form-select w-auto" id="parent-announcement-filter" onchange="loadParentAnnouncements()">
+            <option value="all">All</option>
+            <option value="general">General</option>
+            <option value="events">Events</option>
+            <option value="urgent">Urgent</option>
+          </select>
+        </div>
+        <div id="parent-announcements-content"></div>
+      </div>
+
+      <!-- Communication Tools Tab -->
+      <div class="tab-pane fade" id="parent-communication">
+        <h5>Message Teachers</h5>
+        <div class="row mb-4">
+          <div class="col-md-5">
+            <label class="form-label">Select Teacher</label>
+            <select class="form-select" id="parent-teacher-select"></select>
+          </div>
+          <div class="col-md-7">
+            <label class="form-label">Message</label>
+            <textarea class="form-control" id="parent-message" rows="3" placeholder="Type your message..."></textarea>
+          </div>
+        </div>
+        <button class="btn btn-primary mb-4" onclick="sendParentMessage()">Send Message</button>
+        <h6>Message History</h6>
+        <div id="parent-messages-list"></div>
+      </div>
+
+      <!-- Student Profile Tab -->
+      <div class="tab-pane fade" id="parent-profile">
+        <h5>Student Profile & Health Records</h5>
+        <div id="parent-profile-content"></div>
+      </div>
+
+      <!-- Event Calendar Tab -->
+      <div class="tab-pane fade" id="parent-calendar">
+        <div class="d-flex justify-content-between mb-3">
+          <h5>School Events & Holidays</h5>
+          <button class="btn btn-info btn-sm no-print" onclick="addToPersonalCalendar()">Export to Calendar</button>
+        </div>
+        <div id="parent-calendar-content"></div>
+      </div>
+    </div>
+  </div>
+</div>
   </div>
 
   <!-- Modals -->
@@ -2964,9 +2871,9 @@
     // Parent Portal Functions
     function parentLogin() {
       const studentId = parseInt(document.getElementById('parent-login-student-id').value);
-      const code = document.getElementById('parent-login-code').value;
+      const password = document.getElementById('parent-login-password').value;
       
-      if (code === 'parent123') {
+      if (password === 'parent123') {
         const student = students.find(s => s.id === studentId);
         if (student) {
           loggedInParent = student;
@@ -2977,7 +2884,7 @@
           alert('Student ID not found!');
         }
       } else {
-        alert('Incorrect access code!');
+        alert('Incorrect password!');
       }
     }
     
@@ -2986,7 +2893,7 @@
       document.getElementById('parent-login-form').style.display = 'block';
       document.getElementById('parent-dashboard').style.display = 'none';
       document.getElementById('parent-login-student-id').value = '';
-      document.getElementById('parent-login-code').value = '';
+      document.getElementById('parent-login-password').value = '';
       // If came from main login, return to main login page
       if (sessionStorage.getItem('userType')) {
         sessionStorage.clear();
@@ -2997,14 +2904,26 @@
     function loadParentPortal() {
       if (!loggedInParent) return;
       
-      document.getElementById('parent-child-name').textContent = loggedInParent.name;
-      document.getElementById('parent-child-grade').textContent = loggedInParent.grade;
-      document.getElementById('parent-child-id').textContent = loggedInParent.id;
+      document.getElementById('parent-student-name').textContent = loggedInParent.name;
+      document.getElementById('parent-student-grade').textContent = loggedInParent.grade;
+      document.getElementById('parent-student-id').textContent = loggedInParent.id;
       
       // Calculate stats (same as student portal)
       const feeCalc = calculateStudentFee(loggedInParent.id);
-      document.getElementById('parent-child-fees').textContent = 'R' + feeCalc.balance.toLocaleString();
-      document.getElementById('parent-child-classes').textContent = loggedInParent.classIds.length;
+      document.getElementById('parent-fee-balance').textContent = 'R' + feeCalc.balance.toLocaleString();
+      
+      // Calculate pending homework
+      let pendingCount = 0;
+      loggedInParent.classIds.forEach(cid => {
+        if (homework[cid]) {
+          homework[cid].forEach(hw => {
+            if (hw.status === 'pending' || hw.status === 'overdue') {
+              pendingCount++;
+            }
+          });
+        }
+      });
+      document.getElementById('parent-pending-homework').textContent = pendingCount;
       
       let totalGrade = 0, gradeCount = 0;
       loggedInParent.classIds.forEach(cid => {
@@ -3025,7 +2944,7 @@
         }
       });
       const avgGrade = gradeCount > 0 ? (totalGrade / gradeCount).toFixed(1) : 'N/A';
-      document.getElementById('parent-child-avg-grade').textContent = avgGrade + '%';
+      document.getElementById('parent-avg-grade').textContent = avgGrade + '%';
       
       let presentCount = 0, totalDays = 0;
       loggedInParent.classIds.forEach(cid => {
@@ -3041,19 +2960,12 @@
         }
       });
       const attendanceRate = totalDays > 0 ? ((presentCount / totalDays) * 100).toFixed(1) : 'N/A';
-      document.getElementById('parent-child-attendance').textContent = attendanceRate + '%';
+      document.getElementById('parent-attendance-rate').textContent = attendanceRate + '%';
       
       loadParentContent();
     }
     
     function loadParentContent() {
-      // Overview
-      let overview = `<p><strong>Student:</strong> ${loggedInParent.name}</p>`;
-      overview += `<p><strong>Grade:</strong> ${loggedInParent.grade}</p>`;
-      overview += `<p><strong>Parent/Guardian:</strong> ${loggedInParent.parent || 'N/A'}</p>`;
-      overview += `<p><strong>Contact:</strong> ${loggedInParent.contact || 'N/A'}</p>`;
-      document.getElementById('parent-overview-content').innerHTML = overview;
-      
       // Load all tabs
       loadParentGrades();
       loadParentAttendance();
@@ -3102,34 +3014,8 @@
     }
     
     function loadParentAttendance() {
-      const mode = document.getElementById('parent-attendance-mode')?.value || 'monthly';
       const fromDate = document.getElementById('parent-attendance-from')?.value;
       const toDate = document.getElementById('parent-attendance-to')?.value;
-      
-      // Check for absence alerts
-      let absentCount = 0;
-      let alertsHtml = '';
-      
-      loggedInParent.classIds.forEach(cid => {
-        if (attendance[cid]) {
-          for (let date in attendance[cid]) {
-            if (attendance[cid][date][loggedInParent.id]) {
-              const status = attendance[cid][date][loggedInParent.id].status;
-              if (status === 'Absent') {
-                absentCount++;
-              }
-            }
-          }
-        }
-      });
-      
-      if (absentCount > 3) {
-        alertsHtml = `<div class="alert alert-warning"><i class="fas fa-exclamation-triangle"></i> <strong>Alert:</strong> Your child has been absent ${absentCount} times. Please ensure regular attendance.</div>`;
-      } else if (absentCount > 0) {
-        alertsHtml = `<div class="alert alert-info"><i class="fas fa-info-circle"></i> Total absences: ${absentCount}</div>`;
-      }
-      
-      document.getElementById('parent-attendance-alerts').innerHTML = alertsHtml;
       
       let attendanceHtml = '<div class="table-responsive"><table class="table table-striped table-hover"><thead><tr><th>Date</th><th>Class</th><th>Status</th><th>Notes</th></tr></thead><tbody>';
       let recordCount = 0;
