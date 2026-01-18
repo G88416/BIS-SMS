@@ -1408,12 +1408,24 @@
       {id: 2, title: 'Parent-Teacher Meeting', date: '2026-01-25', category: 'events', content: 'Annual parent-teacher meeting scheduled for January 25th.', priority: 'urgent'},
       {id: 3, title: 'Sports Day', date: '2026-02-10', category: 'events', content: 'Annual sports day on February 10th. All students must participate.', priority: 'normal'}
     ];
+    
+    // Initialize announcements in localStorage if not already present
+    if (!localStorage.getItem('announcements')) {
+      localStorage.setItem('announcements', JSON.stringify(announcements));
+    }
+    
     let events = JSON.parse(localStorage.getItem('events')) || [
       {id: 1, title: 'School Holiday', date: '2026-01-16', type: 'holiday', description: 'Public Holiday'},
       {id: 2, title: 'Parent-Teacher Meeting', date: '2026-01-25', type: 'meeting', description: 'Annual PTM - 2:00 PM to 5:00 PM'},
       {id: 3, title: 'Sports Day', date: '2026-02-10', type: 'event', description: 'Annual Inter-House Sports Competition'},
       {id: 4, title: 'Mid-Term Exams', date: '2026-02-15', type: 'exam', description: 'Mid-term examinations begin'}
     ];
+    
+    // Initialize events in localStorage if not already present
+    if (!localStorage.getItem('events')) {
+      localStorage.setItem('events', JSON.stringify(events));
+    }
+    
     let healthRecords = JSON.parse(localStorage.getItem('healthRecords')) || {}; // {studentId: {bloodGroup, allergies, medications, emergencyContact}}
     let achievements = JSON.parse(localStorage.getItem('achievements')) || {}; // {studentId: [{title, date, description, category}]}
     let examTimetable = JSON.parse(localStorage.getItem('examTimetable')) || [
@@ -1421,6 +1433,12 @@
       {date: '2026-02-16', subject: 'English', time: '9:00 AM - 11:00 AM', venue: 'Exam Hall B'},
       {date: '2026-02-17', subject: 'Science', time: '9:00 AM - 11:00 AM', venue: 'Exam Hall A'}
     ];
+    
+    // Initialize examTimetable in localStorage if not already present
+    if (!localStorage.getItem('examTimetable')) {
+      localStorage.setItem('examTimetable', JSON.stringify(examTimetable));
+    }
+    
     let dailyRoutine = [
       {time: '7:30 AM - 8:00 AM', activity: 'Assembly'},
       {time: '8:00 AM - 9:00 AM', activity: 'Period 1'},
@@ -3160,6 +3178,7 @@
             {id: 3, title: 'English Essay', dueDate: '2026-01-15', description: 'Write a 500-word essay on climate change', status: 'overdue', subject: 'English'}
           ];
         });
+        localStorage.setItem('homework', JSON.stringify(homework));
       }
       
       let homeworkHtml = '<div class="list-group">';
@@ -3173,7 +3192,7 @@
             if (filter !== 'all' && hw.status !== filter) return;
             
             const today = new Date().toISOString().split('T')[0];
-            const isOverdue = hw.dueDate < today && hw.status === 'pending';
+            const isOverdue = new Date(hw.dueDate) < new Date(today) && hw.status === 'pending';
             const statusBadge = hw.status === 'submitted' ? 'success' : isOverdue ? 'danger' : 'warning';
             const statusText = hw.status === 'submitted' ? 'Submitted' : isOverdue ? 'Overdue' : 'Pending';
             
@@ -3410,6 +3429,7 @@
           {id: 2, message: 'Parent-Teacher meeting scheduled for Jan 25', date: new Date(Date.now() - 86400000).toISOString(), read: false},
           {id: 3, message: 'School fees payment reminder', date: new Date(Date.now() - 172800000).toISOString(), read: true}
         ];
+        localStorage.setItem('notifications', JSON.stringify(notifications));
       }
       
       let notifHtml = '<div class="list-group list-group-flush">';
