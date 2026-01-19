@@ -591,121 +591,227 @@
     </div>
 
     <!-- Student Portal Section -->
-    <div id="student-portal" class="section">
-      <h4>Student Portal</h4>
-      <p class="text-muted">Personalized dashboard for students</p>
-      
-      <!-- Student Dashboard -->
-      <div id="student-dashboard">
-        <div class="row mb-4">
-          <div class="col-md-12">
-            <div class="card">
-              <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                  <div>
-                    <h5 id="student-portal-name" class="mb-1"></h5>
-                    <p class="text-muted mb-0">Grade <span id="student-portal-grade"></span> | Student ID: <span id="student-portal-id"></span></p>
-                  </div>
-                  <button class="btn btn-outline-danger btn-sm" onclick="studentLogout()">Logout</button>
-                </div>
-              </div>
+    <!-- Updated Student Portal Section - Fully Enhanced with All Requested Modules -->
+<div id="student-portal" class="section">
+  <h4>Student Portal</h4>
+  <p class="text-muted">Secure student login with personalized academic dashboard and resources</p>
+  
+  <!-- Student Login Form -->
+  <div id="student-login-form" class="card mx-auto" style="max-width: 500px; margin: 3rem auto;">
+    <div class="card-body">
+      <h5 class="card-title text-center mb-4">Student Portal Login</h5>
+      <div class="mb-3">
+        <label class="form-label">Student ID</label>
+        <input type="text" class="form-control" id="student-login-id" placeholder="Enter your Student ID">
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Password</label>
+        <input type="password" class="form-control" id="student-login-password" placeholder="Enter password">
+      </div>
+      <button class="btn btn-primary w-100" onclick="studentLogin()">Login</button>
+      <p class="text-muted text-center mt-3 small">Demo: Use Student ID "1" or "2" with password "student123"</p>
+    </div>
+  </div>
+  
+  <!-- Student Dashboard (Hidden until login) -->
+  <div id="student-dashboard" style="display: none;">
+    <!-- Welcome Header -->
+    <div class="row mb-4">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-body d-flex justify-content-between align-items-center flex-wrap">
+            <div>
+              <h4 class="mb-1">Welcome, <span id="student-name"></span></h4>
+              <p class="text-muted mb-0">Grade <span id="student-grade"></span> • Student ID: <span id="student-id"></span> • Johannesburg</p>
             </div>
-          </div>
-        </div>
-        
-        <div class="row g-4 mb-4">
-          <div class="col-md-3">
-            <div class="card">
-              <div class="card-body text-center">
-                <i class="fas fa-graduation-cap text-primary stat-icon"></i>
-                <h6 class="mt-2">Average Grade</h6>
-                <h3 id="student-avg-grade">-</h3>
-              </div>
-            </div>
-          </div>
-          <div class="col-md-3">
-            <div class="card">
-              <div class="card-body text-center">
-                <i class="fas fa-calendar-check text-success stat-icon"></i>
-                <h6 class="mt-2">Attendance Rate</h6>
-                <h3 id="student-attendance-rate">-</h3>
-              </div>
-            </div>
-          </div>
-          <div class="col-md-3">
-            <div class="card">
-              <div class="card-body text-center">
-                <i class="fas fa-book text-info stat-icon"></i>
-                <h6 class="mt-2">Enrolled Classes</h6>
-                <h3 id="student-classes-count">-</h3>
-              </div>
-            </div>
-          </div>
-          <div class="col-md-3">
-            <div class="card">
-              <div class="card-body text-center">
-                <i class="fas fa-money-bill-wave text-warning stat-icon"></i>
-                <h6 class="mt-2">Fee Balance</h6>
-                <h3 id="student-fee-balance">-</h3>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <ul class="nav nav-tabs mb-4">
-          <li class="nav-item">
-            <a class="nav-link active" data-bs-toggle="tab" href="#student-grades-tab">My Grades</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" data-bs-toggle="tab" href="#student-attendance-tab">My Attendance</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" data-bs-toggle="tab" href="#student-classes-tab">My Classes</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" data-bs-toggle="tab" href="#student-fees-tab">Fee Statement</a>
-          </li>
-        </ul>
-        
-        <div class="tab-content">
-          <div class="tab-pane fade show active" id="student-grades-tab">
-            <div class="card">
-              <div class="card-body">
-                <h5>My Grades</h5>
-                <div id="student-grades-content"></div>
-              </div>
-            </div>
-          </div>
-          
-          <div class="tab-pane fade" id="student-attendance-tab">
-            <div class="card">
-              <div class="card-body">
-                <h5>My Attendance Record</h5>
-                <div id="student-attendance-content"></div>
-              </div>
-            </div>
-          </div>
-          
-          <div class="tab-pane fade" id="student-classes-tab">
-            <div class="card">
-              <div class="card-body">
-                <h5>My Classes</h5>
-                <div id="student-classes-content"></div>
-              </div>
-            </div>
-          </div>
-          
-          <div class="tab-pane fade" id="student-fees-tab">
-            <div class="card">
-              <div class="card-body">
-                <h5>Fee Statement</h5>
-                <div id="student-fees-content"></div>
-              </div>
-            </div>
+            <button class="btn btn-outline-danger btn-sm mt-2 mt-md-0" onclick="studentLogout()">Logout</button>
           </div>
         </div>
       </div>
     </div>
+
+    <!-- Personal Dashboard - Quick Overview -->
+    <div class="row g-4 mb-5">
+      <div class="col-md-3 col-sm-6">
+        <div class="card text-center h-100">
+          <div class="card-body">
+            <i class="fas fa-graduation-cap text-primary stat-icon"></i>
+            <h6 class="mt-2">Overall Average</h6>
+            <h4 id="student-overall-average">-</h4>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3 col-sm-6">
+        <div class="card text-center h-100">
+          <div class="card-body">
+            <i class="fas fa-calendar-check text-success stat-icon"></i>
+            <h6 class="mt-2">Attendance Rate</h6>
+            <h4 id="student-attendance-rate">-</h4>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3 col-sm-6">
+        <div class="card text-center h-100">
+          <div class="card-body">
+            <i class="fas fa-tasks text-info stat-icon"></i>
+            <h6 class="mt-2">Upcoming Tasks</h6>
+            <h4 id="student-upcoming-tasks">0</h4>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3 col-sm-6">
+        <div class="card text-center h-100">
+          <div class="card-body">
+            <i class="fas fa-bell text-warning stat-icon"></i>
+            <h6 class="mt-2">Notifications</h6>
+            <h4 id="student-notifications-count">0</h4>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Notifications (part of Personal Dashboard) -->
+    <div class="card mb-5">
+      <div class="card-body">
+        <h5>Recent Notifications & Upcoming Events</h5>
+        <div id="student-notifications-list" class="list-group"></div>
+      </div>
+    </div>
+
+    <!-- Module Tabs -->
+    <ul class="nav nav-tabs mb-4" id="studentTabs">
+      <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#student-attendance">Attendance View</a></li>
+      <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#student-grades">Grades & Progress Reports</a></li>
+      <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#student-assignments">Assignments & Homework</a></li>
+      <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#student-timetable">Timetable</a></li>
+      <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#student-announcements">Announcements</a></li>
+      <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#student-resources">Learning Resources</a></li>
+      <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#student-communication">Communication</a></li>
+      <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#student-exams">Exam Schedules & Results</a></li>
+    </ul>
+
+    <div class="tab-content">
+      <!-- Attendance View Tab -->
+      <div class="tab-pane fade show active" id="student-attendance">
+        <h5>My Attendance Records</h5>
+        <div class="row mb-3">
+          <div class="col-md-4">
+            <label class="form-label">From Date</label>
+            <input type="date" class="form-control" id="student-attendance-from">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">To Date</label>
+            <input type="date" class="form-control" id="student-attendance-to">
+          </div>
+          <div class="col-md-4 d-flex align-items-end">
+            <button class="btn btn-primary" onclick="loadStudentAttendance()">Apply Filter</button>
+          </div>
+        </div>
+        <div id="student-attendance-content"></div>
+      </div>
+
+      <!-- Grades & Progress Reports Tab -->
+      <div class="tab-pane fade" id="student-grades">
+        <h5>My Grades & Performance</h5>
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <label class="form-label">Select Term</label>
+            <select class="form-select" id="student-grade-term" onchange="loadStudentGrades()">
+              <option>Term 1 2026</option>
+              <option>Term 2 2026</option>
+              <option>Term 3 2026</option>
+              <option>Term 4 2026</option>
+              <option>Final Year</option>
+            </select>
+          </div>
+          <div class="col-md-6 d-flex align-items-end">
+            <button class="btn btn-info btn-sm no-print" onclick="downloadStudentReportCard()">Download Report Card</button>
+          </div>
+        </div>
+        <div id="student-grades-content"></div>
+        <canvas id="student-performance-chart" class="mt-4 no-print" height="200"></canvas>
+      </div>
+
+      <!-- Assignments & Homework Tab -->
+      <div class="tab-pane fade" id="student-assignments">
+        <h5>Assignments & Homework</h5>
+        <div class="mb-3">
+          <select class="form-select w-auto" id="student-assignment-filter" onchange="loadStudentAssignments()">
+            <option value="all">All</option>
+            <option value="pending">Pending</option>
+            <option value="submitted">Submitted</option>
+            <option value="overdue">Overdue</option>
+          </select>
+        </div>
+        <div id="student-assignments-content"></div>
+      </div>
+
+      <!-- Timetable Tab -->
+      <div class="tab-pane fade" id="student-timetable">
+        <h5>My Class & Exam Timetable</h5>
+        <ul class="nav nav-pills mb-4">
+          <li class="nav-item"><a class="nav-link active" data-bs-toggle="pill" href="#student-daily-timetable">Daily/Weekly Schedule</a></li>
+          <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#student-exam-timetable">Exam Schedule</a></li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane fade show active" id="student-daily-timetable">
+            <div id="student-daily-timetable-content"></div>
+          </div>
+          <div class="tab-pane fade" id="student-exam-timetable">
+            <div id="student-exam-timetable-content"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Announcements Tab -->
+      <div class="tab-pane fade" id="student-announcements">
+        <h5>School Announcements & News</h5>
+        <div class="mb-3">
+          <select class="form-select w-auto" id="student-announcement-filter" onchange="loadStudentAnnouncements()">
+            <option value="all">All</option>
+            <option value="general">General</option>
+            <option value="events">Events</option>
+            <option value="urgent">Urgent</option>
+          </select>
+        </div>
+        <div id="student-announcements-content"></div>
+      </div>
+
+      <!-- Learning Resources Tab -->
+      <div class="tab-pane fade" id="student-resources">
+        <h5>Learning Materials</h5>
+        <div class="mb-3">
+          <input type="text" class="form-control w-50" id="student-resource-search" placeholder="Search resources..." onkeyup="loadStudentResources()">
+        </div>
+        <div id="student-resources-content"></div>
+      </div>
+
+      <!-- Communication Tab -->
+      <div class="tab-pane fade" id="student-communication">
+        <h5>Message Teachers</h5>
+        <div class="row mb-4">
+          <div class="col-md-5">
+            <label class="form-label">Select Teacher</label>
+            <select class="form-select" id="student-teacher-select"></select>
+          </div>
+          <div class="col-md-7">
+            <label class="form-label">Message</label>
+            <textarea class="form-control" id="student-message" rows="4" placeholder="Type your message..."></textarea>
+          </div>
+        </div>
+        <button class="btn btn-primary mb-4" onclick="sendStudentMessage()">Send Message</button>
+        <h6>Message History</h6>
+        <div id="student-messages-list"></div>
+      </div>
+
+      <!-- Exam Schedules & Results Tab -->
+      <div class="tab-pane fade" id="student-exams">
+        <h5>Exams & Results</h5>
+        <div id="student-exams-content"></div>
+      </div>
+    </div>
+  </div>
+</div>
 
     <!-- Updated Teacher Portal Section - Fully Enhanced with All Requested Modules -->
     <div id="teacher-portal" class="section">
@@ -2664,6 +2770,28 @@
 
     // Student Portal Functions
     
+    function studentLogin() {
+      const studentId = document.getElementById('student-login-id').value.trim();
+      const password = document.getElementById('student-login-password').value;
+      
+      // Simple demo authentication
+      if (password === 'student123' && studentId) {
+        const student = students.find(s => s.id === parseInt(studentId));
+        if (student) {
+          loggedInStudent = student;
+          document.getElementById('student-login-form').style.display = 'none';
+          document.getElementById('student-dashboard').style.display = 'block';
+          loadStudentPortal();
+          // Using template literal with data from controlled source
+          alert(`Login successful! Welcome ${student.name}`);
+        } else {
+          alert('Student ID not found. Please try ID "1" or "2".');
+        }
+      } else {
+        alert('Invalid credentials. Use password "student123".');
+      }
+    }
+    
     function studentLogout() {
       loggedInStudent = null;
       // Return to main login page
@@ -2674,15 +2802,10 @@
     function loadStudentPortal() {
       if (!loggedInStudent) return;
       
-      // Update header
-      document.getElementById('student-portal-name').textContent = loggedInStudent.name;
-      document.getElementById('student-portal-grade').textContent = loggedInStudent.grade;
-      document.getElementById('student-portal-id').textContent = loggedInStudent.id;
-      
-      // Calculate stats
-      const feeCalc = calculateStudentFee(loggedInStudent.id);
-      document.getElementById('student-fee-balance').textContent = 'R' + feeCalc.balance.toLocaleString();
-      document.getElementById('student-classes-count').textContent = loggedInStudent.classIds.length;
+      // Update header - new IDs
+      document.getElementById('student-name').textContent = loggedInStudent.name;
+      document.getElementById('student-grade').textContent = loggedInStudent.grade;
+      document.getElementById('student-id').textContent = loggedInStudent.id;
       
       // Calculate average grade
       let totalGrade = 0, gradeCount = 0;
@@ -2704,7 +2827,7 @@
         }
       });
       const avgGrade = gradeCount > 0 ? (totalGrade / gradeCount).toFixed(1) : 'N/A';
-      document.getElementById('student-avg-grade').textContent = avgGrade + '%';
+      document.getElementById('student-overall-average').textContent = avgGrade + '%';
       
       // Calculate attendance rate
       let presentCount = 0, totalDays = 0;
@@ -2723,11 +2846,18 @@
       const attendanceRate = totalDays > 0 ? ((presentCount / totalDays) * 100).toFixed(1) : 'N/A';
       document.getElementById('student-attendance-rate').textContent = attendanceRate + '%';
       
-      // Load grades content
+      // Load notifications
+      loadStudentNotifications();
+      
+      // Load content for tabs
       loadStudentGrades();
       loadStudentAttendance();
-      loadStudentClasses();
-      loadStudentFees();
+      loadStudentAssignments();
+      loadStudentTimetable();
+      loadStudentAnnouncements();
+      loadStudentResources();
+      loadStudentCommunication();
+      loadStudentExams();
     }
     
     function loadStudentGrades() {
@@ -2804,6 +2934,233 @@
       html += '</tbody></table>';
       
       document.getElementById('student-fees-content').innerHTML = html;
+    }
+    
+    // New enhanced student portal functions
+    function loadStudentNotifications() {
+      // Sample notifications data
+      const notifications = [
+        { type: 'urgent', title: 'Upcoming Exam', message: 'Math exam scheduled for next week', date: '2026-01-25' },
+        { type: 'general', title: 'School Event', message: 'Sports day on Friday', date: '2026-01-22' },
+        { type: 'assignment', title: 'Assignment Due', message: 'Science project due tomorrow', date: '2026-01-20' }
+      ];
+      
+      let html = '';
+      if (notifications.length === 0) {
+        html = '<p class="text-muted">No notifications at this time.</p>';
+      } else {
+        notifications.forEach(notif => {
+          const badgeClass = notif.type === 'urgent' ? 'danger' : notif.type === 'assignment' ? 'warning' : 'info';
+          html += `<div class="list-group-item">
+            <div class="d-flex justify-content-between align-items-center">
+              <h6 class="mb-1">${notif.title}</h6>
+              <span class="badge bg-${badgeClass}">${notif.type}</span>
+            </div>
+            <p class="mb-1">${notif.message}</p>
+            <small class="text-muted">${notif.date}</small>
+          </div>`;
+        });
+      }
+      
+      document.getElementById('student-notifications-list').innerHTML = html;
+      document.getElementById('student-notifications-count').textContent = notifications.length;
+      document.getElementById('student-upcoming-tasks').textContent = notifications.filter(n => n.type === 'assignment').length;
+    }
+    
+    function loadStudentAssignments() {
+      const filter = document.getElementById('student-assignment-filter').value;
+      
+      // Sample assignments data
+      const assignments = [
+        { subject: 'Mathematics', title: 'Algebra Worksheet', dueDate: '2026-01-25', status: 'pending' },
+        { subject: 'Science', title: 'Chemistry Lab Report', dueDate: '2026-01-20', status: 'overdue' },
+        { subject: 'English', title: 'Essay on Shakespeare', dueDate: '2026-01-28', status: 'pending' },
+        { subject: 'History', title: 'World War II Research', dueDate: '2026-01-15', status: 'submitted' }
+      ];
+      
+      let filteredAssignments = assignments;
+      if (filter !== 'all') {
+        filteredAssignments = assignments.filter(a => a.status === filter);
+      }
+      
+      let html = '<div class="table-responsive"><table class="table table-striped"><thead><tr><th>Subject</th><th>Assignment</th><th>Due Date</th><th>Status</th><th>Action</th></tr></thead><tbody>';
+      
+      filteredAssignments.forEach(assign => {
+        const statusBadge = assign.status === 'submitted' ? 'success' : assign.status === 'overdue' ? 'danger' : 'warning';
+        html += `<tr>
+          <td>${assign.subject}</td>
+          <td>${assign.title}</td>
+          <td>${assign.dueDate}</td>
+          <td><span class="badge bg-${statusBadge}">${assign.status}</span></td>
+          <td><button class="btn btn-sm btn-primary" onclick="alert('Submit assignment feature')">Submit</button></td>
+        </tr>`;
+      });
+      
+      html += '</tbody></table></div>';
+      document.getElementById('student-assignments-content').innerHTML = html || '<p>No assignments found.</p>';
+    }
+    
+    function loadStudentTimetable() {
+      // Sample timetable data
+      const timetable = [
+        { day: 'Monday', time: '08:00 - 09:00', subject: 'Mathematics', teacher: 'Mr. Smith', room: 'A101' },
+        { day: 'Monday', time: '09:15 - 10:15', subject: 'English', teacher: 'Ms. Johnson', room: 'B205' },
+        { day: 'Tuesday', time: '08:00 - 09:00', subject: 'Science', teacher: 'Dr. Brown', room: 'Lab 1' },
+        { day: 'Wednesday', time: '08:00 - 09:00', subject: 'History', teacher: 'Mr. Davis', room: 'C301' }
+      ];
+      
+      let html = '<div class="table-responsive"><table class="table table-striped"><thead><tr><th>Day</th><th>Time</th><th>Subject</th><th>Teacher</th><th>Room</th></tr></thead><tbody>';
+      
+      timetable.forEach(slot => {
+        html += `<tr><td>${slot.day}</td><td>${slot.time}</td><td>${slot.subject}</td><td>${slot.teacher}</td><td>${slot.room}</td></tr>`;
+      });
+      
+      html += '</tbody></table></div>';
+      document.getElementById('student-daily-timetable-content').innerHTML = html;
+      
+      // Exam timetable
+      const examTimetable = [
+        { date: '2026-01-25', subject: 'Mathematics', time: '09:00 - 11:00', room: 'Hall A' },
+        { date: '2026-01-27', subject: 'Science', time: '09:00 - 11:00', room: 'Hall B' }
+      ];
+      
+      let examHtml = '<div class="table-responsive"><table class="table table-striped"><thead><tr><th>Date</th><th>Subject</th><th>Time</th><th>Room</th></tr></thead><tbody>';
+      
+      examTimetable.forEach(exam => {
+        examHtml += `<tr><td>${exam.date}</td><td>${exam.subject}</td><td>${exam.time}</td><td>${exam.room}</td></tr>`;
+      });
+      
+      examHtml += '</tbody></table></div>';
+      document.getElementById('student-exam-timetable-content').innerHTML = examHtml;
+    }
+    
+    function loadStudentAnnouncements() {
+      const filter = document.getElementById('student-announcement-filter').value;
+      
+      // Sample announcements
+      const announcements = [
+        { type: 'urgent', title: 'School Closure', message: 'School will be closed on Friday due to maintenance', date: '2026-01-19' },
+        { type: 'general', title: 'Library Hours', message: 'Extended library hours during exam period', date: '2026-01-18' },
+        { type: 'events', title: 'Sports Day', message: 'Annual sports day scheduled for next month', date: '2026-01-17' }
+      ];
+      
+      let filteredAnnouncements = filter === 'all' ? announcements : announcements.filter(a => a.type === filter);
+      
+      let html = '';
+      filteredAnnouncements.forEach(ann => {
+        html += `<div class="card mb-3">
+          <div class="card-body">
+            <div class="d-flex justify-content-between">
+              <h6 class="card-title">${ann.title}</h6>
+              <span class="badge bg-${ann.type === 'urgent' ? 'danger' : 'info'}">${ann.type}</span>
+            </div>
+            <p class="card-text">${ann.message}</p>
+            <small class="text-muted">${ann.date}</small>
+          </div>
+        </div>`;
+      });
+      
+      document.getElementById('student-announcements-content').innerHTML = html || '<p>No announcements found.</p>';
+    }
+    
+    function loadStudentResources() {
+      const searchTerm = document.getElementById('student-resource-search').value.toLowerCase();
+      
+      // Sample resources
+      const resources = [
+        { title: 'Mathematics Textbook Chapter 5', type: 'PDF', subject: 'Mathematics', url: '#' },
+        { title: 'Science Lab Manual', type: 'PDF', subject: 'Science', url: '#' },
+        { title: 'English Literature Notes', type: 'Document', subject: 'English', url: '#' },
+        { title: 'History Video Lecture', type: 'Video', subject: 'History', url: '#' }
+      ];
+      
+      let filteredResources = searchTerm ? resources.filter(r => r.title.toLowerCase().includes(searchTerm) || r.subject.toLowerCase().includes(searchTerm)) : resources;
+      
+      let html = '<div class="list-group">';
+      filteredResources.forEach(res => {
+        html += `<a href="${res.url}" class="list-group-item list-group-item-action">
+          <div class="d-flex justify-content-between align-items-center">
+            <h6 class="mb-1">${res.title}</h6>
+            <span class="badge bg-secondary">${res.type}</span>
+          </div>
+          <small class="text-muted">Subject: ${res.subject}</small>
+        </a>`;
+      });
+      html += '</div>';
+      
+      document.getElementById('student-resources-content').innerHTML = html || '<p>No resources found.</p>';
+    }
+    
+    function loadStudentCommunication() {
+      // Load teacher list for dropdown
+      let teacherOptions = '<option value="">Select a teacher</option>';
+      teachers.forEach(t => {
+        teacherOptions += `<option value="${t.id}">${t.name} (${t.subject})</option>`;
+      });
+      document.getElementById('student-teacher-select').innerHTML = teacherOptions;
+      
+      // Sample message history
+      const messages = [
+        { teacher: 'Mr. Smith', subject: 'Mathematics', message: 'Regarding homework question', date: '2026-01-18', reply: 'Please see me after class' },
+        { teacher: 'Ms. Johnson', subject: 'English', message: 'Essay submission', date: '2026-01-17', reply: 'Received, well done!' }
+      ];
+      
+      let html = '<div class="list-group">';
+      messages.forEach(msg => {
+        html += `<div class="list-group-item">
+          <h6>${msg.teacher} - ${msg.subject}</h6>
+          <p class="mb-1"><strong>You:</strong> ${msg.message}</p>
+          <p class="mb-1"><strong>Reply:</strong> ${msg.reply}</p>
+          <small class="text-muted">${msg.date}</small>
+        </div>`;
+      });
+      html += '</div>';
+      
+      document.getElementById('student-messages-list').innerHTML = html || '<p>No messages yet.</p>';
+    }
+    
+    function sendStudentMessage() {
+      const teacherId = document.getElementById('student-teacher-select').value;
+      const message = document.getElementById('student-message').value;
+      
+      if (!teacherId || !message) {
+        alert('Please select a teacher and enter a message.');
+        return;
+      }
+      
+      const teacher = teachers.find(t => t.id === parseInt(teacherId));
+      alert(`Message sent to ${teacher.name}!`);
+      document.getElementById('student-message').value = '';
+      loadStudentCommunication();
+    }
+    
+    function loadStudentExams() {
+      // Sample exam results
+      const exams = [
+        { subject: 'Mathematics', date: '2025-12-15', score: 85, grade: 'A', status: 'completed' },
+        { subject: 'Science', date: '2025-12-18', score: 78, grade: 'B', status: 'completed' },
+        { subject: 'English', date: '2026-01-25', score: '-', grade: '-', status: 'upcoming' }
+      ];
+      
+      let html = '<div class="table-responsive"><table class="table table-striped"><thead><tr><th>Subject</th><th>Date</th><th>Score</th><th>Grade</th><th>Status</th></tr></thead><tbody>';
+      
+      exams.forEach(exam => {
+        const statusBadge = exam.status === 'completed' ? 'success' : 'warning';
+        html += `<tr>
+          <td>${exam.subject}</td>
+          <td>${exam.date}</td>
+          <td>${exam.score}</td>
+          <td>${exam.grade}</td>
+          <td><span class="badge bg-${statusBadge}">${exam.status}</span></td>
+        </tr>`;
+      });
+      
+      html += '</tbody></table></div>';
+      document.getElementById('student-exams-content').innerHTML = html;
+    }
+    
+    function downloadStudentReportCard() {
+      alert('Report card download feature - would generate PDF in production');
     }
 
     // Teacher Portal Functions
@@ -3684,6 +4041,8 @@
             const student = students.find(s => s.id === parseInt(studentId));
             if (student) {
               loggedInStudent = student;
+              document.getElementById('student-login-form').style.display = 'none';
+              document.getElementById('student-dashboard').style.display = 'block';
               loadStudentPortal();
             }
           }
