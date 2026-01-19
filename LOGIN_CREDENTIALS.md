@@ -5,8 +5,19 @@ This document contains the login credentials for all user types in the Bophelong
 ## System Access
 
 The system can be accessed through two main files:
-- **Main Login Page**: `index.html` - Unified login interface for all user types
-- **Application Dashboard**: `admin.html` - Main application interface (accessed after login)
+- **Main Login Page**: `index.html` - Unified login interface for all user types with Firebase Authentication
+- **Application Dashboard**: `admin.html` - Main application interface (accessed after login, protected by Firebase Auth)
+
+---
+
+## Important: Firebase Authentication Required
+
+This system now uses **Firebase Authentication** for secure user login. All users must be created in Firebase Authentication with the following email format:
+
+- **Admin**: `admin@bis.local`
+- **Teachers**: `teacher{ID}@bis.local` (e.g., `teacher1@bis.local`, `teacher2@bis.local`)
+- **Students**: `student{ID}@bis.local` (e.g., `student1@bis.local`, `student2@bis.local`)
+- **Parents**: `parent.{childid}@bis.local` (e.g., `parent.c331@bis.local`)
 
 ---
 
@@ -19,6 +30,7 @@ The system can be accessed through two main files:
 **Login Details**:
 - **Username**: `admin`
 - **Password**: `admin123`
+- **Firebase Email**: `admin@bis.local`
 
 **Access**: From the main login page (`index.html`), select "Administrator" as user type.
 
@@ -31,14 +43,15 @@ The system can be accessed through two main files:
 **Login Details**:
 - **Teacher ID**: Any teacher ID (e.g., `1` or `2`)
 - **Password**: `teacher123`
+- **Firebase Email Format**: `teacher{ID}@bis.local`
 
 **Demo Teacher IDs**:
-- ID `1`: Mr. Johnson (Math)
-- ID `2`: Ms. Lee (Science)
+- ID `1`: Mr. Johnson (Math) - Email: `teacher1@bis.local`
+- ID `2`: Ms. Lee (Science) - Email: `teacher2@bis.local`
 
 **Access**: From the main login page (`index.html`), select "Teacher" as user type, or access the teacher portal directly in the admin dashboard.
 
-**Note**: The system accepts any teacher ID with the password "teacher123" for demonstration purposes.
+**Note**: The system accepts any teacher ID with the password "teacher123" for demonstration purposes. The user must exist in Firebase Authentication.
 
 ---
 
@@ -49,14 +62,15 @@ The system can be accessed through two main files:
 **Login Details**:
 - **Student ID**: Any student ID (e.g., `1` or `2`)
 - **Password**: `student123`
+- **Firebase Email Format**: `student{ID}@bis.local`
 
 **Demo Student IDs**:
-- ID `1`: John Doe (Grade 10)
-- ID `2`: Sarah Smith (Grade 11)
+- ID `1`: John Doe (Grade 10) - Email: `student1@bis.local`
+- ID `2`: Sarah Smith (Grade 11) - Email: `student2@bis.local`
 
 **Access**: From the main login page (`index.html`), select "Student" as user type, or access the student portal directly in the admin dashboard.
 
-**Note**: The system accepts any student ID with the password "student123" for demonstration purposes.
+**Note**: The system accepts any student ID with the password "student123" for demonstration purposes. The user must exist in Firebase Authentication.
 
 ---
 
@@ -65,23 +79,24 @@ The system can be accessed through two main files:
 **Purpose**: Access to parent portal to monitor child's academic progress, attendance, fees, and communicate with teachers.
 
 **Login Details**:
-- **Child ID**: `C331`
+- **Child ID**: `C331` (case-insensitive)
 - **Parent Access Code**: `parent321`
+- **Firebase Email**: `parent.c331@bis.local`
 
 **Access**: From the main login page (`index.html`), select "Parent/Guardian" as user type, or access the parent portal directly in the admin dashboard.
 
-**Note**: Parents log in using the specific child ID "C331" along with the parent access code "parent321".
+**Note**: Parents log in using the specific child ID "C331" along with the parent access code "parent321". The child ID is case-insensitive (C331, c331, or any mixed case will work).
 
 ---
 
 ## Quick Reference Table
 
-| User Type | Username/ID | Password/Code | Notes |
-|-----------|-------------|---------------|-------|
-| **Administrator** | `admin` | `admin123` | Full system access |
-| **Teacher** | `1`, `2`, or any teacher ID | `teacher123` | Teacher portal access |
-| **Student** | `1`, `2`, or any student ID | `student123` | Student portal access |
-| **Parent/Guardian** | `C331` | `parent321` | Parent portal access (specific child ID) |
+| User Type | Username/ID | Password/Code | Firebase Email | Notes |
+|-----------|-------------|---------------|----------------|-------|
+| **Administrator** | `admin` | `admin123` | `admin@bis.local` | Full system access |
+| **Teacher** | `1`, `2`, or any teacher ID | `teacher123` | `teacher{ID}@bis.local` | Teacher portal access |
+| **Student** | `1`, `2`, or any student ID | `student123` | `student{ID}@bis.local` | Student portal access |
+| **Parent/Guardian** | `C331` (case-insensitive) | `parent321` | `parent.c331@bis.local` | Parent portal access |
 
 ---
 
@@ -122,18 +137,38 @@ The system can be accessed through two main files:
 
 ---
 
+## Security Features
+
+### Authentication & Authorization
+✅ **Firebase Authentication**: All login attempts are verified through Firebase Authentication services  
+✅ **Email-based Verification**: User roles are derived from the authenticated email to prevent tampering  
+✅ **Role Validation**: The system validates that the authenticated user matches the selected user type  
+✅ **Session Protection**: Protected pages redirect to login if the user is not authenticated  
+✅ **Secure Logout**: Properly clears Firebase session and application session storage  
+
+### Security Implementation
+- **Protected Routes**: `admin.html` and `parent-portal-module.html` require authentication
+- **onAuthStateChanged Listener**: Monitors authentication state and redirects if needed
+- **Automatic Sign-Out**: Invalid role/ID combinations trigger automatic sign-out
+- **Session Management**: Uses sessionStorage for temporary session data
+- **Error Handling**: Proper error messages without exposing system details
+
+---
+
 ## Security Notes
 
 ⚠️ **Important**: These are demo credentials for testing and development purposes. In a production environment, you should:
 
-1. Change all default passwords immediately
-2. Implement proper password encryption
+1. ✅ **Firebase Authentication** - Already implemented
+2. Change all default passwords immediately
 3. Add multi-factor authentication
 4. Use individual unique credentials for each user
-5. Implement password complexity requirements
-6. Add password reset functionality
-7. Enable session management and timeout
-8. Implement proper role-based access control (RBAC)
+5. Implement password complexity requirements in Firebase
+6. Add password reset functionality (Firebase provides this)
+7. Enable session timeout in Firebase console
+8. Implement proper role-based access control (RBAC) with custom claims
+9. Configure Firebase Security Rules for Firestore
+10. Enable Firebase App Check for additional security
 
 ---
 
@@ -143,16 +178,45 @@ The system can be accessed through two main files:
 - Double-check you've entered the correct username/ID and password
 - Ensure you've selected the correct user type from the dropdown
 - Passwords are case-sensitive
+- **Verify the user exists in Firebase Authentication with the correct email format**
+
+### "Invalid user account format" Error
+- This means the authenticated email doesn't match the expected format
+- Check Firebase Authentication console to verify the email format
 
 ### Portal Not Loading
 - Clear browser cache and cookies
 - Ensure JavaScript is enabled in your browser
 - Check browser console for errors (F12)
+- Verify Firebase configuration is correct
+
+### Automatically Redirected to Login
+- This is expected behavior if you're not authenticated
+- Protected pages (`admin.html`, `parent-portal-module.html`) require authentication
+- Log in through `index.html` first
 
 ### Data Not Showing
 - The system uses browser localStorage for data persistence
 - First-time users will see sample data (2 students, 2 teachers)
 - Add more data through the administrator portal
+
+---
+
+## Setting Up Firebase Users
+
+To add new users to the system:
+
+1. **Go to Firebase Console** (https://console.firebase.google.com)
+2. Select your project: `bis-management-system-d77f4`
+3. Navigate to **Authentication** → **Users**
+4. Click **Add User**
+5. Enter the email in the correct format:
+   - Admin: `admin@bis.local`
+   - Teacher: `teacher{ID}@bis.local`
+   - Student: `student{ID}@bis.local`
+   - Parent: `parent.{childid}@bis.local`
+6. Set the password
+7. Click **Add User**
 
 ---
 
