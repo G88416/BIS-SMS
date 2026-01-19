@@ -1,0 +1,193 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper functions for role-based access control
+    function isAdmin() {
+      return request.auth != null && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    function isTeacher() {
+      return request.auth != null && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'teacher';
+    }
+    
+    function isStudent() {
+      return request.auth != null && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'student';
+    }
+    
+    function isParent() {
+      return request.auth != null && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'parent';
+    }
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+    
+    function isParentOfStudent(studentId) {
+      return isParent() && 
+             studentId in get(/databases/$(database)/documents/users/$(request.auth.uid)).data.childrenIds;
+    }
+    
+    function isTeacherOfClass(classId) {
+      return isTeacher() && 
+             get(/databases/$(database)/documents/classes/$(classId)).data.teacherId == request.auth.uid;
+    }
+    
+    // Users collection - basic user profiles
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isAdmin();
+      allow update: if isAdmin() || isOwner(userId);
+      allow delete: if isAdmin();
+    }
+    
+    // Students collection
+    match /students/{studentId} {
+      allow read: if isAdmin() || 
+                     isTeacher() || 
+                     (isStudent() && isOwner(studentId)) ||
+                     isParentOfStudent(studentId);
+      allow create, update, delete: if isAdmin();
+    }
+    
+    // Teachers collection
+    match /teachers/{teacherId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isAdmin();
+    }
+    
+    // Classes collection
+    match /classes/{classId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isAdmin();
+    }
+    
+    // Attendance records
+    match /attendance/{classId} {
+      allow read: if isAdmin() || 
+                     isTeacherOfClass(classId) ||
+                     (isStudent() && request.auth.uid in resource.data.studentIds) ||
+                     (isParent() && exists(/databases/$(database)/documents/classes/$(classId)));
+      allow write: if isAdmin() || isTeacherOfClass(classId);
+    }
+    
+    // Grades collection
+    match /grades/{classId} {
+      allow read: if isAdmin() || 
+                     isTeacherOfClass(classId) ||
+                     (isStudent() && request.auth.uid in resource.data.studentIds) ||
+                     (isParent() && exists(/databases/$(database)/documents/classes/$(classId)));
+      allow write: if isAdmin() || isTeacherOfClass(classId);
+    }
+    
+    // Individual student grades
+    match /gradesData/{studentId} {
+      allow read: if isAdmin() || 
+                     isTeacher() ||
+                     (isStudent() && isOwner(studentId)) ||
+                     isParentOfStudent(studentId);
+      allow write: if isAdmin() || isTeacher();
+    }
+    
+    // Subjects per class
+    match /subjects/{classId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin() || isTeacherOfClass(classId);
+    }
+    
+    // Messages collection
+    match /messages/{messageId} {
+      allow read: if isAuthenticated() && 
+                     (resource.data.senderId == request.auth.uid || 
+                      resource.data.recipientId == request.auth.uid ||
+                      isAdmin());
+      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.senderId;
+      allow update, delete: if isAdmin() || 
+                              (isAuthenticated() && resource.data.senderId == request.auth.uid);
+    }
+    
+    // Fees and payments
+    match /fees/{studentId} {
+      allow read: if isAdmin() || 
+                     (isStudent() && isOwner(studentId)) ||
+                     isParentOfStudent(studentId);
+      allow write: if isAdmin();
+    }
+    
+    // Expenses (school expenses)
+    match /expenses/{expenseId} {
+      allow read, write: if isAdmin();
+    }
+    
+    // Homework assignments
+    match /homework/{classId} {
+      allow read: if isAuthenticated() &&
+                     (isAdmin() || 
+                      isTeacherOfClass(classId) ||
+                      isStudent() ||
+                      isParent());
+      allow write: if isAdmin() || isTeacherOfClass(classId);
+    }
+    
+    // School announcements
+    match /announcements/{announcementId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin() || isTeacher();
+    }
+    
+    // School events calendar
+    match /events/{eventId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin() || isTeacher();
+    }
+    
+    // Health records for students
+    match /healthRecords/{studentId} {
+      allow read: if isAdmin() || 
+                     (isStudent() && isOwner(studentId)) ||
+                     isParentOfStudent(studentId);
+      allow write: if isAdmin() || isParentOfStudent(studentId);
+    }
+    
+    // Student achievements
+    match /achievements/{studentId} {
+      allow read: if isAdmin() || 
+                     isTeacher() ||
+                     (isStudent() && isOwner(studentId)) ||
+                     isParentOfStudent(studentId);
+      allow write: if isAdmin() || isTeacher();
+    }
+    
+    // Exam timetable
+    match /examTimetable/{timetableId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin() || isTeacher();
+    }
+    
+    // Notifications
+    match /notifications/{userId} {
+      allow read: if isAuthenticated() && isOwner(userId);
+      allow create: if isAuthenticated();
+      allow update, delete: if isOwner(userId);
+    }
+    
+    // School schedule
+    match /schedule/{scheduleId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+    
+    // Default deny all other access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
