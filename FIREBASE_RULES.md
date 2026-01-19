@@ -66,7 +66,7 @@ The system supports four user roles:
 - **Read/Write**: Admins only
 
 #### Homework
-- **Read**: All authenticated users
+- **Read**: Admins, class teacher, students enrolled in the class, parents of enrolled students
 - **Write**: Admins and teachers
 
 #### Announcements
@@ -139,7 +139,7 @@ The system supports four user roles:
 - **Restrictions**: Images or videos, max 50MB
 
 #### Reports (`/reports/{studentId}/{fileName}`)
-- **Read**: Admins, teachers, or the student
+- **Read**: Admins, teachers, the student, or their parents
 - **Write**: Admins or teachers
 - **Restrictions**: Documents only, max 10MB
 
@@ -148,7 +148,7 @@ The system supports four user roles:
 - **Restrictions**: Documents or images, max 10MB
 
 #### Achievements (`/achievements/{studentId}/{fileName}`)
-- **Read**: Admins, teachers, or the student
+- **Read**: Admins, teachers, the student, or their parents
 - **Write**: Admins or teachers
 - **Restrictions**: Documents or images, max 10MB
 

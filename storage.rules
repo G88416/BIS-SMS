@@ -133,7 +133,10 @@ service firebase.storage {
     // Report cards and certificates
     match /reports/{studentId}/{fileName} {
       allow read: if isAuthenticated() && 
-                     (isAdmin() || isTeacher() || isOwner(studentId));
+                     (isAdmin() || 
+                      isTeacher() || 
+                      isOwner(studentId) ||
+                      (isParent() && studentId in firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.childrenIds));
       allow write: if (isAdmin() || isTeacher()) && 
                       isDocument() &&
                       isValidSize();
@@ -150,7 +153,10 @@ service firebase.storage {
     // Achievement certificates and awards
     match /achievements/{studentId}/{fileName} {
       allow read: if isAuthenticated() && 
-                     (isAdmin() || isTeacher() || isOwner(studentId));
+                     (isAdmin() || 
+                      isTeacher() || 
+                      isOwner(studentId) ||
+                      (isParent() && studentId in firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.childrenIds));
       allow write: if (isAdmin() || isTeacher()) && 
                       (isDocument() || isImage()) &&
                       isValidSize();

@@ -136,8 +136,8 @@ service cloud.firestore {
       allow read: if isAuthenticated() &&
                      (isAdmin() || 
                       isTeacherOfClass(classId) ||
-                      isStudent() ||
-                      isParent());
+                      (isStudent() && request.auth.uid in get(/databases/$(database)/documents/classes/$(classId)).data.studentIds) ||
+                      (isParent() && get(/databases/$(database)/documents/classes/$(classId)).data.studentIds.hasAny(get(/databases/$(database)/documents/users/$(request.auth.uid)).data.childrenIds)));
       allow write: if isAdmin() || isTeacherOfClass(classId);
     }
     
