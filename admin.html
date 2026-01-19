@@ -1367,6 +1367,13 @@
 
   <!-- App JavaScript -->
   <script>
+    // HTML escaping utility function to prevent XSS
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+    
     // Dummy data with persistence
     let students = JSON.parse(localStorage.getItem('students')) || [
       { id: 1, name: 'John Doe', grade: '10', parent: 'Jane Doe', contact: '+27 11 234 5678', classIds: [] },
@@ -2813,7 +2820,8 @@
           document.getElementById('teacher-login-form').style.display = 'none';
           document.getElementById('teacher-dashboard').style.display = 'block';
           loadTeacherPortalEnhanced();
-          alert('Login successful! Welcome ' + teacher.name);
+          // Using template literal with data from controlled source
+          alert(`Login successful! Welcome ${teacher.name}`);
         } else {
           alert('Teacher ID not found. Please try ID "1" or "2".');
         }
@@ -3084,7 +3092,7 @@
       const history = document.getElementById('teacher-messages-history');
       const msgDiv = document.createElement('div');
       msgDiv.className = 'card mb-2';
-      msgDiv.innerHTML = `<div class="card-body"><small class="text-muted">${new Date().toLocaleString()}</small><p class="mb-0">${message}</p><small>Sent to: ${target}</small></div>`;
+      msgDiv.innerHTML = `<div class="card-body"><small class="text-muted">${new Date().toLocaleString()}</small><p class="mb-0">${escapeHtml(message)}</p><small>Sent to: ${escapeHtml(target)}</small></div>`;
       history.insertBefore(msgDiv, history.firstChild);
     }
     
@@ -3098,7 +3106,7 @@
       }
       
       const content = document.getElementById('teacher-report-content');
-      content.innerHTML = `<div class="alert alert-success mt-3">Generating ${reportType} for the selected class...</div>`;
+      content.innerHTML = `<div class="alert alert-success mt-3">Generating ${escapeHtml(reportType)} for the selected class...</div>`;
       
       setTimeout(() => {
         content.innerHTML += '<p>Report generated successfully. You can now print this page.</p>';
