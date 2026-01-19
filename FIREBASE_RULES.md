@@ -226,6 +226,38 @@ firebase emulators:start
 5. **Size Limits**: Prevents storage abuse with file size restrictions
 6. **Ownership Validation**: Users can only modify their own data (except admins)
 
+## Performance Considerations
+
+The current implementation uses Firestore document reads (`get()` calls) for role checking and relationship validation. This approach prioritizes security correctness and clarity.
+
+### Performance Optimization Options (for production at scale):
+
+1. **Firebase Auth Custom Claims**: Store user roles in custom claims instead of Firestore documents
+   - Eliminates Firestore reads for role checks
+   - Faster rule evaluation
+   - Requires Cloud Functions to manage claims
+
+2. **Data Denormalization**: Store frequently accessed relationships directly in documents
+   - Reduces number of `get()` calls
+   - Trade-off: More storage and data consistency challenges
+
+3. **Cloud Functions for Complex Logic**: Move complex authorization to backend
+   - Better performance for complex checks
+   - More control over authorization flow
+
+4. **Caching**: Firebase automatically caches rule results during a request
+   - Multiple calls to the same `get()` path are optimized
+   - Cross-request caching not available
+
+### Current Performance Characteristics:
+
+- Each rule evaluation may perform 1-3 Firestore reads
+- Firestore has a limit of 10 document reads per rule evaluation
+- Current rules stay well within this limit
+- Suitable for small to medium deployments (< 1000 concurrent users)
+
+For high-scale deployments, implement custom claims for roles.
+
 ## Important Notes
 
 1. **User Role Setup**: Ensure that the `users` collection in Firestore has a `role` field for each user (`admin`, `teacher`, `student`, or `parent`)

@@ -1,4 +1,16 @@
 rules_version = '2';
+
+// BIS-SMS Firestore Security Rules
+// 
+// PERFORMANCE NOTE: These rules use Firestore document reads (get() calls) for role checking
+// and relationship validation. For better performance in production, consider:
+// 1. Using Firebase Auth Custom Claims for user roles instead of Firestore reads
+// 2. Denormalizing frequently accessed data to reduce get() calls
+// 3. Using Cloud Functions to manage complex authorization logic
+// 
+// This implementation prioritizes security correctness and clarity over performance.
+// Optimize based on actual usage patterns and scale requirements.
+
 service cloud.firestore {
   match /databases/{database}/documents {
     
@@ -71,23 +83,23 @@ service cloud.firestore {
     }
     
     // Attendance records
+    // Note: Attendance documents are keyed by classId and contain nested student data
     match /attendance/{classId} {
       allow read: if isAdmin() || 
                      isTeacherOfClass(classId) ||
-                     (isStudent() && request.auth.uid in resource.data.studentIds) ||
+                     (isStudent() && request.auth.uid in get(/databases/$(database)/documents/classes/$(classId)).data.studentIds) ||
                      (isParent() && 
-                      exists(/databases/$(database)/documents/classes/$(classId)) &&
                       get(/databases/$(database)/documents/classes/$(classId)).data.studentIds.hasAny(get(/databases/$(database)/documents/users/$(request.auth.uid)).data.childrenIds));
       allow write: if isAdmin() || isTeacherOfClass(classId);
     }
     
     // Grades collection
+    // Note: Grade documents are keyed by classId and contain nested student data
     match /grades/{classId} {
       allow read: if isAdmin() || 
                      isTeacherOfClass(classId) ||
-                     (isStudent() && request.auth.uid in resource.data.studentIds) ||
+                     (isStudent() && request.auth.uid in get(/databases/$(database)/documents/classes/$(classId)).data.studentIds) ||
                      (isParent() && 
-                      exists(/databases/$(database)/documents/classes/$(classId)) &&
                       get(/databases/$(database)/documents/classes/$(classId)).data.studentIds.hasAny(get(/databases/$(database)/documents/users/$(request.auth.uid)).data.childrenIds));
       allow write: if isAdmin() || isTeacherOfClass(classId);
     }
