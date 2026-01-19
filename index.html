@@ -424,16 +424,30 @@
                         derivedId = 'admin';
                     } else if (signedEmail.startsWith(`teacher`) && signedEmail.endsWith(`@${domain}`)) {
                         derivedRole = 'teacher';
-                        derivedId = signedEmail.match(/teacher(\d+)@/)[1];
+                        const match = signedEmail.match(/teacher(\d+)@/);
+                        if (match) {
+                            derivedId = match[1];
+                        }
                     } else if (signedEmail.startsWith(`student`) && signedEmail.endsWith(`@${domain}`)) {
                         derivedRole = 'student';
-                        derivedId = signedEmail.match(/student(\d+)@/)[1];
+                        const match = signedEmail.match(/student(\d+)@/);
+                        if (match) {
+                            derivedId = match[1];
+                        }
                     } else if (signedEmail.startsWith(`parent.`) && signedEmail.endsWith(`@${domain}`)) {
                         derivedRole = 'parent';
-                        derivedId = signedEmail.split('parent.')[1].split('@')[0].toUpperCase();  // c331 → C331
+                        derivedId = signedEmail.split('parent.')[1].split('@')[0].toUpperCase();  // parent.c331@bis.local → C331
                     }
                     
-                    if (derivedRole !== userType || (userType !== 'admin' && derivedId !== username)) {
+                    // Ensure we got valid role and ID
+                    if (!derivedRole || !derivedId) {
+                        return signOut(window.firebaseAuth).then(() => {
+                            errorMessage.textContent = 'Invalid user account format.';
+                            errorMessage.style.display = 'block';
+                        });
+                    }
+                    
+                    if (derivedRole !== userType || (userType !== 'admin' && derivedId !== username && derivedId.toLowerCase() !== username.toLowerCase())) {
                         return signOut(window.firebaseAuth).then(() => {
                             errorMessage.textContent = 'Invalid credentials for selected user type.';
                             errorMessage.style.display = 'block';
