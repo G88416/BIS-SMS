@@ -10,6 +10,7 @@
         // Import the functions you need from the SDKs you need
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         
         // Your web app's Firebase configuration
         const firebaseConfig = {
@@ -33,9 +34,13 @@
             console.warn('Firebase Analytics could not be initialized:', error);
         }
         
+        // Initialize Auth
+        const auth = getAuth(app);
+        
         // Make available globally
         window.firebaseApp = app;
         window.firebaseAnalytics = analytics;
+        window.firebaseAuth = auth;
     </script>
     
     <style>
@@ -372,65 +377,85 @@
             event.preventDefault();
             
             const userType = document.getElementById('userType').value;
-            const username = document.getElementById('username').value;
+            const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value;
             const errorMessage = document.getElementById('errorMessage');
             
-            // Hide error message
             errorMessage.style.display = 'none';
             
-            // Simple authentication logic
-            let isValid = false;
-            let redirectUrl = '';
-            
-            switch(userType) {
-                case 'admin':
-                    // Admin credentials (can be customized)
-                    if (username === 'admin' && password === 'admin123') {
-                        isValid = true;
-                        redirectUrl = 'admin.html';
-                    }
-                    break;
-                    
-                case 'teacher':
-                    // Teacher login - accepts any teacher ID with password "teacher123"
-                    if (password === 'teacher123') {
-                        isValid = true;
-                        redirectUrl = `admin.html#teacher-portal?id=${username}`;
-                    }
-                    break;
-                    
-                case 'student':
-                    // Student login - accepts any student ID with password "student123"
-                    if (password === 'student123') {
-                        isValid = true;
-                        redirectUrl = `admin.html#student-portal?id=${username}`;
-                    }
-                    break;
-                    
-                case 'parent':
-                    // Parent login - specific child ID "C331" with password "parent321"
-                    if (username === 'C331' && password === 'parent321') {
-                        isValid = true;
-                        redirectUrl = `admin.html#parent-portal?id=${username}`;
-                    }
-                    break;
-            }
-            
-            if (isValid) {
-                // Store login info in session storage
-                sessionStorage.setItem('userType', userType);
-                sessionStorage.setItem('userId', username);
-                
-                // Redirect to appropriate portal
-                window.location.href = redirectUrl;
-            } else {
-                // Show error message
-                errorMessage.textContent = 'Invalid credentials. Please try again.';
+            if (!userType || !username || !password) {
+                errorMessage.textContent = 'Please fill all fields.';
                 errorMessage.style.display = 'block';
+                return;
             }
             
-            return false;
+            // Map to email based on selected userType and username/ID
+            let email = '';
+            const domain = 'bis.local';
+            
+            if (userType === 'admin') {
+                email = `admin@${domain}`;
+            } else if (userType === 'teacher') {
+                email = `teacher${username}@${domain}`;
+            } else if (userType === 'student') {
+                email = `student${username}@${domain}`;
+            } else if (userType === 'parent') {
+                email = `parent.${username.toLowerCase()}@${domain}`;  // e.g., C331 → parent.c331@bis.local
+            }
+            
+            if (!email) {
+                errorMessage.textContent = 'Invalid user type or ID.';
+                errorMessage.style.display = 'block';
+                return;
+            }
+            
+            // Sign in with Firebase Auth
+            signInWithEmailAndPassword(window.firebaseAuth, email, password)
+                .then((userCredential) => {
+                    const user = userCredential.user;
+                    
+                    // Derive role and ID from ACTUAL signed-in email (prevents tampering)
+                    const signedEmail = user.email.toLowerCase();
+                    let derivedRole = '';
+                    let derivedId = '';
+                    
+                    if (signedEmail === `admin@${domain}`) {
+                        derivedRole = 'admin';
+                        derivedId = 'admin';
+                    } else if (signedEmail.startsWith(`teacher`) && signedEmail.endsWith(`@${domain}`)) {
+                        derivedRole = 'teacher';
+                        derivedId = signedEmail.match(/teacher(\d+)@/)[1];
+                    } else if (signedEmail.startsWith(`student`) && signedEmail.endsWith(`@${domain}`)) {
+                        derivedRole = 'student';
+                        derivedId = signedEmail.match(/student(\d+)@/)[1];
+                    } else if (signedEmail.startsWith(`parent.`) && signedEmail.endsWith(`@${domain}`)) {
+                        derivedRole = 'parent';
+                        derivedId = signedEmail.split('parent.')[1].split('@')[0].toUpperCase();  // c331 → C331
+                    }
+                    
+                    if (derivedRole !== userType || (userType !== 'admin' && derivedId !== username)) {
+                        return signOut(window.firebaseAuth).then(() => {
+                            errorMessage.textContent = 'Invalid credentials for selected user type.';
+                            errorMessage.style.display = 'block';
+                        });
+                    }
+                    
+                    // Store verified data
+                    sessionStorage.setItem('userType', derivedRole);
+                    sessionStorage.setItem('userId', derivedId);
+                    
+                    // Redirect (same as your original logic)
+                    let redirectUrl = 'admin.html';
+                    if (derivedRole !== 'admin') {
+                        redirectUrl += `#${derivedRole}-portal?id=${derivedId}`;
+                    }
+                    window.location.href = redirectUrl;
+                })
+                .catch((error) => {
+                    errorMessage.textContent = 'Invalid credentials. Please try again.';
+                    errorMessage.style.display = 'block';
+                    console.error(error);
+                });
         }
     </script>
 </body>
