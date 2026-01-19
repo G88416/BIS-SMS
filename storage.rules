@@ -1,0 +1,194 @@
+rules_version = '2';
+
+// BIS-SMS Storage Security Rules
+//
+// PERFORMANCE NOTE: These rules use Firestore reads to check user roles and relationships.
+// For better performance in production, consider using Firebase Auth Custom Claims for user roles.
+// This implementation prioritizes security correctness and clarity over performance.
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Helper functions for authentication and authorization
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isAdmin() {
+      return request.auth != null && 
+             firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    function isTeacher() {
+      return request.auth != null && 
+             firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'teacher';
+    }
+    
+    function isStudent() {
+      return request.auth != null && 
+             firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'student';
+    }
+    
+    function isParent() {
+      return request.auth != null && 
+             firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'parent';
+    }
+    
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Validate file size (10MB max for most files)
+    function isValidSize() {
+      return request.resource.size < 10 * 1024 * 1024;
+    }
+    
+    // Validate large file size (50MB max for videos/large documents)
+    function isValidLargeSize() {
+      return request.resource.size < 50 * 1024 * 1024;
+    }
+    
+    // Validate image file types
+    function isImage() {
+      return request.resource.contentType.matches('image/.*');
+    }
+    
+    // Validate document file types
+    function isDocument() {
+      return request.resource.contentType.matches('application/pdf') ||
+             request.resource.contentType.matches('application/msword') ||
+             request.resource.contentType.matches('application/vnd.openxmlformats-officedocument.wordprocessingml.document') ||
+             request.resource.contentType.matches('application/vnd.ms-excel') ||
+             request.resource.contentType.matches('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') ||
+             request.resource.contentType.matches('text/plain');
+    }
+    
+    // Validate video file types
+    function isVideo() {
+      return request.resource.contentType.matches('video/.*');
+    }
+    
+    // Profile pictures for users
+    match /profiles/{userId}/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && 
+                      (isOwner(userId) || isAdmin()) &&
+                      isImage() &&
+                      isValidSize();
+    }
+    
+    // Student photos/documents
+    match /students/{studentId}/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin() && 
+                      (isImage() || isDocument()) &&
+                      isValidSize();
+    }
+    
+    // Teacher documents and photos
+    match /teachers/{teacherId}/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if (isAdmin() || isOwner(teacherId)) && 
+                      (isImage() || isDocument()) &&
+                      isValidSize();
+    }
+    
+    // Homework submissions by students
+    match /homework/{classId}/{studentId}/{fileName} {
+      allow read: if isAuthenticated() && 
+                     (isAdmin() || isTeacher() || isOwner(studentId));
+      allow write: if isAuthenticated() && 
+                      (isOwner(studentId) || isTeacher() || isAdmin()) &&
+                      (isDocument() || isImage()) &&
+                      isValidSize();
+    }
+    
+    // Homework assignments uploaded by teachers
+    match /assignments/{classId}/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if (isAdmin() || isTeacher()) && 
+                      (isDocument() || isImage() || isVideo()) &&
+                      isValidLargeSize();
+    }
+    
+    // Health records documents
+    match /health/{studentId}/{fileName} {
+      allow read: if isAdmin() || 
+                     isOwner(studentId) ||
+                     (isParent() && studentId in firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.childrenIds);
+      allow write: if isAdmin() && 
+                      (isDocument() || isImage()) &&
+                      isValidSize();
+    }
+    
+    // School announcements attachments
+    match /announcements/{announcementId}/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if (isAdmin() || isTeacher()) && 
+                      (isDocument() || isImage() || isVideo()) &&
+                      isValidLargeSize();
+    }
+    
+    // School events media
+    match /events/{eventId}/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if (isAdmin() || isTeacher()) && 
+                      (isImage() || isVideo()) &&
+                      isValidLargeSize();
+    }
+    
+    // Report cards and certificates
+    match /reports/{studentId}/{fileName} {
+      allow read: if isAuthenticated() && 
+                     (isAdmin() || 
+                      isTeacher() || 
+                      isOwner(studentId) ||
+                      (isParent() && studentId in firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.childrenIds));
+      allow write: if (isAdmin() || isTeacher()) && 
+                      isDocument() &&
+                      isValidSize();
+    }
+    
+    // Financial documents (receipts, invoices)
+    match /finance/{type}/{documentId}/{fileName} {
+      allow read: if isAdmin();
+      allow write: if isAdmin() && 
+                      (isDocument() || isImage()) &&
+                      isValidSize();
+    }
+    
+    // Achievement certificates and awards
+    match /achievements/{studentId}/{fileName} {
+      allow read: if isAuthenticated() && 
+                     (isAdmin() || 
+                      isTeacher() || 
+                      isOwner(studentId) ||
+                      (isParent() && studentId in firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.childrenIds));
+      allow write: if (isAdmin() || isTeacher()) && 
+                      (isDocument() || isImage()) &&
+                      isValidSize();
+    }
+    
+    // School branding and assets (logos, banners, etc.)
+    match /assets/{assetType}/{fileName} {
+      allow read: if true; // Public read for school branding
+      allow write: if isAdmin() && 
+                      isImage() &&
+                      isValidSize();
+    }
+    
+    // General uploads - restricted
+    match /uploads/{userId}/{fileName} {
+      allow read: if isAuthenticated() && (isOwner(userId) || isAdmin());
+      allow write: if isAuthenticated() && 
+                      isOwner(userId) &&
+                      (isDocument() || isImage()) &&
+                      isValidSize();
+    }
+    
+    // Default deny all other access
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
