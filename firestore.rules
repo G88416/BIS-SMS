@@ -75,7 +75,9 @@ service cloud.firestore {
       allow read: if isAdmin() || 
                      isTeacherOfClass(classId) ||
                      (isStudent() && request.auth.uid in resource.data.studentIds) ||
-                     (isParent() && exists(/databases/$(database)/documents/classes/$(classId)));
+                     (isParent() && 
+                      exists(/databases/$(database)/documents/classes/$(classId)) &&
+                      get(/databases/$(database)/documents/classes/$(classId)).data.studentIds.hasAny(get(/databases/$(database)/documents/users/$(request.auth.uid)).data.childrenIds));
       allow write: if isAdmin() || isTeacherOfClass(classId);
     }
     
@@ -84,7 +86,9 @@ service cloud.firestore {
       allow read: if isAdmin() || 
                      isTeacherOfClass(classId) ||
                      (isStudent() && request.auth.uid in resource.data.studentIds) ||
-                     (isParent() && exists(/databases/$(database)/documents/classes/$(classId)));
+                     (isParent() && 
+                      exists(/databases/$(database)/documents/classes/$(classId)) &&
+                      get(/databases/$(database)/documents/classes/$(classId)).data.studentIds.hasAny(get(/databases/$(database)/documents/users/$(request.auth.uid)).data.childrenIds));
       allow write: if isAdmin() || isTeacherOfClass(classId);
     }
     

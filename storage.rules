@@ -106,7 +106,9 @@ service firebase.storage {
     
     // Health records documents
     match /health/{studentId}/{fileName} {
-      allow read: if isAdmin() || isOwner(studentId);
+      allow read: if isAdmin() || 
+                     isOwner(studentId) ||
+                     (isParent() && studentId in firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.childrenIds);
       allow write: if isAdmin() && 
                       (isDocument() || isImage()) &&
                       isValidSize();
