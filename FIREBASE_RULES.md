@@ -124,7 +124,7 @@ The system supports four user roles:
 - **Restrictions**: Documents, images, or videos, max 50MB
 
 #### Health Records (`/health/{studentId}/{fileName}`)
-- **Read**: Admins or the student
+- **Read**: Admins, the student, or their parents
 - **Write**: Admins only
 - **Restrictions**: Documents or images, max 10MB
 
@@ -230,13 +230,17 @@ firebase emulators:start
 
 1. **User Role Setup**: Ensure that the `users` collection in Firestore has a `role` field for each user (`admin`, `teacher`, `student`, or `parent`)
 
-2. **Parent-Child Relationship**: Parents need a `childrenIds` array field in their user document containing student IDs they have access to
+2. **Parent-Child Relationship**: Parents need a `childrenIds` array field in their user document containing student IDs they have access to. This relationship should only be managed by administrators to ensure data integrity.
 
 3. **Class-Teacher Relationship**: Classes must have a `teacherId` field linking to the teacher
 
-4. **Testing**: Always test rules in development environment before deploying to production
+4. **Class-Student Enrollment**: Classes should have a `studentIds` array field containing all enrolled students for proper access control to class-specific resources (attendance, grades)
 
-5. **Monitoring**: Monitor Firebase Console for unauthorized access attempts
+5. **Testing**: Always test rules in development environment before deploying to production
+
+6. **Monitoring**: Monitor Firebase Console for unauthorized access attempts
+
+7. **Data Integrity**: The childrenIds array in parent user documents is critical for access control. Only admins should be able to modify user documents to prevent unauthorized access.
 
 ## Updating Rules
 
