@@ -24,7 +24,14 @@
         
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
-        const analytics = getAnalytics(app);
+        
+        // Initialize Analytics with error handling
+        let analytics = null;
+        try {
+            analytics = getAnalytics(app);
+        } catch (error) {
+            console.warn('Firebase Analytics could not be initialized:', error);
+        }
         
         // Make available globally
         window.firebaseApp = app;
