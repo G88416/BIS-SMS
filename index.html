@@ -41,6 +41,111 @@
         window.firebaseApp = app;
         window.firebaseAnalytics = analytics;
         window.firebaseAuth = auth;
+        
+        // Handle login form submission
+        document.addEventListener('DOMContentLoaded', function() {
+            const loginForm = document.getElementById('loginForm');
+            if (loginForm) {
+                loginForm.addEventListener('submit', function(event) {
+                    event.preventDefault();
+                    
+                    const userType = document.getElementById('userType').value;
+                    const username = document.getElementById('username').value.trim();
+                    const password = document.getElementById('password').value;
+                    const errorMessage = document.getElementById('errorMessage');
+                    
+                    errorMessage.style.display = 'none';
+                    
+                    if (!userType || !username || !password) {
+                        errorMessage.textContent = 'Please fill all fields.';
+                        errorMessage.style.display = 'block';
+                        return;
+                    }
+                    
+                    // Map to email based on selected userType and username/ID
+                    let email = '';
+                    const domain = 'bis.local';
+                    
+                    if (userType === 'admin') {
+                        email = `admin@${domain}`;
+                    } else if (userType === 'teacher') {
+                        email = `teacher${username}@${domain}`;
+                    } else if (userType === 'student') {
+                        email = `student${username}@${domain}`;
+                    } else if (userType === 'parent') {
+                        email = `parent.${username.toLowerCase()}@${domain}`;  // e.g., C331 → parent.c331@bis.local
+                    }
+                    
+                    if (!email) {
+                        errorMessage.textContent = 'Invalid user type or ID.';
+                        errorMessage.style.display = 'block';
+                        return;
+                    }
+                    
+                    // Sign in with Firebase Auth
+                    signInWithEmailAndPassword(auth, email, password)
+                        .then((userCredential) => {
+                            const user = userCredential.user;
+                            
+                            // Derive role and ID from ACTUAL signed-in email (prevents tampering)
+                            const signedEmail = user.email.toLowerCase();
+                            let derivedRole = '';
+                            let derivedId = '';
+                            
+                            if (signedEmail === `admin@${domain}`) {
+                                derivedRole = 'admin';
+                                derivedId = 'admin';
+                            } else if (signedEmail.startsWith(`teacher`) && signedEmail.endsWith(`@${domain}`)) {
+                                derivedRole = 'teacher';
+                                const match = signedEmail.match(/teacher(\d+)@/);
+                                if (match) {
+                                    derivedId = match[1];
+                                }
+                            } else if (signedEmail.startsWith(`student`) && signedEmail.endsWith(`@${domain}`)) {
+                                derivedRole = 'student';
+                                const match = signedEmail.match(/student(\d+)@/);
+                                if (match) {
+                                    derivedId = match[1];
+                                }
+                            } else if (signedEmail.startsWith(`parent.`) && signedEmail.endsWith(`@${domain}`)) {
+                                derivedRole = 'parent';
+                                derivedId = signedEmail.split('parent.')[1].split('@')[0].toUpperCase();  // parent.c331@bis.local → C331
+                            }
+                            
+                            // Ensure we got valid role and ID
+                            if (!derivedRole || !derivedId) {
+                                return signOut(auth).then(() => {
+                                    errorMessage.textContent = 'Invalid user account format.';
+                                    errorMessage.style.display = 'block';
+                                });
+                            }
+                            
+                            if (derivedRole !== userType || (userType !== 'admin' && derivedId !== username && derivedId.toLowerCase() !== username.toLowerCase())) {
+                                return signOut(auth).then(() => {
+                                    errorMessage.textContent = 'Invalid credentials for selected user type.';
+                                    errorMessage.style.display = 'block';
+                                });
+                            }
+                            
+                            // Store verified data
+                            sessionStorage.setItem('userType', derivedRole);
+                            sessionStorage.setItem('userId', derivedId);
+                            
+                            // Redirect (same as your original logic)
+                            let redirectUrl = 'admin.html';
+                            if (derivedRole !== 'admin') {
+                                redirectUrl += `#${derivedRole}-portal?id=${derivedId}`;
+                            }
+                            window.location.href = redirectUrl;
+                        })
+                        .catch((error) => {
+                            errorMessage.textContent = 'Invalid credentials. Please try again.';
+                            errorMessage.style.display = 'block';
+                            console.error(error);
+                        });
+                });
+            }
+        });
     </script>
     
     <style>
@@ -292,7 +397,7 @@
                 <p>School Management System</p>
             </div>
             <div class="error-message" id="errorMessage">Invalid credentials</div>
-            <form id="loginForm" onsubmit="handleLogin(event)">
+            <form id="loginForm">
                 <div class="form-group">
                     <label>User Type</label>
                     <select id="userType" required>
@@ -372,105 +477,6 @@
                 modal.style.display = 'none';
             }
         });
-
-        function handleLogin(event) {
-            event.preventDefault();
-            
-            const userType = document.getElementById('userType').value;
-            const username = document.getElementById('username').value.trim();
-            const password = document.getElementById('password').value;
-            const errorMessage = document.getElementById('errorMessage');
-            
-            errorMessage.style.display = 'none';
-            
-            if (!userType || !username || !password) {
-                errorMessage.textContent = 'Please fill all fields.';
-                errorMessage.style.display = 'block';
-                return;
-            }
-            
-            // Map to email based on selected userType and username/ID
-            let email = '';
-            const domain = 'bis.local';
-            
-            if (userType === 'admin') {
-                email = `admin@${domain}`;
-            } else if (userType === 'teacher') {
-                email = `teacher${username}@${domain}`;
-            } else if (userType === 'student') {
-                email = `student${username}@${domain}`;
-            } else if (userType === 'parent') {
-                email = `parent.${username.toLowerCase()}@${domain}`;  // e.g., C331 → parent.c331@bis.local
-            }
-            
-            if (!email) {
-                errorMessage.textContent = 'Invalid user type or ID.';
-                errorMessage.style.display = 'block';
-                return;
-            }
-            
-            // Sign in with Firebase Auth
-            signInWithEmailAndPassword(window.firebaseAuth, email, password)
-                .then((userCredential) => {
-                    const user = userCredential.user;
-                    
-                    // Derive role and ID from ACTUAL signed-in email (prevents tampering)
-                    const signedEmail = user.email.toLowerCase();
-                    let derivedRole = '';
-                    let derivedId = '';
-                    
-                    if (signedEmail === `admin@${domain}`) {
-                        derivedRole = 'admin';
-                        derivedId = 'admin';
-                    } else if (signedEmail.startsWith(`teacher`) && signedEmail.endsWith(`@${domain}`)) {
-                        derivedRole = 'teacher';
-                        const match = signedEmail.match(/teacher(\d+)@/);
-                        if (match) {
-                            derivedId = match[1];
-                        }
-                    } else if (signedEmail.startsWith(`student`) && signedEmail.endsWith(`@${domain}`)) {
-                        derivedRole = 'student';
-                        const match = signedEmail.match(/student(\d+)@/);
-                        if (match) {
-                            derivedId = match[1];
-                        }
-                    } else if (signedEmail.startsWith(`parent.`) && signedEmail.endsWith(`@${domain}`)) {
-                        derivedRole = 'parent';
-                        derivedId = signedEmail.split('parent.')[1].split('@')[0].toUpperCase();  // parent.c331@bis.local → C331
-                    }
-                    
-                    // Ensure we got valid role and ID
-                    if (!derivedRole || !derivedId) {
-                        return signOut(window.firebaseAuth).then(() => {
-                            errorMessage.textContent = 'Invalid user account format.';
-                            errorMessage.style.display = 'block';
-                        });
-                    }
-                    
-                    if (derivedRole !== userType || (userType !== 'admin' && derivedId !== username && derivedId.toLowerCase() !== username.toLowerCase())) {
-                        return signOut(window.firebaseAuth).then(() => {
-                            errorMessage.textContent = 'Invalid credentials for selected user type.';
-                            errorMessage.style.display = 'block';
-                        });
-                    }
-                    
-                    // Store verified data
-                    sessionStorage.setItem('userType', derivedRole);
-                    sessionStorage.setItem('userId', derivedId);
-                    
-                    // Redirect (same as your original logic)
-                    let redirectUrl = 'admin.html';
-                    if (derivedRole !== 'admin') {
-                        redirectUrl += `#${derivedRole}-portal?id=${derivedId}`;
-                    }
-                    window.location.href = redirectUrl;
-                })
-                .catch((error) => {
-                    errorMessage.textContent = 'Invalid credentials. Please try again.';
-                    errorMessage.style.display = 'block';
-                    console.error(error);
-                });
-        }
     </script>
 </body>
 </html>
