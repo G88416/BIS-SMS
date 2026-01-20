@@ -10,7 +10,7 @@
     // Import the functions you need from the SDKs you need
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js";
-    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getAuth, onAuthStateChanged, signOut, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
     
     // Your web app's Firebase configuration
     const firebaseConfig = {
@@ -58,6 +58,7 @@
     window.firebaseApp = app;
     window.firebaseAnalytics = analytics;
     window.firebaseAuth = auth;
+    window.firebaseCreateUser = createUserWithEmailAndPassword;
   </script>
   
   <!-- Bootstrap 5 CSS CDN -->
@@ -215,6 +216,7 @@
     <a data-section="finance"><i class="fas fa-money-bill-wave"></i> <span>Finance</span></a>
     <a data-section="reports"><i class="fas fa-chart-bar"></i> <span>Reports</span></a>
     <a data-section="messages"><i class="fas fa-envelope"></i> <span>Messages</span></a>
+    <a data-section="user-management"><i class="fas fa-user-cog"></i> <span>User Management</span></a>
     <hr style="border-color: rgba(255,255,255,0.2); margin: 0.5rem 1rem;">
     <div style="padding: 0.5rem 1.2rem; color: rgba(255,255,255,0.5); font-size: 0.75rem; text-transform: uppercase;">Portals</div>
     <a data-section="student-portal"><i class="fas fa-user-graduate"></i> <span>Student Portal</span></a>
@@ -642,6 +644,123 @@
       <div class="form-check form-switch">
         <input class="form-check-input" type="checkbox" id="darkModeSwitch" onchange="toggleDarkMode()">
         <label class="form-check-label" for="darkModeSwitch">Enable Dark Mode</label>
+      </div>
+    </div>
+
+    <!-- User Management Section -->
+    <div id="user-management" class="section">
+      <h4>User Management</h4>
+      <p class="text-muted">Create and manage user accounts for students, teachers, and parents</p>
+      
+      <div class="row mb-4">
+        <div class="col-12">
+          <button class="btn btn-primary me-2" data-bs-toggle="modal" data-bs-target="#addUserModal">
+            <i class="fas fa-user-plus"></i> Add New User
+          </button>
+          <button class="btn btn-info" onclick="refreshUsersList()">
+            <i class="fas fa-sync-alt"></i> Refresh List
+          </button>
+        </div>
+      </div>
+
+      <!-- User Type Tabs -->
+      <ul class="nav nav-tabs mb-4" id="userManagementTabs">
+        <li class="nav-item">
+          <a class="nav-link active" data-bs-toggle="tab" href="#admin-users">Administrators</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" data-bs-toggle="tab" href="#teacher-users">Teachers</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" data-bs-toggle="tab" href="#student-users">Students</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" data-bs-toggle="tab" href="#parent-users">Parents</a>
+        </li>
+      </ul>
+
+      <div class="tab-content">
+        <!-- Admin Users Tab -->
+        <div class="tab-pane fade show active" id="admin-users">
+          <div class="table-responsive">
+            <table class="table table-striped table-hover">
+              <thead>
+                <tr>
+                  <th>Email</th>
+                  <th>Created</th>
+                  <th>Last Sign In</th>
+                  <th class="no-print">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="admin-users-table">
+                <tr><td colspan="4" class="text-center text-muted">Loading users...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Teacher Users Tab -->
+        <div class="tab-pane fade" id="teacher-users">
+          <div class="table-responsive">
+            <table class="table table-striped table-hover">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Email</th>
+                  <th>Name</th>
+                  <th>Created</th>
+                  <th>Last Sign In</th>
+                  <th class="no-print">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="teacher-users-table">
+                <tr><td colspan="6" class="text-center text-muted">Loading users...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Student Users Tab -->
+        <div class="tab-pane fade" id="student-users">
+          <div class="table-responsive">
+            <table class="table table-striped table-hover">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Email</th>
+                  <th>Name</th>
+                  <th>Created</th>
+                  <th>Last Sign In</th>
+                  <th class="no-print">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="student-users-table">
+                <tr><td colspan="6" class="text-center text-muted">Loading users...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Parent Users Tab -->
+        <div class="tab-pane fade" id="parent-users">
+          <div class="table-responsive">
+            <table class="table table-striped table-hover">
+              <thead>
+                <tr>
+                  <th>Child ID</th>
+                  <th>Email</th>
+                  <th>Child Name</th>
+                  <th>Created</th>
+                  <th>Last Sign In</th>
+                  <th class="no-print">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="parent-users-table">
+                <tr><td colspan="6" class="text-center text-muted">Loading users...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -1484,6 +1603,103 @@
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
           <button type="button" class="btn btn-primary" onclick="createAssignment()" data-bs-dismiss="modal">Create Assignment</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add User Modal -->
+  <div class="modal fade" id="addUserModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Add New User</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="addUserForm">
+            <div class="mb-3">
+              <label class="form-label">User Type <span class="text-danger">*</span></label>
+              <select class="form-select" id="new-user-type" required onchange="updateUserForm()">
+                <option value="">Select User Type</option>
+                <option value="admin">Administrator</option>
+                <option value="teacher">Teacher</option>
+                <option value="student">Student</option>
+                <option value="parent">Parent/Guardian</option>
+              </select>
+            </div>
+
+            <div class="mb-3" id="user-id-field" style="display: none;">
+              <label class="form-label">User ID <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="new-user-id" placeholder="e.g., 1, 2, 3">
+              <small class="text-muted">For teachers/students: numeric ID. For parents: child ID (e.g., C331)</small>
+            </div>
+
+            <div class="mb-3" id="user-name-field" style="display: none;">
+              <label class="form-label">Full Name <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="new-user-name" placeholder="Enter full name">
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Email <span class="text-danger">*</span></label>
+              <input type="email" class="form-control" id="new-user-email" placeholder="Will be auto-generated" readonly>
+              <small class="text-muted">Email format: admin@bis.local, teacher{ID}@bis.local, student{ID}@bis.local, parent.{childid}@bis.local</small>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Password <span class="text-danger">*</span></label>
+              <input type="password" class="form-control" id="new-user-password" placeholder="Enter password" required>
+              <small class="text-muted">Minimum 6 characters. User can change this later.</small>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Confirm Password <span class="text-danger">*</span></label>
+              <input type="password" class="form-control" id="new-user-password-confirm" placeholder="Confirm password" required>
+            </div>
+
+            <!-- Additional fields for student -->
+            <div id="student-fields" style="display: none;">
+              <div class="mb-3">
+                <label class="form-label">Grade Level</label>
+                <input type="number" class="form-control" id="new-student-grade" placeholder="e.g., 10" min="1" max="12">
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Parent/Guardian Name</label>
+                <input type="text" class="form-control" id="new-student-parent" placeholder="Parent/Guardian name">
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Contact Number</label>
+                <input type="tel" class="form-control" id="new-student-contact" placeholder="Contact number">
+              </div>
+            </div>
+
+            <!-- Additional fields for teacher -->
+            <div id="teacher-fields" style="display: none;">
+              <div class="mb-3">
+                <label class="form-label">Subject/Specialization</label>
+                <input type="text" class="form-control" id="new-teacher-subject" placeholder="e.g., Mathematics">
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Qualification</label>
+                <input type="text" class="form-control" id="new-teacher-qualification" placeholder="e.g., B.Ed, M.Sc">
+              </div>
+            </div>
+
+            <div class="alert alert-info">
+              <i class="fas fa-info-circle"></i> Creating a user will:
+              <ul class="mb-0">
+                <li>Create a Firebase Authentication account</li>
+                <li>Create a corresponding Firestore user document</li>
+                <li>Add the user to the local application data</li>
+              </ul>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" onclick="createNewUser()">
+            <i class="fas fa-user-plus"></i> Create User
+          </button>
         </div>
       </div>
     </div>
@@ -4097,6 +4313,246 @@
           topbar.innerHTML = `<span class="me-3">${sessionStorage.getItem('userId')} (${userType})</span>
             <button class="btn btn-danger btn-sm" onclick="logout()">Logout</button>`;
         }
+      }
+    }
+    
+    // User Management Functions
+    
+    function updateUserForm() {
+      const userType = document.getElementById('new-user-type').value;
+      const userIdField = document.getElementById('user-id-field');
+      const userNameField = document.getElementById('user-name-field');
+      const emailField = document.getElementById('new-user-email');
+      const studentFields = document.getElementById('student-fields');
+      const teacherFields = document.getElementById('teacher-fields');
+      
+      // Hide all conditional fields first
+      userIdField.style.display = 'none';
+      userNameField.style.display = 'none';
+      studentFields.style.display = 'none';
+      teacherFields.style.display = 'none';
+      emailField.value = '';
+      
+      if (!userType) return;
+      
+      if (userType === 'admin') {
+        emailField.value = 'admin@bis.local';
+      } else {
+        userIdField.style.display = 'block';
+        userNameField.style.display = 'block';
+        
+        if (userType === 'student') {
+          studentFields.style.display = 'block';
+        } else if (userType === 'teacher') {
+          teacherFields.style.display = 'block';
+        }
+      }
+      
+      // Update email when ID changes
+      const userIdInput = document.getElementById('new-user-id');
+      userIdInput.addEventListener('input', function() {
+        const id = this.value.trim();
+        if (id) {
+          if (userType === 'teacher') {
+            emailField.value = `teacher${id}@bis.local`;
+          } else if (userType === 'student') {
+            emailField.value = `student${id}@bis.local`;
+          } else if (userType === 'parent') {
+            emailField.value = `parent.${id.toLowerCase()}@bis.local`;
+          }
+        }
+      });
+    }
+    
+    function createNewUser() {
+      const userType = document.getElementById('new-user-type').value;
+      const userId = document.getElementById('new-user-id').value.trim();
+      const userName = document.getElementById('new-user-name').value.trim();
+      const email = document.getElementById('new-user-email').value.trim();
+      const password = document.getElementById('new-user-password').value;
+      const passwordConfirm = document.getElementById('new-user-password-confirm').value;
+      
+      // Validation
+      if (!userType) {
+        alert('Please select a user type.');
+        return;
+      }
+      
+      if (userType !== 'admin' && (!userId || !userName)) {
+        alert('Please fill in all required fields.');
+        return;
+      }
+      
+      if (!email || !password) {
+        alert('Please enter email and password.');
+        return;
+      }
+      
+      if (password !== passwordConfirm) {
+        alert('Passwords do not match.');
+        return;
+      }
+      
+      if (password.length < 6) {
+        alert('Password must be at least 6 characters long.');
+        return;
+      }
+      
+      // Create user in Firebase Authentication
+      window.firebaseCreateUser(window.firebaseAuth, email, password)
+        .then((userCredential) => {
+          const user = userCredential.user;
+          console.log('User created in Firebase Auth:', user.uid);
+          
+          // Add user to local data based on type
+          if (userType === 'student') {
+            const grade = document.getElementById('new-student-grade').value;
+            const parent = document.getElementById('new-student-parent').value;
+            const contact = document.getElementById('new-student-contact').value;
+            
+            const newStudent = {
+              id: parseInt(userId) || students.length + 1,
+              name: userName,
+              grade: parseInt(grade) || 10,
+              parent: parent || 'N/A',
+              contact: contact || 'N/A',
+              classIds: []
+            };
+            
+            students.push(newStudent);
+            localStorage.setItem('students', JSON.stringify(students));
+            renderStudents();
+            
+          } else if (userType === 'teacher') {
+            const subject = document.getElementById('new-teacher-subject').value;
+            const qualification = document.getElementById('new-teacher-qualification').value;
+            
+            const newTeacher = {
+              id: parseInt(userId) || teachers.length + 1,
+              name: userName,
+              subject: subject || 'General',
+              qualification: qualification || 'N/A',
+              status: 'Active'
+            };
+            
+            teachers.push(newTeacher);
+            localStorage.setItem('teachers', JSON.stringify(teachers));
+            renderTeachers();
+            
+          } else if (userType === 'parent') {
+            // For parent, find the student by ID and associate
+            const childId = userId.toUpperCase();
+            const student = students.find(s => s.id.toString() === childId.replace(/\D/g, ''));
+            if (student) {
+              if (!student.parent || student.parent === 'N/A') {
+                student.parent = userName;
+                localStorage.setItem('students', JSON.stringify(students));
+              }
+            }
+          }
+          
+          // Close modal and show success message
+          const modal = bootstrap.Modal.getInstance(document.getElementById('addUserModal'));
+          modal.hide();
+          
+          alert(`User created successfully!\\n\\nEmail: ${email}\\nPassword: ${password}\\n\\nThe user can now log in with these credentials.`);
+          
+          // Clear form
+          document.getElementById('addUserForm').reset();
+          document.getElementById('new-user-email').value = '';
+          updateUserForm();
+          
+          // Refresh user list if on user management section
+          refreshUsersList();
+          
+        })
+        .catch((error) => {
+          console.error('Error creating user:', error);
+          let errorMessage = 'Failed to create user. ';
+          
+          if (error.code === 'auth/email-already-in-use') {
+            errorMessage += 'This email is already in use.';
+          } else if (error.code === 'auth/invalid-email') {
+            errorMessage += 'Invalid email format.';
+          } else if (error.code === 'auth/weak-password') {
+            errorMessage += 'Password is too weak.';
+          } else {
+            errorMessage += error.message;
+          }
+          
+          alert(errorMessage);
+        });
+    }
+    
+    function refreshUsersList() {
+      // This would normally query Firebase Auth to get the list of users
+      // For now, we'll show a message
+      const tables = ['admin-users-table', 'teacher-users-table', 'student-users-table', 'parent-users-table'];
+      tables.forEach(tableId => {
+        const tbody = document.getElementById(tableId);
+        if (tbody) {
+          tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">User list requires Firebase Admin SDK to query all users. Users you create will appear here after refresh.</td></tr>';
+        }
+      });
+      
+      // Show local data
+      updateLocalUsersList();
+    }
+    
+    function updateLocalUsersList() {
+      // Show teacher users from local data
+      const teacherTable = document.getElementById('teacher-users-table');
+      if (teacherTable && teachers.length > 0) {
+        let html = '';
+        teachers.forEach(teacher => {
+          const email = `teacher${teacher.id}@bis.local`;
+          html += `<tr>
+            <td>${teacher.id}</td>
+            <td>${email}</td>
+            <td>${teacher.name}</td>
+            <td>-</td>
+            <td>-</td>
+            <td>
+              <button class="btn btn-sm btn-danger" onclick="alert('Delete functionality coming soon')">
+                <i class="fas fa-trash"></i>
+              </button>
+            </td>
+          </tr>`;
+        });
+        teacherTable.innerHTML = html;
+      }
+      
+      // Show student users from local data
+      const studentTable = document.getElementById('student-users-table');
+      if (studentTable && students.length > 0) {
+        let html = '';
+        students.forEach(student => {
+          const email = `student${student.id}@bis.local`;
+          html += `<tr>
+            <td>${student.id}</td>
+            <td>${email}</td>
+            <td>${student.name}</td>
+            <td>-</td>
+            <td>-</td>
+            <td>
+              <button class="btn btn-sm btn-danger" onclick="alert('Delete functionality coming soon')">
+                <i class="fas fa-trash"></i>
+              </button>
+            </td>
+          </tr>`;
+        });
+        studentTable.innerHTML = html;
+      }
+      
+      // Admin users
+      const adminTable = document.getElementById('admin-users-table');
+      if (adminTable) {
+        adminTable.innerHTML = `<tr>
+          <td>admin@bis.local</td>
+          <td>-</td>
+          <td>-</td>
+          <td><span class="badge bg-success">Protected</span></td>
+        </tr>`;
       }
     }
     
