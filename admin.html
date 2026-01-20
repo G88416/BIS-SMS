@@ -2697,6 +2697,9 @@
       if (surname && firstname && gender && grade) {
         const id = students.length ? Math.max(...students.map(s => s.id)) + 1 : 1;
         
+        // Update the displayed student number
+        document.getElementById('student-number').value = id;
+        
         // Build full name
         const name = `${firstname} ${surname}`;
         
@@ -2705,14 +2708,14 @@
         let contact = '';
         
         if (fatherFirstname || fatherSurname) {
-          const fatherName = `${fatherFirstname || ''} ${fatherSurname || ''}`.trim();
+          const fatherName = [fatherFirstname, fatherSurname].filter(Boolean).join(' ');
           if (fatherName) {
             parent = `Father: ${fatherName}`;
             contact = fatherCell || fatherEmail;
           }
         }
         if (motherFirstname || motherSurname) {
-          const motherName = `${motherFirstname || ''} ${motherSurname || ''}`.trim();
+          const motherName = [motherFirstname, motherSurname].filter(Boolean).join(' ');
           if (motherName) {
             if (parent) parent += '; ';
             parent += `Mother: ${motherName}`;
