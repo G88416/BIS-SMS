@@ -11,6 +11,8 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js";
     import { getAuth, onAuthStateChanged, signOut, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, where, getDocs, Timestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
     
     // Your web app's Firebase configuration
     const firebaseConfig = {
@@ -37,6 +39,12 @@
     // Initialize Auth
     const auth = getAuth(app);
     
+    // Initialize Firestore
+    const db = getFirestore(app);
+    
+    // Initialize Storage
+    const storage = getStorage(app);
+    
     // Protect page: redirect to login if not authenticated
     onAuthStateChanged(auth, (user) => {
       if (!user) {
@@ -59,6 +67,19 @@
     window.firebaseAnalytics = analytics;
     window.firebaseAuth = auth;
     window.firebaseCreateUser = createUserWithEmailAndPassword;
+    window.firebaseDb = db;
+    window.firebaseStorage = storage;
+    window.firebaseCollection = collection;
+    window.firebaseAddDoc = addDoc;
+    window.firebaseQuery = query;
+    window.firebaseOrderBy = orderBy;
+    window.firebaseOnSnapshot = onSnapshot;
+    window.firebaseWhere = where;
+    window.firebaseGetDocs = getDocs;
+    window.firebaseTimestamp = Timestamp;
+    window.firebaseStorageRef = ref;
+    window.firebaseUploadBytes = uploadBytes;
+    window.firebaseGetDownloadURL = getDownloadURL;
   </script>
   
   <!-- Bootstrap 5 CSS CDN -->
@@ -643,14 +664,191 @@
       <canvas id="gradeDistributionChart" class="mt-4 no-print" height="200"></canvas>
     </div>
 
-    <!-- Messages Section -->
+    <!-- Choptso Chat Section -->
     <div id="messages" class="section">
-      <h4>Messages</h4>
-      <textarea class="form-control mb-3" id="message-text" placeholder="Type message..."></textarea>
-      <button class="btn btn-primary" onclick="sendMessage()">Send</button>
-      <ul class="list-group mt-3" id="messages-list">
-        <!-- Messages appear here -->
-      </ul>
+      <h4><i class="fas fa-comments"></i> Choptso - School Messaging</h4>
+      <div class="choptso-container">
+        <div class="row">
+          <!-- Contacts/Users List -->
+          <div class="col-md-4 choptso-sidebar">
+            <div class="card">
+              <div class="card-header bg-primary text-white">
+                <h6 class="mb-0"><i class="fas fa-users"></i> Contacts</h6>
+              </div>
+              <div class="card-body p-0">
+                <div class="list-group list-group-flush" id="choptso-contacts">
+                  <a href="#" class="list-group-item list-group-item-action" onclick="loadConversation('all'); return false;">
+                    <i class="fas fa-users"></i> All Users (Broadcast)
+                  </a>
+                  <!-- Dynamic contacts will be loaded here -->
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Chat Window -->
+          <div class="col-md-8">
+            <div class="card choptso-chat-card">
+              <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                <h6 class="mb-0" id="choptso-chat-title"><i class="fas fa-comment-dots"></i> Select a contact</h6>
+                <button class="btn btn-sm btn-light" onclick="refreshChat()" title="Refresh">
+                  <i class="fas fa-sync-alt"></i>
+                </button>
+              </div>
+              <div class="card-body choptso-messages" id="choptso-messages">
+                <div class="text-center text-muted py-5">
+                  <i class="fas fa-comments fa-3x mb-3"></i>
+                  <p>Select a contact to start chatting</p>
+                </div>
+              </div>
+              <div class="card-footer">
+                <div class="input-group">
+                  <input type="text" class="form-control" id="choptso-message-input" placeholder="Type your message..." onkeypress="if(event.key==='Enter') sendChoptsoMessage()">
+                  <input type="file" id="choptso-file-input" style="display: none;" onchange="handleFileAttachment()" accept="image/*,.pdf,.doc,.docx,.txt">
+                  <button class="btn btn-outline-secondary" type="button" onclick="document.getElementById('choptso-file-input').click()" title="Attach file">
+                    <i class="fas fa-paperclip"></i>
+                  </button>
+                  <button class="btn btn-success" type="button" onclick="sendChoptsoMessage()">
+                    <i class="fas fa-paper-plane"></i> Send
+                  </button>
+                </div>
+                <div id="choptso-file-preview" class="mt-2"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Choptso Styles -->
+      <style>
+        .choptso-container {
+          margin-top: 20px;
+        }
+        
+        .choptso-sidebar {
+          max-height: 600px;
+          overflow-y: auto;
+        }
+        
+        .choptso-chat-card {
+          height: 600px;
+          display: flex;
+          flex-direction: column;
+        }
+        
+        .choptso-messages {
+          flex: 1;
+          overflow-y: auto;
+          background: #f8f9fa;
+          padding: 15px;
+          max-height: 450px;
+        }
+        
+        .choptso-message {
+          margin-bottom: 15px;
+          display: flex;
+          align-items: flex-start;
+        }
+        
+        .choptso-message.sent {
+          flex-direction: row-reverse;
+        }
+        
+        .choptso-message-content {
+          max-width: 70%;
+          padding: 10px 15px;
+          border-radius: 15px;
+          position: relative;
+        }
+        
+        .choptso-message.received .choptso-message-content {
+          background: white;
+          border: 1px solid #dee2e6;
+        }
+        
+        .choptso-message.sent .choptso-message-content {
+          background: #28a745;
+          color: white;
+        }
+        
+        .choptso-message-meta {
+          font-size: 0.75rem;
+          margin-top: 5px;
+          opacity: 0.7;
+        }
+        
+        .choptso-message.sent .choptso-message-meta {
+          text-align: right;
+        }
+        
+        .choptso-avatar {
+          width: 35px;
+          height: 35px;
+          border-radius: 50%;
+          background: #007bff;
+          color: white;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-weight: bold;
+          margin: 0 10px;
+          flex-shrink: 0;
+        }
+        
+        .choptso-attachment {
+          margin-top: 8px;
+          padding: 8px;
+          background: rgba(0,0,0,0.1);
+          border-radius: 8px;
+        }
+        
+        .choptso-attachment img {
+          max-width: 200px;
+          border-radius: 8px;
+          cursor: pointer;
+        }
+        
+        .choptso-file-badge {
+          display: inline-block;
+          padding: 5px 10px;
+          background: rgba(255,255,255,0.2);
+          border-radius: 5px;
+          margin-top: 5px;
+        }
+        
+        #choptso-contacts .list-group-item {
+          cursor: pointer;
+          border-left: 3px solid transparent;
+          transition: all 0.2s;
+        }
+        
+        #choptso-contacts .list-group-item:hover {
+          background: #f8f9fa;
+          border-left-color: #28a745;
+        }
+        
+        #choptso-contacts .list-group-item.active {
+          background: #e7f5e9;
+          border-left-color: #28a745;
+          color: #28a745;
+        }
+        
+        .choptso-loading {
+          text-align: center;
+          padding: 20px;
+          color: #6c757d;
+        }
+        
+        @media (max-width: 768px) {
+          .choptso-sidebar {
+            margin-bottom: 20px;
+          }
+          
+          .choptso-message-content {
+            max-width: 85%;
+          }
+        }
+      </style>
     </div>
 
     <!-- Reports Section -->
@@ -2659,12 +2857,425 @@
       });
     }
 
-    function renderMessages() {
-      const list = document.getElementById('messages-list');
-      list.innerHTML = '';
-      messages.forEach(msg => {
-        list.innerHTML += `<li class="list-group-item">${msg}</li>`;
+    // Choptso Chat Functions
+    let currentConversationId = null;
+    let choptsoUnsubscribe = null;
+    let choptsoAttachment = null;
+    
+    // Initialize Choptso Chat
+    function initChoptso() {
+      loadContacts();
+      // Load all users conversation by default
+      loadConversation('all');
+    }
+    
+    // Load contacts list
+    async function loadContacts() {
+      const contactsList = document.getElementById('choptso-contacts');
+      
+      try {
+        // Get all users from Firestore (you may need to create a users collection)
+        const usersQuery = window.firebaseQuery(
+          window.firebaseCollection(window.firebaseDb, 'users'),
+          window.firebaseOrderBy('displayName')
+        );
+        
+        const usersSnapshot = await window.firebaseGetDocs(usersQuery);
+        
+        // Clear existing contacts (except the "All Users" item)
+        const allUsersItem = contactsList.children[0];
+        contactsList.innerHTML = '';
+        contactsList.appendChild(allUsersItem);
+        
+        usersSnapshot.forEach((doc) => {
+          const user = doc.data();
+          const userId = doc.id;
+          const currentUser = window.firebaseAuth.currentUser;
+          
+          // Don't show current user in contacts
+          if (currentUser && userId !== currentUser.uid) {
+            const contactItem = document.createElement('a');
+            contactItem.href = '#';
+            contactItem.className = 'list-group-item list-group-item-action';
+            contactItem.onclick = () => { loadConversation(userId); return false; };
+            contactItem.innerHTML = `
+              <div class="d-flex align-items-center">
+                <div class="choptso-avatar" style="width: 30px; height: 30px; font-size: 0.8rem;">
+                  ${user.displayName ? user.displayName.charAt(0).toUpperCase() : '?'}
+                </div>
+                <div class="ms-2">
+                  <strong>${user.displayName || 'User'}</strong>
+                  <br><small class="text-muted">${user.role || ''}</small>
+                </div>
+              </div>
+            `;
+            contactsList.appendChild(contactItem);
+          }
+        });
+      } catch (error) {
+        console.error('Error loading contacts:', error);
+        // Fallback to local users
+        loadLocalContacts();
+      }
+    }
+    
+    // Load contacts from local data (fallback)
+    function loadLocalContacts() {
+      const contactsList = document.getElementById('choptso-contacts');
+      const allUsersItem = contactsList.children[0];
+      contactsList.innerHTML = '';
+      contactsList.appendChild(allUsersItem);
+      
+      // Add teachers
+      teachers.forEach(teacher => {
+        const contactItem = document.createElement('a');
+        contactItem.href = '#';
+        contactItem.className = 'list-group-item list-group-item-action';
+        contactItem.onclick = () => { loadConversation(`teacher-${teacher.id}`); return false; };
+        contactItem.innerHTML = `
+          <div class="d-flex align-items-center">
+            <div class="choptso-avatar" style="width: 30px; height: 30px; font-size: 0.8rem;">
+              ${teacher.firstname.charAt(0)}
+            </div>
+            <div class="ms-2">
+              <strong>${teacher.firstname} ${teacher.surname}</strong>
+              <br><small class="text-muted">Teacher</small>
+            </div>
+          </div>
+        `;
+        contactsList.appendChild(contactItem);
       });
+      
+      // Add students
+      students.forEach(student => {
+        const contactItem = document.createElement('a');
+        contactItem.href = '#';
+        contactItem.className = 'list-group-item list-group-item-action';
+        contactItem.onclick = () => { loadConversation(`student-${student.id}`); return false; };
+        contactItem.innerHTML = `
+          <div class="d-flex align-items-center">
+            <div class="choptso-avatar" style="width: 30px; height: 30px; font-size: 0.8rem;">
+              ${student.firstname.charAt(0)}
+            </div>
+            <div class="ms-2">
+              <strong>${student.firstname} ${student.surname}</strong>
+              <br><small class="text-muted">Student - Grade ${student.grade}</small>
+            </div>
+          </div>
+        `;
+        contactsList.appendChild(contactItem);
+      });
+    }
+    
+    // Load conversation with a specific user or broadcast
+    function loadConversation(conversationId) {
+      currentConversationId = conversationId;
+      
+      // Update active state in contacts
+      document.querySelectorAll('#choptso-contacts .list-group-item').forEach(item => {
+        item.classList.remove('active');
+      });
+      event.target.closest('.list-group-item').classList.add('active');
+      
+      // Update chat title
+      const titleElement = document.getElementById('choptso-chat-title');
+      if (conversationId === 'all') {
+        titleElement.innerHTML = '<i class="fas fa-users"></i> All Users (Broadcast)';
+      } else {
+        titleElement.innerHTML = `<i class="fas fa-comment-dots"></i> Chat`;
+      }
+      
+      // Unsubscribe from previous conversation
+      if (choptsoUnsubscribe) {
+        choptsoUnsubscribe();
+      }
+      
+      // Load messages from Firestore
+      loadMessages(conversationId);
+    }
+    
+    // Load messages from Firestore with real-time updates
+    async function loadMessages(conversationId) {
+      const messagesContainer = document.getElementById('choptso-messages');
+      messagesContainer.innerHTML = '<div class="choptso-loading"><i class="fas fa-spinner fa-spin"></i> Loading messages...</div>';
+      
+      try {
+        const currentUser = window.firebaseAuth.currentUser;
+        if (!currentUser) {
+          messagesContainer.innerHTML = '<div class="text-center text-danger py-3">Please log in to view messages</div>';
+          return;
+        }
+        
+        // Query messages
+        let messagesQuery;
+        if (conversationId === 'all') {
+          // Broadcast messages
+          messagesQuery = window.firebaseQuery(
+            window.firebaseCollection(window.firebaseDb, 'choptsoMessages'),
+            window.firebaseWhere('broadcast', '==', true),
+            window.firebaseOrderBy('timestamp', 'desc')
+          );
+        } else {
+          // Direct messages between two users
+          messagesQuery = window.firebaseQuery(
+            window.firebaseCollection(window.firebaseDb, 'choptsoMessages'),
+            window.firebaseWhere('participants', 'array-contains', currentUser.uid),
+            window.firebaseOrderBy('timestamp', 'desc')
+          );
+        }
+        
+        // Set up real-time listener
+        choptsoUnsubscribe = window.firebaseOnSnapshot(messagesQuery, (snapshot) => {
+          messagesContainer.innerHTML = '';
+          
+          if (snapshot.empty) {
+            messagesContainer.innerHTML = '<div class="text-center text-muted py-5"><i class="fas fa-comments fa-2x mb-3"></i><p>No messages yet. Start the conversation!</p></div>';
+            return;
+          }
+          
+          // Reverse to show oldest first
+          const messages = [];
+          snapshot.forEach((doc) => {
+            messages.push({ id: doc.id, ...doc.data() });
+          });
+          messages.reverse();
+          
+          messages.forEach((message) => {
+            const isSent = message.senderId === currentUser.uid;
+            const messageDiv = createMessageElement(message, isSent);
+            messagesContainer.appendChild(messageDiv);
+          });
+          
+          // Scroll to bottom
+          messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }, (error) => {
+          console.error('Error loading messages:', error);
+          messagesContainer.innerHTML = '<div class="text-center text-warning py-3">Error loading messages. Using local storage...</div>';
+          loadLocalMessages(conversationId);
+        });
+      } catch (error) {
+        console.error('Error setting up messages listener:', error);
+        messagesContainer.innerHTML = '<div class="text-center text-warning py-3">Error loading messages. Using local storage...</div>';
+        loadLocalMessages(conversationId);
+      }
+    }
+    
+    // Create message HTML element
+    function createMessageElement(message, isSent) {
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `choptso-message ${isSent ? 'sent' : 'received'}`;
+      
+      const avatar = document.createElement('div');
+      avatar.className = 'choptso-avatar';
+      avatar.textContent = message.senderName ? message.senderName.charAt(0).toUpperCase() : '?';
+      
+      const content = document.createElement('div');
+      content.className = 'choptso-message-content';
+      
+      let messageHTML = `<div>${escapeHtml(message.text)}</div>`;
+      
+      // Add attachment if present
+      if (message.attachmentURL) {
+        const fileType = message.attachmentType || 'file';
+        if (fileType.startsWith('image/')) {
+          messageHTML += `<div class="choptso-attachment">
+            <img src="${message.attachmentURL}" alt="Attachment" onclick="window.open('${message.attachmentURL}', '_blank')">
+          </div>`;
+        } else {
+          messageHTML += `<div class="choptso-attachment">
+            <a href="${message.attachmentURL}" target="_blank" class="text-decoration-none">
+              <i class="fas fa-file"></i> ${message.attachmentName || 'File attachment'}
+            </a>
+          </div>`;
+        }
+      }
+      
+      const timestamp = message.timestamp ? 
+        new Date(message.timestamp.seconds * 1000).toLocaleString() : 
+        new Date().toLocaleString();
+      
+      messageHTML += `<div class="choptso-message-meta">
+        ${isSent ? 'You' : message.senderName} • ${timestamp}
+      </div>`;
+      
+      content.innerHTML = messageHTML;
+      
+      messageDiv.appendChild(avatar);
+      messageDiv.appendChild(content);
+      
+      return messageDiv;
+    }
+    
+    // Send message with Firestore
+    async function sendChoptsoMessage() {
+      const input = document.getElementById('choptso-message-input');
+      const text = input.value.trim();
+      
+      if (!text && !choptsoAttachment) {
+        return;
+      }
+      
+      if (!currentConversationId) {
+        alert('Please select a contact first');
+        return;
+      }
+      
+      try {
+        const currentUser = window.firebaseAuth.currentUser;
+        if (!currentUser) {
+          alert('Please log in to send messages');
+          return;
+        }
+        
+        const message = {
+          text: text || '(file attachment)',
+          senderId: currentUser.uid,
+          senderName: currentUser.displayName || currentUser.email,
+          timestamp: window.firebaseTimestamp.now(),
+          broadcast: currentConversationId === 'all',
+          participants: currentConversationId === 'all' ? [] : [currentUser.uid, currentConversationId]
+        };
+        
+        // Upload attachment if present
+        if (choptsoAttachment) {
+          const attachmentURL = await uploadChoptsoAttachment(choptsoAttachment);
+          message.attachmentURL = attachmentURL;
+          message.attachmentName = choptsoAttachment.name;
+          message.attachmentType = choptsoAttachment.type;
+        }
+        
+        // Add message to Firestore
+        await window.firebaseAddDoc(
+          window.firebaseCollection(window.firebaseDb, 'choptsoMessages'),
+          message
+        );
+        
+        // Clear input and attachment
+        input.value = '';
+        choptsoAttachment = null;
+        document.getElementById('choptso-file-preview').innerHTML = '';
+        
+      } catch (error) {
+        console.error('Error sending message:', error);
+        // Fallback to local storage
+        saveMessageLocally(text);
+        input.value = '';
+      }
+    }
+    
+    // Upload attachment to Firebase Storage
+    async function uploadChoptsoAttachment(file) {
+      const currentUser = window.firebaseAuth.currentUser;
+      const filePath = `choptso/${currentUser.uid}/${Date.now()}_${file.name}`;
+      const storageRef = window.firebaseStorageRef(window.firebaseStorage, filePath);
+      
+      await window.firebaseUploadBytes(storageRef, file);
+      const downloadURL = await window.firebaseGetDownloadURL(storageRef);
+      
+      return downloadURL;
+    }
+    
+    // Handle file attachment selection
+    function handleFileAttachment() {
+      const fileInput = document.getElementById('choptso-file-input');
+      const file = fileInput.files[0];
+      
+      if (file) {
+        choptsoAttachment = file;
+        const preview = document.getElementById('choptso-file-preview');
+        
+        if (file.type.startsWith('image/')) {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            preview.innerHTML = `
+              <div class="alert alert-info d-flex align-items-center">
+                <img src="${e.target.result}" style="max-width: 100px; max-height: 100px; margin-right: 10px;">
+                <span>${file.name}</span>
+                <button class="btn btn-sm btn-danger ms-auto" onclick="clearChoptsoAttachment()">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+            `;
+          };
+          reader.readAsDataURL(file);
+        } else {
+          preview.innerHTML = `
+            <div class="alert alert-info d-flex align-items-center">
+              <i class="fas fa-file fa-2x me-3"></i>
+              <span>${file.name}</span>
+              <button class="btn btn-sm btn-danger ms-auto" onclick="clearChoptsoAttachment()">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+          `;
+        }
+      }
+    }
+    
+    // Clear attachment
+    function clearChoptsoAttachment() {
+      choptsoAttachment = null;
+      document.getElementById('choptso-file-preview').innerHTML = '';
+      document.getElementById('choptso-file-input').value = '';
+    }
+    
+    // Refresh chat
+    function refreshChat() {
+      if (currentConversationId) {
+        loadMessages(currentConversationId);
+      }
+    }
+    
+    // Fallback: Load messages from local storage
+    function loadLocalMessages(conversationId) {
+      const messagesContainer = document.getElementById('choptso-messages');
+      const localMessages = messages.filter(msg => 
+        conversationId === 'all' || msg.conversationId === conversationId
+      );
+      
+      messagesContainer.innerHTML = '';
+      
+      if (localMessages.length === 0) {
+        messagesContainer.innerHTML = '<div class="text-center text-muted py-5"><i class="fas fa-comments fa-2x mb-3"></i><p>No messages yet.</p></div>';
+        return;
+      }
+      
+      localMessages.forEach(text => {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'choptso-message sent';
+        messageDiv.innerHTML = `
+          <div class="choptso-avatar">A</div>
+          <div class="choptso-message-content">
+            <div>${escapeHtml(text)}</div>
+            <div class="choptso-message-meta">Admin • ${new Date().toLocaleString()}</div>
+          </div>
+        `;
+        messagesContainer.appendChild(messageDiv);
+      });
+      
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+    
+    // Save message to local storage (fallback)
+    function saveMessageLocally(text) {
+      if (text) {
+        messages.push(text);
+        localStorage.setItem('messages', JSON.stringify(messages));
+        loadLocalMessages(currentConversationId);
+      }
+    }
+    
+    // HTML escape function
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+    
+    function renderMessages() {
+      // Deprecated - now using Choptso chat
+      // Keeping for backwards compatibility
+      initChoptso();
     }
 
     // Add functions
@@ -3104,13 +3715,9 @@
 
     // Message & Report
     function sendMessage() {
-      const text = document.getElementById('message-text').value.trim();
-      if (text) {
-        messages.push(text);
-        localStorage.setItem('messages', JSON.stringify(messages));
-        renderMessages();
-        document.getElementById('message-text').value = '';
-      }
+      // Deprecated - now using sendChoptsoMessage
+      // Keeping for backwards compatibility
+      sendChoptsoMessage();
     }
 
     function generateReport() {

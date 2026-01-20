@@ -186,6 +186,23 @@ service firebase.storage {
                       isValidSize();
     }
     
+    // Choptso chat attachments
+    match /choptso/{userId}/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && 
+                      isOwner(userId) &&
+                      (isDocument() || isImage() || isVideo()) &&
+                      isValidSize();
+    }
+    
+    // Choptso shared files in conversations
+    match /choptso-shared/{conversationId}/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && 
+                      (isDocument() || isImage() || isVideo()) &&
+                      isValidSize();
+    }
+    
     // Default deny all other access
     match /{allPaths=**} {
       allow read, write: if false;
