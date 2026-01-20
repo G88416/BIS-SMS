@@ -2705,13 +2705,19 @@
         let contact = '';
         
         if (fatherFirstname || fatherSurname) {
-          parent = `Father: ${fatherFirstname} ${fatherSurname}`.trim();
-          contact = fatherCell || fatherEmail;
+          const fatherName = `${fatherFirstname} ${fatherSurname}`.trim();
+          if (fatherName) {
+            parent = `Father: ${fatherName}`;
+            contact = fatherCell || fatherEmail;
+          }
         }
         if (motherFirstname || motherSurname) {
-          if (parent) parent += '; ';
-          parent += `Mother: ${motherFirstname} ${motherSurname}`.trim();
-          if (!contact) contact = motherCell || motherEmail;
+          const motherName = `${motherFirstname} ${motherSurname}`.trim();
+          if (motherName) {
+            if (parent) parent += '; ';
+            parent += `Mother: ${motherName}`;
+            if (!contact) contact = motherCell || motherEmail;
+          }
         }
         
         // Create new student object with all details
