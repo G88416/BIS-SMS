@@ -3024,9 +3024,10 @@
           );
         } else {
           // Direct messages between two users
+          // Use conversationId to filter messages for specific conversation
           messagesQuery = window.firebaseQuery(
             window.firebaseCollection(window.firebaseDb, 'choptsoMessages'),
-            window.firebaseWhere('participants', 'array-contains', currentUser.uid),
+            window.firebaseWhere('conversationId', '==', conversationId),
             window.firebaseOrderBy('timestamp', 'desc')
           );
         }
@@ -3047,7 +3048,12 @@
           });
           messages.reverse();
           
-          messages.forEach((message) => {
+          // Filter messages for this specific conversation (client-side filtering as backup)
+          const filteredMessages = conversationId === 'all' ? messages : 
+            messages.filter(m => m.conversationId === conversationId || 
+                                 (m.participants && m.participants.includes(conversationId)));
+          
+          filteredMessages.forEach((message) => {
             const isSent = message.senderId === currentUser.uid;
             const messageDiv = createMessageElement(message, isSent);
             messagesContainer.appendChild(messageDiv);
@@ -3140,6 +3146,7 @@
           senderName: currentUser.displayName || currentUser.email,
           timestamp: window.firebaseTimestamp.now(),
           broadcast: currentConversationId === 'all',
+          conversationId: currentConversationId,
           participants: currentConversationId === 'all' ? [] : [currentUser.uid, currentConversationId]
         };
         
@@ -3173,7 +3180,10 @@
     // Upload attachment to Firebase Storage
     async function uploadChoptsoAttachment(file) {
       const currentUser = window.firebaseAuth.currentUser;
-      const filePath = `choptso/${currentUser.uid}/${Date.now()}_${file.name}`;
+      
+      // Sanitize filename - remove path traversal and special characters
+      const sanitizedName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+      const filePath = `choptso/${currentUser.uid}/${Date.now()}_${sanitizedName}`;
       const storageRef = window.firebaseStorageRef(window.firebaseStorage, filePath);
       
       await window.firebaseUploadBytes(storageRef, file);
@@ -3236,9 +3246,10 @@
     // Fallback: Load messages from local storage
     function loadLocalMessages(conversationId) {
       const messagesContainer = document.getElementById('choptso-messages');
-      const localMessages = messages.filter(msg => 
-        conversationId === 'all' || msg.conversationId === conversationId
-      );
+      
+      // Handle the fact that old messages array contains simple strings
+      // We'll show all messages for now as a fallback
+      const localMessages = messages;
       
       messagesContainer.innerHTML = '';
       
@@ -3247,13 +3258,13 @@
         return;
       }
       
-      localMessages.forEach(text => {
+      localMessages.forEach(messageText => {
         const messageDiv = document.createElement('div');
         messageDiv.className = 'choptso-message sent';
         messageDiv.innerHTML = `
           <div class="choptso-avatar">A</div>
           <div class="choptso-message-content">
-            <div>${escapeHtml(text)}</div>
+            <div>${escapeHtml(messageText)}</div>
             <div class="choptso-message-meta">Admin • ${new Date().toLocaleString()}</div>
           </div>
         `;
