@@ -200,6 +200,31 @@
       font-weight: bold;
       color: #28a745;
     }
+    
+    /* Student Registration Form Styles */
+    .section-header {
+      background-color: #28a745;
+      color: white;
+      padding: 0.75rem 1rem;
+      border-radius: 8px 8px 0 0;
+      font-weight: bold;
+      margin-top: 1rem;
+    }
+    
+    .section-header:first-child {
+      margin-top: 0;
+    }
+    
+    .form-section {
+      background-color: #ffffff;
+      padding: 1rem;
+      border: 1px solid #dee2e6;
+      border-top: none;
+    }
+    
+    .form-section:last-of-type {
+      border-radius: 0 0 8px 8px;
+    }
   </style>
 </head>
 <body>
@@ -1400,25 +1425,149 @@
   <!-- Modals -->
   <!-- Add Student Modal -->
   <div class="modal fade" id="addStudentModal" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-xl">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">Add Student</h5>
+          <h5 class="modal-title"><i class="fas fa-user-plus"></i> Student Registration Form</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
-          <input type="text" class="form-control mb-2" id="student-name" placeholder="Full Name">
-          <input type="text" class="form-control mb-2" id="student-grade" placeholder="Grade Level (e.g., 10)">
-          <input type="text" class="form-control mb-2" id="student-parent" placeholder="Parent/Guardian Name">
-          <input type="text" class="form-control mb-2" id="student-contact" placeholder="Contact Number">
-          <select class="form-select mb-2" id="student-class" multiple size="3">
-            <!-- Populated dynamically -->
-          </select>
-          <small class="text-muted">Hold Ctrl/Cmd to select multiple classes for enrollment</small>
+          <form id="studentRegistrationForm">
+            
+            <!-- Learner Details Section -->
+            <div class="section-header">
+              <i class="fas fa-child"></i> LEARNER DETAILS
+            </div>
+            <div class="form-section">
+              <div class="row g-3">
+                <div class="col-md-2">
+                  <label class="form-label">Number (Auto)</label>
+                  <input type="text" class="form-control" id="student-number" readonly placeholder="Auto-generated">
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label">Surname <span class="text-danger">*</span></label>
+                  <input type="text" class="form-control" id="learner-surname" required>
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label">First Name <span class="text-danger">*</span></label>
+                  <input type="text" class="form-control" id="learner-firstname" required>
+                </div>
+                <div class="col-md-2">
+                  <label class="form-label">Gender <span class="text-danger">*</span></label>
+                  <select class="form-select" id="learner-gender" required>
+                    <option value="">Select</option>
+                    <option value="M">Male</option>
+                    <option value="F">Female</option>
+                  </select>
+                </div>
+                <div class="col-md-2">
+                  <label class="form-label">Grade <span class="text-danger">*</span></label>
+                  <select class="form-select" id="learner-grade" required>
+                    <option value="">Select</option>
+                    <option value="Grade R">Grade R</option>
+                    <option value="Grade 01">Grade 01</option>
+                    <option value="Grade 02">Grade 02</option>
+                    <option value="Grade 03">Grade 03</option>
+                    <option value="Grade 04">Grade 04</option>
+                    <option value="Grade 05">Grade 05</option>
+                    <option value="Grade 06">Grade 06</option>
+                    <option value="Grade 07">Grade 07</option>
+                    <option value="Grade 08">Grade 08</option>
+                    <option value="Grade 09">Grade 09</option>
+                    <option value="Grade 10">Grade 10</option>
+                    <option value="Grade 11">Grade 11</option>
+                    <option value="Grade 12">Grade 12</option>
+                  </select>
+                </div>
+                <div class="col-md-2">
+                  <label class="form-label">Class</label>
+                  <input type="text" class="form-control" id="learner-class" placeholder="e.g. 10A">
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label">Learner Cell #</label>
+                  <input type="tel" class="form-control" id="learner-cell">
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label">Learner Email</label>
+                  <input type="email" class="form-control" id="learner-email">
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label">Home Language</label>
+                  <select class="form-select" id="learner-language">
+                    <option value="">Select</option>
+                    <option value="English">English</option>
+                    <option value="Afrikaans">Afrikaans</option>
+                    <option value="isiZulu">isiZulu</option>
+                    <option value="Sepedi">Sepedi</option>
+                    <option value="Setswana">Setswana</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+                <div class="col-md-12">
+                  <label class="form-label">Select Classes for Enrollment</label>
+                  <select class="form-select" id="student-class" multiple size="3">
+                    <!-- Populated dynamically -->
+                  </select>
+                  <small class="text-muted">Hold Ctrl/Cmd to select multiple classes</small>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Father Details Section -->
+            <div class="section-header">
+              <i class="fas fa-male"></i> FATHER / GUARDIAN DETAILS
+            </div>
+            <div class="form-section">
+              <div class="row g-3">
+                <div class="col-md-3">
+                  <label class="form-label">First Name</label>
+                  <input type="text" class="form-control" id="father-firstname">
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label">Surname</label>
+                  <input type="text" class="form-control" id="father-surname">
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label">Email</label>
+                  <input type="email" class="form-control" id="father-email">
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label">Cell #</label>
+                  <input type="tel" class="form-control" id="father-cell">
+                </div>
+              </div>
+            </div>
+            
+            <!-- Mother Details Section -->
+            <div class="section-header">
+              <i class="fas fa-female"></i> MOTHER / GUARDIAN DETAILS
+            </div>
+            <div class="form-section">
+              <div class="row g-3">
+                <div class="col-md-3">
+                  <label class="form-label">First Name</label>
+                  <input type="text" class="form-control" id="mother-firstname">
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label">Surname</label>
+                  <input type="text" class="form-control" id="mother-surname">
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label">Email</label>
+                  <input type="email" class="form-control" id="mother-email">
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label">Cell #</label>
+                  <input type="tel" class="form-control" id="mother-cell">
+                </div>
+              </div>
+            </div>
+            
+          </form>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-          <button type="button" class="btn btn-primary" onclick="addStudent()" data-bs-dismiss="modal">Add Student</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="fas fa-times"></i> Close</button>
+          <button type="button" class="btn btn-success" onclick="addStudent()" data-bs-dismiss="modal"><i class="fas fa-save"></i> Save Student</button>
         </div>
       </div>
     </div>
@@ -2520,15 +2669,88 @@
 
     // Add functions
     function addStudent() {
-      const name = document.getElementById('student-name').value.trim();
-      const grade = document.getElementById('student-grade').value.trim();
-      const parent = document.getElementById('student-parent').value.trim();
-      const contact = document.getElementById('student-contact').value.trim();
+      // Get learner details
+      const surname = document.getElementById('learner-surname').value.trim();
+      const firstname = document.getElementById('learner-firstname').value.trim();
+      const gender = document.getElementById('learner-gender').value;
+      const grade = document.getElementById('learner-grade').value;
+      const classname = document.getElementById('learner-class').value.trim();
+      const learnerCell = document.getElementById('learner-cell').value.trim();
+      const learnerEmail = document.getElementById('learner-email').value.trim();
+      const language = document.getElementById('learner-language').value;
+      
+      // Get father details
+      const fatherFirstname = document.getElementById('father-firstname').value.trim();
+      const fatherSurname = document.getElementById('father-surname').value.trim();
+      const fatherEmail = document.getElementById('father-email').value.trim();
+      const fatherCell = document.getElementById('father-cell').value.trim();
+      
+      // Get mother details
+      const motherFirstname = document.getElementById('mother-firstname').value.trim();
+      const motherSurname = document.getElementById('mother-surname').value.trim();
+      const motherEmail = document.getElementById('mother-email').value.trim();
+      const motherCell = document.getElementById('mother-cell').value.trim();
+      
       const selectedClasses = Array.from(document.getElementById('student-class').selectedOptions).map(opt => parseInt(opt.value));
-      if (name && grade) {
+      
+      // Validate required fields
+      if (surname && firstname && gender && grade) {
         const id = students.length ? Math.max(...students.map(s => s.id)) + 1 : 1;
-        const newStudent = { id, name, grade, parent, contact, classIds: selectedClasses };
+        
+        // Update the displayed student number
+        document.getElementById('student-number').value = id;
+        
+        // Build full name
+        const name = `${firstname} ${surname}`;
+        
+        // Build parent/guardian information
+        let parent = '';
+        let contact = '';
+        
+        if (fatherFirstname || fatherSurname) {
+          const fatherName = [fatherFirstname, fatherSurname].filter(Boolean).join(' ');
+          if (fatherName) {
+            parent = `Father: ${fatherName}`;
+            contact = fatherCell || fatherEmail;
+          }
+        }
+        if (motherFirstname || motherSurname) {
+          const motherName = [motherFirstname, motherSurname].filter(Boolean).join(' ');
+          if (motherName) {
+            if (parent) parent += '; ';
+            parent += `Mother: ${motherName}`;
+            if (!contact) contact = motherCell || motherEmail;
+          }
+        }
+        
+        // Create new student object with all details
+        const newStudent = { 
+          id, 
+          name, 
+          grade, 
+          parent, 
+          contact,
+          classIds: selectedClasses,
+          // Additional details
+          surname,
+          firstname,
+          gender,
+          classname,
+          learnerCell,
+          learnerEmail,
+          language,
+          fatherFirstname,
+          fatherSurname,
+          fatherEmail,
+          fatherCell,
+          motherFirstname,
+          motherSurname,
+          motherEmail,
+          motherCell
+        };
+        
         students.push(newStudent);
+        
         // Enroll in selected classes
         selectedClasses.forEach(cid => {
           const cls = classes.find(c => c.id === cid);
@@ -2537,15 +2759,20 @@
             cls.studentIds.push(id);
           }
         });
+        
         localStorage.setItem('students', JSON.stringify(students));
         localStorage.setItem('classes', JSON.stringify(classes));
         renderStudents();
         renderClasses();
         updateDashboardStats();
-        document.getElementById('student-name').value = '';
-        document.getElementById('student-grade').value = '';
-        document.getElementById('student-parent').value = '';
-        document.getElementById('student-contact').value = '';
+        
+        // Clear form
+        document.getElementById('studentRegistrationForm').reset();
+        
+        // Show success message
+        alert('Student registered successfully!');
+      } else {
+        alert('Please fill in all required fields (Surname, First Name, Gender, and Grade)');
       }
     }
 
