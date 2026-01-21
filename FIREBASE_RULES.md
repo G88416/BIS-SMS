@@ -58,6 +58,35 @@ The system supports four user roles:
 - **Create**: Authenticated users (must be the sender)
 - **Update/Delete**: Admins or message sender
 
+#### Choptso Messages
+- **Read**: Admins, sender, recipients, or broadcast message viewers
+- **Create**: Authenticated users (must be the sender)
+  - Validates emoji and reaction fields
+  - Supports broadcast or direct messaging
+- **Update**: Admins, message sender, or participants (for reactions/read receipts)
+  - Participants can only update: reactions, readBy, deliveredTo, updatedAt
+- **Delete**: Admins only
+
+#### Choptso Conversations
+- **Read**: Participants or admins
+- **Create**: Authenticated users (must be a participant)
+- **Update**: Participants or admins
+  - Supports typing indicators and status updates
+- **Delete**: Admins only
+
+#### Choptso Reactions (subcollection)
+- **Read**: All authenticated users
+- **Create**: Authenticated users (must be owner of reaction)
+  - Validates emoji string (max 10 characters)
+- **Update**: Reaction owner or admins
+- **Delete**: Reaction owner or admins
+
+#### Choptso User Status
+- **Read**: All authenticated users
+- **Create/Update**: User themselves or admins
+  - Status values: online, away, busy, offline
+  - Supports custom emoji status
+
 #### Fees & Payments
 - **Read**: Admins, the student, or their parents
 - **Write**: Admins only
@@ -162,10 +191,31 @@ The system supports four user roles:
 - **Write**: User themselves
 - **Restrictions**: Documents or images, max 10MB
 
+#### Choptso Chat Attachments (`/choptso/{userId}/{fileName}`)
+- **Read**: All authenticated users
+- **Write**: User themselves
+- **Restrictions**: Documents, images, videos, or GIFs, max 10MB
+
+#### Choptso Shared Files (`/choptso-shared/{conversationId}/{fileName}`)
+- **Read**: All authenticated users
+- **Write**: Any authenticated user
+- **Restrictions**: Documents, images, videos, or GIFs, max 10MB
+
+#### Choptso Custom Emojis (`/choptso-emojis/{userId}/{emojiId}`)
+- **Read**: All authenticated users
+- **Write**: User themselves
+- **Restrictions**: Images only, max 1MB
+
+#### Choptso Shared Emojis (`/choptso-emojis-shared/{emojiId}`)
+- **Read**: All authenticated users
+- **Write**: Admins only
+- **Restrictions**: Images only, max 1MB
+
 ### File Type Restrictions
 
 #### Supported Image Types
 - All image MIME types (image/*)
+- GIF files (image/gif) for emoji/reactions
 
 #### Supported Document Types
 - PDF (application/pdf)
@@ -179,6 +229,51 @@ The system supports four user roles:
 ### Size Limits
 - **Standard files**: 10MB maximum
 - **Large files** (videos, large documents): 50MB maximum
+- **Emoji/sticker images**: 1MB maximum
+
+## Choptso Chat Enhancements
+
+### Emoji and Reaction Support
+
+The Choptso chat system has been enhanced to support emoji reactions and custom emoji/stickers:
+
+#### Message Reactions
+- **Reaction Collection**: `choptsoMessages/{messageId}/reactions/{reactionId}`
+- Users can add emoji reactions to any message they have access to
+- Each reaction is stored as a subcollection under the message
+- Reaction documents contain: `userId`, `emoji` (string, max 10 chars), `timestamp`
+- Users can only modify or delete their own reactions
+- All authenticated users can read reactions
+
+#### Message Fields
+- **emoji**: String field for emoji content in messages
+- **reactions**: Map field for inline reaction counts (optional alternative to subcollection)
+- **readBy**: Array field for tracking which users have read the message
+- **deliveredTo**: Array field for tracking message delivery status
+- **updatedAt**: Timestamp field for when the message was last updated
+
+#### Custom Emoji/Stickers
+- **User Emojis**: `choptso-emojis/{userId}/{emojiId}` - Personal emoji/sticker collection
+- **Shared Emojis**: `choptso-emojis-shared/{emojiId}` - School-wide emoji/stickers (admin only)
+- Maximum size: 1MB per emoji image
+- Supports all image formats including GIFs
+
+#### User Status with Emoji
+- **Status Collection**: `choptsoStatus/{userId}`
+- Users can set their online status (online, away, busy, offline)
+- Users can add a custom emoji to their status
+- Visible to all authenticated users
+
+#### Typing Indicators
+- Supported through the `choptsoConversations` collection
+- `typingUsers` field tracks who is currently typing
+- Real-time updates for better user experience
+
+### GIF Support
+- GIF files are now explicitly supported in Choptso chat attachments
+- Perfect for emoji reactions and animated stickers
+- Validated through `isGif()` function in storage rules
+- Same size limits as other images (10MB for attachments, 1MB for emojis)
 
 ## Deployment Instructions
 
