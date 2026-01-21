@@ -11,7 +11,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js";
     import { getAuth, onAuthStateChanged, signOut, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, where, getDocs, Timestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, where, getDocs, Timestamp, setDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
     import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
     
     // Your web app's Firebase configuration
@@ -71,6 +71,8 @@
     window.firebaseStorage = storage;
     window.firebaseCollection = collection;
     window.firebaseAddDoc = addDoc;
+    window.firebaseSetDoc = setDoc;
+    window.firebaseDoc = doc;
     window.firebaseQuery = query;
     window.firebaseOrderBy = orderBy;
     window.firebaseOnSnapshot = onSnapshot;
@@ -4229,6 +4231,17 @@
         titleElement.innerHTML = `<i class="fas fa-comment-dots"></i> Chat`;
       }
       
+      // Show call buttons for individual chats
+      const voiceBtn = document.getElementById('admin-voice-call-btn');
+      const videoBtn = document.getElementById('admin-video-call-btn');
+      if (conversationId !== 'all' && !conversationId.startsWith('group-')) {
+        if (voiceBtn) voiceBtn.style.display = 'inline-block';
+        if (videoBtn) videoBtn.style.display = 'inline-block';
+      } else {
+        if (voiceBtn) voiceBtn.style.display = 'none';
+        if (videoBtn) videoBtn.style.display = 'none';
+      }
+      
       // Unsubscribe from previous conversation
       if (choptsoUnsubscribe) {
         choptsoUnsubscribe();
@@ -7285,6 +7298,19 @@
       window.location.href = 'index.html';
     }
 
+    // ===== Constants =====
+    const STATUS_EXPIRATION_HOURS = 24;
+    const MAX_PROFILE_PIC_SIZE_MB = 5;
+    const ALLOWED_IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+
+    // ===== Helper Functions =====
+    function getValidatedFileExtension(filename) {
+      const parts = filename.toLowerCase().split('.');
+      if (parts.length < 2) return null;
+      const ext = parts[parts.length - 1];
+      return ALLOWED_IMAGE_EXTENSIONS.includes(ext) ? ext : null;
+    }
+
     // ===== Voice & Video Call Functions for Admin =====
     function adminStartVoiceCall() {
       if (!currentConversationId || currentConversationId === 'all' || currentConversationId.startsWith('group-')) {
@@ -7581,14 +7607,20 @@
         return;
       }
       
-      if (file.size > 5 * 1024 * 1024) {
-        alert('Image size must be less than 5MB');
+      const fileExt = getValidatedFileExtension(file.name);
+      if (!fileExt) {
+        alert('Invalid file type. Allowed: ' + ALLOWED_IMAGE_EXTENSIONS.join(', '));
+        return;
+      }
+      
+      if (file.size > MAX_PROFILE_PIC_SIZE_MB * 1024 * 1024) {
+        alert(`Image size must be less than ${MAX_PROFILE_PIC_SIZE_MB}MB`);
         return;
       }
       
       try {
         const currentUser = window.firebaseAuth.currentUser;
-        const fileName = `profile_${currentUser.uid}_${Date.now()}.${file.name.split('.').pop()}`;
+        const fileName = `profile_${currentUser.uid}_${Date.now()}.${fileExt}`;
         const storageRef = window.firebaseStorageRef(window.firebaseStorage, `profiles/admin/${fileName}`);
         
         await window.firebaseUploadBytes(storageRef, file);
@@ -7597,12 +7629,13 @@
         // Update profile picture in UI
         document.getElementById('admin-profile-pic').src = url;
         
-        // Save to Firestore
-        await window.firebaseAddDoc(window.firebaseCollection(window.firebaseDb, 'userProfiles'), {
+        // Save to Firestore using setDoc to update/create single document per user
+        const userProfileRef = window.firebaseDoc(window.firebaseDb, 'userProfiles', currentUser.uid);
+        await window.firebaseSetDoc(userProfileRef, {
           userId: currentUser.uid,
           profilePicUrl: url,
           updatedAt: window.firebaseTimestamp.now()
-        });
+        }, { merge: true });
         
         alert('Profile picture updated successfully!');
       } catch (error) {
@@ -7626,14 +7659,20 @@
         return;
       }
       
-      if (file.size > 5 * 1024 * 1024) {
-        alert('Image size must be less than 5MB');
+      const fileExt = getValidatedFileExtension(file.name);
+      if (!fileExt) {
+        alert('Invalid file type. Allowed: ' + ALLOWED_IMAGE_EXTENSIONS.join(', '));
+        return;
+      }
+      
+      if (file.size > MAX_PROFILE_PIC_SIZE_MB * 1024 * 1024) {
+        alert(`Image size must be less than ${MAX_PROFILE_PIC_SIZE_MB}MB`);
         return;
       }
       
       try {
         const currentUser = window.firebaseAuth.currentUser;
-        const fileName = `profile_${currentUser.uid}_${Date.now()}.${file.name.split('.').pop()}`;
+        const fileName = `profile_${currentUser.uid}_${Date.now()}.${fileExt}`;
         const storageRef = window.firebaseStorageRef(window.firebaseStorage, `profiles/teacher/${fileName}`);
         
         await window.firebaseUploadBytes(storageRef, file);
@@ -7641,11 +7680,12 @@
         
         document.getElementById('teacher-profile-pic').src = url;
         
-        await window.firebaseAddDoc(window.firebaseCollection(window.firebaseDb, 'userProfiles'), {
+        const userProfileRef = window.firebaseDoc(window.firebaseDb, 'userProfiles', currentUser.uid);
+        await window.firebaseSetDoc(userProfileRef, {
           userId: currentUser.uid,
           profilePicUrl: url,
           updatedAt: window.firebaseTimestamp.now()
-        });
+        }, { merge: true });
         
         alert('Profile picture updated successfully!');
       } catch (error) {
@@ -7669,14 +7709,20 @@
         return;
       }
       
-      if (file.size > 5 * 1024 * 1024) {
-        alert('Image size must be less than 5MB');
+      const fileExt = getValidatedFileExtension(file.name);
+      if (!fileExt) {
+        alert('Invalid file type. Allowed: ' + ALLOWED_IMAGE_EXTENSIONS.join(', '));
+        return;
+      }
+      
+      if (file.size > MAX_PROFILE_PIC_SIZE_MB * 1024 * 1024) {
+        alert(`Image size must be less than ${MAX_PROFILE_PIC_SIZE_MB}MB`);
         return;
       }
       
       try {
         const currentUser = window.firebaseAuth.currentUser;
-        const fileName = `profile_${currentUser.uid}_${Date.now()}.${file.name.split('.').pop()}`;
+        const fileName = `profile_${currentUser.uid}_${Date.now()}.${fileExt}`;
         const storageRef = window.firebaseStorageRef(window.firebaseStorage, `profiles/parent/${fileName}`);
         
         await window.firebaseUploadBytes(storageRef, file);
@@ -7684,11 +7730,12 @@
         
         document.getElementById('parent-profile-pic').src = url;
         
-        await window.firebaseAddDoc(window.firebaseCollection(window.firebaseDb, 'userProfiles'), {
+        const userProfileRef = window.firebaseDoc(window.firebaseDb, 'userProfiles', currentUser.uid);
+        await window.firebaseSetDoc(userProfileRef, {
           userId: currentUser.uid,
           profilePicUrl: url,
           updatedAt: window.firebaseTimestamp.now()
-        });
+        }, { merge: true });
         
         alert('Profile picture updated successfully!');
       } catch (error) {
@@ -7701,11 +7748,12 @@
     async function updateAdminStatus(status) {
       try {
         const currentUser = window.firebaseAuth.currentUser;
-        await window.firebaseAddDoc(window.firebaseCollection(window.firebaseDb, 'userStatus'), {
+        const statusRef = window.firebaseDoc(window.firebaseDb, 'userStatus', currentUser.uid);
+        await window.firebaseSetDoc(statusRef, {
           userId: currentUser.uid,
           status: status,
           updatedAt: window.firebaseTimestamp.now()
-        });
+        }, { merge: true });
       } catch (error) {
         console.error('Error updating status:', error);
       }
@@ -7714,11 +7762,12 @@
     async function updateTeacherStatus(status) {
       try {
         const currentUser = window.firebaseAuth.currentUser;
-        await window.firebaseAddDoc(window.firebaseCollection(window.firebaseDb, 'userStatus'), {
+        const statusRef = window.firebaseDoc(window.firebaseDb, 'userStatus', currentUser.uid);
+        await window.firebaseSetDoc(statusRef, {
           userId: currentUser.uid,
           status: status,
           updatedAt: window.firebaseTimestamp.now()
-        });
+        }, { merge: true });
       } catch (error) {
         console.error('Error updating status:', error);
       }
@@ -7727,11 +7776,12 @@
     async function updateParentStatus(status) {
       try {
         const currentUser = window.firebaseAuth.currentUser;
-        await window.firebaseAddDoc(window.firebaseCollection(window.firebaseDb, 'userStatus'), {
+        const statusRef = window.firebaseDoc(window.firebaseDb, 'userStatus', currentUser.uid);
+        await window.firebaseSetDoc(statusRef, {
           userId: currentUser.uid,
           status: status,
           updatedAt: window.firebaseTimestamp.now()
-        });
+        }, { merge: true });
       } catch (error) {
         console.error('Error updating status:', error);
       }
@@ -7767,12 +7817,24 @@
       // Initialize canvas after modal is shown
       setTimeout(() => {
         const canvas = document.getElementById('status-canvas');
-        if (canvas && !canvasContext) {
+        if (canvas) {
+          // Always reinitialize context for new modal session
           canvasContext = canvas.getContext('2d');
+          canvasContext.clearRect(0, 0, canvas.width, canvas.height);
           canvasContext.lineWidth = brushSize;
           canvasContext.lineCap = 'round';
           canvasContext.strokeStyle = canvasColor;
           
+          // Remove old listeners to prevent duplicates
+          canvas.removeEventListener('mousedown', startDrawing);
+          canvas.removeEventListener('mousemove', draw);
+          canvas.removeEventListener('mouseup', stopDrawing);
+          canvas.removeEventListener('mouseout', stopDrawing);
+          canvas.removeEventListener('touchstart', handleTouchStart);
+          canvas.removeEventListener('touchmove', handleTouchMove);
+          canvas.removeEventListener('touchend', stopDrawing);
+          
+          // Add fresh event listeners
           canvas.addEventListener('mousedown', startDrawing);
           canvas.addEventListener('mousemove', draw);
           canvas.addEventListener('mouseup', stopDrawing);
@@ -7878,7 +7940,7 @@
           userEmail: currentUser.email,
           userType: currentStatusType,
           timestamp: window.firebaseTimestamp.now(),
-          expiresAt: window.firebaseTimestamp.fromDate(new Date(Date.now() + 24 * 60 * 60 * 1000))
+          expiresAt: window.firebaseTimestamp.fromDate(new Date(Date.now() + STATUS_EXPIRATION_HOURS * 60 * 60 * 1000))
         };
         
         if (activeTab === 'status-text-tab') {
