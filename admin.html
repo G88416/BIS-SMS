@@ -4028,12 +4028,6 @@
     }
     
     // HTML escape function
-    function escapeHtml(text) {
-      const div = document.createElement('div');
-      div.textContent = text;
-      return div.innerHTML;
-    }
-    
     function renderMessages() {
       // Deprecated - now using Choptso chat
       // Keeping for backwards compatibility
@@ -6167,9 +6161,25 @@
       const modal = new bootstrap.Modal(document.getElementById('callModal'));
       modal.show();
       
-      // Update UI
-      const contactName = document.getElementById('call-contact-name');
-      contactName.textContent = contactId.replace('teacher-', 'Teacher ').replace('parent-', 'Parent ').replace('student-', 'Student ');
+      // Update UI with proper contact name
+      const contactNameEl = document.getElementById('call-contact-name');
+      let displayName = 'Unknown Contact';
+      
+      if (contactId.startsWith('teacher-')) {
+        const teacherId = parseInt(contactId.replace('teacher-', ''));
+        const teacher = teachers.find(t => t.id === teacherId);
+        displayName = teacher ? teacher.name : 'Teacher';
+      } else if (contactId.startsWith('parent-')) {
+        const studentId = parseInt(contactId.replace('parent-', ''));
+        const student = students.find(s => s.id === studentId);
+        displayName = student ? `${student.parent} (Parent)` : 'Parent';
+      } else if (contactId.startsWith('student-')) {
+        const studentId = parseInt(contactId.replace('student-', ''));
+        const student = students.find(s => s.id === studentId);
+        displayName = student ? student.name : 'Student';
+      }
+      
+      contactNameEl.textContent = displayName;
       
       const icon = document.getElementById('call-type-icon');
       icon.className = type === 'voice' ? 'fas fa-phone' : 'fas fa-video';
@@ -6193,7 +6203,8 @@
       callStartTime = Date.now();
       callDurationInterval = setInterval(updateCallDuration, 1000);
       
-      // Simulate call connection (in real app, use WebRTC)
+      // IMPORTANT: WebRTC requires HTTPS in production for security
+      // getUserMedia will fail on HTTP connections (except localhost)
       try {
         // Request media permissions
         const constraints = {
