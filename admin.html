@@ -7396,7 +7396,7 @@
     }
 
     async function sendAdminVoiceNote(audioBlob) {
-      if (!currentConversationId || currentConversationId === 'all') {
+      if (!currentConversationId || currentConversationId === 'all' || currentConversationId.startsWith('group-')) {
         alert('Please select a contact to send voice note');
         return;
       }
@@ -7820,6 +7820,10 @@
         if (canvas) {
           // Always reinitialize context for new modal session
           canvasContext = canvas.getContext('2d');
+          if (!canvasContext) {
+            console.error('Failed to get canvas 2d context');
+            return;
+          }
           canvasContext.clearRect(0, 0, canvas.width, canvas.height);
           canvasContext.lineWidth = brushSize;
           canvasContext.lineCap = 'round';
@@ -7960,7 +7964,18 @@
             return;
           }
           
-          const fileName = `status_${currentUser.uid}_${Date.now()}.${file.name.split('.').pop()}`;
+          if (!file.type.startsWith('image/')) {
+            alert('Please select an image file');
+            return;
+          }
+          
+          const fileExt = getValidatedFileExtension(file.name);
+          if (!fileExt) {
+            alert('Invalid file type. Allowed: ' + ALLOWED_IMAGE_EXTENSIONS.join(', '));
+            return;
+          }
+          
+          const fileName = `status_${currentUser.uid}_${Date.now()}.${fileExt}`;
           const storageRef = window.firebaseStorageRef(window.firebaseStorage, `statuses/${fileName}`);
           await window.firebaseUploadBytes(storageRef, file);
           const url = await window.firebaseGetDownloadURL(storageRef);
