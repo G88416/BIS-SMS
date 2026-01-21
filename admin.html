@@ -2887,6 +2887,55 @@
     </div>
   </div>
 
+  <!-- Profile Picture Preview Modal -->
+  <div class="modal fade" id="profilePicPreviewModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title"><i class="fas fa-camera"></i> Update Profile Picture</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row">
+            <div class="col-md-8">
+              <div class="mb-3">
+                <label class="form-label">Select Image</label>
+                <input type="file" class="form-control" id="profile-pic-file-input" accept="image/*" onchange="previewProfilePicture()">
+              </div>
+              <div id="profile-pic-preview-container" class="text-center border rounded p-3" style="min-height: 300px; display: none;">
+                <img id="profile-pic-preview" src="" alt="Preview" style="max-width: 100%; max-height: 400px; object-fit: contain;">
+              </div>
+            </div>
+            <div class="col-md-4">
+              <h6>Preview</h6>
+              <div class="text-center">
+                <div class="position-relative d-inline-block mb-3">
+                  <img id="profile-pic-preview-small" src="https://via.placeholder.com/120" class="rounded-circle" width="120" height="120" alt="Profile Preview" style="object-fit: cover;">
+                </div>
+                <p class="text-muted small">This is how your profile picture will appear</p>
+              </div>
+              <div class="mt-3">
+                <h6>Tips:</h6>
+                <ul class="small text-muted">
+                  <li>Use a clear, well-lit photo</li>
+                  <li>Face the camera directly</li>
+                  <li>Square images work best</li>
+                  <li>Maximum size: 10MB</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" id="profile-pic-upload-btn" onclick="uploadProfilePictureFromModal()" disabled>
+            <i class="fas fa-upload"></i> Upload
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
@@ -4108,12 +4157,12 @@
       loadConversation('all');
     }
     
-    // Load contacts list
+    // Load contacts list with enhanced functionality
     async function loadContacts() {
       const contactsList = document.getElementById('choptso-contacts');
       
       try {
-        // Get all users from Firestore (you may need to create a users collection)
+        // Get all users from Firestore with enhanced profile data
         const usersQuery = window.firebaseQuery(
           window.firebaseCollection(window.firebaseDb, 'users'),
           window.firebaseOrderBy('displayName')
@@ -4126,10 +4175,33 @@
         contactsList.innerHTML = '';
         contactsList.appendChild(allUsersItem);
         
+        // Load user profiles for enhanced display
+        const userProfilesPromises = [];
         usersSnapshot.forEach((doc) => {
+          const userId = doc.id;
+          userProfilesPromises.push(
+            window.firebaseGetDocs(
+              window.firebaseQuery(
+                window.firebaseCollection(window.firebaseDb, 'userProfiles'),
+                window.firebaseWhere('userId', '==', userId)
+              )
+            )
+          );
+        });
+        
+        const userProfilesSnapshots = await Promise.all(userProfilesPromises);
+        
+        usersSnapshot.forEach((doc, index) => {
           const user = doc.data();
           const userId = doc.id;
           const currentUser = window.firebaseAuth.currentUser;
+          
+          // Get profile picture if available
+          let profilePicUrl = null;
+          if (!userProfilesSnapshots[index].empty) {
+            const profileData = userProfilesSnapshots[index].docs[0].data();
+            profilePicUrl = profileData.profilePicUrl;
+          }
           
           // Don't show current user in contacts
           if (currentUser && userId !== currentUser.uid) {
@@ -4137,24 +4209,55 @@
             contactItem.href = '#';
             contactItem.className = 'list-group-item list-group-item-action';
             contactItem.onclick = (e) => { loadConversation(userId, e); return false; };
+            
+            const avatarContent = profilePicUrl 
+              ? `<img src="${profilePicUrl}" alt="${user.displayName || 'User'}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">` 
+              : `<div class="choptso-avatar" style="width: 40px; height: 40px; font-size: 1rem;">
+                   ${user.displayName ? user.displayName.charAt(0).toUpperCase() : '?'}
+                 </div>`;
+            
             contactItem.innerHTML = `
               <div class="d-flex align-items-center">
-                <div class="choptso-avatar" style="width: 30px; height: 30px; font-size: 0.8rem;">
-                  ${user.displayName ? user.displayName.charAt(0).toUpperCase() : '?'}
-                </div>
-                <div class="ms-2">
+                ${avatarContent}
+                <div class="ms-2 flex-grow-1">
                   <strong>${user.displayName || 'User'}</strong>
                   <br><small class="text-muted">${user.role || ''}</small>
                 </div>
+                <span class="badge bg-success" id="status-${userId}" style="display: none;">●</span>
               </div>
             `;
             contactsList.appendChild(contactItem);
+            
+            // Check online status
+            checkUserStatus(userId);
           }
         });
       } catch (error) {
         console.error('Error loading contacts:', error);
         // Fallback to local users
         loadLocalContacts();
+      }
+    }
+    
+    // Check user online status
+    async function checkUserStatus(userId) {
+      try {
+        const statusDoc = await window.firebaseGetDocs(
+          window.firebaseQuery(
+            window.firebaseCollection(window.firebaseDb, 'userStatus'),
+            window.firebaseWhere('userId', '==', userId)
+          )
+        );
+        
+        if (!statusDoc.empty) {
+          const status = statusDoc.docs[0].data();
+          const statusBadge = document.getElementById(`status-${userId}`);
+          if (statusBadge && status.status === 'online') {
+            statusBadge.style.display = 'inline-block';
+          }
+        }
+      } catch (error) {
+        console.error('Error checking user status:', error);
       }
     }
     
@@ -4786,7 +4889,140 @@
       });
       
       localStorage.setItem('attendance', JSON.stringify(attendance));
+      
+      // Proactive attendance features
+      checkAttendanceAlerts(classId, date);
+      
       alert('Attendance saved successfully!');
+    }
+    
+    // Proactive attendance alerts
+    function checkAttendanceAlerts(classId, date) {
+      const cls = classes.find(c => c.id == classId);
+      if (!cls || !cls.studentIds) return;
+      
+      const alerts = [];
+      
+      // Check for students with low attendance
+      cls.studentIds.forEach(sid => {
+        const student = students.find(s => s.id == sid);
+        if (!student) return;
+        
+        // Calculate attendance rate
+        const attendanceRate = calculateStudentAttendanceRate(sid, classId);
+        
+        // Alert if attendance < 80%
+        if (attendanceRate < 80) {
+          alerts.push({
+            type: 'low_attendance',
+            student: student,
+            rate: attendanceRate,
+            message: `${student.firstname} ${student.surname} has low attendance (${attendanceRate.toFixed(1)}%)`
+          });
+          
+          // Send notification to parent (in real app, this would be via Firestore)
+          notifyParentOfLowAttendance(student, attendanceRate);
+        }
+        
+        // Check for consecutive absences
+        const consecutiveAbsences = checkConsecutiveAbsences(sid, classId);
+        if (consecutiveAbsences >= 3) {
+          alerts.push({
+            type: 'consecutive_absence',
+            student: student,
+            days: consecutiveAbsences,
+            message: `${student.firstname} ${student.surname} has been absent for ${consecutiveAbsences} consecutive days`
+          });
+        }
+      });
+      
+      // Display alerts if any
+      if (alerts.length > 0) {
+        displayAttendanceAlerts(alerts);
+      }
+    }
+    
+    function calculateStudentAttendanceRate(studentId, classId) {
+      if (!attendance[classId]) return 100;
+      
+      let totalDays = 0;
+      let presentDays = 0;
+      
+      Object.keys(attendance[classId]).forEach(date => {
+        if (attendance[classId][date][studentId]) {
+          totalDays++;
+          if (attendance[classId][date][studentId].status === 'Present') {
+            presentDays++;
+          }
+        }
+      });
+      
+      return totalDays > 0 ? (presentDays / totalDays) * 100 : 100;
+    }
+    
+    function checkConsecutiveAbsences(studentId, classId) {
+      if (!attendance[classId]) return 0;
+      
+      // Get dates in reverse chronological order
+      const dates = Object.keys(attendance[classId]).sort().reverse();
+      let consecutive = 0;
+      
+      for (const date of dates) {
+        if (attendance[classId][date][studentId] && 
+            attendance[classId][date][studentId].status === 'Absent') {
+          consecutive++;
+        } else {
+          break;
+        }
+      }
+      
+      return consecutive;
+    }
+    
+    function displayAttendanceAlerts(alerts) {
+      let alertHtml = '<div class="alert alert-warning alert-dismissible fade show" role="alert">';
+      alertHtml += '<h6><i class="fas fa-exclamation-triangle"></i> Attendance Alerts</h6>';
+      alertHtml += '<ul class="mb-0">';
+      
+      alerts.forEach(alert => {
+        alertHtml += `<li>${alert.message}</li>`;
+      });
+      
+      alertHtml += '</ul>';
+      alertHtml += '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>';
+      alertHtml += '</div>';
+      
+      // Insert alert at the top of attendance section
+      const attendanceSection = document.getElementById('attendance');
+      const existingAlert = attendanceSection.querySelector('.alert-warning');
+      if (existingAlert) {
+        existingAlert.remove();
+      }
+      attendanceSection.insertAdjacentHTML('afterbegin', alertHtml);
+    }
+    
+    async function notifyParentOfLowAttendance(student, attendanceRate) {
+      try {
+        // In a real implementation, send notification via Firestore
+        const notification = {
+          type: 'low_attendance',
+          studentId: student.id,
+          studentName: `${student.firstname} ${student.surname}`,
+          attendanceRate: attendanceRate,
+          message: `Your child's attendance has dropped to ${attendanceRate.toFixed(1)}%. Please ensure regular attendance.`,
+          timestamp: window.firebaseTimestamp ? window.firebaseTimestamp.now() : new Date(),
+          read: false
+        };
+        
+        // This would normally be sent to parent's notification collection
+        console.log('Parent notification:', notification);
+        
+        // Store in local notifications for now
+        if (!window.notifications) window.notifications = [];
+        window.notifications.push(notification);
+      } catch (error) {
+        console.error('Error sending parent notification:', error);
+      }
     }
 
     function saveGrades() {
@@ -4810,8 +5046,214 @@
       });
 
       localStorage.setItem('gradesData', JSON.stringify(gradesData));
+      
+      // Enhanced grade analytics
+      analyzeGradeDistribution(classId, term);
+      checkGradeAlerts(classId, term);
+      
       alert('Grades saved successfully!');
       renderGradesTable(); // Refresh averages
+    }
+    
+    // Analyze grade distribution for insights
+    function analyzeGradeDistribution(classId, term) {
+      if (!gradesData[classId] || !gradesData[classId][term]) return;
+      
+      const cls = classes.find(c => c.id == classId);
+      if (!cls || !cls.studentIds) return;
+      
+      // Calculate statistics for each subject
+      const subjectStats = {};
+      const subjects = ['Mathematics', 'English', 'Science', 'History', 'Life Skills'];
+      
+      subjects.forEach(subject => {
+        const grades = [];
+        cls.studentIds.forEach(sid => {
+          if (gradesData[classId][term][sid] && gradesData[classId][term][sid][subject]) {
+            const grade = parseFloat(gradesData[classId][term][sid][subject]);
+            if (!isNaN(grade)) {
+              grades.push(grade);
+            }
+          }
+        });
+        
+        if (grades.length > 0) {
+          const avg = grades.reduce((a, b) => a + b, 0) / grades.length;
+          const min = Math.min(...grades);
+          const max = Math.max(...grades);
+          const passing = grades.filter(g => g >= 50).length;
+          
+          subjectStats[subject] = {
+            average: avg.toFixed(1),
+            min: min,
+            max: max,
+            passingRate: ((passing / grades.length) * 100).toFixed(1),
+            count: grades.length
+          };
+        }
+      });
+      
+      // Store analytics for display
+      window.gradeAnalytics = window.gradeAnalytics || {};
+      window.gradeAnalytics[classId] = window.gradeAnalytics[classId] || {};
+      window.gradeAnalytics[classId][term] = subjectStats;
+      
+      console.log('Grade Analytics:', subjectStats);
+    }
+    
+    // Check for grade alerts
+    function checkGradeAlerts(classId, term) {
+      if (!gradesData[classId] || !gradesData[classId][term]) return;
+      
+      const cls = classes.find(c => c.id == classId);
+      if (!cls || !cls.studentIds) return;
+      
+      const alerts = [];
+      
+      cls.studentIds.forEach(sid => {
+        const student = students.find(s => s.id == sid);
+        if (!student) return;
+        
+        if (gradesData[classId][term][sid]) {
+          const studentGrades = gradesData[classId][term][sid];
+          const subjects = ['Mathematics', 'English', 'Science', 'History', 'Life Skills'];
+          
+          let totalGrade = 0;
+          let gradeCount = 0;
+          let failingSubjects = [];
+          
+          subjects.forEach(subject => {
+            if (studentGrades[subject]) {
+              const grade = parseFloat(studentGrades[subject]);
+              if (!isNaN(grade)) {
+                totalGrade += grade;
+                gradeCount++;
+                
+                if (grade < 50) {
+                  failingSubjects.push(subject);
+                }
+              }
+            }
+          });
+          
+          // Alert for failing grades
+          if (failingSubjects.length > 0) {
+            alerts.push({
+              type: 'failing',
+              student: student,
+              subjects: failingSubjects,
+              message: `${student.firstname} ${student.surname} is failing in: ${failingSubjects.join(', ')}`
+            });
+          }
+          
+          // Alert for very low average
+          if (gradeCount > 0) {
+            const average = totalGrade / gradeCount;
+            if (average < 40) {
+              alerts.push({
+                type: 'low_average',
+                student: student,
+                average: average.toFixed(1),
+                message: `${student.firstname} ${student.surname} has a very low average (${average.toFixed(1)}%)`
+              });
+            }
+          }
+        }
+      });
+      
+      if (alerts.length > 0) {
+        displayGradeAlerts(alerts);
+      }
+    }
+    
+    function displayGradeAlerts(alerts) {
+      let alertHtml = '<div class="alert alert-danger alert-dismissible fade show" role="alert">';
+      alertHtml += '<h6><i class="fas fa-exclamation-circle"></i> Grade Alerts</h6>';
+      alertHtml += '<ul class="mb-0">';
+      
+      alerts.forEach(alert => {
+        alertHtml += `<li>${alert.message}</li>`;
+      });
+      
+      alertHtml += '</ul>';
+      alertHtml += '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>';
+      alertHtml += '</div>';
+      
+      // Insert alert at the top of grades section
+      const gradesSection = document.getElementById('grades');
+      const existingAlert = gradesSection.querySelector('.alert-danger');
+      if (existingAlert) {
+        existingAlert.remove();
+      }
+      gradesSection.insertAdjacentHTML('afterbegin', alertHtml);
+    }
+    
+    // Bulk grade entry helper
+    function bulkEnterGrades(subject, grade) {
+      const classId = document.getElementById('grades-class').value;
+      if (!classId) return alert('Select a class first');
+      
+      document.querySelectorAll(`#grades-table input[data-subject="${subject}"]`).forEach(input => {
+        input.value = grade;
+      });
+    }
+    
+    // Export grades to CSV
+    function exportGradesToCSV() {
+      const classId = document.getElementById('grades-class').value;
+      const term = document.getElementById('grades-term').value || 'Term 1 2026';
+      
+      if (!classId || !gradesData[classId] || !gradesData[classId][term]) {
+        alert('No grades to export');
+        return;
+      }
+      
+      const cls = classes.find(c => c.id == classId);
+      if (!cls || !cls.studentIds) return;
+      
+      const subjects = ['Mathematics', 'English', 'Science', 'History', 'Life Skills'];
+      
+      // Build CSV
+      let csv = 'Student ID,Name,Surname,' + subjects.join(',') + ',Average,Comment\n';
+      
+      cls.studentIds.forEach(sid => {
+        const student = students.find(s => s.id == sid);
+        if (!student) return;
+        
+        let row = `${student.id},"${student.firstname}","${student.surname}"`;
+        let total = 0;
+        let count = 0;
+        
+        subjects.forEach(subject => {
+          const grade = gradesData[classId][term][sid] && gradesData[classId][term][sid][subject] 
+            ? gradesData[classId][term][sid][subject] : '';
+          row += `,${grade}`;
+          
+          if (grade !== '') {
+            const g = parseFloat(grade);
+            if (!isNaN(g)) {
+              total += g;
+              count++;
+            }
+          }
+        });
+        
+        const avg = count > 0 ? (total / count).toFixed(1) : '';
+        const comment = gradesData[classId][term][sid] && gradesData[classId][term][sid].comment 
+          ? gradesData[classId][term][sid].comment : '';
+        
+        row += `,${avg},"${comment}"\n`;
+        csv += row;
+      });
+      
+      // Download CSV
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `grades_${cls.name}_${term}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
     }
     
     // Attendance History
@@ -6769,18 +7211,36 @@
       const contactNameEl = document.getElementById('call-contact-name');
       let displayName = 'Unknown Contact';
       
-      if (contactId.startsWith('teacher-')) {
-        const teacherId = parseInt(contactId.replace('teacher-', ''));
-        const teacher = teachers.find(t => t.id === teacherId);
-        displayName = teacher ? teacher.name : 'Teacher';
-      } else if (contactId.startsWith('parent-')) {
-        const studentId = parseInt(contactId.replace('parent-', ''));
-        const student = students.find(s => s.id === studentId);
-        displayName = student ? `${student.parent} (Parent)` : 'Parent';
-      } else if (contactId.startsWith('student-')) {
-        const studentId = parseInt(contactId.replace('student-', ''));
-        const student = students.find(s => s.id === studentId);
-        displayName = student ? student.name : 'Student';
+      // Enhanced contact name resolution
+      try {
+        // Try to get user data from Firestore
+        const userDoc = await window.firebaseGetDocs(
+          window.firebaseQuery(
+            window.firebaseCollection(window.firebaseDb, 'users'),
+            window.firebaseWhere('__name__', '==', contactId)
+          )
+        );
+        
+        if (!userDoc.empty) {
+          const userData = userDoc.docs[0].data();
+          displayName = userData.displayName || userData.name || 'User';
+        }
+      } catch (error) {
+        console.log('Could not fetch user data, using fallback');
+        // Fallback to local data
+        if (contactId.startsWith('teacher-')) {
+          const teacherId = parseInt(contactId.replace('teacher-', ''));
+          const teacher = teachers.find(t => t.id === teacherId);
+          displayName = teacher ? teacher.name : 'Teacher';
+        } else if (contactId.startsWith('parent-')) {
+          const studentId = parseInt(contactId.replace('parent-', ''));
+          const student = students.find(s => s.id === studentId);
+          displayName = student ? `${student.parent} (Parent)` : 'Parent';
+        } else if (contactId.startsWith('student-')) {
+          const studentId = parseInt(contactId.replace('student-', ''));
+          const student = students.find(s => s.id === studentId);
+          displayName = student ? student.name : 'Student';
+        }
       }
       
       contactNameEl.textContent = displayName;
@@ -6829,6 +7289,25 @@
           statusElement.textContent = 'Connected';
         }
         
+        // Store call metadata in Firestore for tracking
+        try {
+          const currentUser = window.firebaseAuth.currentUser;
+          const callDoc = {
+            callerId: currentUser.uid,
+            recipientId: contactId,
+            callType: type,
+            startTime: window.firebaseTimestamp.now(),
+            status: 'initiated'
+          };
+          
+          await window.firebaseAddDoc(
+            window.firebaseCollection(window.firebaseDb, 'callHistory'),
+            callDoc
+          );
+        } catch (error) {
+          console.error('Error saving call metadata:', error);
+        }
+        
         // In a real implementation, you would:
         // 1. Create RTCPeerConnection
         // 2. Add local stream tracks
@@ -6836,9 +7315,27 @@
         // 4. Handle answer and ICE candidates
         // 5. Display remote stream
         
+        // Example WebRTC setup (requires signaling server):
+        // peerConnection = new RTCPeerConnection({
+        //   iceServers: [
+        //     { urls: 'stun:stun.l.google.com:19302' },
+        //     { urls: 'stun:stun1.l.google.com:19302' }
+        //   ]
+        // });
+        // 
+        // localStream.getTracks().forEach(track => {
+        //   peerConnection.addTrack(track, localStream);
+        // });
+        // 
+        // peerConnection.ontrack = (event) => {
+        //   if (type === 'video') {
+        //     document.getElementById('remote-video').srcObject = event.streams[0];
+        //   }
+        // };
+        
       } catch (error) {
         console.error('Error accessing media devices:', error);
-        alert('Could not access camera/microphone. Please check permissions.');
+        alert('Could not access camera/microphone. Please check permissions and ensure you are using HTTPS.');
         endCall();
       }
     }
@@ -7593,7 +8090,92 @@
 
     // ===== Profile Picture Functions =====
     function adminUploadProfilePic() {
-      document.getElementById('admin-profile-pic-input').click();
+      // Open the enhanced profile picture modal
+      const modal = new bootstrap.Modal(document.getElementById('profilePicPreviewModal'));
+      modal.show();
+      
+      // Reset the modal
+      document.getElementById('profile-pic-file-input').value = '';
+      document.getElementById('profile-pic-preview-container').style.display = 'none';
+      document.getElementById('profile-pic-upload-btn').disabled = true;
+    }
+    
+    function previewProfilePicture() {
+      const fileInput = document.getElementById('profile-pic-file-input');
+      const file = fileInput.files[0];
+      
+      if (!file) return;
+      
+      if (!file.type.startsWith('image/')) {
+        alert('Please select an image file');
+        fileInput.value = '';
+        return;
+      }
+      
+      if (file.size > 10 * 1024 * 1024) {
+        alert('Image size must be less than 10MB');
+        fileInput.value = '';
+        return;
+      }
+      
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        document.getElementById('profile-pic-preview').src = e.target.result;
+        document.getElementById('profile-pic-preview-small').src = e.target.result;
+        document.getElementById('profile-pic-preview-container').style.display = 'block';
+        document.getElementById('profile-pic-upload-btn').disabled = false;
+      };
+      reader.readAsDataURL(file);
+    }
+    
+    async function uploadProfilePictureFromModal() {
+      const fileInput = document.getElementById('profile-pic-file-input');
+      const file = fileInput.files[0];
+      
+      if (!file) {
+        alert('Please select an image file');
+        return;
+      }
+      
+      const uploadBtn = document.getElementById('profile-pic-upload-btn');
+      uploadBtn.disabled = true;
+      uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
+      
+      try {
+        const currentUser = window.firebaseAuth.currentUser;
+        const fileExt = file.name.split('.').pop();
+        const fileName = `profile_${currentUser.uid}_${Date.now()}.${fileExt}`;
+        const storageRef = window.firebaseStorageRef(window.firebaseStorage, `profiles/${currentUser.uid}/${fileName}`);
+        
+        await window.firebaseUploadBytes(storageRef, file);
+        const url = await window.firebaseGetDownloadURL(storageRef);
+        
+        // Update profile picture in UI
+        document.getElementById('admin-profile-pic').src = url;
+        
+        // Save to Firestore
+        const userProfileRef = window.firebaseDoc(window.firebaseDb, 'userProfiles', currentUser.uid);
+        await window.firebaseSetDoc(userProfileRef, {
+          userId: currentUser.uid,
+          profilePicUrl: url,
+          updatedAt: window.firebaseTimestamp.now()
+        }, { merge: true });
+        
+        alert('Profile picture updated successfully!');
+        
+        // Close modal
+        const modal = bootstrap.Modal.getInstance(document.getElementById('profilePicPreviewModal'));
+        modal.hide();
+        
+        // Reload contacts to show updated picture
+        loadContacts();
+      } catch (error) {
+        console.error('Error uploading profile picture:', error);
+        alert('Failed to upload profile picture');
+      } finally {
+        uploadBtn.disabled = false;
+        uploadBtn.innerHTML = '<i class="fas fa-upload"></i> Upload';
+      }
     }
 
     async function handleAdminProfilePicUpload() {
