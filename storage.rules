@@ -227,6 +227,22 @@ service firebase.storage {
       allow write: if isAdmin() && isEmojiImage();
     }
     
+    // Choptso voice notes
+    match /choptso-voice/{conversationId}/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && 
+                      request.resource.contentType.matches('audio/.*') &&
+                      request.resource.size < 10 * 1024 * 1024; // Max 10MB for voice notes
+    }
+    
+    // User status/story media (24-hour ephemeral content)
+    match /statuses/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && 
+                      (isImage() || request.resource.contentType == 'image/png') &&
+                      request.resource.size < 5 * 1024 * 1024; // Max 5MB for status images
+    }
+    
     // Default deny all other access
     match /{allPaths=**} {
       allow read, write: if false;
