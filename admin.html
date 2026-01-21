@@ -5911,29 +5911,92 @@
     function loadStudentResources() {
       const searchTerm = document.getElementById('student-resource-search').value.toLowerCase();
       
-      // Sample resources
-      const resources = [
-        { title: 'Mathematics Textbook Chapter 5', type: 'PDF', subject: 'Mathematics', url: '#' },
-        { title: 'Science Lab Manual', type: 'PDF', subject: 'Science', url: '#' },
-        { title: 'English Literature Notes', type: 'Document', subject: 'English', url: '#' },
-        { title: 'History Video Lecture', type: 'Video', subject: 'History', url: '#' }
-      ];
+      // Load resources from storage
+      if (!window.resources) {
+        window.resources = JSON.parse(localStorage.getItem('resources') || '[]');
+      }
       
-      let filteredResources = searchTerm ? resources.filter(r => r.title.toLowerCase().includes(searchTerm) || r.subject.toLowerCase().includes(searchTerm)) : resources;
+      // Sample default resources if none exist
+      if (window.resources.length === 0) {
+        window.resources = [
+          { id: 1, title: 'Mathematics Textbook Chapter 5', type: 'PDF', subject: 'Mathematics', url: '#', uploadedBy: 'admin', uploadDate: '2026-01-15', downloads: 0, category: 'Textbook' },
+          { id: 2, title: 'Science Lab Manual', type: 'PDF', subject: 'Science', url: '#', uploadedBy: 'admin', uploadDate: '2026-01-15', downloads: 0, category: 'Manual' },
+          { id: 3, title: 'English Literature Notes', type: 'Document', subject: 'English', url: '#', uploadedBy: 'admin', uploadDate: '2026-01-15', downloads: 0, category: 'Notes' },
+          { id: 4, title: 'History Video Lecture', type: 'Video', subject: 'History', url: '#', uploadedBy: 'admin', uploadDate: '2026-01-15', downloads: 0, category: 'Video' }
+        ];
+        localStorage.setItem('resources', JSON.stringify(window.resources));
+      }
       
-      let html = '<div class="list-group">';
+      let filteredResources = searchTerm 
+        ? window.resources.filter(r => 
+            r.title.toLowerCase().includes(searchTerm) || 
+            r.subject.toLowerCase().includes(searchTerm) ||
+            r.category.toLowerCase().includes(searchTerm)
+          )
+        : window.resources;
+      
+      // Group by subject
+      const groupedResources = {};
       filteredResources.forEach(res => {
-        html += `<a href="${res.url}" class="list-group-item list-group-item-action">
-          <div class="d-flex justify-content-between align-items-center">
-            <h6 class="mb-1">${res.title}</h6>
-            <span class="badge bg-secondary">${res.type}</span>
-          </div>
-          <small class="text-muted">Subject: ${res.subject}</small>
-        </a>`;
+        if (!groupedResources[res.subject]) {
+          groupedResources[res.subject] = [];
+        }
+        groupedResources[res.subject].push(res);
       });
-      html += '</div>';
+      
+      let html = '';
+      
+      Object.keys(groupedResources).sort().forEach(subject => {
+        html += `
+          <div class="card mb-3">
+            <div class="card-header bg-primary text-white">
+              <i class="fas fa-book"></i> ${escapeHtml(subject)}
+            </div>
+            <div class="list-group list-group-flush">
+        `;
+        
+        groupedResources[subject].forEach(res => {
+          const typeIcon = res.type === 'PDF' ? 'fa-file-pdf' 
+            : res.type === 'Video' ? 'fa-video'
+            : res.type === 'Document' ? 'fa-file-word'
+            : 'fa-file';
+          
+          html += `
+            <a href="${res.url}" class="list-group-item list-group-item-action" onclick="trackResourceDownload(${res.id}); return true;">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <h6 class="mb-1">
+                    <i class="fas ${typeIcon} me-2"></i>
+                    ${escapeHtml(res.title)}
+                  </h6>
+                  <small class="text-muted">
+                    Category: ${escapeHtml(res.category)} | 
+                    Uploaded: ${res.uploadDate} | 
+                    Downloads: ${res.downloads}
+                  </small>
+                </div>
+                <span class="badge bg-secondary">${escapeHtml(res.type)}</span>
+              </div>
+            </a>
+          `;
+        });
+        
+        html += '</div></div>';
+      });
       
       document.getElementById('student-resources-content').innerHTML = html || '<p>No resources found.</p>';
+    }
+    
+    function trackResourceDownload(resourceId) {
+      if (!window.resources) {
+        window.resources = JSON.parse(localStorage.getItem('resources') || '[]');
+      }
+      
+      const resource = window.resources.find(r => r.id === resourceId);
+      if (resource) {
+        resource.downloads = (resource.downloads || 0) + 1;
+        localStorage.setItem('resources', JSON.stringify(window.resources));
+      }
     }
     
     function loadStudentCommunication() {
@@ -6224,24 +6287,245 @@
       const description = document.getElementById('assignment-description').value.trim();
       const dueDate = document.getElementById('assignment-due-date').value;
       const classId = document.getElementById('assignment-class').value;
+      const subject = document.getElementById('assignment-subject') ? document.getElementById('assignment-subject').value : 'General';
+      const type = document.getElementById('assignment-type') ? document.getElementById('assignment-type').value : 'homework';
+      const maxPoints = document.getElementById('assignment-max-points') ? parseInt(document.getElementById('assignment-max-points').value) : 100;
       
       if (!title || !dueDate || !classId) {
         alert('Please fill in all required fields.');
         return;
       }
       
-      alert(`Assignment "${title}" created successfully for class!`);
+      // Initialize assignments storage
+      if (!window.assignments) {
+        window.assignments = JSON.parse(localStorage.getItem('assignments') || '[]');
+      }
+      
+      // Create new assignment
+      const newAssignment = {
+        id: Date.now(),
+        title: title,
+        description: description,
+        dueDate: dueDate,
+        classId: parseInt(classId),
+        subject: subject,
+        type: type,
+        maxPoints: maxPoints,
+        createdDate: new Date().toISOString().split('T')[0],
+        createdBy: 'admin', // Would be current user in real app
+        submissions: {},
+        status: 'active'
+      };
+      
+      window.assignments.push(newAssignment);
+      localStorage.setItem('assignments', JSON.stringify(window.assignments));
+      
+      alert(`Assignment "${title}" created successfully!`);
       loadTeacherAssignments();
       
       // Clear form
       document.getElementById('assignment-title').value = '';
       document.getElementById('assignment-description').value = '';
       document.getElementById('assignment-due-date').value = '';
+      if (document.getElementById('assignment-subject')) document.getElementById('assignment-subject').value = '';
+      if (document.getElementById('assignment-max-points')) document.getElementById('assignment-max-points').value = '100';
     }
     
     function loadTeacherAssignments() {
       const content = document.getElementById('teacher-assignments-content');
-      content.innerHTML = '<p class="text-muted">No assignments yet. Click "Create New Assignment" to get started.</p>';
+      
+      // Load assignments from storage
+      if (!window.assignments) {
+        window.assignments = JSON.parse(localStorage.getItem('assignments') || '[]');
+      }
+      
+      if (window.assignments.length === 0) {
+        content.innerHTML = '<p class="text-muted">No assignments yet. Click "Create New Assignment" to get started.</p>';
+        return;
+      }
+      
+      // Display assignments with enhanced analytics
+      let html = '<div class="row">';
+      
+      // Add assignment statistics
+      const activeAssignments = window.assignments.filter(a => a.status === 'active').length;
+      const overdueAssignments = window.assignments.filter(a => {
+        return a.status === 'active' && new Date(a.dueDate) < new Date();
+      }).length;
+      
+      html += `
+        <div class="col-md-12 mb-3">
+          <div class="row">
+            <div class="col-md-4">
+              <div class="card bg-primary text-white">
+                <div class="card-body">
+                  <h5>${activeAssignments}</h5>
+                  <small>Active Assignments</small>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="card bg-warning text-white">
+                <div class="card-body">
+                  <h5>${overdueAssignments}</h5>
+                  <small>Overdue</small>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="card bg-success text-white">
+                <div class="card-body">
+                  <h5>${window.assignments.length}</h5>
+                  <small>Total Assignments</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      html += '</div><div class="table-responsive"><table class="table table-hover">';
+      html += '<thead><tr><th>Title</th><th>Class</th><th>Subject</th><th>Due Date</th><th>Submissions</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
+      
+      window.assignments.forEach(assignment => {
+        const cls = classes.find(c => c.id === assignment.classId);
+        const className = cls ? cls.name : 'Unknown Class';
+        const submissionCount = Object.keys(assignment.submissions || {}).length;
+        const totalStudents = cls && cls.studentIds ? cls.studentIds.length : 0;
+        const submissionRate = totalStudents > 0 ? ((submissionCount / totalStudents) * 100).toFixed(0) : 0;
+        
+        const isOverdue = new Date(assignment.dueDate) < new Date();
+        const statusBadge = isOverdue ? '<span class="badge bg-danger">Overdue</span>' : '<span class="badge bg-success">Active</span>';
+        
+        html += `
+          <tr>
+            <td><strong>${escapeHtml(assignment.title)}</strong><br><small class="text-muted">${escapeHtml(assignment.description || '')}</small></td>
+            <td>${escapeHtml(className)}</td>
+            <td>${escapeHtml(assignment.subject || 'General')}</td>
+            <td>${assignment.dueDate}</td>
+            <td>
+              <div class="progress" style="height: 20px;">
+                <div class="progress-bar ${submissionRate < 50 ? 'bg-danger' : submissionRate < 80 ? 'bg-warning' : 'bg-success'}" 
+                     role="progressbar" style="width: ${submissionRate}%" 
+                     aria-valuenow="${submissionRate}" aria-valuemin="0" aria-valuemax="100">
+                  ${submissionCount}/${totalStudents}
+                </div>
+              </div>
+            </td>
+            <td>${statusBadge}</td>
+            <td>
+              <button class="btn btn-sm btn-info" onclick="viewAssignmentDetails(${assignment.id})" title="View Details">
+                <i class="fas fa-eye"></i>
+              </button>
+              <button class="btn btn-sm btn-primary" onclick="gradeAssignment(${assignment.id})" title="Grade">
+                <i class="fas fa-check"></i>
+              </button>
+              <button class="btn btn-sm btn-danger" onclick="deleteAssignment(${assignment.id})" title="Delete">
+                <i class="fas fa-trash"></i>
+              </button>
+            </td>
+          </tr>
+        `;
+      });
+      
+      html += '</tbody></table></div>';
+      content.innerHTML = html;
+    }
+    
+    function viewAssignmentDetails(assignmentId) {
+      const assignment = window.assignments.find(a => a.id === assignmentId);
+      if (!assignment) return;
+      
+      const cls = classes.find(c => c.id === assignment.classId);
+      
+      let detailsHtml = `
+        <div class="modal fade" id="assignmentDetailsModal" tabindex="-1">
+          <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">Assignment Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+              </div>
+              <div class="modal-body">
+                <h6>${escapeHtml(assignment.title)}</h6>
+                <p>${escapeHtml(assignment.description || 'No description')}</p>
+                <div class="row mb-3">
+                  <div class="col-md-6">
+                    <strong>Class:</strong> ${cls ? escapeHtml(cls.name) : 'Unknown'}<br>
+                    <strong>Subject:</strong> ${escapeHtml(assignment.subject || 'General')}<br>
+                    <strong>Due Date:</strong> ${assignment.dueDate}
+                  </div>
+                  <div class="col-md-6">
+                    <strong>Max Points:</strong> ${assignment.maxPoints}<br>
+                    <strong>Type:</strong> ${escapeHtml(assignment.type || 'homework')}<br>
+                    <strong>Created:</strong> ${assignment.createdDate}
+                  </div>
+                </div>
+                <h6>Submissions</h6>
+                <div class="table-responsive">
+                  <table class="table table-sm">
+                    <thead><tr><th>Student</th><th>Submitted</th><th>Grade</th><th>Feedback</th></tr></thead>
+                    <tbody>
+      `;
+      
+      if (cls && cls.studentIds) {
+        cls.studentIds.forEach(sid => {
+          const student = students.find(s => s.id === sid);
+          if (!student) return;
+          
+          const submission = assignment.submissions[sid];
+          if (submission) {
+            detailsHtml += `
+              <tr>
+                <td>${escapeHtml(student.firstname)} ${escapeHtml(student.surname)}</td>
+                <td><span class="badge bg-success">Yes</span></td>
+                <td>${submission.grade || 'Not graded'}</td>
+                <td>${escapeHtml(submission.feedback || '-')}</td>
+              </tr>
+            `;
+          } else {
+            detailsHtml += `
+              <tr>
+                <td>${escapeHtml(student.firstname)} ${escapeHtml(student.surname)}</td>
+                <td><span class="badge bg-warning">No</span></td>
+                <td>-</td>
+                <td>-</td>
+              </tr>
+            `;
+          }
+        });
+      }
+      
+      detailsHtml += `
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      // Remove existing modal if any
+      const existingModal = document.getElementById('assignmentDetailsModal');
+      if (existingModal) existingModal.remove();
+      
+      document.body.insertAdjacentHTML('beforeend', detailsHtml);
+      const modal = new bootstrap.Modal(document.getElementById('assignmentDetailsModal'));
+      modal.show();
+    }
+    
+    function gradeAssignment(assignmentId) {
+      alert('Grade assignment feature - allows bulk grading of student submissions');
+      // This would open a grading interface
+    }
+    
+    function deleteAssignment(assignmentId) {
+      if (!confirm('Are you sure you want to delete this assignment?')) return;
+      
+      window.assignments = window.assignments.filter(a => a.id !== assignmentId);
+      localStorage.setItem('assignments', JSON.stringify(window.assignments));
+      loadTeacherAssignments();
     }
     
     function loadTeacherLessonPlans() {
@@ -6253,7 +6537,199 @@
         return;
       }
       
-      content.innerHTML = '<p class="text-muted">Lesson planning module coming soon. You can track your syllabus progress and create weekly lesson plans here.</p>';
+      // Initialize lesson plans storage
+      if (!window.lessonPlans) {
+        window.lessonPlans = JSON.parse(localStorage.getItem('lessonPlans') || '{}');
+      }
+      
+      const cls = classes.find(c => c.id == classId);
+      if (!cls) {
+        content.innerHTML = '<p class="text-muted">Class not found.</p>';
+        return;
+      }
+      
+      // Display lesson planning interface
+      let html = `
+        <div class="card mb-3">
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-8">
+                <h6>Lesson Planning for ${escapeHtml(cls.name)}</h6>
+                <p class="text-muted">Create and track weekly lesson plans and syllabus progress</p>
+              </div>
+              <div class="col-md-4 text-end">
+                <button class="btn btn-primary btn-sm" onclick="createNewLessonPlan(${classId})">
+                  <i class="fas fa-plus"></i> New Lesson Plan
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="row mb-3">
+          <div class="col-md-12">
+            <div class="card">
+              <div class="card-header bg-info text-white">
+                <i class="fas fa-chart-line"></i> Syllabus Progress
+              </div>
+              <div class="card-body">
+                <div class="mb-2">
+                  <label>Overall Progress:</label>
+                  <div class="progress" style="height: 25px;">
+                    <div class="progress-bar" id="syllabus-progress-${classId}" role="progressbar" 
+                         style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                      0%
+                    </div>
+                  </div>
+                </div>
+                <div class="row mt-3">
+                  <div class="col-md-4">
+                    <small class="text-muted">Planned Lessons:</small>
+                    <h5 id="planned-lessons-${classId}">0</h5>
+                  </div>
+                  <div class="col-md-4">
+                    <small class="text-muted">Completed Lessons:</small>
+                    <h5 id="completed-lessons-${classId}">0</h5>
+                  </div>
+                  <div class="col-md-4">
+                    <small class="text-muted">Upcoming:</small>
+                    <h5 id="upcoming-lessons-${classId}">0</h5>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      // Load existing lesson plans
+      const classLessonPlans = window.lessonPlans[classId] || [];
+      
+      if (classLessonPlans.length > 0) {
+        html += '<div class="table-responsive"><table class="table table-hover">';
+        html += '<thead><tr><th>Week</th><th>Topic</th><th>Objectives</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
+        
+        classLessonPlans.forEach((plan, index) => {
+          const statusBadge = plan.status === 'completed' 
+            ? '<span class="badge bg-success">Completed</span>' 
+            : plan.status === 'in_progress'
+            ? '<span class="badge bg-warning">In Progress</span>'
+            : '<span class="badge bg-secondary">Planned</span>';
+          
+          html += `
+            <tr>
+              <td>Week ${plan.week}</td>
+              <td><strong>${escapeHtml(plan.topic)}</strong></td>
+              <td><small>${escapeHtml(plan.objectives || 'No objectives set')}</small></td>
+              <td>${plan.date}</td>
+              <td>${statusBadge}</td>
+              <td>
+                <button class="btn btn-sm btn-info" onclick="editLessonPlan(${classId}, ${index})" title="Edit">
+                  <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn btn-sm btn-success" onclick="markLessonComplete(${classId}, ${index})" title="Mark Complete">
+                  <i class="fas fa-check"></i>
+                </button>
+                <button class="btn btn-sm btn-danger" onclick="deleteLessonPlan(${classId}, ${index})" title="Delete">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </td>
+            </tr>
+          `;
+        });
+        
+        html += '</tbody></table></div>';
+        
+        // Update statistics
+        setTimeout(() => {
+          const completed = classLessonPlans.filter(p => p.status === 'completed').length;
+          const total = classLessonPlans.length;
+          const upcoming = classLessonPlans.filter(p => new Date(p.date) > new Date()).length;
+          const progress = total > 0 ? Math.round((completed / total) * 100) : 0;
+          
+          const progressBar = document.getElementById(`syllabus-progress-${classId}`);
+          if (progressBar) {
+            progressBar.style.width = progress + '%';
+            progressBar.textContent = progress + '%';
+            progressBar.setAttribute('aria-valuenow', progress);
+          }
+          
+          const plannedEl = document.getElementById(`planned-lessons-${classId}`);
+          if (plannedEl) plannedEl.textContent = total;
+          
+          const completedEl = document.getElementById(`completed-lessons-${classId}`);
+          if (completedEl) completedEl.textContent = completed;
+          
+          const upcomingEl = document.getElementById(`upcoming-lessons-${classId}`);
+          if (upcomingEl) upcomingEl.textContent = upcoming;
+        }, 100);
+      } else {
+        html += '<div class="alert alert-info">No lesson plans yet. Click "New Lesson Plan" to create one.</div>';
+      }
+      
+      content.innerHTML = html;
+    }
+    
+    function createNewLessonPlan(classId) {
+      const topic = prompt('Enter lesson topic:');
+      if (!topic) return;
+      
+      const objectives = prompt('Enter learning objectives:');
+      const date = prompt('Enter lesson date (YYYY-MM-DD):', new Date().toISOString().split('T')[0]);
+      
+      if (!window.lessonPlans) {
+        window.lessonPlans = JSON.parse(localStorage.getItem('lessonPlans') || '{}');
+      }
+      
+      if (!window.lessonPlans[classId]) {
+        window.lessonPlans[classId] = [];
+      }
+      
+      const newPlan = {
+        week: window.lessonPlans[classId].length + 1,
+        topic: topic,
+        objectives: objectives || '',
+        date: date || new Date().toISOString().split('T')[0],
+        status: 'planned',
+        resources: [],
+        notes: '',
+        createdDate: new Date().toISOString()
+      };
+      
+      window.lessonPlans[classId].push(newPlan);
+      localStorage.setItem('lessonPlans', JSON.stringify(window.lessonPlans));
+      
+      loadTeacherLessonPlans();
+    }
+    
+    function editLessonPlan(classId, index) {
+      const plan = window.lessonPlans[classId][index];
+      
+      const newTopic = prompt('Edit topic:', plan.topic);
+      if (newTopic !== null) plan.topic = newTopic;
+      
+      const newObjectives = prompt('Edit objectives:', plan.objectives);
+      if (newObjectives !== null) plan.objectives = newObjectives;
+      
+      const newDate = prompt('Edit date:', plan.date);
+      if (newDate !== null) plan.date = newDate;
+      
+      localStorage.setItem('lessonPlans', JSON.stringify(window.lessonPlans));
+      loadTeacherLessonPlans();
+    }
+    
+    function markLessonComplete(classId, index) {
+      window.lessonPlans[classId][index].status = 'completed';
+      localStorage.setItem('lessonPlans', JSON.stringify(window.lessonPlans));
+      loadTeacherLessonPlans();
+    }
+    
+    function deleteLessonPlan(classId, index) {
+      if (!confirm('Delete this lesson plan?')) return;
+      
+      window.lessonPlans[classId].splice(index, 1);
+      localStorage.setItem('lessonPlans', JSON.stringify(window.lessonPlans));
+      loadTeacherLessonPlans();
     }
     
     function sendTeacherAnnouncement() {
@@ -6294,7 +6770,220 @@
     }
     
     function uploadTeacherResource() {
-      alert('Resource upload feature coming soon! You will be able to upload PDFs, documents, and other study materials for your students.');
+      // Create resource upload modal
+      const modalHtml = `
+        <div class="modal fade" id="uploadResourceModal" tabindex="-1">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-upload"></i> Upload Resource</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+              </div>
+              <div class="modal-body">
+                <div class="mb-3">
+                  <label class="form-label">Title *</label>
+                  <input type="text" class="form-control" id="resource-title" placeholder="Resource title">
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Subject *</label>
+                  <select class="form-select" id="resource-subject">
+                    <option value="">Select subject</option>
+                    <option value="Mathematics">Mathematics</option>
+                    <option value="English">English</option>
+                    <option value="Science">Science</option>
+                    <option value="History">History</option>
+                    <option value="Life Skills">Life Skills</option>
+                    <option value="General">General</option>
+                  </select>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Category *</label>
+                  <select class="form-select" id="resource-category">
+                    <option value="">Select category</option>
+                    <option value="Textbook">Textbook</option>
+                    <option value="Notes">Notes</option>
+                    <option value="Manual">Manual</option>
+                    <option value="Video">Video</option>
+                    <option value="Assignment">Assignment</option>
+                    <option value="Reference">Reference</option>
+                  </select>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Description</label>
+                  <textarea class="form-control" id="resource-description" rows="3" placeholder="Brief description"></textarea>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">File or URL *</label>
+                  <input type="text" class="form-control" id="resource-url" placeholder="Enter URL or file path">
+                  <small class="text-muted">In production, this would be a file upload</small>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">File Type *</label>
+                  <select class="form-select" id="resource-type">
+                    <option value="PDF">PDF</option>
+                    <option value="Document">Document</option>
+                    <option value="Video">Video</option>
+                    <option value="Link">Link</option>
+                  </select>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Share with</label>
+                  <select class="form-select" id="resource-share">
+                    <option value="all">All Students</option>
+                    <option value="specific">Specific Classes</option>
+                  </select>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveTeacherResource()">
+                  <i class="fas fa-save"></i> Save Resource
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      // Remove existing modal if any
+      const existingModal = document.getElementById('uploadResourceModal');
+      if (existingModal) existingModal.remove();
+      
+      document.body.insertAdjacentHTML('beforeend', modalHtml);
+      const modal = new bootstrap.Modal(document.getElementById('uploadResourceModal'));
+      modal.show();
+    }
+    
+    function saveTeacherResource() {
+      const title = document.getElementById('resource-title').value.trim();
+      const subject = document.getElementById('resource-subject').value;
+      const category = document.getElementById('resource-category').value;
+      const description = document.getElementById('resource-description').value.trim();
+      const url = document.getElementById('resource-url').value.trim();
+      const type = document.getElementById('resource-type').value;
+      const shareWith = document.getElementById('resource-share').value;
+      
+      if (!title || !subject || !category || !url) {
+        alert('Please fill in all required fields');
+        return;
+      }
+      
+      // Load resources
+      if (!window.resources) {
+        window.resources = JSON.parse(localStorage.getItem('resources') || '[]');
+      }
+      
+      // Create new resource
+      const newResource = {
+        id: Date.now(),
+        title: title,
+        subject: subject,
+        category: category,
+        description: description,
+        url: url,
+        type: type,
+        uploadedBy: 'teacher', // Would be current user
+        uploadDate: new Date().toISOString().split('T')[0],
+        downloads: 0,
+        shareWith: shareWith,
+        tags: []
+      };
+      
+      window.resources.push(newResource);
+      localStorage.setItem('resources', JSON.stringify(window.resources));
+      
+      alert('Resource uploaded successfully!');
+      
+      // Close modal
+      const modal = bootstrap.Modal.getInstance(document.getElementById('uploadResourceModal'));
+      modal.hide();
+      
+      // Reload resources
+      loadTeacherResourcesList();
+    }
+    
+    function loadTeacherResourcesList() {
+      const content = document.getElementById('teacher-resources-content');
+      
+      if (!window.resources) {
+        window.resources = JSON.parse(localStorage.getItem('resources') || '[]');
+      }
+      
+      const teacherResources = window.resources.filter(r => r.uploadedBy === 'teacher' || r.uploadedBy === 'admin');
+      
+      if (teacherResources.length === 0) {
+        content.innerHTML = '<div class="alert alert-info">No resources uploaded yet. Click "Upload New Resource" to get started.</div>';
+        return;
+      }
+      
+      let html = '<div class="table-responsive"><table class="table table-hover">';
+      html += '<thead><tr><th>Title</th><th>Subject</th><th>Category</th><th>Type</th><th>Downloads</th><th>Date</th><th>Actions</th></tr></thead><tbody>';
+      
+      teacherResources.forEach(resource => {
+        html += `
+          <tr>
+            <td><strong>${escapeHtml(resource.title)}</strong><br><small class="text-muted">${escapeHtml(resource.description || '')}</small></td>
+            <td>${escapeHtml(resource.subject)}</td>
+            <td><span class="badge bg-info">${escapeHtml(resource.category)}</span></td>
+            <td>${escapeHtml(resource.type)}</td>
+            <td><span class="badge bg-success">${resource.downloads}</span></td>
+            <td>${resource.uploadDate}</td>
+            <td>
+              <button class="btn btn-sm btn-primary" onclick="window.open('${resource.url}', '_blank')" title="View">
+                <i class="fas fa-eye"></i>
+              </button>
+              <button class="btn btn-sm btn-danger" onclick="deleteTeacherResource(${resource.id})" title="Delete">
+                <i class="fas fa-trash"></i>
+              </button>
+            </td>
+          </tr>
+        `;
+      });
+      
+      html += '</tbody></table></div>';
+      
+      // Add statistics
+      const stats = `
+        <div class="row mb-3">
+          <div class="col-md-4">
+            <div class="card bg-primary text-white">
+              <div class="card-body">
+                <h5>${teacherResources.length}</h5>
+                <small>Total Resources</small>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card bg-success text-white">
+              <div class="card-body">
+                <h5>${teacherResources.reduce((sum, r) => sum + r.downloads, 0)}</h5>
+                <small>Total Downloads</small>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card bg-info text-white">
+              <div class="card-body">
+                <h5>${[...new Set(teacherResources.map(r => r.subject))].length}</h5>
+                <small>Subjects Covered</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      content.innerHTML = stats + html;
+      
+      // Update resource count in dashboard
+      document.getElementById('teacher-resources-count').textContent = teacherResources.length;
+    }
+    
+    function deleteTeacherResource(resourceId) {
+      if (!confirm('Are you sure you want to delete this resource?')) return;
+      
+      window.resources = window.resources.filter(r => r.id !== resourceId);
+      localStorage.setItem('resources', JSON.stringify(window.resources));
+      loadTeacherResourcesList();
     }
     
     function teacherLogout() {
