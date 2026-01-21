@@ -643,6 +643,9 @@
         </div>
         <div class="col-md-4 d-flex align-items-end">
           <button class="btn btn-primary me-2 no-print" data-bs-toggle="modal" data-bs-target="#manageSubjectsModal">Manage Subjects</button>
+          <button class="btn btn-info me-2 no-print" onclick="exportGradesToCSV()" title="Export to CSV">
+            <i class="fas fa-download"></i> Export
+          </button>
           <button class="btn btn-success no-print" onclick="saveGrades()">Save All Grades</button>
         </div>
       </div>
@@ -2547,11 +2550,40 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
-          <input type="text" class="form-control mb-2" id="assignment-title" placeholder="Assignment Title">
+          <input type="text" class="form-control mb-2" id="assignment-title" placeholder="Assignment Title *">
           <textarea class="form-control mb-2" id="assignment-description" rows="3" placeholder="Description"></textarea>
-          <input type="date" class="form-control mb-2" id="assignment-due-date">
+          <div class="row mb-2">
+            <div class="col-md-6">
+              <select class="form-select" id="assignment-subject">
+                <option value="">Select Subject</option>
+                <option value="Mathematics">Mathematics</option>
+                <option value="English">English</option>
+                <option value="Science">Science</option>
+                <option value="History">History</option>
+                <option value="Life Skills">Life Skills</option>
+                <option value="General">General</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <select class="form-select" id="assignment-type">
+                <option value="homework">Homework</option>
+                <option value="project">Project</option>
+                <option value="test">Test</option>
+                <option value="quiz">Quiz</option>
+                <option value="essay">Essay</option>
+              </select>
+            </div>
+          </div>
+          <div class="row mb-2">
+            <div class="col-md-6">
+              <input type="date" class="form-control" id="assignment-due-date">
+            </div>
+            <div class="col-md-6">
+              <input type="number" class="form-control" id="assignment-max-points" placeholder="Max Points" value="100">
+            </div>
+          </div>
           <select class="form-select mb-2" id="assignment-class">
-            <option value="">Select Class</option>
+            <option value="">Select Class *</option>
             <!-- Populated dynamically -->
           </select>
         </div>
@@ -2562,7 +2594,6 @@
       </div>
     </div>
   </div>
-
   <!-- Add User Modal -->
   <div class="modal fade" id="addUserModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
@@ -6090,14 +6121,25 @@
       });
       document.getElementById('teacher-total-students').textContent = totalStudents;
       
-      // Calculate pending assignments (placeholder)
-      document.getElementById('teacher-pending-assignments').textContent = '0';
+      // Calculate pending assignments
+      if (!window.assignments) {
+        window.assignments = JSON.parse(localStorage.getItem('assignments') || '[]');
+      }
+      const activeAssignments = window.assignments.filter(a => a.status === 'active').length;
+      document.getElementById('teacher-pending-assignments').textContent = activeAssignments;
       
       // Today's attendance (placeholder)
       document.getElementById('teacher-today-attendance').textContent = '-';
       
-      // Resources count (placeholder)
-      document.getElementById('teacher-resources-count').textContent = '0';
+      // Resources count
+      if (!window.resources) {
+        window.resources = JSON.parse(localStorage.getItem('resources') || '[]');
+      }
+      const teacherResources = window.resources.filter(r => r.uploadedBy === 'teacher' || r.uploadedBy === 'admin').length;
+      document.getElementById('teacher-resources-count').textContent = teacherResources;
+      
+      // Load teacher resources list
+      loadTeacherResourcesList();
       
       // Populate all select dropdowns
       populateTeacherSelectsEnhanced();
@@ -7981,18 +8023,20 @@
         // Store call metadata in Firestore for tracking
         try {
           const currentUser = window.firebaseAuth.currentUser;
-          const callDoc = {
-            callerId: currentUser.uid,
-            recipientId: contactId,
-            callType: type,
-            startTime: window.firebaseTimestamp.now(),
-            status: 'initiated'
-          };
-          
-          await window.firebaseAddDoc(
-            window.firebaseCollection(window.firebaseDb, 'callHistory'),
-            callDoc
-          );
+          if (currentUser) {
+            const callDoc = {
+              callerId: currentUser.uid,
+              recipientId: contactId,
+              callType: type,
+              startTime: window.firebaseTimestamp.now(),
+              status: 'initiated'
+            };
+            
+            await window.firebaseAddDoc(
+              window.firebaseCollection(window.firebaseDb, 'callHistory'),
+              callDoc
+            );
+          }
         } catch (error) {
           console.error('Error saving call metadata:', error);
         }
@@ -8832,6 +8876,11 @@
       
       try {
         const currentUser = window.firebaseAuth.currentUser;
+        if (!currentUser) {
+          alert('You must be logged in to upload a profile picture');
+          return;
+        }
+        
         const fileExt = file.name.split('.').pop();
         const fileName = `profile_${currentUser.uid}_${Date.now()}.${fileExt}`;
         const storageRef = window.firebaseStorageRef(window.firebaseStorage, `profiles/${currentUser.uid}/${fileName}`);
