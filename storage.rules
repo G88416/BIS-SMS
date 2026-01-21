@@ -68,6 +68,16 @@ service firebase.storage {
       return request.resource.contentType.matches('video/.*');
     }
     
+    // Validate GIF files (often used for emoji/reactions)
+    function isGif() {
+      return request.resource.contentType == 'image/gif';
+    }
+    
+    // Validate emoji/sticker images (small images for reactions)
+    function isEmojiImage() {
+      return isImage() && request.resource.size < 1 * 1024 * 1024; // Max 1MB for emojis
+    }
+    
     // Profile pictures for users
     match /profiles/{userId}/{fileName} {
       allow read: if isAuthenticated();
@@ -191,7 +201,7 @@ service firebase.storage {
       allow read: if isAuthenticated();
       allow write: if isAuthenticated() && 
                       isOwner(userId) &&
-                      (isDocument() || isImage() || isVideo()) &&
+                      (isDocument() || isImage() || isVideo() || isGif()) &&
                       isValidSize();
     }
     
@@ -199,8 +209,22 @@ service firebase.storage {
     match /choptso-shared/{conversationId}/{fileName} {
       allow read: if isAuthenticated();
       allow write: if isAuthenticated() && 
-                      (isDocument() || isImage() || isVideo()) &&
+                      (isDocument() || isImage() || isVideo() || isGif()) &&
                       isValidSize();
+    }
+    
+    // Choptso custom emoji/stickers uploaded by users
+    match /choptso-emojis/{userId}/{emojiId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && 
+                      isOwner(userId) &&
+                      isEmojiImage();
+    }
+    
+    // Choptso shared emoji/stickers (school-wide or class-wide)
+    match /choptso-emojis-shared/{emojiId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin() && isEmojiImage();
     }
     
     // Default deny all other access
