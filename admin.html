@@ -2171,7 +2171,7 @@
       <div class="modal-content">
         <div class="modal-header bg-primary text-white">
           <h5 class="modal-title"><i class="fas fa-id-card"></i> Complete Student Registration Information</h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" onclick="closeStudentInfoModal()"></button>
         </div>
         <div class="modal-body">
           <!-- Learner Details Section -->
@@ -2274,7 +2274,7 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="fas fa-times"></i> Close</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" onclick="closeStudentInfoModal()"><i class="fas fa-times"></i> Close</button>
           <button type="button" class="btn btn-primary" onclick="printStudentInfo()"><i class="fas fa-print"></i> Print</button>
         </div>
       </div>
@@ -4880,9 +4880,42 @@
       document.getElementById('view-mother-email').textContent = student.motherEmail || '-';
       document.getElementById('view-mother-cell').textContent = student.motherCell || '-';
       
-      // Show modal
-      const modal = new bootstrap.Modal(document.getElementById('viewStudentInfoModal'));
-      modal.show();
+      // Show modal (with fallback if Bootstrap is not loaded)
+      const modalElement = document.getElementById('viewStudentInfoModal');
+      if (typeof bootstrap !== 'undefined') {
+        const modal = new bootstrap.Modal(modalElement);
+        modal.show();
+      } else {
+        // Fallback: manually show the modal
+        modalElement.classList.add('show');
+        modalElement.style.display = 'block';
+        modalElement.setAttribute('aria-modal', 'true');
+        modalElement.removeAttribute('aria-hidden');
+        // Add backdrop
+        const backdrop = document.createElement('div');
+        backdrop.className = 'modal-backdrop fade show';
+        backdrop.id = 'student-info-backdrop';
+        document.body.appendChild(backdrop);
+        document.body.classList.add('modal-open');
+      }
+    }
+    
+    function closeStudentInfoModal() {
+      const modalElement = document.getElementById('viewStudentInfoModal');
+      if (typeof bootstrap !== 'undefined') {
+        const modal = bootstrap.Modal.getInstance(modalElement);
+        if (modal) modal.hide();
+      } else {
+        // Fallback: manually hide the modal
+        modalElement.classList.remove('show');
+        modalElement.style.display = 'none';
+        modalElement.removeAttribute('aria-modal');
+        modalElement.setAttribute('aria-hidden', 'true');
+        // Remove backdrop
+        const backdrop = document.getElementById('student-info-backdrop');
+        if (backdrop) backdrop.remove();
+        document.body.classList.remove('modal-open');
+      }
     }
     
     function printStudentInfo() {
