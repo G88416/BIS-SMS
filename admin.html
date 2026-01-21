@@ -3888,12 +3888,19 @@
         const senderName = choptsoUserProfiles[msg.senderId]?.displayName || 'Unknown';
         const avatar = senderName.charAt(0).toUpperCase();
         
+        let messageContent = '';
+        if (msg.type === 'voice' && msg.voiceUrl) {
+          messageContent = `<audio controls style="max-width: 100%;"><source src="${escapeHtml(msg.voiceUrl)}" type="audio/webm">Your browser does not support audio playback.</audio>`;
+        } else {
+          messageContent = escapeHtml(msg.text || '');
+        }
+        
         html += `
           <div class="choptso-message ${isSent ? 'sent' : 'received'}">
             ${!isSent ? `<div class="choptso-avatar">${avatar}</div>` : ''}
             <div>
               <div class="choptso-message-content">
-                ${escapeHtml(msg.text)}
+                ${messageContent}
                 ${msg.attachmentURL ? `<div class="choptso-attachment mt-2"><a href="${escapeHtml(msg.attachmentURL)}" target="_blank"><i class="fas fa-paperclip"></i> ${escapeHtml(msg.attachmentName || 'Attachment')}</a></div>` : ''}
               </div>
               <div class="choptso-message-meta">
@@ -4315,7 +4322,19 @@
       const content = document.createElement('div');
       content.className = 'choptso-message-content';
       
-      let messageHTML = `<div>${escapeHtml(message.text)}</div>`;
+      let messageHTML = '';
+      
+      // Handle voice notes
+      if (message.type === 'voice' && message.voiceUrl) {
+        messageHTML += `<div class="mb-2">
+          <audio controls style="max-width: 100%;">
+            <source src="${message.voiceUrl}" type="audio/webm">
+            Your browser does not support audio playback.
+          </audio>
+        </div>`;
+      } else {
+        messageHTML += `<div>${escapeHtml(message.text || '')}</div>`;
+      }
       
       // Add attachment if present
       if (message.attachmentURL) {
@@ -6488,12 +6507,19 @@
         const senderName = choptsoUserProfiles[msg.senderId]?.displayName || 'Unknown';
         const avatar = senderName.charAt(0).toUpperCase();
         
+        let messageContent = '';
+        if (msg.type === 'voice' && msg.voiceUrl) {
+          messageContent = `<audio controls style="max-width: 100%;"><source src="${escapeHtml(msg.voiceUrl)}" type="audio/webm">Your browser does not support audio playback.</audio>`;
+        } else {
+          messageContent = escapeHtml(msg.text || '');
+        }
+        
         html += `
           <div class="choptso-message ${isSent ? 'sent' : 'received'}">
             ${!isSent ? `<div class="choptso-avatar">${avatar}</div>` : ''}
             <div>
               <div class="choptso-message-content">
-                ${escapeHtml(msg.text)}
+                ${messageContent}
                 ${msg.attachmentURL ? `<div class="choptso-attachment mt-2"><a href="${escapeHtml(msg.attachmentURL)}" target="_blank"><i class="fas fa-paperclip"></i> ${escapeHtml(msg.attachmentName || 'Attachment')}</a></div>` : ''}
               </div>
               <div class="choptso-message-meta">
