@@ -3832,7 +3832,97 @@
       loadTeacherGroupMembers();
     }
     
-    function loadTeacherContacts() {
+    async function loadTeacherContacts() {
+      const contactsList = document.getElementById('teacher-choptso-contacts');
+      if (!contactsList) return;
+      
+      try {
+        // Get all users from Firestore
+        const usersQuery = window.firebaseQuery(
+          window.firebaseCollection(window.firebaseDb, 'users'),
+          window.firebaseOrderBy('displayName')
+        );
+        
+        const usersSnapshot = await window.firebaseGetDocs(usersQuery);
+        
+        let html = '<a href="#" class="list-group-item list-group-item-action" onclick="loadTeacherConversation(\'broadcast\', event); return false;"><i class="fas fa-bullhorn"></i> <strong>Broadcast to All</strong></a>';
+        
+        const currentTeacherId = `teacher-${loggedInTeacher.id}`;
+        const parents = [];
+        const students = [];
+        const teachers = [];
+        
+        usersSnapshot.forEach((doc) => {
+          const user = doc.data();
+          const userId = doc.id;
+          
+          // Don't show current teacher in contacts
+          if (userId === currentTeacherId) return;
+          
+          if (user.role === 'parent') {
+            parents.push({ id: userId, name: user.displayName || 'Parent', role: user.role });
+          } else if (user.role === 'student') {
+            students.push({ id: userId, name: user.displayName || 'Student', role: user.role });
+          } else if (user.role === 'teacher') {
+            teachers.push({ id: userId, name: user.displayName || 'Teacher', role: user.role });
+          }
+        });
+        
+        // Display Teachers
+        if (teachers.length > 0) {
+          html += '<div class="list-group-item bg-light"><strong>Teachers</strong></div>';
+          teachers.forEach(teacher => {
+            html += `
+              <a href="#" class="list-group-item list-group-item-action" onclick="loadTeacherConversation('${escapeHtml(teacher.id)}', event); return false;">
+                <div class="d-flex align-items-center">
+                  <i class="fas fa-chalkboard-teacher me-2"></i>
+                  <span>${escapeHtml(teacher.name)}</span>
+                </div>
+              </a>
+            `;
+          });
+        }
+        
+        // Display Parents
+        if (parents.length > 0) {
+          html += '<div class="list-group-item bg-light"><strong>Parents</strong></div>';
+          parents.forEach(parent => {
+            html += `
+              <a href="#" class="list-group-item list-group-item-action" onclick="loadTeacherConversation('${escapeHtml(parent.id)}', event); return false;">
+                <div class="d-flex align-items-center">
+                  <i class="fas fa-user-friends me-2"></i>
+                  <span>${escapeHtml(parent.name)}</span>
+                </div>
+              </a>
+            `;
+          });
+        }
+        
+        // Display Students
+        if (students.length > 0) {
+          html += '<div class="list-group-item bg-light"><strong>Students</strong></div>';
+          students.forEach(student => {
+            html += `
+              <a href="#" class="list-group-item list-group-item-action" onclick="loadTeacherConversation('${escapeHtml(student.id)}', event); return false;">
+                <div class="d-flex align-items-center">
+                  <i class="fas fa-user-graduate me-2"></i>
+                  <span>${escapeHtml(student.name)}</span>
+                </div>
+              </a>
+            `;
+          });
+        }
+        
+        contactsList.innerHTML = html;
+      } catch (error) {
+        console.error('Error loading teacher contacts from Firestore:', error);
+        // Fallback to localStorage
+        loadTeacherContactsFromLocalStorage();
+      }
+    }
+    
+    // Fallback function to load from localStorage
+    function loadTeacherContactsFromLocalStorage() {
       const contactsList = document.getElementById('teacher-choptso-contacts');
       if (!contactsList) return;
       
@@ -3946,7 +4036,111 @@
       loadTeacherMessages(conversationId);
     }
     
-    function loadTeacherMessages(conversationId) {
+    let teacherChoptsoUnsubscribe = null;
+    
+    async function loadTeacherMessages(conversationId) {
+      const messagesContainer = document.getElementById('teacher-choptso-messages');
+      if (!messagesContainer) return;
+      
+      messagesContainer.innerHTML = '<div class="text-center py-3"><i class="fas fa-spinner fa-spin"></i> Loading messages...</div>';
+      
+      try {
+        const currentUser = window.firebaseAuth.currentUser;
+        if (!currentUser) {
+          messagesContainer.innerHTML = '<div class="text-center text-danger py-3">Please log in to view messages</div>';
+          return;
+        }
+        
+        // Unsubscribe from previous listener
+        if (teacherChoptsoUnsubscribe) {
+          teacherChoptsoUnsubscribe();
+        }
+        
+        // Query messages from Firestore
+        let messagesQuery;
+        if (conversationId === 'broadcast') {
+          // Broadcast messages
+          messagesQuery = window.firebaseQuery(
+            window.firebaseCollection(window.firebaseDb, 'choptsoMessages'),
+            window.firebaseWhere('broadcast', '==', true),
+            window.firebaseOrderBy('timestamp', 'desc'),
+            window.firebaseLimit(50)
+          );
+        } else {
+          // Direct messages
+          messagesQuery = window.firebaseQuery(
+            window.firebaseCollection(window.firebaseDb, 'choptsoMessages'),
+            window.firebaseWhere('conversationId', '==', conversationId),
+            window.firebaseOrderBy('timestamp', 'desc'),
+            window.firebaseLimit(50)
+          );
+        }
+        
+        // Set up real-time listener
+        teacherChoptsoUnsubscribe = window.firebaseOnSnapshot(messagesQuery, (snapshot) => {
+          if (snapshot.empty) {
+            messagesContainer.innerHTML = `
+              <div class="text-center text-muted py-5">
+                <i class="fas fa-comments fa-3x mb-3"></i>
+                <p>No messages yet. Start the conversation!</p>
+              </div>
+            `;
+            return;
+          }
+          
+          const currentUserId = currentUser.uid;
+          
+          // Reverse to show oldest first
+          const messages = [];
+          snapshot.forEach((doc) => {
+            messages.push({ id: doc.id, ...doc.data() });
+          });
+          messages.reverse();
+          
+          let html = '';
+          messages.forEach(msg => {
+            const isSent = msg.senderId === currentUserId;
+            const senderName = msg.senderName || 'Unknown';
+            const avatar = senderName.charAt(0).toUpperCase();
+            
+            let messageContent = '';
+            if (msg.type === 'voice' && msg.voiceUrl) {
+              messageContent = `<audio controls style="max-width: 100%;"><source src="${escapeHtml(msg.voiceUrl)}" type="audio/webm">Your browser does not support audio playback.</audio>`;
+            } else {
+              messageContent = escapeHtml(msg.text || '');
+            }
+            
+            const timestamp = msg.timestamp?.toDate ? msg.timestamp.toDate() : new Date(msg.timestamp);
+            
+            html += `
+              <div class="choptso-message ${isSent ? 'sent' : 'received'}">
+                ${!isSent ? `<div class="choptso-avatar">${avatar}</div>` : ''}
+                <div>
+                  <div class="choptso-message-content">
+                    ${messageContent}
+                    ${msg.attachmentURL ? `<div class="choptso-attachment mt-2"><a href="${escapeHtml(msg.attachmentURL)}" target="_blank"><i class="fas fa-paperclip"></i> ${escapeHtml(msg.attachmentName || 'Attachment')}</a></div>` : ''}
+                  </div>
+                  <div class="choptso-message-meta">
+                    ${!isSent ? escapeHtml(senderName) + ' • ' : ''}${timestamp.toLocaleTimeString()}
+                  </div>
+                </div>
+                ${isSent ? `<div class="choptso-avatar">${avatar}</div>` : ''}
+              </div>
+            `;
+          });
+          
+          messagesContainer.innerHTML = html;
+          messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        });
+      } catch (error) {
+        console.error('Error loading teacher messages from Firestore:', error);
+        // Fallback to localStorage
+        loadTeacherMessagesFromLocalStorage(conversationId);
+      }
+    }
+    
+    // Fallback function to load from localStorage
+    function loadTeacherMessagesFromLocalStorage(conversationId) {
       const messagesContainer = document.getElementById('teacher-choptso-messages');
       if (!messagesContainer) return;
       
@@ -3998,7 +4192,7 @@
       messagesContainer.scrollTop = messagesContainer.scrollHeight;
     }
     
-    function sendTeacherChoptsoMessage() {
+    async function sendTeacherChoptsoMessage() {
       const input = document.getElementById('teacher-choptso-message-input');
       const text = input?.value.trim();
       
@@ -4008,6 +4202,68 @@
         return;
       }
       
+      try {
+        const currentUser = window.firebaseAuth.currentUser;
+        if (!currentUser) {
+          alert('Please log in to send messages');
+          return;
+        }
+        
+        const message = {
+          senderId: currentUser.uid,
+          senderName: currentUser.displayName || currentUser.email,
+          text: text || '(file attachment)',
+          timestamp: window.firebaseTimestamp.now(),
+          broadcast: currentTeacherConversationId === 'broadcast',
+          conversationId: currentTeacherConversationId,
+          participants: currentTeacherConversationId === 'broadcast' ? [] : [currentUser.uid, currentTeacherConversationId]
+        };
+        
+        // Upload attachment if present
+        if (teacherFileAttachment) {
+          const attachmentURL = await uploadTeacherAttachment(teacherFileAttachment);
+          message.attachmentURL = attachmentURL;
+          message.attachmentName = teacherFileAttachment.name;
+          message.attachmentType = teacherFileAttachment.type;
+        }
+        
+        // Add message to Firestore
+        await window.firebaseAddDoc(
+          window.firebaseCollection(window.firebaseDb, 'choptsoMessages'),
+          message
+        );
+        
+        // Clear input and attachment
+        if (input) input.value = '';
+        teacherFileAttachment = null;
+        document.getElementById('teacher-choptso-file-preview').innerHTML = '';
+        
+      } catch (error) {
+        console.error('Error sending teacher message:', error);
+        // Fallback to localStorage
+        sendTeacherChoptsoMessageToLocalStorage(text);
+      }
+    }
+    
+    // Upload teacher attachment to Firebase Storage
+    async function uploadTeacherAttachment(file) {
+      const currentUser = window.firebaseAuth.currentUser;
+      
+      // Sanitize filename
+      const sanitizedName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+      const filePath = `choptso/${currentUser.uid}/${Date.now()}_${sanitizedName}`;
+      const storageRef = window.firebaseStorageRef(window.firebaseStorage, filePath);
+      
+      await window.firebaseUploadBytes(storageRef, file);
+      const downloadURL = await window.firebaseGetDownloadURL(storageRef);
+      
+      return downloadURL;
+    }
+    
+    // Fallback function to save to localStorage
+    function sendTeacherChoptsoMessageToLocalStorage(text) {
+      const input = document.getElementById('teacher-choptso-message-input');
+      
       const message = {
         senderId: `teacher-${loggedInTeacher.id}`,
         text: text || '(file attachment)',
@@ -4015,7 +4271,6 @@
       };
       
       if (teacherFileAttachment) {
-        // In a real app, upload to Firebase Storage
         message.attachmentURL = URL.createObjectURL(teacherFileAttachment);
         message.attachmentName = teacherFileAttachment.name;
       }
@@ -7559,7 +7814,82 @@
       loadParentGroupMembers();
     }
     
-    function loadParentContacts() {
+    async function loadParentContacts() {
+      const contactsList = document.getElementById('parent-choptso-contacts');
+      if (!contactsList) return;
+      
+      try {
+        // Get all users from Firestore
+        const usersQuery = window.firebaseQuery(
+          window.firebaseCollection(window.firebaseDb, 'users'),
+          window.firebaseOrderBy('displayName')
+        );
+        
+        const usersSnapshot = await window.firebaseGetDocs(usersQuery);
+        
+        let html = '';
+        const currentParentId = window.firebaseAuth.currentUser?.uid;
+        const teachers = [];
+        const parents = [];
+        
+        usersSnapshot.forEach((doc) => {
+          const user = doc.data();
+          const userId = doc.id;
+          
+          // Don't show current parent in contacts
+          if (userId === currentParentId) return;
+          
+          if (user.role === 'teacher') {
+            teachers.push({ id: userId, name: user.displayName || 'Teacher', role: user.role, subject: user.subject || '' });
+          } else if (user.role === 'parent') {
+            parents.push({ id: userId, name: user.displayName || 'Parent', role: user.role });
+          }
+        });
+        
+        // Display Teachers
+        if (teachers.length > 0) {
+          html += '<div class="list-group-item bg-light"><strong>Teachers</strong></div>';
+          teachers.forEach(teacher => {
+            html += `
+              <a href="#" class="list-group-item list-group-item-action" onclick="loadParentConversation('${escapeHtml(teacher.id)}', event); return false;">
+                <div class="d-flex align-items-center">
+                  <i class="fas fa-chalkboard-teacher me-2"></i>
+                  <span>${escapeHtml(teacher.name)}${teacher.subject ? ' - ' + escapeHtml(teacher.subject) : ''}</span>
+                </div>
+              </a>
+            `;
+          });
+        }
+        
+        // Display Other Parents
+        if (parents.length > 0) {
+          html += '<div class="list-group-item bg-light"><strong>Other Parents</strong></div>';
+          parents.forEach(parent => {
+            html += `
+              <a href="#" class="list-group-item list-group-item-action" onclick="loadParentConversation('${escapeHtml(parent.id)}', event); return false;">
+                <div class="d-flex align-items-center">
+                  <i class="fas fa-user-friends me-2"></i>
+                  <span>${escapeHtml(parent.name)}</span>
+                </div>
+              </a>
+            `;
+          });
+        }
+        
+        if (html === '') {
+          html = '<div class="list-group-item text-muted">No contacts available</div>';
+        }
+        
+        contactsList.innerHTML = html;
+      } catch (error) {
+        console.error('Error loading parent contacts from Firestore:', error);
+        // Fallback to localStorage
+        loadParentContactsFromLocalStorage();
+      }
+    }
+    
+    // Fallback function to load from localStorage
+    function loadParentContactsFromLocalStorage() {
       const contactsList = document.getElementById('parent-choptso-contacts');
       if (!contactsList) return;
       
@@ -7669,7 +7999,99 @@
       loadParentMessages(conversationId);
     }
     
-    function loadParentMessages(conversationId) {
+    let parentChoptsoUnsubscribe = null;
+    
+    async function loadParentMessages(conversationId) {
+      const messagesContainer = document.getElementById('parent-choptso-messages');
+      if (!messagesContainer) return;
+      
+      messagesContainer.innerHTML = '<div class="text-center py-3"><i class="fas fa-spinner fa-spin"></i> Loading messages...</div>';
+      
+      try {
+        const currentUser = window.firebaseAuth.currentUser;
+        if (!currentUser) {
+          messagesContainer.innerHTML = '<div class="text-center text-danger py-3">Please log in to view messages</div>';
+          return;
+        }
+        
+        // Unsubscribe from previous listener
+        if (parentChoptsoUnsubscribe) {
+          parentChoptsoUnsubscribe();
+        }
+        
+        // Query messages from Firestore
+        const messagesQuery = window.firebaseQuery(
+          window.firebaseCollection(window.firebaseDb, 'choptsoMessages'),
+          window.firebaseWhere('conversationId', '==', conversationId),
+          window.firebaseOrderBy('timestamp', 'desc'),
+          window.firebaseLimit(50)
+        );
+        
+        // Set up real-time listener
+        parentChoptsoUnsubscribe = window.firebaseOnSnapshot(messagesQuery, (snapshot) => {
+          if (snapshot.empty) {
+            messagesContainer.innerHTML = `
+              <div class="text-center text-muted py-5">
+                <i class="fas fa-comments fa-3x mb-3"></i>
+                <p>No messages yet. Start the conversation!</p>
+              </div>
+            `;
+            return;
+          }
+          
+          const currentUserId = currentUser.uid;
+          
+          // Reverse to show oldest first
+          const messages = [];
+          snapshot.forEach((doc) => {
+            messages.push({ id: doc.id, ...doc.data() });
+          });
+          messages.reverse();
+          
+          let html = '';
+          messages.forEach(msg => {
+            const isSent = msg.senderId === currentUserId;
+            const senderName = msg.senderName || 'Unknown';
+            const avatar = senderName.charAt(0).toUpperCase();
+            
+            let messageContent = '';
+            if (msg.type === 'voice' && msg.voiceUrl) {
+              messageContent = `<audio controls style="max-width: 100%;"><source src="${escapeHtml(msg.voiceUrl)}" type="audio/webm">Your browser does not support audio playback.</audio>`;
+            } else {
+              messageContent = escapeHtml(msg.text || '');
+            }
+            
+            const timestamp = msg.timestamp?.toDate ? msg.timestamp.toDate() : new Date(msg.timestamp);
+            
+            html += `
+              <div class="choptso-message ${isSent ? 'sent' : 'received'}">
+                ${!isSent ? `<div class="choptso-avatar">${avatar}</div>` : ''}
+                <div>
+                  <div class="choptso-message-content">
+                    ${messageContent}
+                    ${msg.attachmentURL ? `<div class="choptso-attachment mt-2"><a href="${escapeHtml(msg.attachmentURL)}" target="_blank"><i class="fas fa-paperclip"></i> ${escapeHtml(msg.attachmentName || 'Attachment')}</a></div>` : ''}
+                  </div>
+                  <div class="choptso-message-meta">
+                    ${!isSent ? escapeHtml(senderName) + ' • ' : ''}${timestamp.toLocaleTimeString()}
+                  </div>
+                </div>
+                ${isSent ? `<div class="choptso-avatar">${avatar}</div>` : ''}
+              </div>
+            `;
+          });
+          
+          messagesContainer.innerHTML = html;
+          messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        });
+      } catch (error) {
+        console.error('Error loading parent messages from Firestore:', error);
+        // Fallback to localStorage
+        loadParentMessagesFromLocalStorage(conversationId);
+      }
+    }
+    
+    // Fallback function to load from localStorage
+    function loadParentMessagesFromLocalStorage(conversationId) {
       const messagesContainer = document.getElementById('parent-choptso-messages');
       if (!messagesContainer) return;
       
@@ -7721,7 +8143,7 @@
       messagesContainer.scrollTop = messagesContainer.scrollHeight;
     }
     
-    function sendParentChoptsoMessage() {
+    async function sendParentChoptsoMessage() {
       const input = document.getElementById('parent-choptso-message-input');
       const text = input?.value.trim();
       
@@ -7731,6 +8153,68 @@
         return;
       }
       
+      try {
+        const currentUser = window.firebaseAuth.currentUser;
+        if (!currentUser) {
+          alert('Please log in to send messages');
+          return;
+        }
+        
+        const message = {
+          senderId: currentUser.uid,
+          senderName: currentUser.displayName || currentUser.email,
+          text: text || '(file attachment)',
+          timestamp: window.firebaseTimestamp.now(),
+          broadcast: false,
+          conversationId: currentParentConversationId,
+          participants: [currentUser.uid, currentParentConversationId]
+        };
+        
+        // Upload attachment if present
+        if (parentFileAttachment) {
+          const attachmentURL = await uploadParentAttachment(parentFileAttachment);
+          message.attachmentURL = attachmentURL;
+          message.attachmentName = parentFileAttachment.name;
+          message.attachmentType = parentFileAttachment.type;
+        }
+        
+        // Add message to Firestore
+        await window.firebaseAddDoc(
+          window.firebaseCollection(window.firebaseDb, 'choptsoMessages'),
+          message
+        );
+        
+        // Clear input and attachment
+        if (input) input.value = '';
+        parentFileAttachment = null;
+        document.getElementById('parent-choptso-file-preview').innerHTML = '';
+        
+      } catch (error) {
+        console.error('Error sending parent message:', error);
+        // Fallback to localStorage
+        sendParentChoptsoMessageToLocalStorage(text);
+      }
+    }
+    
+    // Upload parent attachment to Firebase Storage
+    async function uploadParentAttachment(file) {
+      const currentUser = window.firebaseAuth.currentUser;
+      
+      // Sanitize filename
+      const sanitizedName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+      const filePath = `choptso/${currentUser.uid}/${Date.now()}_${sanitizedName}`;
+      const storageRef = window.firebaseStorageRef(window.firebaseStorage, filePath);
+      
+      await window.firebaseUploadBytes(storageRef, file);
+      const downloadURL = await window.firebaseGetDownloadURL(storageRef);
+      
+      return downloadURL;
+    }
+    
+    // Fallback function to save to localStorage
+    function sendParentChoptsoMessageToLocalStorage(text) {
+      const input = document.getElementById('parent-choptso-message-input');
+      
       const message = {
         senderId: `parent-${loggedInParent.id}`,
         text: text || '(file attachment)',
@@ -7738,7 +8222,6 @@
       };
       
       if (parentFileAttachment) {
-        // In a real app, upload to Firebase Storage
         message.attachmentURL = URL.createObjectURL(parentFileAttachment);
         message.attachmentName = parentFileAttachment.name;
       }
