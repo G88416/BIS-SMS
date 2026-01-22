@@ -10,11 +10,23 @@ The BIS-SMS has been significantly enhanced with improved communication features
 
 ## 1. Chaptso/Choptso Communication Enhancements
 
+### ✅ Cloud Storage Integration (Latest Update)
+- **Firestore Backend**: All Choptso contacts and messages are now stored in Firebase Firestore instead of localStorage
+- **Real-time Sync**: Messages sync in real-time across all devices and users
+- **Teacher Portal**: Teacher contacts and messages now use cloud storage
+- **Parent Portal**: Parent contacts and messages now use cloud storage
+- **Admin Portal**: Admin contacts and messages continue to use cloud storage
+- **Cross-Device Access**: Users can access their messages from any device
+- **Data Persistence**: Messages are permanently stored and backed up in the cloud
+- **Fallback Support**: Automatic fallback to localStorage if cloud connection fails
+- **Visual Indicators**: Cloud sync status indicators visible in all Choptso interfaces
+
 ### Enhanced Contact Management
 - **System-Wide Contacts**: Admin can now view all users from the system with their roles and profile information
 - **Profile Pictures**: Contact list displays user profile pictures when available, with fallback to initials
 - **Online Status Indicators**: Real-time online status badges show which users are currently active
 - **Enhanced Profile Display**: Larger avatar display (40px) for better visibility
+- **Dynamic Loading**: Contacts are loaded from Firestore with real-time updates
 
 ### Profile Picture Upload
 - **Preview Modal**: New profile picture upload modal with live preview
@@ -30,6 +42,14 @@ The BIS-SMS has been significantly enhanced with improved communication features
 - **Improved Error Handling**: Better error messages for camera/microphone permissions
 - **User Name Resolution**: Enhanced contact name display using Firestore user data with fallback to local data
 - **Call Duration Tracking**: Visual timer displays call duration
+
+### Message Storage and Sync
+- **Real-time Listeners**: All portals use Firestore real-time listeners for instant message updates
+- **Attachment Storage**: File attachments are uploaded to Firebase Storage
+- **Message Metadata**: Comprehensive message data including sender ID, sender name, timestamp, conversation ID
+- **Query Optimization**: Messages are limited to 50 most recent per conversation
+- **Broadcast Support**: Broadcast messages to all users are supported
+- **Conversation Management**: Messages are organized by conversation ID for efficient retrieval
 
 ### Features Already Supported
 - Voice notes with recording interface
