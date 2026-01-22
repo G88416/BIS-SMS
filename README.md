@@ -47,12 +47,15 @@ For detailed login information for all user types, see **[LOGIN_CREDENTIALS.md](
 
 ```
 BIS-SMS/
-├── index.html              # Main login page
-├── admin.html              # Admin dashboard and portals
-├── README.md               # This file
-├── FAQ.md                  # Frequently Asked Questions (includes .local domain explanation)
-├── LOGIN_CREDENTIALS.md    # Detailed login credentials documentation
-└── USER_MANAGEMENT_GUIDE.md # Guide for managing users
+├── index.html                      # Main login page
+├── admin.html                      # Admin dashboard and portals
+├── parent-portal-module.html       # Parent portal interface
+├── README.md                       # Project overview
+├── FAQ.md                          # Frequently Asked Questions
+├── LOGIN_CREDENTIALS.md            # Login credentials for all user types
+├── USER_MANAGEMENT_GUIDE.md        # User creation and management guide
+├── CLOUD_STORAGE_FIX_SUMMARY.md    # Cloud storage implementation details
+└── (additional documentation files...)
 ```
 
 ## Technologies Used
