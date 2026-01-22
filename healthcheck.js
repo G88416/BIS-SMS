@@ -9,6 +9,10 @@ const options = {
 
 const request = http.request(options, (res) => {
   console.log(`Health check status: ${res.statusCode}`);
+  
+  // Consume response body to prevent memory leaks
+  res.resume();
+  
   if (res.statusCode === 200) {
     process.exit(0);
   } else {
