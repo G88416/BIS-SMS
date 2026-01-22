@@ -410,6 +410,7 @@
         </div>
         <div class="col-md-5 text-end">
           <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addStudentModal"><i class="fas fa-plus"></i> Add Student</button>
+          <button class="btn btn-info" data-bs-toggle="modal" data-bs-target="#bulkUploadStudentModal"><i class="fas fa-upload"></i> Bulk Upload</button>
           <button class="btn btn-success" onclick="exportStudentsCSV()"><i class="fas fa-download"></i> Export CSV</button>
         </div>
       </div>
@@ -454,6 +455,7 @@
         </div>
         <div class="col-md-5 text-end">
           <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addTeacherModal"><i class="fas fa-plus"></i> Add Teacher</button>
+          <button class="btn btn-info" data-bs-toggle="modal" data-bs-target="#bulkUploadTeacherModal"><i class="fas fa-upload"></i> Bulk Upload</button>
           <button class="btn btn-success" onclick="exportTeachersCSV()"><i class="fas fa-download"></i> Export CSV</button>
         </div>
       </div>
@@ -2403,6 +2405,90 @@
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
           <button type="button" class="btn btn-primary" onclick="addTeacher()" data-bs-dismiss="modal">Add Teacher</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bulk Upload Student Modal -->
+  <div class="modal fade" id="bulkUploadStudentModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="fas fa-upload"></i> Bulk Upload Students</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i> <strong>Instructions:</strong>
+            <ul class="mb-0 mt-2">
+              <li>Download the CSV template to see the required format</li>
+              <li>Fill in the student data in the template</li>
+              <li>Upload the completed CSV file</li>
+              <li>Required fields: Surname, First Name, Gender, Grade</li>
+            </ul>
+          </div>
+          
+          <div class="mb-3">
+            <button class="btn btn-outline-primary" onclick="downloadStudentTemplate()">
+              <i class="fas fa-download"></i> Download CSV Template
+            </button>
+          </div>
+          
+          <div class="mb-3">
+            <label class="form-label">Select CSV File</label>
+            <input type="file" class="form-control" id="bulk-student-file" accept=".csv" onchange="previewBulkStudentUpload()">
+          </div>
+          
+          <div id="bulk-student-preview" class="mt-3"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary" id="bulk-student-upload-btn" onclick="processBulkStudentUpload()" disabled>
+            <i class="fas fa-upload"></i> Upload Students
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bulk Upload Teacher Modal -->
+  <div class="modal fade" id="bulkUploadTeacherModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="fas fa-upload"></i> Bulk Upload Teachers</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i> <strong>Instructions:</strong>
+            <ul class="mb-0 mt-2">
+              <li>Download the CSV template to see the required format</li>
+              <li>Fill in the teacher data in the template</li>
+              <li>Upload the completed CSV file</li>
+              <li>Required fields: Full Name, Subject, Qualification, Status</li>
+            </ul>
+          </div>
+          
+          <div class="mb-3">
+            <button class="btn btn-outline-primary" onclick="downloadTeacherTemplate()">
+              <i class="fas fa-download"></i> Download CSV Template
+            </button>
+          </div>
+          
+          <div class="mb-3">
+            <label class="form-label">Select CSV File</label>
+            <input type="file" class="form-control" id="bulk-teacher-file" accept=".csv" onchange="previewBulkTeacherUpload()">
+          </div>
+          
+          <div id="bulk-teacher-preview" class="mt-3"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary" id="bulk-teacher-upload-btn" onclick="processBulkTeacherUpload()" disabled>
+            <i class="fas fa-upload"></i> Upload Teachers
+          </button>
         </div>
       </div>
     </div>
@@ -5800,6 +5886,271 @@
       a.download = filename;
       a.click();
       window.URL.revokeObjectURL(url);
+    }
+    
+    // Bulk Upload Functions
+    function downloadStudentTemplate() {
+      const template = 'Surname,First Name,Gender,Grade,Class,Learner Cell,Learner Email,Home Language,Parent/Guardian Name,Parent Contact,Parent Email,Address\n' +
+                      'Example,Student,M,Grade 10,10A,0712345678,student@school.com,English,John Doe,0798765432,parent@email.com,123 Main St\n';
+      downloadCSV(template, 'student_upload_template.csv');
+    }
+    
+    function downloadTeacherTemplate() {
+      const template = 'Full Name,Subject,Qualification,Status\n' +
+                      'John Smith,Mathematics,B.Ed,Active\n';
+      downloadCSV(template, 'teacher_upload_template.csv');
+    }
+    
+    function previewBulkStudentUpload() {
+      const fileInput = document.getElementById('bulk-student-file');
+      const file = fileInput.files[0];
+      const preview = document.getElementById('bulk-student-preview');
+      const uploadBtn = document.getElementById('bulk-student-upload-btn');
+      
+      if (!file) {
+        preview.innerHTML = '';
+        uploadBtn.disabled = true;
+        return;
+      }
+      
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const csv = e.target.result;
+        const lines = csv.split('\n').filter(line => line.trim());
+        
+        if (lines.length < 2) {
+          preview.innerHTML = '<div class="alert alert-warning">CSV file is empty or invalid</div>';
+          uploadBtn.disabled = true;
+          return;
+        }
+        
+        const headers = lines[0].split(',').map(h => h.trim());
+        const dataLines = lines.slice(1);
+        
+        let html = '<div class="alert alert-success">';
+        html += `<i class="fas fa-check-circle"></i> Found ${dataLines.length} students to upload`;
+        html += '</div>';
+        html += '<div class="table-responsive" style="max-height: 300px; overflow-y: auto;">';
+        html += '<table class="table table-sm table-bordered">';
+        html += '<thead><tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr></thead>';
+        html += '<tbody>';
+        
+        dataLines.slice(0, 10).forEach(line => {
+          const values = line.split(',').map(v => v.trim());
+          html += '<tr>' + values.map(v => `<td>${v}</td>`).join('') + '</tr>';
+        });
+        
+        if (dataLines.length > 10) {
+          html += `<tr><td colspan="${headers.length}" class="text-center text-muted">... and ${dataLines.length - 10} more</td></tr>`;
+        }
+        
+        html += '</tbody></table></div>';
+        preview.innerHTML = html;
+        uploadBtn.disabled = false;
+      };
+      
+      reader.readAsText(file);
+    }
+    
+    function previewBulkTeacherUpload() {
+      const fileInput = document.getElementById('bulk-teacher-file');
+      const file = fileInput.files[0];
+      const preview = document.getElementById('bulk-teacher-preview');
+      const uploadBtn = document.getElementById('bulk-teacher-upload-btn');
+      
+      if (!file) {
+        preview.innerHTML = '';
+        uploadBtn.disabled = true;
+        return;
+      }
+      
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const csv = e.target.result;
+        const lines = csv.split('\n').filter(line => line.trim());
+        
+        if (lines.length < 2) {
+          preview.innerHTML = '<div class="alert alert-warning">CSV file is empty or invalid</div>';
+          uploadBtn.disabled = true;
+          return;
+        }
+        
+        const headers = lines[0].split(',').map(h => h.trim());
+        const dataLines = lines.slice(1);
+        
+        let html = '<div class="alert alert-success">';
+        html += `<i class="fas fa-check-circle"></i> Found ${dataLines.length} teachers to upload`;
+        html += '</div>';
+        html += '<div class="table-responsive" style="max-height: 300px; overflow-y: auto;">';
+        html += '<table class="table table-sm table-bordered">';
+        html += '<thead><tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr></thead>';
+        html += '<tbody>';
+        
+        dataLines.forEach(line => {
+          const values = line.split(',').map(v => v.trim());
+          html += '<tr>' + values.map(v => `<td>${v}</td>`).join('') + '</tr>';
+        });
+        
+        html += '</tbody></table></div>';
+        preview.innerHTML = html;
+        uploadBtn.disabled = false;
+      };
+      
+      reader.readAsText(file);
+    }
+    
+    async function processBulkStudentUpload() {
+      const fileInput = document.getElementById('bulk-student-file');
+      const file = fileInput.files[0];
+      
+      if (!file) {
+        alert('Please select a file');
+        return;
+      }
+      
+      const reader = new FileReader();
+      reader.onload = async function(e) {
+        const csv = e.target.result;
+        const lines = csv.split('\n').filter(line => line.trim());
+        
+        if (lines.length < 2) {
+          alert('CSV file is empty or invalid');
+          return;
+        }
+        
+        const headers = lines[0].split(',').map(h => h.trim());
+        const dataLines = lines.slice(1);
+        
+        let successCount = 0;
+        let errorCount = 0;
+        
+        for (const line of dataLines) {
+          try {
+            const values = line.split(',').map(v => v.trim());
+            const studentData = {};
+            
+            headers.forEach((header, index) => {
+              studentData[header] = values[index] || '';
+            });
+            
+            // Validate required fields
+            if (!studentData['Surname'] || !studentData['First Name'] || !studentData['Gender'] || !studentData['Grade']) {
+              errorCount++;
+              continue;
+            }
+            
+            // Create student object
+            const newStudent = {
+              id: 'S' + (students.length + successCount + 1).toString().padStart(4, '0'),
+              surname: studentData['Surname'],
+              firstname: studentData['First Name'],
+              name: `${studentData['Surname']} ${studentData['First Name']}`,
+              gender: studentData['Gender'],
+              grade: studentData['Grade'],
+              class: studentData['Class'] || '',
+              learnerCell: studentData['Learner Cell'] || '',
+              learnerEmail: studentData['Learner Email'] || '',
+              language: studentData['Home Language'] || '',
+              parent: studentData['Parent/Guardian Name'] || '',
+              contact: studentData['Parent Contact'] || '',
+              parentEmail: studentData['Parent Email'] || '',
+              address: studentData['Address'] || '',
+              classIds: []
+            };
+            
+            // Add to Firestore
+            await db.collection('students').doc(newStudent.id).set(newStudent);
+            students.push(newStudent);
+            successCount++;
+          } catch (error) {
+            console.error('Error adding student:', error);
+            errorCount++;
+          }
+        }
+        
+        alert(`Upload Complete!\nSuccess: ${successCount}\nErrors: ${errorCount}`);
+        
+        // Close modal and refresh table
+        const modal = bootstrap.Modal.getInstance(document.getElementById('bulkUploadStudentModal'));
+        modal.hide();
+        fileInput.value = '';
+        document.getElementById('bulk-student-preview').innerHTML = '';
+        renderStudents();
+      };
+      
+      reader.readAsText(file);
+    }
+    
+    async function processBulkTeacherUpload() {
+      const fileInput = document.getElementById('bulk-teacher-file');
+      const file = fileInput.files[0];
+      
+      if (!file) {
+        alert('Please select a file');
+        return;
+      }
+      
+      const reader = new FileReader();
+      reader.onload = async function(e) {
+        const csv = e.target.result;
+        const lines = csv.split('\n').filter(line => line.trim());
+        
+        if (lines.length < 2) {
+          alert('CSV file is empty or invalid');
+          return;
+        }
+        
+        const headers = lines[0].split(',').map(h => h.trim());
+        const dataLines = lines.slice(1);
+        
+        let successCount = 0;
+        let errorCount = 0;
+        
+        for (const line of dataLines) {
+          try {
+            const values = line.split(',').map(v => v.trim());
+            const teacherData = {};
+            
+            headers.forEach((header, index) => {
+              teacherData[header] = values[index] || '';
+            });
+            
+            // Validate required fields
+            if (!teacherData['Full Name'] || !teacherData['Subject']) {
+              errorCount++;
+              continue;
+            }
+            
+            // Create teacher object
+            const newTeacher = {
+              id: 'T' + (teachers.length + successCount + 1).toString().padStart(4, '0'),
+              name: teacherData['Full Name'],
+              subject: teacherData['Subject'],
+              qualification: teacherData['Qualification'] || '',
+              status: teacherData['Status'] || 'Active'
+            };
+            
+            // Add to Firestore
+            await db.collection('teachers').doc(newTeacher.id).set(newTeacher);
+            teachers.push(newTeacher);
+            successCount++;
+          } catch (error) {
+            console.error('Error adding teacher:', error);
+            errorCount++;
+          }
+        }
+        
+        alert(`Upload Complete!\nSuccess: ${successCount}\nErrors: ${errorCount}`);
+        
+        // Close modal and refresh table
+        const modal = bootstrap.Modal.getInstance(document.getElementById('bulkUploadTeacherModal'));
+        modal.hide();
+        fileInput.value = '';
+        document.getElementById('bulk-teacher-preview').innerHTML = '';
+        renderTeachers();
+      };
+      
+      reader.readAsText(file);
     }
     
     // View details functions
