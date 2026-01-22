@@ -20,10 +20,20 @@ A comprehensive web-based School Management System for managing students, teache
 
 ## Getting Started
 
-### Quick Start
+### Quick Start (Browser)
 
 1. Open `index.html` in your web browser
 2. Select your user type and log in with the credentials below
+
+### Quick Start (Docker)
+
+For production deployment using Docker, see **[README_DOCKER.md](README_DOCKER.md)**
+
+**Quick Docker setup:**
+```bash
+docker-compose up -d
+```
+Then access the application at: http://localhost:3000
 
 ### Login Credentials
 
@@ -37,9 +47,14 @@ For detailed login information for all user types, see **[LOGIN_CREDENTIALS.md](
 
 ## System Requirements
 
+### Browser-based (Local Development)
 - Modern web browser (Chrome, Firefox, Safari, Edge)
 - JavaScript enabled
 - Local storage enabled for data persistence
+
+### Docker-based (Production)
+- Docker and Docker Compose installed
+- Port 3000 available (or configure custom port)
 
 ## Project Structure
 
@@ -59,6 +74,8 @@ BIS-SMS/
 - Chart.js for data visualization
 - Font Awesome for icons
 - Local Storage for data persistence
+- Node.js & Express (Docker deployment)
+- Firebase (Authentication & Hosting)
 
 ## Security Note
 
