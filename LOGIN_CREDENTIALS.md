@@ -19,6 +19,8 @@ This system now uses **Firebase Authentication** for secure user login. All user
 - **Students**: `student{ID}@bis.local` (e.g., `student1@bis.local`, `student2@bis.local`)
 - **Parents**: `parent.{childid}@bis.local` (e.g., `parent.c331@bis.local`)
 
+> **Why `.local` domain?** The `.local` domain is used for internal system identification, separating school accounts from personal email addresses. This prevents conflicts, provides a consistent format, and works perfectly with Firebase Authentication without requiring email verification or external SMTP servers. See [FAQ.md](FAQ.md) for detailed explanation.
+
 ---
 
 ## Login Credentials by User Type
