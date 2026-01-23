@@ -3558,13 +3558,15 @@
         </tr>`;
         table.innerHTML += row;
       });
-      document.getElementById('total-expenses').textContent = 'R' + total.toLocaleString();
+      const totalExpensesEl = safeGetElement('total-expenses');
+      if (totalExpensesEl) totalExpensesEl.textContent = 'R' + total.toLocaleString();
     }
 
     // Student Modal
     function openStudentFeeModal(id, name) {
       currentStudentId = id;
-      document.getElementById('modal-student-name').textContent = name;
+      const modalStudentNameEl = safeGetElement('modal-student-name');
+      if (modalStudentNameEl) modalStudentNameEl.textContent = name;
       renderStudentFeeDetails();
       new bootstrap.Modal(document.getElementById('studentFeeModal')).show();
     }
@@ -3578,24 +3580,28 @@
       f.items.forEach((item, idx) => {
         itemsHtml += `<tr><td>${item.desc}</td><td>R${parseFloat(item.amount).toLocaleString()}</td><td><button class="btn btn-sm btn-danger" onclick="deleteFeeItem(${idx})">Del</button></td></tr>`;
       });
-      document.getElementById('fee-items-list').innerHTML = itemsHtml || '<tr><td colspan="3">No fee items</td></tr>';
+      const feeItemsListEl = safeGetElement('fee-items-list');
+      if (feeItemsListEl) feeItemsListEl.innerHTML = itemsHtml || '<tr><td colspan="3">No fee items</td></tr>';
 
       // Discounts
       let discHtml = '';
       f.discounts.forEach((d, idx) => {
         discHtml += `<tr><td>${d.desc}</td><td>R${parseFloat(d.amount).toLocaleString()}</td><td><button class="btn btn-sm btn-danger" onclick="deleteDiscount(${idx})">Del</button></td></tr>`;
       });
-      document.getElementById('discounts-list').innerHTML = discHtml || '<tr><td colspan="3">No discounts</td></tr>';
+      const discountsListEl = safeGetElement('discounts-list');
+      if (discountsListEl) discountsListEl.innerHTML = discHtml || '<tr><td colspan="3">No discounts</td></tr>';
 
       // Payments
       let payHtml = '';
       f.payments.forEach((p, idx) => {
         payHtml += `<tr><td>${p.date}</td><td>R${parseFloat(p.amount).toLocaleString()}</td><td>${p.method}</td><td><button class="btn btn-sm btn-danger" onclick="deletePayment(${idx})">Del</button></td></tr>`;
       });
-      document.getElementById('payments-list').innerHTML = payHtml || '<tr><td colspan="4">No payments</td></tr>';
+      const paymentsListEl = safeGetElement('payments-list');
+      if (paymentsListEl) paymentsListEl.innerHTML = payHtml || '<tr><td colspan="4">No payments</td></tr>';
 
       // Summary
-      document.getElementById('fee-summary').innerHTML = `
+      const feeSummaryEl = safeGetElement('fee-summary');
+      if (feeSummaryEl) feeSummaryEl.innerHTML = `
         <p><strong>Total Fee Items:</strong> R${calc.itemsTotal.toLocaleString()}</p>
         <p><strong>Total Discounts:</strong> R${calc.discountsTotal.toLocaleString()}</p>
         <p><strong>Net Due:</strong> R${calc.netDue.toLocaleString()}</p>
@@ -3606,15 +3612,19 @@
 
     function addFeeItem(id) {
       if (!fees[id]) fees[id] = {items: [], discounts: [], payments: []};
-      const desc = document.getElementById('fee-desc').value.trim();
-      const amount = parseFloat(document.getElementById('fee-amount').value);
+      const feeDescEl = safeGetElement('fee-desc');
+      const feeAmountEl = safeGetElement('fee-amount');
+      if (!feeDescEl || !feeAmountEl) return;
+      
+      const desc = feeDescEl.value.trim();
+      const amount = parseFloat(feeAmountEl.value);
       if (desc && amount > 0) {
         fees[id].items.push({desc, amount});
         safeStorage.setItem('fees', fees);
         renderStudentFeeDetails();
         renderFeesTable();
-        document.getElementById('fee-desc').value = '';
-        document.getElementById('fee-amount').value = '';
+        feeDescEl.value = '';
+        feeAmountEl.value = '';
       }
     }
 
@@ -3627,8 +3637,12 @@
 
     function addDiscount(id) {
       if (!fees[id]) fees[id] = {items: [], discounts: [], payments: []};
-      const desc = document.getElementById('discount-desc').value.trim();
-      const amount = parseFloat(document.getElementById('discount-amount').value);
+      const discountDescEl = safeGetElement('discount-desc');
+      const discountAmountEl = safeGetElement('discount-amount');
+      if (!discountDescEl || !discountAmountEl) return;
+      
+      const desc = discountDescEl.value.trim();
+      const amount = parseFloat(discountAmountEl.value);
       if (desc && amount > 0) {
         fees[id].discounts.push({desc, amount});
         safeStorage.setItem('fees', fees);
@@ -3646,9 +3660,14 @@
 
     function addPayment(id) {
       if (!fees[id]) fees[id] = {items: [], discounts: [], payments: []};
-      const date = document.getElementById('payment-date').value || new Date().toISOString().split('T')[0];
-      const amount = parseFloat(document.getElementById('payment-amount').value);
-      const method = document.getElementById('payment-method').value;
+      const paymentDateEl = safeGetElement('payment-date');
+      const paymentAmountEl = safeGetElement('payment-amount');
+      const paymentMethodEl = safeGetElement('payment-method');
+      if (!paymentAmountEl || !paymentMethodEl) return;
+      
+      const date = (paymentDateEl ? paymentDateEl.value : null) || new Date().toISOString().split('T')[0];
+      const amount = parseFloat(paymentAmountEl.value);
+      const method = paymentMethodEl.value;
       if (amount > 0) {
         fees[id].payments.push({date, amount, method});
         safeStorage.setItem('fees', fees);
@@ -3680,10 +3699,16 @@
 
     // Expenses
     function addExpense() {
-      const date = document.getElementById('expense-date').value || new Date().toISOString().split('T')[0];
-      const desc = document.getElementById('expense-desc').value.trim();
-      const category = document.getElementById('expense-category').value;
-      const amount = parseFloat(document.getElementById('expense-amount').value);
+      const expenseDateEl = safeGetElement('expense-date');
+      const expenseDescEl = safeGetElement('expense-desc');
+      const expenseCategoryEl = safeGetElement('expense-category');
+      const expenseAmountEl = safeGetElement('expense-amount');
+      if (!expenseDescEl || !expenseCategoryEl || !expenseAmountEl) return;
+      
+      const date = (expenseDateEl ? expenseDateEl.value : null) || new Date().toISOString().split('T')[0];
+      const desc = expenseDescEl.value.trim();
+      const category = expenseCategoryEl.value;
+      const amount = parseFloat(expenseAmountEl.value);
       if (desc && amount > 0) {
         expenses.push({date, desc, category, amount});
         safeStorage.setItem('expenses', expenses);
@@ -3731,7 +3756,8 @@
 
     // Dashboard Stats
     function updateDashboardStats() {
-      document.getElementById('total-students').textContent = students.length;
+      const totalStudentsEl = safeGetElement('total-students');
+      if (totalStudentsEl) totalStudentsEl.textContent = students.length;
       
       let totalDue = 0;
       let totalPaid = 0;
@@ -3744,9 +3770,12 @@
       });
       const totalExp = expenses.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
       
-      document.getElementById('outstanding-fees').textContent = 'R' + totalBalance.toLocaleString();
-      document.getElementById('collection-rate').textContent = totalDue > 0 ? Math.round((totalPaid / totalDue) * 100) + '%' : '0%';
-      document.getElementById('net-surplus').textContent = 'R' + (totalPaid - totalExp).toLocaleString();
+      const outstandingFeesEl = safeGetElement('outstanding-fees');
+      if (outstandingFeesEl) outstandingFeesEl.textContent = 'R' + totalBalance.toLocaleString();
+      const collectionRateEl = safeGetElement('collection-rate');
+      if (collectionRateEl) collectionRateEl.textContent = totalDue > 0 ? Math.round((totalPaid / totalDue) * 100) + '%' : '0%';
+      const netSurplusEl = safeGetElement('net-surplus');
+      if (netSurplusEl) netSurplusEl.textContent = 'R' + (totalPaid - totalExp).toLocaleString();
     }
 
     // Advanced Reports
@@ -3817,17 +3846,24 @@
 
     // Render grades table
     function renderGradesTable() {
-      const classId = document.getElementById('grades-class').value;
-      const term = document.getElementById('grades-term').value || 'Term 1 2026';
+      const gradesClassEl = safeGetElement('grades-class');
+      const gradesTermEl = safeGetElement('grades-term');
+      if (!gradesClassEl || !gradesTermEl) return;
+      
+      const classId = gradesClassEl.value;
+      const term = gradesTermEl.value || 'Term 1 2026';
       if (!classId) {
-        document.getElementById('grades-thead').innerHTML = '';
-        document.getElementById('grades-table').innerHTML = '<tr><td>Select a class to view grades</td></tr>';
+        const gradesTheadEl = safeGetElement('grades-thead');
+        const gradesTableEl = safeGetElement('grades-table');
+        if (gradesTheadEl) gradesTheadEl.innerHTML = '';
+        if (gradesTableEl) gradesTableEl.innerHTML = '<tr><td>Select a class to view grades</td></tr>';
         return;
       }
 
       const cls = classes.find(c => c.id == classId);
       if (!cls || !cls.studentIds || cls.studentIds.length === 0) {
-        document.getElementById('grades-table').innerHTML = '<tr><td>No students enrolled</td></tr>';
+        const gradesTableEl = safeGetElement('grades-table');
+        if (gradesTableEl) gradesTableEl.innerHTML = '<tr><td>No students enrolled</td></tr>';
         return;
       }
 
@@ -3846,7 +3882,8 @@
         thead += `<th>${sub.name}<br><small>Weight: ${sub.weight}%</small></th>`;
       });
       thead += '<th>Comment</th><th>Average</th><th>Status</th></tr>';
-      document.getElementById('grades-thead').innerHTML = thead;
+      const gradesTheadEl = safeGetElement('grades-thead');
+      if (gradesTheadEl) gradesTheadEl.innerHTML = thead;
 
       // Body
       let tbody = '';
@@ -3872,12 +3909,16 @@
         row += `<td class="avg-score">${avg}%</td><td>${status}</td></tr>`;
         tbody += row;
       });
-      document.getElementById('grades-table').innerHTML = tbody;
+      const gradesTableEl = safeGetElement('grades-table');
+      if (gradesTableEl) gradesTableEl.innerHTML = tbody;
     }
 
     // Manage subjects
     function openManageSubjects() {
-      const classId = document.getElementById('grades-class').value;
+      const gradesClassEl = safeGetElement('grades-class');
+      if (!gradesClassEl) return;
+      
+      const classId = gradesClassEl.value;
       if (!classId) return alert('Select a class first');
       renderSubjectsList(classId);
       new bootstrap.Modal(document.getElementById('manageSubjectsModal')).show();
@@ -3896,16 +3937,21 @@
     }
 
     function addSubject() {
-      const classId = document.getElementById('grades-class').value;
-      const name = document.getElementById('new-subject-name').value.trim();
-      const weight = parseFloat(document.getElementById('new-subject-weight').value) || 10;
+      const gradesClassEl = safeGetElement('grades-class');
+      const newSubjectNameEl = safeGetElement('new-subject-name');
+      const newSubjectWeightEl = safeGetElement('new-subject-weight');
+      if (!gradesClassEl || !newSubjectNameEl || !newSubjectWeightEl) return;
+      
+      const classId = gradesClassEl.value;
+      const name = newSubjectNameEl.value.trim();
+      const weight = parseFloat(newSubjectWeightEl.value) || 10;
       if (name && classId) {
         if (!subjects[classId]) subjects[classId] = [];
         subjects[classId].push({name, weight});
         safeStorage.setItem('subjects', subjects);
         renderSubjectsList(classId);
         renderGradesTable();
-        document.getElementById('new-subject-name').value = '';
+        newSubjectNameEl.value = '';
       }
     }
 
@@ -4144,10 +4190,15 @@
     }
 
     function renderAttendance() {
-      const classId = document.getElementById('attendance-class').value;
-      const date = document.getElementById('attendance-date').value || new Date().toISOString().split('T')[0];
-      const table = document.getElementById('attendance-table');
-      table.innerHTML = '';
+      const attendanceClassEl = safeGetElement('attendance-class');
+      const attendanceDateEl = safeGetElement('attendance-date');
+      const attendanceTableEl = safeGetElement('attendance-table');
+      
+      if (!attendanceClassEl || !attendanceTableEl) return;
+      
+      const classId = attendanceClassEl.value;
+      const date = (attendanceDateEl ? attendanceDateEl.value : null) || new Date().toISOString().split('T')[0];
+      attendanceTableEl.innerHTML = '';
       
       if (classId) {
         const cls = classes.find(c => c.id == classId);
@@ -4161,7 +4212,7 @@
               
               const record = attendance[classId][date][sid] || { status: 'Present', notes: '' };
               
-              table.innerHTML += `<tr>
+              attendanceTableEl.innerHTML += `<tr>
                 <td>${stu.name}</td>
                 <td>
                   <select class="form-select form-select-sm" data-class="${classId}" data-date="${date}" data-id="${sid}" data-type="status">
@@ -4178,10 +4229,10 @@
             }
           });
         } else {
-          table.innerHTML = '<tr><td colspan="3">No students enrolled in this class</td></tr>';
+          attendanceTableEl.innerHTML = '<tr><td colspan="3">No students enrolled in this class</td></tr>';
         }
       } else {
-        table.innerHTML = '<tr><td colspan="3">Please select a class</td></tr>';
+        attendanceTableEl.innerHTML = '<tr><td colspan="3">Please select a class</td></tr>';
       }
     }
     
@@ -6615,12 +6666,18 @@
 
     
     function loadStudentPortal() {
+      // Validate portal access
+      if (!validatePortalAccess('student')) return;
+      
       if (!loggedInStudent) return;
       
       // Update header - new IDs
-      document.getElementById('student-name').textContent = loggedInStudent.name;
-      document.getElementById('student-grade').textContent = loggedInStudent.grade;
-      document.getElementById('student-id').textContent = loggedInStudent.id;
+      const studentNameEl = safeGetElement('student-name');
+      if (studentNameEl) studentNameEl.textContent = loggedInStudent.name;
+      const studentGradeEl = safeGetElement('student-grade');
+      if (studentGradeEl) studentGradeEl.textContent = loggedInStudent.grade;
+      const studentIdEl = safeGetElement('student-id');
+      if (studentIdEl) studentIdEl.textContent = loggedInStudent.id;
       
       // Calculate average grade
       let totalGrade = 0, gradeCount = 0;
@@ -6642,7 +6699,8 @@
         }
       });
       const avgGrade = gradeCount > 0 ? (totalGrade / gradeCount).toFixed(1) : 'N/A';
-      document.getElementById('student-overall-average').textContent = avgGrade + '%';
+      const studentOverallAvgEl = safeGetElement('student-overall-average');
+      if (studentOverallAvgEl) studentOverallAvgEl.textContent = avgGrade + '%';
       
       // Calculate attendance rate
       let presentCount = 0, totalDays = 0;
@@ -8243,6 +8301,9 @@
     }
     
     function loadTeacherPortal() {
+      // Validate portal access
+      if (!validatePortalAccess('teacher')) return;
+      
       if (!loggedInTeacher) return;
       
       // Use the enhanced version
@@ -8262,15 +8323,22 @@
     }
     
     function loadParentPortal() {
+      // Validate portal access
+      if (!validatePortalAccess('parent')) return;
+      
       if (!loggedInParent) return;
       
-      document.getElementById('parent-student-name').textContent = loggedInParent.name;
-      document.getElementById('parent-student-grade').textContent = loggedInParent.grade;
-      document.getElementById('parent-student-id').textContent = loggedInParent.id;
+      const parentStudentNameEl = safeGetElement('parent-student-name');
+      if (parentStudentNameEl) parentStudentNameEl.textContent = loggedInParent.name;
+      const parentStudentGradeEl = safeGetElement('parent-student-grade');
+      if (parentStudentGradeEl) parentStudentGradeEl.textContent = loggedInParent.grade;
+      const parentStudentIdEl = safeGetElement('parent-student-id');
+      if (parentStudentIdEl) parentStudentIdEl.textContent = loggedInParent.id;
       
       // Calculate stats (same as student portal)
       const feeCalc = calculateStudentFee(loggedInParent.id);
-      document.getElementById('parent-fee-balance').textContent = 'R' + feeCalc.balance.toLocaleString();
+      const parentFeeBalanceEl = safeGetElement('parent-fee-balance');
+      if (parentFeeBalanceEl) parentFeeBalanceEl.textContent = 'R' + feeCalc.balance.toLocaleString();
       
       // Calculate pending homework
       let pendingCount = 0;
@@ -8283,7 +8351,8 @@
           });
         }
       });
-      document.getElementById('parent-pending-homework').textContent = pendingCount;
+      const parentPendingHwEl = safeGetElement('parent-pending-homework');
+      if (parentPendingHwEl) parentPendingHwEl.textContent = pendingCount;
       
       let totalGrade = 0, gradeCount = 0;
       loggedInParent.classIds.forEach(cid => {
@@ -8304,7 +8373,8 @@
         }
       });
       const avgGrade = gradeCount > 0 ? (totalGrade / gradeCount).toFixed(1) : 'N/A';
-      document.getElementById('parent-avg-grade').textContent = avgGrade + '%';
+      const parentAvgGradeEl = safeGetElement('parent-avg-grade');
+      if (parentAvgGradeEl) parentAvgGradeEl.textContent = avgGrade + '%';
       
       let presentCount = 0, totalDays = 0;
       loggedInParent.classIds.forEach(cid => {
@@ -8320,7 +8390,8 @@
         }
       });
       const attendanceRate = totalDays > 0 ? ((presentCount / totalDays) * 100).toFixed(1) : 'N/A';
-      document.getElementById('parent-attendance-rate').textContent = attendanceRate + '%';
+      const parentAttendanceRateEl = safeGetElement('parent-attendance-rate');
+      if (parentAttendanceRateEl) parentAttendanceRateEl.textContent = attendanceRate + '%';
       
       loadParentContent();
     }
@@ -9766,12 +9837,24 @@
     }
     
     function createNewUser() {
-      const userType = document.getElementById('new-user-type').value;
-      const userId = document.getElementById('new-user-id').value.trim();
-      const userName = document.getElementById('new-user-name').value.trim();
-      const email = document.getElementById('new-user-email').value.trim();
-      const password = document.getElementById('new-user-password').value;
-      const passwordConfirm = document.getElementById('new-user-password-confirm').value;
+      const newUserTypeEl = safeGetElement('new-user-type');
+      const newUserIdEl = safeGetElement('new-user-id');
+      const newUserNameEl = safeGetElement('new-user-name');
+      const newUserEmailEl = safeGetElement('new-user-email');
+      const newUserPasswordEl = safeGetElement('new-user-password');
+      const newUserPasswordConfirmEl = safeGetElement('new-user-password-confirm');
+      
+      if (!newUserTypeEl || !newUserIdEl || !newUserNameEl || !newUserEmailEl || !newUserPasswordEl || !newUserPasswordConfirmEl) {
+        alert('Form elements not found');
+        return;
+      }
+      
+      const userType = newUserTypeEl.value;
+      const userId = newUserIdEl.value.trim();
+      const userName = newUserNameEl.value.trim();
+      const email = newUserEmailEl.value.trim();
+      const password = newUserPasswordEl.value;
+      const passwordConfirm = newUserPasswordConfirmEl.value;
       
       // Validation
       if (!userType) {
@@ -9807,9 +9890,13 @@
           
           // Add user to local data based on type
           if (userType === 'student') {
-            const grade = document.getElementById('new-student-grade').value;
-            const parent = document.getElementById('new-student-parent').value;
-            const contact = document.getElementById('new-student-contact').value;
+            const newStudentGradeEl = safeGetElement('new-student-grade');
+            const newStudentParentEl = safeGetElement('new-student-parent');
+            const newStudentContactEl = safeGetElement('new-student-contact');
+            
+            const grade = newStudentGradeEl ? newStudentGradeEl.value : '';
+            const parent = newStudentParentEl ? newStudentParentEl.value : '';
+            const contact = newStudentContactEl ? newStudentContactEl.value : '';
             
             const newStudent = {
               id: parseInt(userId) || students.length + 1,
@@ -9825,8 +9912,11 @@
             renderStudents();
             
           } else if (userType === 'teacher') {
-            const subject = document.getElementById('new-teacher-subject').value;
-            const qualification = document.getElementById('new-teacher-qualification').value;
+            const newTeacherSubjectEl = safeGetElement('new-teacher-subject');
+            const newTeacherQualificationEl = safeGetElement('new-teacher-qualification');
+            
+            const subject = newTeacherSubjectEl ? newTeacherSubjectEl.value : '';
+            const qualification = newTeacherQualificationEl ? newTeacherQualificationEl.value : '';
             
             const newTeacher = {
               id: parseInt(userId) || teachers.length + 1,
