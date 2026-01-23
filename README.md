@@ -81,9 +81,26 @@ BIS-SMS/
 
 ⚠️ This system uses demo credentials for testing purposes. In a production environment, implement proper authentication, password encryption, and security measures.
 
+### Recent Security Improvements (v1.1.0)
+
+✅ **Comprehensive security fixes implemented** - See [SECURITY_FIXES.md](SECURITY_FIXES.md) and [FIX_SUMMARY.md](FIX_SUMMARY.md) for details:
+- XSS protection (131 instances)
+- Safe localStorage operations (89 instances)
+- Portal access validation (3 portals)
+- Null-safe DOM access (57 instances)
+- CSV validation and security (12 instances)
+- Cross-tab logout synchronization
+- Security headers (Helmet.js)
+- Enhanced error handling
+- **CodeQL Security Scan: 0 vulnerabilities**
+
 ## Support
 
-For questions or issues, please refer to the [LOGIN_CREDENTIALS.md](LOGIN_CREDENTIALS.md) file or open an issue in the repository.
+For questions or issues, please refer to:
+- [LOGIN_CREDENTIALS.md](LOGIN_CREDENTIALS.md) - Login information
+- [SECURITY_FIXES.md](SECURITY_FIXES.md) - Security improvements
+- [FIX_SUMMARY.md](FIX_SUMMARY.md) - Complete fix summary
+- Open an issue in the repository
 
 ## License
 

@@ -46,20 +46,19 @@
     const storage = getStorage(app);
     
     // Protect page: redirect to login if not authenticated
-    onAuthStateChanged(auth, (user) => {
-      if (!user) {
-        window.location.href = 'index.html';
-      }
-      // Optional: refresh token to get latest claims (for future custom claims)
-      // user.getIdToken(true);
+    document.addEventListener('DOMContentLoaded', function() {
+      onAuthStateChanged(auth, (user) => {
+        if (!user) {
+          window.location.href = 'index.html';
+        }
+        // Optional: refresh token to get latest claims (for future custom claims)
+        // user.getIdToken(true);
+      });
     });
     
     // Global logout function
     window.logout = function() {
-      signOut(auth).then(() => {
-        sessionStorage.clear();
-        window.location.href = 'index.html';
-      });
+      syncLogout();
     };
     
     // Make available globally
@@ -3400,22 +3399,22 @@
     }
     
     // Dummy data with persistence
-    let students = JSON.parse(localStorage.getItem('students')) || [
+    let students = safeStorage.getItem('students', [
       { id: 1, name: 'John Doe', grade: '10', parent: 'Jane Doe', contact: '+27 11 234 5678', classIds: [] },
       { id: 2, name: 'Sarah Smith', grade: '11', parent: 'Mike Smith', contact: '+27 11 876 5432', classIds: [] }
-    ];
-    let teachers = JSON.parse(localStorage.getItem('teachers')) || [
+    ]);
+    let teachers = safeStorage.getItem('teachers', [
       { id: 1, name: 'Mr. Johnson', subject: 'Math', qualification: 'B.Ed Mathematics', status: 'Active' },
       { id: 2, name: 'Ms. Lee', subject: 'Science', qualification: 'M.Sc Physics', status: 'Active' }
-    ];
-    let classes = JSON.parse(localStorage.getItem('classes')) || []; // { id, name, grade, teacherId, studentIds: [], capacity: 30, schedule: '' }
-    let attendance = JSON.parse(localStorage.getItem('attendance')) || {}; // { [classId]: { [date]: { [studentId]: {status: 'Present', notes: ''} } } }
-    let grades = JSON.parse(localStorage.getItem('grades')) || {}; // { [classId]: { [studentId]: { math: '', science: '' } } }
-    let messages = JSON.parse(localStorage.getItem('messages')) || [];
-    let fees = JSON.parse(localStorage.getItem('fees')) || {}; // {studentId: {items: [], discounts: [], payments: []}}
-    let expenses = JSON.parse(localStorage.getItem('expenses')) || [];
-    let gradesData = JSON.parse(localStorage.getItem('gradesData')) || {}; // {classId: {term: {studentId: {subject: score, comment: ''}}}}
-    let subjects = JSON.parse(localStorage.getItem('subjects')) || {}; // {classId: [{name: 'Math', weight: 25}, ...]}
+    ]);
+    let classes = safeStorage.getItem('classes', []); // { id, name, grade, teacherId, studentIds: [], capacity: 30, schedule: '' }
+    let attendance = safeStorage.getItem('attendance', {}); // { [classId]: { [date]: { [studentId]: {status: 'Present', notes: ''} } } }
+    let grades = safeStorage.getItem('grades', {}); // { [classId]: { [studentId]: { math: '', science: '' } } }
+    let messages = safeStorage.getItem('messages', []);
+    let fees = safeStorage.getItem('fees', {}); // {studentId: {items: [], discounts: [], payments: []}}
+    let expenses = safeStorage.getItem('expenses', []);
+    let gradesData = safeStorage.getItem('gradesData', {}); // {classId: {term: {studentId: {subject: score, comment: ''}}}}
+    let subjects = safeStorage.getItem('subjects', {}); // {classId: [{name: 'Math', weight: 25}, ...]}
     let currentStudentId = null;
     let loggedInStudent = null;
     let loggedInTeacher = null;
@@ -3425,41 +3424,41 @@
     let attendanceChart = null;
     
     // New data structures for parent portal modules
-    let homework = JSON.parse(localStorage.getItem('homework')) || {}; // {classId: [{id, title, dueDate, description, status}]}
-    let announcements = JSON.parse(localStorage.getItem('announcements')) || [
+    let homework = safeStorage.getItem('homework', {}); // {classId: [{id, title, dueDate, description, status}]}
+    let announcements = safeStorage.getItem('announcements', [
       {id: 1, title: 'School Reopening', date: '2026-01-15', category: 'general', content: 'School will reopen on January 20th, 2026.', priority: 'normal'},
       {id: 2, title: 'Parent-Teacher Meeting', date: '2026-01-25', category: 'events', content: 'Annual parent-teacher meeting scheduled for January 25th.', priority: 'urgent'},
       {id: 3, title: 'Sports Day', date: '2026-02-10', category: 'events', content: 'Annual sports day on February 10th. All students must participate.', priority: 'normal'}
-    ];
+    ]);
     
-    // Initialize announcements in localStorage if not already present
+    // Initialize announcements if not already present
     if (!localStorage.getItem('announcements')) {
-      localStorage.setItem('announcements', JSON.stringify(announcements));
+      safeStorage.setItem('announcements', announcements);
     }
     
-    let events = JSON.parse(localStorage.getItem('events')) || [
+    let events = safeStorage.getItem('events', [
       {id: 1, title: 'School Holiday', date: '2026-01-16', type: 'holiday', description: 'Public Holiday'},
       {id: 2, title: 'Parent-Teacher Meeting', date: '2026-01-25', type: 'meeting', description: 'Annual PTM - 2:00 PM to 5:00 PM'},
       {id: 3, title: 'Sports Day', date: '2026-02-10', type: 'event', description: 'Annual Inter-House Sports Competition'},
       {id: 4, title: 'Mid-Term Exams', date: '2026-02-15', type: 'exam', description: 'Mid-term examinations begin'}
-    ];
+    ]);
     
-    // Initialize events in localStorage if not already present
+    // Initialize events if not already present
     if (!localStorage.getItem('events')) {
-      localStorage.setItem('events', JSON.stringify(events));
+      safeStorage.setItem('events', events);
     }
     
-    let healthRecords = JSON.parse(localStorage.getItem('healthRecords')) || {}; // {studentId: {bloodGroup, allergies, medications, emergencyContact}}
-    let achievements = JSON.parse(localStorage.getItem('achievements')) || {}; // {studentId: [{title, date, description, category}]}
-    let examTimetable = JSON.parse(localStorage.getItem('examTimetable')) || [
+    let healthRecords = safeStorage.getItem('healthRecords', {}); // {studentId: {bloodGroup, allergies, medications, emergencyContact}}
+    let achievements = safeStorage.getItem('achievements', {}); // {studentId: [{title, date, description, category}]}
+    let examTimetable = safeStorage.getItem('examTimetable', [
       {date: '2026-02-15', subject: 'Mathematics', time: '9:00 AM - 11:00 AM', venue: 'Exam Hall A'},
       {date: '2026-02-16', subject: 'English', time: '9:00 AM - 11:00 AM', venue: 'Exam Hall B'},
       {date: '2026-02-17', subject: 'Science', time: '9:00 AM - 11:00 AM', venue: 'Exam Hall A'}
-    ];
+    ]);
     
-    // Initialize examTimetable in localStorage if not already present
+    // Initialize examTimetable if not already present
     if (!localStorage.getItem('examTimetable')) {
-      localStorage.setItem('examTimetable', JSON.stringify(examTimetable));
+      safeStorage.setItem('examTimetable', examTimetable);
     }
     
     let dailyRoutine = [
@@ -3473,7 +3472,7 @@
       {time: '1:30 PM - 2:30 PM', activity: 'Period 5'},
       {time: '2:30 PM - 3:30 PM', activity: 'Period 6 / Extra Curricular'}
     ];
-    let notifications = JSON.parse(localStorage.getItem('notifications')) || [];
+    let notifications = safeStorage.getItem('notifications', []);
 
     // Navigation
     const sections = document.querySelectorAll('.section');
@@ -3533,11 +3532,11 @@
         totalOutstanding += calc.balance > 0 ? calc.balance : 0;
         const row = document.createElement('tr');
         row.innerHTML = `
-          <td>${stu.name}</td>
+          <td>${escapeHtml(stu.name)}</td>
           <td>R${calc.netDue.toLocaleString()}</td>
           <td>R${calc.paidTotal.toLocaleString()}</td>
           <td class="${calc.balance > 0 ? 'text-danger' : 'text-success'}">R${calc.balance.toLocaleString()}</td>
-          <td class="no-print"><button class="btn btn-sm btn-primary" onclick="openStudentFeeModal(${stu.id}, '${stu.name}')">Manage</button></td>
+          <td class="no-print"><button class="btn btn-sm btn-primary" onclick="openStudentFeeModal(${stu.id}, '${stu.name.replace(/'/g, "\\'")}')">Manage</button></td>
         `;
         table.appendChild(row);
       });
@@ -3551,21 +3550,23 @@
       expenses.forEach((exp, idx) => {
         total += parseFloat(exp.amount) || 0;
         const row = `<tr>
-          <td>${exp.date}</td>
-          <td>${exp.desc}</td>
-          <td>${exp.category}</td>
+          <td>${escapeHtml(exp.date)}</td>
+          <td>${escapeHtml(exp.desc)}</td>
+          <td>${escapeHtml(exp.category)}</td>
           <td>R${parseFloat(exp.amount).toLocaleString()}</td>
           <td class="no-print"><button class="btn btn-sm btn-danger" onclick="deleteExpense(${idx})">Delete</button></td>
         </tr>`;
         table.innerHTML += row;
       });
-      document.getElementById('total-expenses').textContent = 'R' + total.toLocaleString();
+      const totalExpensesEl = safeGetElement('total-expenses');
+      if (totalExpensesEl) totalExpensesEl.textContent = 'R' + total.toLocaleString();
     }
 
     // Student Modal
     function openStudentFeeModal(id, name) {
       currentStudentId = id;
-      document.getElementById('modal-student-name').textContent = name;
+      const modalStudentNameEl = safeGetElement('modal-student-name');
+      if (modalStudentNameEl) modalStudentNameEl.textContent = name;
       renderStudentFeeDetails();
       new bootstrap.Modal(document.getElementById('studentFeeModal')).show();
     }
@@ -3579,24 +3580,28 @@
       f.items.forEach((item, idx) => {
         itemsHtml += `<tr><td>${item.desc}</td><td>R${parseFloat(item.amount).toLocaleString()}</td><td><button class="btn btn-sm btn-danger" onclick="deleteFeeItem(${idx})">Del</button></td></tr>`;
       });
-      document.getElementById('fee-items-list').innerHTML = itemsHtml || '<tr><td colspan="3">No fee items</td></tr>';
+      const feeItemsListEl = safeGetElement('fee-items-list');
+      if (feeItemsListEl) feeItemsListEl.innerHTML = itemsHtml || '<tr><td colspan="3">No fee items</td></tr>';
 
       // Discounts
       let discHtml = '';
       f.discounts.forEach((d, idx) => {
         discHtml += `<tr><td>${d.desc}</td><td>R${parseFloat(d.amount).toLocaleString()}</td><td><button class="btn btn-sm btn-danger" onclick="deleteDiscount(${idx})">Del</button></td></tr>`;
       });
-      document.getElementById('discounts-list').innerHTML = discHtml || '<tr><td colspan="3">No discounts</td></tr>';
+      const discountsListEl = safeGetElement('discounts-list');
+      if (discountsListEl) discountsListEl.innerHTML = discHtml || '<tr><td colspan="3">No discounts</td></tr>';
 
       // Payments
       let payHtml = '';
       f.payments.forEach((p, idx) => {
         payHtml += `<tr><td>${p.date}</td><td>R${parseFloat(p.amount).toLocaleString()}</td><td>${p.method}</td><td><button class="btn btn-sm btn-danger" onclick="deletePayment(${idx})">Del</button></td></tr>`;
       });
-      document.getElementById('payments-list').innerHTML = payHtml || '<tr><td colspan="4">No payments</td></tr>';
+      const paymentsListEl = safeGetElement('payments-list');
+      if (paymentsListEl) paymentsListEl.innerHTML = payHtml || '<tr><td colspan="4">No payments</td></tr>';
 
       // Summary
-      document.getElementById('fee-summary').innerHTML = `
+      const feeSummaryEl = safeGetElement('fee-summary');
+      if (feeSummaryEl) feeSummaryEl.innerHTML = `
         <p><strong>Total Fee Items:</strong> R${calc.itemsTotal.toLocaleString()}</p>
         <p><strong>Total Discounts:</strong> R${calc.discountsTotal.toLocaleString()}</p>
         <p><strong>Net Due:</strong> R${calc.netDue.toLocaleString()}</p>
@@ -3607,32 +3612,40 @@
 
     function addFeeItem(id) {
       if (!fees[id]) fees[id] = {items: [], discounts: [], payments: []};
-      const desc = document.getElementById('fee-desc').value.trim();
-      const amount = parseFloat(document.getElementById('fee-amount').value);
+      const feeDescEl = safeGetElement('fee-desc');
+      const feeAmountEl = safeGetElement('fee-amount');
+      if (!feeDescEl || !feeAmountEl) return;
+      
+      const desc = feeDescEl.value.trim();
+      const amount = parseFloat(feeAmountEl.value);
       if (desc && amount > 0) {
         fees[id].items.push({desc, amount});
-        localStorage.setItem('fees', JSON.stringify(fees));
+        safeStorage.setItem('fees', fees);
         renderStudentFeeDetails();
         renderFeesTable();
-        document.getElementById('fee-desc').value = '';
-        document.getElementById('fee-amount').value = '';
+        feeDescEl.value = '';
+        feeAmountEl.value = '';
       }
     }
 
     function deleteFeeItem(idx) {
       fees[currentStudentId].items.splice(idx, 1);
-      localStorage.setItem('fees', JSON.stringify(fees));
+      safeStorage.setItem('fees', fees);
       renderStudentFeeDetails();
       renderFeesTable();
     }
 
     function addDiscount(id) {
       if (!fees[id]) fees[id] = {items: [], discounts: [], payments: []};
-      const desc = document.getElementById('discount-desc').value.trim();
-      const amount = parseFloat(document.getElementById('discount-amount').value);
+      const discountDescEl = safeGetElement('discount-desc');
+      const discountAmountEl = safeGetElement('discount-amount');
+      if (!discountDescEl || !discountAmountEl) return;
+      
+      const desc = discountDescEl.value.trim();
+      const amount = parseFloat(discountAmountEl.value);
       if (desc && amount > 0) {
         fees[id].discounts.push({desc, amount});
-        localStorage.setItem('fees', JSON.stringify(fees));
+        safeStorage.setItem('fees', fees);
         renderStudentFeeDetails();
         renderFeesTable();
       }
@@ -3640,19 +3653,24 @@
 
     function deleteDiscount(idx) {
       fees[currentStudentId].discounts.splice(idx, 1);
-      localStorage.setItem('fees', JSON.stringify(fees));
+      safeStorage.setItem('fees', fees);
       renderStudentFeeDetails();
       renderFeesTable();
     }
 
     function addPayment(id) {
       if (!fees[id]) fees[id] = {items: [], discounts: [], payments: []};
-      const date = document.getElementById('payment-date').value || new Date().toISOString().split('T')[0];
-      const amount = parseFloat(document.getElementById('payment-amount').value);
-      const method = document.getElementById('payment-method').value;
+      const paymentDateEl = safeGetElement('payment-date');
+      const paymentAmountEl = safeGetElement('payment-amount');
+      const paymentMethodEl = safeGetElement('payment-method');
+      if (!paymentAmountEl || !paymentMethodEl) return;
+      
+      const date = (paymentDateEl ? paymentDateEl.value : null) || new Date().toISOString().split('T')[0];
+      const amount = parseFloat(paymentAmountEl.value);
+      const method = paymentMethodEl.value;
       if (amount > 0) {
         fees[id].payments.push({date, amount, method});
-        localStorage.setItem('fees', JSON.stringify(fees));
+        safeStorage.setItem('fees', fees);
         renderStudentFeeDetails();
         renderFeesTable();
       }
@@ -3660,7 +3678,7 @@
 
     function deletePayment(idx) {
       fees[currentStudentId].payments.splice(idx, 1);
-      localStorage.setItem('fees', JSON.stringify(fees));
+      safeStorage.setItem('fees', fees);
       renderStudentFeeDetails();
       renderFeesTable();
     }
@@ -3674,20 +3692,26 @@
           if (!fees[stu.id]) fees[stu.id] = {items: [], discounts: [], payments: []};
           fees[stu.id].items.push({desc, amount: parseFloat(amount)});
         });
-        localStorage.setItem('fees', JSON.stringify(fees));
+        safeStorage.setItem('fees', fees);
         renderFeesTable();
       }
     }
 
     // Expenses
     function addExpense() {
-      const date = document.getElementById('expense-date').value || new Date().toISOString().split('T')[0];
-      const desc = document.getElementById('expense-desc').value.trim();
-      const category = document.getElementById('expense-category').value;
-      const amount = parseFloat(document.getElementById('expense-amount').value);
+      const expenseDateEl = safeGetElement('expense-date');
+      const expenseDescEl = safeGetElement('expense-desc');
+      const expenseCategoryEl = safeGetElement('expense-category');
+      const expenseAmountEl = safeGetElement('expense-amount');
+      if (!expenseDescEl || !expenseCategoryEl || !expenseAmountEl) return;
+      
+      const date = (expenseDateEl ? expenseDateEl.value : null) || new Date().toISOString().split('T')[0];
+      const desc = expenseDescEl.value.trim();
+      const category = expenseCategoryEl.value;
+      const amount = parseFloat(expenseAmountEl.value);
       if (desc && amount > 0) {
         expenses.push({date, desc, category, amount});
-        localStorage.setItem('expenses', JSON.stringify(expenses));
+        safeStorage.setItem('expenses', expenses);
         renderExpensesTable();
         updateDashboardStats();
       }
@@ -3695,7 +3719,7 @@
 
     function deleteExpense(idx) {
       expenses.splice(idx, 1);
-      localStorage.setItem('expenses', JSON.stringify(expenses));
+      safeStorage.setItem('expenses', expenses);
       renderExpensesTable();
       updateDashboardStats();
     }
@@ -3732,7 +3756,8 @@
 
     // Dashboard Stats
     function updateDashboardStats() {
-      document.getElementById('total-students').textContent = students.length;
+      const totalStudentsEl = safeGetElement('total-students');
+      if (totalStudentsEl) totalStudentsEl.textContent = students.length;
       
       let totalDue = 0;
       let totalPaid = 0;
@@ -3745,9 +3770,12 @@
       });
       const totalExp = expenses.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
       
-      document.getElementById('outstanding-fees').textContent = 'R' + totalBalance.toLocaleString();
-      document.getElementById('collection-rate').textContent = totalDue > 0 ? Math.round((totalPaid / totalDue) * 100) + '%' : '0%';
-      document.getElementById('net-surplus').textContent = 'R' + (totalPaid - totalExp).toLocaleString();
+      const outstandingFeesEl = safeGetElement('outstanding-fees');
+      if (outstandingFeesEl) outstandingFeesEl.textContent = 'R' + totalBalance.toLocaleString();
+      const collectionRateEl = safeGetElement('collection-rate');
+      if (collectionRateEl) collectionRateEl.textContent = totalDue > 0 ? Math.round((totalPaid / totalDue) * 100) + '%' : '0%';
+      const netSurplusEl = safeGetElement('net-surplus');
+      if (netSurplusEl) netSurplusEl.textContent = 'R' + (totalPaid - totalExp).toLocaleString();
     }
 
     // Advanced Reports
@@ -3811,24 +3839,31 @@
       classes.forEach(cls => {
         const opt = document.createElement('option');
         opt.value = cls.id;
-        opt.textContent = `${cls.name} (Grade ${cls.grade})`;
+        opt.textContent = `${escapeHtml(cls.name)} (Grade ${escapeHtml(cls.grade)})`;
         select.appendChild(opt);
       });
     }
 
     // Render grades table
     function renderGradesTable() {
-      const classId = document.getElementById('grades-class').value;
-      const term = document.getElementById('grades-term').value || 'Term 1 2026';
+      const gradesClassEl = safeGetElement('grades-class');
+      const gradesTermEl = safeGetElement('grades-term');
+      if (!gradesClassEl || !gradesTermEl) return;
+      
+      const classId = gradesClassEl.value;
+      const term = gradesTermEl.value || 'Term 1 2026';
       if (!classId) {
-        document.getElementById('grades-thead').innerHTML = '';
-        document.getElementById('grades-table').innerHTML = '<tr><td>Select a class to view grades</td></tr>';
+        const gradesTheadEl = safeGetElement('grades-thead');
+        const gradesTableEl = safeGetElement('grades-table');
+        if (gradesTheadEl) gradesTheadEl.innerHTML = '';
+        if (gradesTableEl) gradesTableEl.innerHTML = '<tr><td>Select a class to view grades</td></tr>';
         return;
       }
 
       const cls = classes.find(c => c.id == classId);
       if (!cls || !cls.studentIds || cls.studentIds.length === 0) {
-        document.getElementById('grades-table').innerHTML = '<tr><td>No students enrolled</td></tr>';
+        const gradesTableEl = safeGetElement('grades-table');
+        if (gradesTableEl) gradesTableEl.innerHTML = '<tr><td>No students enrolled</td></tr>';
         return;
       }
 
@@ -3847,7 +3882,8 @@
         thead += `<th>${sub.name}<br><small>Weight: ${sub.weight}%</small></th>`;
       });
       thead += '<th>Comment</th><th>Average</th><th>Status</th></tr>';
-      document.getElementById('grades-thead').innerHTML = thead;
+      const gradesTheadEl = safeGetElement('grades-thead');
+      if (gradesTheadEl) gradesTheadEl.innerHTML = thead;
 
       // Body
       let tbody = '';
@@ -3856,7 +3892,7 @@
         if (!stu) return;
         const studentGrades = gradesData[classId]?.[term]?.[sid] || {};
         
-        let row = `<tr><td>${stu.name}</td>`;
+        let row = `<tr><td>${escapeHtml(stu.name)}</td>`;
         let totalWeighted = 0;
         let totalWeight = 0;
         
@@ -3873,12 +3909,16 @@
         row += `<td class="avg-score">${avg}%</td><td>${status}</td></tr>`;
         tbody += row;
       });
-      document.getElementById('grades-table').innerHTML = tbody;
+      const gradesTableEl = safeGetElement('grades-table');
+      if (gradesTableEl) gradesTableEl.innerHTML = tbody;
     }
 
     // Manage subjects
     function openManageSubjects() {
-      const classId = document.getElementById('grades-class').value;
+      const gradesClassEl = safeGetElement('grades-class');
+      if (!gradesClassEl) return;
+      
+      const classId = gradesClassEl.value;
       if (!classId) return alert('Select a class first');
       renderSubjectsList(classId);
       new bootstrap.Modal(document.getElementById('manageSubjectsModal')).show();
@@ -3890,29 +3930,34 @@
       list.innerHTML = '';
       subjects[classId].forEach((sub, idx) => {
         list.innerHTML += `<tr>
-          <td>${sub.name} (Weight: ${sub.weight}%)</td>
+          <td>${escapeHtml(sub.name)} (Weight: ${sub.weight}%)</td>
           <td><button class="btn btn-sm btn-danger" onclick="deleteSubject(${classId}, ${idx})">Delete</button></td>
         </tr>`;
       });
     }
 
     function addSubject() {
-      const classId = document.getElementById('grades-class').value;
-      const name = document.getElementById('new-subject-name').value.trim();
-      const weight = parseFloat(document.getElementById('new-subject-weight').value) || 10;
+      const gradesClassEl = safeGetElement('grades-class');
+      const newSubjectNameEl = safeGetElement('new-subject-name');
+      const newSubjectWeightEl = safeGetElement('new-subject-weight');
+      if (!gradesClassEl || !newSubjectNameEl || !newSubjectWeightEl) return;
+      
+      const classId = gradesClassEl.value;
+      const name = newSubjectNameEl.value.trim();
+      const weight = parseFloat(newSubjectWeightEl.value) || 10;
       if (name && classId) {
         if (!subjects[classId]) subjects[classId] = [];
         subjects[classId].push({name, weight});
-        localStorage.setItem('subjects', JSON.stringify(subjects));
+        safeStorage.setItem('subjects', subjects);
         renderSubjectsList(classId);
         renderGradesTable();
-        document.getElementById('new-subject-name').value = '';
+        newSubjectNameEl.value = '';
       }
     }
 
     function deleteSubject(classId, idx) {
       subjects[classId].splice(idx, 1);
-      localStorage.setItem('subjects', JSON.stringify(subjects));
+      safeStorage.setItem('subjects', subjects);
       renderSubjectsList(classId);
       renderGradesTable();
     }
@@ -3932,15 +3977,15 @@
         let totalWeighted = 0;
         let totalWeight = subjects[classId].reduce((sum, sub) => sum + sub.weight, 0);
         
-        report += `<div class="card mb-4 p-4"><h5>${stu.name}</h5><table class="table table-bordered"><thead><tr><th>Subject</th><th>Mark</th><th>Weight</th></tr></thead><tbody>`;
+        report += `<div class="card mb-4 p-4"><h5>${escapeHtml(stu.name)}</h5><table class="table table-bordered"><thead><tr><th>Subject</th><th>Mark</th><th>Weight</th></tr></thead><tbody>`;
         subjects[classId].forEach(sub => {
           const score = studentGrades[sub.name] || 'N/A';
           totalWeighted += (parseFloat(score) || 0) * (sub.weight / 100);
-          report += `<tr><td>${sub.name}</td><td>${score}%</td><td>${sub.weight}%</td></tr>`;
+          report += `<tr><td>${escapeHtml(sub.name)}</td><td>${escapeHtml(score)}%</td><td>${sub.weight}%</td></tr>`;
         });
         const avg = totalWeight > 0 ? (totalWeighted / (totalWeight / 100)).toFixed(1) : '0';
         report += `</tbody><tfoot><tr><td><strong>Overall Average</strong></td><td colspan="2"><strong>${avg}%</strong></td></tr></tfoot></table>`;
-        report += `<p><strong>Teacher Comment:</strong> ${studentGrades.comment || 'No comment'}</p></div>`;
+        report += `<p><strong>Teacher Comment:</strong> ${escapeHtml(studentGrades.comment || 'No comment')}</p></div>`;
       });
       
       document.getElementById('class-report-output').innerHTML = report;
@@ -3997,7 +4042,7 @@
         teachers.forEach(tea => {
           const opt = document.createElement('option');
           opt.value = tea.id;
-          opt.textContent = tea.name;
+          opt.textContent = escapeHtml(tea.name);
           classTeacherSelect.appendChild(opt);
         });
       }
@@ -4042,12 +4087,12 @@
           return cls ? cls.name : '';
         }).join(', ') || 'None';
         const row = `<tr>
-          <td>${stu.id}</td>
-          <td>${stu.name}</td>
-          <td>${stu.grade}</td>
-          <td>${stu.parent || 'N/A'}</td>
-          <td>${stu.contact || 'N/A'}</td>
-          <td>${enrolledClasses}</td>
+          <td>${escapeHtml(stu.id)}</td>
+          <td>${escapeHtml(stu.name)}</td>
+          <td>${escapeHtml(stu.grade)}</td>
+          <td>${escapeHtml(stu.parent || 'N/A')}</td>
+          <td>${escapeHtml(stu.contact || 'N/A')}</td>
+          <td>${escapeHtml(enrolledClasses)}</td>
           <td>
             <button class="btn btn-sm btn-primary" onclick="viewCompleteStudentInfo(${stu.id})" title="View Complete Registration"><i class="fas fa-id-card"></i></button>
             <button class="btn btn-sm btn-info" onclick="viewStudentDetails(${stu.id})"><i class="fas fa-eye"></i></button>
@@ -4081,12 +4126,12 @@
       filteredTeachers.forEach(tea => {
         const assignedClasses = classes.filter(c => c.teacherId === tea.id).map(c => c.name).join(', ') || 'None';
         const row = `<tr>
-          <td>${tea.id}</td>
-          <td>${tea.name}</td>
-          <td>${tea.subject}</td>
-          <td>${tea.qualification || 'N/A'}</td>
-          <td><span class="badge bg-${tea.status === 'Active' ? 'success' : 'warning'}">${tea.status || 'Active'}</span></td>
-          <td>${assignedClasses}</td>
+          <td>${escapeHtml(tea.id)}</td>
+          <td>${escapeHtml(tea.name)}</td>
+          <td>${escapeHtml(tea.subject)}</td>
+          <td>${escapeHtml(tea.qualification || 'N/A')}</td>
+          <td><span class="badge bg-${tea.status === 'Active' ? 'success' : 'warning'}">${escapeHtml(tea.status || 'Active')}</span></td>
+          <td>${escapeHtml(assignedClasses)}</td>
           <td>
             <button class="btn btn-sm btn-info" onclick="viewTeacherDetails(${tea.id})"><i class="fas fa-eye"></i></button>
             <button class="btn btn-sm btn-danger" onclick="deleteTeacher(${tea.id})"><i class="fas fa-trash"></i></button>
@@ -4122,13 +4167,13 @@
         const capacity = cls.capacity || 30;
         const capacityColor = enrolledCount >= capacity ? 'danger' : enrolledCount >= capacity * 0.8 ? 'warning' : 'success';
         const row = `<tr>
-          <td>${cls.id}</td>
-          <td>${cls.name}</td>
-          <td>${cls.grade}</td>
-          <td>${teacherName}</td>
+          <td>${escapeHtml(cls.id)}</td>
+          <td>${escapeHtml(cls.name)}</td>
+          <td>${escapeHtml(cls.grade)}</td>
+          <td>${escapeHtml(teacherName)}</td>
           <td><span class="badge bg-${capacityColor}">${capacity}</span></td>
           <td>${enrolledCount}/${capacity}</td>
-          <td><small>${cls.schedule || 'Not set'}</small></td>
+          <td><small>${escapeHtml(cls.schedule || 'Not set')}</small></td>
           <td>
             <button class="btn btn-sm btn-info" onclick="viewClassDetails(${cls.id})"><i class="fas fa-eye"></i></button>
             <button class="btn btn-sm btn-danger" onclick="deleteClass(${cls.id})"><i class="fas fa-trash"></i></button>
@@ -4145,10 +4190,15 @@
     }
 
     function renderAttendance() {
-      const classId = document.getElementById('attendance-class').value;
-      const date = document.getElementById('attendance-date').value || new Date().toISOString().split('T')[0];
-      const table = document.getElementById('attendance-table');
-      table.innerHTML = '';
+      const attendanceClassEl = safeGetElement('attendance-class');
+      const attendanceDateEl = safeGetElement('attendance-date');
+      const attendanceTableEl = safeGetElement('attendance-table');
+      
+      if (!attendanceClassEl || !attendanceTableEl) return;
+      
+      const classId = attendanceClassEl.value;
+      const date = (attendanceDateEl ? attendanceDateEl.value : null) || new Date().toISOString().split('T')[0];
+      attendanceTableEl.innerHTML = '';
       
       if (classId) {
         const cls = classes.find(c => c.id == classId);
@@ -4162,8 +4212,8 @@
               
               const record = attendance[classId][date][sid] || { status: 'Present', notes: '' };
               
-              table.innerHTML += `<tr>
-                <td>${stu.name}</td>
+              attendanceTableEl.innerHTML += `<tr>
+                <td>${escapeHtml(stu.name)}</td>
                 <td>
                   <select class="form-select form-select-sm" data-class="${classId}" data-date="${date}" data-id="${sid}" data-type="status">
                     <option value="Present" ${record.status === 'Present' ? 'selected' : ''}>Present</option>
@@ -4179,10 +4229,10 @@
             }
           });
         } else {
-          table.innerHTML = '<tr><td colspan="3">No students enrolled in this class</td></tr>';
+          attendanceTableEl.innerHTML = '<tr><td colspan="3">No students enrolled in this class</td></tr>';
         }
       } else {
-        table.innerHTML = '<tr><td colspan="3">Please select a class</td></tr>';
+        attendanceTableEl.innerHTML = '<tr><td colspan="3">Please select a class</td></tr>';
       }
     }
     
@@ -4194,9 +4244,9 @@
     }
 
     // Choptso Portal Chat Data Structures
-    let choptsoGroups = JSON.parse(localStorage.getItem('choptsoGroups')) || []; // {id, name, description, members: [], createdBy, createdAt, type: 'teacher'/'parent'}
-    let choptsoUserProfiles = JSON.parse(localStorage.getItem('choptsoUserProfiles')) || {}; // {userId: {profilePic: url, status: 'online/away/busy/offline', displayName}}
-    let choptsoMessages = JSON.parse(localStorage.getItem('choptsoMessages')) || {}; // {conversationId: [{senderId, text, timestamp, attachmentURL}]}
+    let choptsoGroups = safeStorage.getItem('choptsoGroups', []); // {id, name, description, members: [], createdBy, createdAt, type: 'teacher'/'parent'}
+    let choptsoUserProfiles = safeStorage.getItem('choptsoUserProfiles', {}); // {userId: {profilePic: url, status: 'online/away/busy/offline', displayName}}
+    let choptsoMessages = safeStorage.getItem('choptsoMessages', {}); // {conversationId: [{senderId, text, timestamp, attachmentURL}]}
     
     // Current conversation tracking for portals
     let currentTeacherConversationId = null;
@@ -4222,7 +4272,7 @@
           displayName: userName,
           type: userType
         };
-        localStorage.setItem('choptsoUserProfiles', JSON.stringify(choptsoUserProfiles));
+        safeStorage.setItem('choptsoUserProfiles', choptsoUserProfiles);
       }
     }
     
@@ -4699,7 +4749,7 @@
         choptsoMessages[currentTeacherConversationId] = [];
       }
       choptsoMessages[currentTeacherConversationId].push(message);
-      localStorage.setItem('choptsoMessages', JSON.stringify(choptsoMessages));
+      safeStorage.setItem('choptsoMessages', choptsoMessages);
       
       if (input) input.value = '';
       teacherFileAttachment = null;
@@ -4721,7 +4771,7 @@
         reader.onload = (e) => {
           const teacherId = `teacher-${loggedInTeacher.id}`;
           choptsoUserProfiles[teacherId].profilePic = e.target.result;
-          localStorage.setItem('choptsoUserProfiles', JSON.stringify(choptsoUserProfiles));
+          safeStorage.setItem('choptsoUserProfiles', choptsoUserProfiles);
           document.getElementById('teacher-profile-pic').src = e.target.result;
         };
         reader.readAsDataURL(file);
@@ -4750,7 +4800,7 @@
     function updateTeacherStatus(status) {
       const teacherId = `teacher-${loggedInTeacher.id}`;
       choptsoUserProfiles[teacherId].status = status;
-      localStorage.setItem('choptsoUserProfiles', JSON.stringify(choptsoUserProfiles));
+      safeStorage.setItem('choptsoUserProfiles', choptsoUserProfiles);
     }
     
     function teacherRefreshChat() {
@@ -4821,7 +4871,7 @@
       };
       
       choptsoGroups.push(group);
-      localStorage.setItem('choptsoGroups', JSON.stringify(choptsoGroups));
+      safeStorage.setItem('choptsoGroups', choptsoGroups);
       
       // Close modal
       const modal = bootstrap.Modal.getInstance(document.getElementById('teacherCreateGroupModal'));
@@ -5139,7 +5189,7 @@
       
       const avatar = document.createElement('div');
       avatar.className = 'choptso-avatar';
-      avatar.textContent = message.senderName ? message.senderName.charAt(0).toUpperCase() : '?';
+      avatar.textContent = message.senderName ? escapeHtml(message.senderName).charAt(0).toUpperCase() : '?';
       
       const content = document.createElement('div');
       content.className = 'choptso-message-content';
@@ -5168,7 +5218,7 @@
         } else {
           messageHTML += `<div class="choptso-attachment">
             <a href="${message.attachmentURL}" target="_blank" class="text-decoration-none">
-              <i class="fas fa-file"></i> ${message.attachmentName || 'File attachment'}
+              <i class="fas fa-file"></i> ${escapeHtml(message.attachmentName || 'File attachment')}
             </a>
           </div>`;
         }
@@ -5179,7 +5229,7 @@
         new Date().toLocaleString();
       
       messageHTML += `<div class="choptso-message-meta">
-        ${isSent ? 'You' : message.senderName} • ${timestamp}
+        ${isSent ? 'You' : escapeHtml(message.senderName)} • ${timestamp}
       </div>`;
       
       content.innerHTML = messageHTML;
@@ -5349,7 +5399,7 @@
     function saveMessageLocally(text) {
       if (text) {
         messages.push(text);
-        localStorage.setItem('messages', JSON.stringify(messages));
+        safeStorage.setItem('messages', messages);
         loadLocalMessages(currentConversationId);
       }
     }
@@ -5454,8 +5504,8 @@
           }
         });
         
-        localStorage.setItem('students', JSON.stringify(students));
-        localStorage.setItem('classes', JSON.stringify(classes));
+        safeStorage.setItem('students', students);
+        safeStorage.setItem('classes', classes);
         renderStudents();
         renderClasses();
         updateDashboardStats();
@@ -5478,7 +5528,7 @@
       if (name && subject) {
         const id = teachers.length ? Math.max(...teachers.map(t => t.id)) + 1 : 1;
         teachers.push({ id, name, subject, qualification, status });
-        localStorage.setItem('teachers', JSON.stringify(teachers));
+        safeStorage.setItem('teachers', teachers);
         renderTeachers();
         populateClassSelects();
         updateDashboardStats();
@@ -5497,7 +5547,7 @@
       if (name && grade) {
         const id = classes.length ? Math.max(...classes.map(c => c.id)) + 1 : 1;
         classes.push({ id, name, grade, teacherId, capacity, schedule, studentIds: [] });
-        localStorage.setItem('classes', JSON.stringify(classes));
+        safeStorage.setItem('classes', classes);
         renderClasses();
         populateClassSelects();
         updateDashboardStats();
@@ -5515,8 +5565,8 @@
       classes.forEach(cls => {
         if (cls.studentIds) cls.studentIds = cls.studentIds.filter(sid => sid !== id);
       });
-      localStorage.setItem('students', JSON.stringify(students));
-      localStorage.setItem('classes', JSON.stringify(classes));
+      safeStorage.setItem('students', students);
+      safeStorage.setItem('classes', classes);
       renderStudents();
       renderClasses();
       updateDashboardStats();
@@ -5528,8 +5578,8 @@
       classes.forEach(cls => {
         if (cls.teacherId === id) cls.teacherId = null;
       });
-      localStorage.setItem('teachers', JSON.stringify(teachers));
-      localStorage.setItem('classes', JSON.stringify(classes));
+      safeStorage.setItem('teachers', teachers);
+      safeStorage.setItem('classes', classes);
       renderTeachers();
       renderClasses();
       updateDashboardStats();
@@ -5541,8 +5591,8 @@
       students.forEach(stu => {
         if (stu.classIds) stu.classIds = stu.classIds.filter(cid => cid !== id);
       });
-      localStorage.setItem('classes', JSON.stringify(classes));
-      localStorage.setItem('students', JSON.stringify(students));
+      safeStorage.setItem('classes', classes);
+      safeStorage.setItem('students', students);
       renderClasses();
       renderStudents();
       populateClassSelects();
@@ -5553,12 +5603,12 @@
       const cls = classes.find(c => c.id === classId);
       if (cls && cls.studentIds) {
         cls.studentIds = cls.studentIds.filter(sid => sid !== studentId);
-        localStorage.setItem('classes', JSON.stringify(classes));
+        safeStorage.setItem('classes', classes);
       }
       const stu = students.find(s => s.id === studentId);
       if (stu && stu.classIds) {
         stu.classIds = stu.classIds.filter(cid => cid !== classId);
-        localStorage.setItem('students', JSON.stringify(students));
+        safeStorage.setItem('students', students);
       }
       renderGrades();
       renderClasses();
@@ -5594,7 +5644,7 @@
         attendance[classId][date][sid].notes = input.value;
       });
       
-      localStorage.setItem('attendance', JSON.stringify(attendance));
+      safeStorage.setItem('attendance', attendance);
       
       // Proactive attendance features
       checkAttendanceAlerts(classId, date);
@@ -5751,7 +5801,7 @@
         }
       });
 
-      localStorage.setItem('gradesData', JSON.stringify(gradesData));
+      safeStorage.setItem('gradesData', gradesData);
       
       // Enhanced grade analytics
       analyzeGradeDistribution(classId, term);
@@ -6249,32 +6299,48 @@
       const reader = new FileReader();
       reader.onload = function(e) {
         const csv = e.target.result;
-        const lines = csv.split('\n').filter(line => line.trim());
         
-        if (lines.length < 2) {
+        // Use the parseCSV function from utils.js
+        const parseResult = parseCSV(csv);
+        
+        if (!parseResult.success) {
+          preview.innerHTML = `<div class="alert alert-warning">${escapeHtml(parseResult.error)}</div>`;
+          uploadBtn.disabled = true;
+          return;
+        }
+        
+        const { data, headers } = parseResult;
+        
+        if (data.length === 0) {
           preview.innerHTML = '<div class="alert alert-warning">CSV file is empty or invalid</div>';
           uploadBtn.disabled = true;
           return;
         }
         
-        const headers = lines[0].split(',').map(h => h.trim());
-        const dataLines = lines.slice(1);
+        // Validate required fields
+        const requiredFields = ['Surname', 'First Name', 'Gender', 'Grade'];
+        const validationResult = validateCSVData(data, requiredFields);
+        
+        if (!validationResult.valid) {
+          preview.innerHTML = `<div class="alert alert-danger"><i class="fas fa-exclamation-triangle"></i> ${escapeHtml(validationResult.error)}</div>`;
+          uploadBtn.disabled = true;
+          return;
+        }
         
         let html = '<div class="alert alert-success">';
-        html += `<i class="fas fa-check-circle"></i> Found ${dataLines.length} students to upload`;
+        html += `<i class="fas fa-check-circle"></i> Found ${data.length} students to upload`;
         html += '</div>';
         html += '<div class="table-responsive" style="max-height: 300px; overflow-y: auto;">';
         html += '<table class="table table-sm table-bordered">';
-        html += '<thead><tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr></thead>';
+        html += '<thead><tr>' + headers.map(h => `<th>${escapeHtml(h)}</th>`).join('') + '</tr></thead>';
         html += '<tbody>';
         
-        dataLines.slice(0, 10).forEach(line => {
-          const values = line.split(',').map(v => v.trim());
-          html += '<tr>' + values.map(v => `<td>${v}</td>`).join('') + '</tr>';
+        data.slice(0, 10).forEach(row => {
+          html += '<tr>' + headers.map(h => `<td>${escapeHtml(row[h] !== undefined ? row[h] : '')}</td>`).join('') + '</tr>';
         });
         
-        if (dataLines.length > 10) {
-          html += `<tr><td colspan="${headers.length}" class="text-center text-muted">... and ${dataLines.length - 10} more</td></tr>`;
+        if (data.length > 10) {
+          html += `<tr><td colspan="${headers.length}" class="text-center text-muted">... and ${data.length - 10} more</td></tr>`;
         }
         
         html += '</tbody></table></div>';
@@ -6300,28 +6366,44 @@
       const reader = new FileReader();
       reader.onload = function(e) {
         const csv = e.target.result;
-        const lines = csv.split('\n').filter(line => line.trim());
         
-        if (lines.length < 2) {
+        // Use the parseCSV function from utils.js
+        const parseResult = parseCSV(csv);
+        
+        if (!parseResult.success) {
+          preview.innerHTML = `<div class="alert alert-warning">${escapeHtml(parseResult.error)}</div>`;
+          uploadBtn.disabled = true;
+          return;
+        }
+        
+        const { data, headers } = parseResult;
+        
+        if (data.length === 0) {
           preview.innerHTML = '<div class="alert alert-warning">CSV file is empty or invalid</div>';
           uploadBtn.disabled = true;
           return;
         }
         
-        const headers = lines[0].split(',').map(h => h.trim());
-        const dataLines = lines.slice(1);
+        // Validate required fields
+        const requiredFields = ['Full Name', 'Subject'];
+        const validationResult = validateCSVData(data, requiredFields);
+        
+        if (!validationResult.valid) {
+          preview.innerHTML = `<div class="alert alert-danger"><i class="fas fa-exclamation-triangle"></i> ${escapeHtml(validationResult.error)}</div>`;
+          uploadBtn.disabled = true;
+          return;
+        }
         
         let html = '<div class="alert alert-success">';
-        html += `<i class="fas fa-check-circle"></i> Found ${dataLines.length} teachers to upload`;
+        html += `<i class="fas fa-check-circle"></i> Found ${data.length} teachers to upload`;
         html += '</div>';
         html += '<div class="table-responsive" style="max-height: 300px; overflow-y: auto;">';
         html += '<table class="table table-sm table-bordered">';
-        html += '<thead><tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr></thead>';
+        html += '<thead><tr>' + headers.map(h => `<th>${escapeHtml(h)}</th>`).join('') + '</tr></thead>';
         html += '<tbody>';
         
-        dataLines.forEach(line => {
-          const values = line.split(',').map(v => v.trim());
-          html += '<tr>' + values.map(v => `<td>${v}</td>`).join('') + '</tr>';
+        data.forEach(row => {
+          html += '<tr>' + headers.map(h => `<td>${escapeHtml(row[h] !== undefined ? row[h] : '')}</td>`).join('') + '</tr>';
         });
         
         html += '</tbody></table></div>';
@@ -6344,34 +6426,36 @@
       const reader = new FileReader();
       reader.onload = async function(e) {
         const csv = e.target.result;
-        const lines = csv.split('\n').filter(line => line.trim());
         
-        if (lines.length < 2) {
+        // Use the parseCSV function from utils.js
+        const parseResult = parseCSV(csv);
+        
+        if (!parseResult.success) {
+          alert(`CSV parsing error: ${parseResult.error}`);
+          return;
+        }
+        
+        const { data } = parseResult;
+        
+        if (data.length === 0) {
           alert('The selected CSV file appears to be empty or has no data rows. Please check your file and try again.');
           return;
         }
         
-        const headers = lines[0].split(',').map(h => h.trim());
-        const dataLines = lines.slice(1);
+        // Validate required fields
+        const requiredFields = ['Surname', 'First Name', 'Gender', 'Grade'];
+        const validationResult = validateCSVData(data, requiredFields);
+        
+        if (!validationResult.valid) {
+          alert(`CSV validation error: ${validationResult.error}`);
+          return;
+        }
         
         let successCount = 0;
         let errorCount = 0;
         
-        for (const line of dataLines) {
+        for (const studentData of data) {
           try {
-            const values = line.split(',').map(v => v.trim());
-            const studentData = {};
-            
-            headers.forEach((header, index) => {
-              studentData[header] = values[index] || '';
-            });
-            
-            // Validate required fields
-            if (!studentData['Surname'] || !studentData['First Name'] || !studentData['Gender'] || !studentData['Grade']) {
-              errorCount++;
-              continue;
-            }
-            
             // Create student object
             const newStudent = {
               id: 'S' + (students.length + successCount + 1).toString().padStart(4, '0'),
@@ -6426,34 +6510,36 @@
       const reader = new FileReader();
       reader.onload = async function(e) {
         const csv = e.target.result;
-        const lines = csv.split('\n').filter(line => line.trim());
         
-        if (lines.length < 2) {
+        // Use the parseCSV function from utils.js
+        const parseResult = parseCSV(csv);
+        
+        if (!parseResult.success) {
+          alert(`CSV parsing error: ${parseResult.error}`);
+          return;
+        }
+        
+        const { data } = parseResult;
+        
+        if (data.length === 0) {
           alert('The selected CSV file appears to be empty or has no data rows. Please check your file and try again.');
           return;
         }
         
-        const headers = lines[0].split(',').map(h => h.trim());
-        const dataLines = lines.slice(1);
+        // Validate required fields
+        const requiredFields = ['Full Name', 'Subject'];
+        const validationResult = validateCSVData(data, requiredFields);
+        
+        if (!validationResult.valid) {
+          alert(`CSV validation error: ${validationResult.error}`);
+          return;
+        }
         
         let successCount = 0;
         let errorCount = 0;
         
-        for (const line of dataLines) {
+        for (const teacherData of data) {
           try {
-            const values = line.split(',').map(v => v.trim());
-            const teacherData = {};
-            
-            headers.forEach((header, index) => {
-              teacherData[header] = values[index] || '';
-            });
-            
-            // Validate required fields
-            if (!teacherData['Full Name'] || !teacherData['Subject']) {
-              errorCount++;
-              continue;
-            }
-            
             // Create teacher object
             const newTeacher = {
               id: 'T' + (teachers.length + successCount + 1).toString().padStart(4, '0'),
@@ -6503,34 +6589,34 @@
       }
       
       // Populate learner details
-      document.getElementById('view-student-number').textContent = student.id || '-';
-      document.getElementById('view-learner-surname').textContent = student.surname || '-';
-      document.getElementById('view-learner-firstname').textContent = student.firstname || '-';
-      document.getElementById('view-learner-gender').textContent = student.gender || '-';
-      document.getElementById('view-learner-grade').textContent = student.grade || '-';
-      document.getElementById('view-learner-class').textContent = student.class || '-';
-      document.getElementById('view-learner-cell').textContent = student.learnerCell || '-';
-      document.getElementById('view-learner-email').textContent = student.learnerEmail || '-';
-      document.getElementById('view-learner-language').textContent = student.language || '-';
+      document.getElementById('view-student-number').textContent = escapeHtml(student.id || '-');
+      document.getElementById('view-learner-surname').textContent = escapeHtml(student.surname || '-');
+      document.getElementById('view-learner-firstname').textContent = escapeHtml(student.firstname || '-');
+      document.getElementById('view-learner-gender').textContent = escapeHtml(student.gender || '-');
+      document.getElementById('view-learner-grade').textContent = escapeHtml(student.grade || '-');
+      document.getElementById('view-learner-class').textContent = escapeHtml(student.class || '-');
+      document.getElementById('view-learner-cell').textContent = escapeHtml(student.learnerCell || '-');
+      document.getElementById('view-learner-email').textContent = escapeHtml(student.learnerEmail || '-');
+      document.getElementById('view-learner-language').textContent = escapeHtml(student.language || '-');
       
       // Get enrolled classes
       const enrolledClasses = student.classIds ? student.classIds.map(cid => {
         const cls = classes.find(c => c.id === cid);
         return cls ? cls.name : '';
       }).join(', ') : 'None';
-      document.getElementById('view-enrolled-classes').textContent = enrolledClasses || 'None';
+      document.getElementById('view-enrolled-classes').textContent = escapeHtml(enrolledClasses || 'None');
       
       // Populate father details
-      document.getElementById('view-father-firstname').textContent = student.fatherFirstname || '-';
-      document.getElementById('view-father-surname').textContent = student.fatherSurname || '-';
-      document.getElementById('view-father-email').textContent = student.fatherEmail || '-';
-      document.getElementById('view-father-cell').textContent = student.fatherCell || '-';
+      document.getElementById('view-father-firstname').textContent = escapeHtml(student.fatherFirstname || '-');
+      document.getElementById('view-father-surname').textContent = escapeHtml(student.fatherSurname || '-');
+      document.getElementById('view-father-email').textContent = escapeHtml(student.fatherEmail || '-');
+      document.getElementById('view-father-cell').textContent = escapeHtml(student.fatherCell || '-');
       
       // Populate mother details
-      document.getElementById('view-mother-firstname').textContent = student.motherFirstname || '-';
-      document.getElementById('view-mother-surname').textContent = student.motherSurname || '-';
-      document.getElementById('view-mother-email').textContent = student.motherEmail || '-';
-      document.getElementById('view-mother-cell').textContent = student.motherCell || '-';
+      document.getElementById('view-mother-firstname').textContent = escapeHtml(student.motherFirstname || '-');
+      document.getElementById('view-mother-surname').textContent = escapeHtml(student.motherSurname || '-');
+      document.getElementById('view-mother-email').textContent = escapeHtml(student.motherEmail || '-');
+      document.getElementById('view-mother-cell').textContent = escapeHtml(student.motherCell || '-');
       
       // Show modal (with fallback if Bootstrap is not loaded)
       const modalElement = document.getElementById('viewStudentInfoModal');
@@ -6616,12 +6702,18 @@
 
     
     function loadStudentPortal() {
+      // Validate portal access
+      if (!validatePortalAccess('student')) return;
+      
       if (!loggedInStudent) return;
       
       // Update header - new IDs
-      document.getElementById('student-name').textContent = loggedInStudent.name;
-      document.getElementById('student-grade').textContent = loggedInStudent.grade;
-      document.getElementById('student-id').textContent = loggedInStudent.id;
+      const studentNameEl = safeGetElement('student-name');
+      if (studentNameEl) studentNameEl.textContent = loggedInStudent.name;
+      const studentGradeEl = safeGetElement('student-grade');
+      if (studentGradeEl) studentGradeEl.textContent = loggedInStudent.grade;
+      const studentIdEl = safeGetElement('student-id');
+      if (studentIdEl) studentIdEl.textContent = loggedInStudent.id;
       
       // Calculate average grade
       let totalGrade = 0, gradeCount = 0;
@@ -6643,7 +6735,8 @@
         }
       });
       const avgGrade = gradeCount > 0 ? (totalGrade / gradeCount).toFixed(1) : 'N/A';
-      document.getElementById('student-overall-average').textContent = avgGrade + '%';
+      const studentOverallAvgEl = safeGetElement('student-overall-average');
+      if (studentOverallAvgEl) studentOverallAvgEl.textContent = avgGrade + '%';
       
       // Calculate attendance rate
       let presentCount = 0, totalDays = 0;
@@ -6884,7 +6977,7 @@
       
       // Load resources from storage
       if (!window.resources) {
-        window.resources = JSON.parse(localStorage.getItem('resources') || '[]');
+        window.resources = safeStorage.getItem('resources', []);
       }
       
       // Sample default resources if none exist
@@ -6895,7 +6988,7 @@
           { id: 3, title: 'English Literature Notes', type: 'Document', subject: 'English', url: '#', uploadedBy: 'admin', uploadDate: '2026-01-15', downloads: 0, category: 'Notes' },
           { id: 4, title: 'History Video Lecture', type: 'Video', subject: 'History', url: '#', uploadedBy: 'admin', uploadDate: '2026-01-15', downloads: 0, category: 'Video' }
         ];
-        localStorage.setItem('resources', JSON.stringify(window.resources));
+        safeStorage.setItem('resources', window.resources);
       }
       
       let filteredResources = searchTerm 
@@ -6960,13 +7053,13 @@
     
     function trackResourceDownload(resourceId) {
       if (!window.resources) {
-        window.resources = JSON.parse(localStorage.getItem('resources') || '[]');
+        window.resources = safeStorage.getItem('resources', []);
       }
       
       const resource = window.resources.find(r => r.id === resourceId);
       if (resource) {
         resource.downloads = (resource.downloads || 0) + 1;
-        localStorage.setItem('resources', JSON.stringify(window.resources));
+        safeStorage.setItem('resources', window.resources);
       }
     }
     
@@ -7063,7 +7156,7 @@
       
       // Calculate pending assignments
       if (!window.assignments) {
-        window.assignments = JSON.parse(localStorage.getItem('assignments') || '[]');
+        window.assignments = safeStorage.getItem('assignments', []);
       }
       const activeAssignments = window.assignments.filter(a => a.status === 'active').length;
       document.getElementById('teacher-pending-assignments').textContent = activeAssignments;
@@ -7073,7 +7166,7 @@
       
       // Resources count
       if (!window.resources) {
-        window.resources = JSON.parse(localStorage.getItem('resources') || '[]');
+        window.resources = safeStorage.getItem('resources', []);
       }
       const teacherResources = window.resources.filter(r => r.uploadedBy === 'teacher' || r.uploadedBy === 'admin').length;
       document.getElementById('teacher-resources-count').textContent = teacherResources;
@@ -7215,7 +7308,7 @@
         attendance[classId][date][studentId] = { status, notes };
       });
       
-      localStorage.setItem('attendance', JSON.stringify(attendance));
+      safeStorage.setItem('attendance', attendance);
       alert('Attendance saved successfully!');
     }
     
@@ -7298,7 +7391,7 @@
       
       // Initialize assignments storage
       if (!window.assignments) {
-        window.assignments = JSON.parse(localStorage.getItem('assignments') || '[]');
+        window.assignments = safeStorage.getItem('assignments', []);
       }
       
       // Create new assignment
@@ -7318,7 +7411,7 @@
       };
       
       window.assignments.push(newAssignment);
-      localStorage.setItem('assignments', JSON.stringify(window.assignments));
+      safeStorage.setItem('assignments', window.assignments);
       
       alert(`Assignment "${title}" created successfully!`);
       loadTeacherAssignments();
@@ -7336,7 +7429,7 @@
       
       // Load assignments from storage
       if (!window.assignments) {
-        window.assignments = JSON.parse(localStorage.getItem('assignments') || '[]');
+        window.assignments = safeStorage.getItem('assignments', []);
       }
       
       if (window.assignments.length === 0) {
@@ -7524,7 +7617,7 @@
       if (!confirm('Are you sure you want to delete this assignment?')) return;
       
       window.assignments = window.assignments.filter(a => a.id !== assignmentId);
-      localStorage.setItem('assignments', JSON.stringify(window.assignments));
+      safeStorage.setItem('assignments', window.assignments);
       loadTeacherAssignments();
     }
     
@@ -7539,7 +7632,7 @@
       
       // Initialize lesson plans storage
       if (!window.lessonPlans) {
-        window.lessonPlans = JSON.parse(localStorage.getItem('lessonPlans') || '{}');
+        window.lessonPlans = safeStorage.getItem('lessonPlans', {});
       }
       
       const cls = classes.find(c => c.id == classId);
@@ -7678,7 +7771,7 @@
       const date = prompt('Enter lesson date (YYYY-MM-DD):', new Date().toISOString().split('T')[0]);
       
       if (!window.lessonPlans) {
-        window.lessonPlans = JSON.parse(localStorage.getItem('lessonPlans') || '{}');
+        window.lessonPlans = safeStorage.getItem('lessonPlans', {});
       }
       
       if (!window.lessonPlans[classId]) {
@@ -7697,7 +7790,7 @@
       };
       
       window.lessonPlans[classId].push(newPlan);
-      localStorage.setItem('lessonPlans', JSON.stringify(window.lessonPlans));
+      safeStorage.setItem('lessonPlans', window.lessonPlans);
       
       loadTeacherLessonPlans();
     }
@@ -7714,13 +7807,13 @@
       const newDate = prompt('Edit date:', plan.date);
       if (newDate !== null) plan.date = newDate;
       
-      localStorage.setItem('lessonPlans', JSON.stringify(window.lessonPlans));
+      safeStorage.setItem('lessonPlans', window.lessonPlans);
       loadTeacherLessonPlans();
     }
     
     function markLessonComplete(classId, index) {
       window.lessonPlans[classId][index].status = 'completed';
-      localStorage.setItem('lessonPlans', JSON.stringify(window.lessonPlans));
+      safeStorage.setItem('lessonPlans', window.lessonPlans);
       loadTeacherLessonPlans();
     }
     
@@ -7728,7 +7821,7 @@
       if (!confirm('Delete this lesson plan?')) return;
       
       window.lessonPlans[classId].splice(index, 1);
-      localStorage.setItem('lessonPlans', JSON.stringify(window.lessonPlans));
+      safeStorage.setItem('lessonPlans', window.lessonPlans);
       loadTeacherLessonPlans();
     }
     
@@ -7870,7 +7963,7 @@
       
       // Load resources
       if (!window.resources) {
-        window.resources = JSON.parse(localStorage.getItem('resources') || '[]');
+        window.resources = safeStorage.getItem('resources', []);
       }
       
       // Create new resource
@@ -7890,7 +7983,7 @@
       };
       
       window.resources.push(newResource);
-      localStorage.setItem('resources', JSON.stringify(window.resources));
+      safeStorage.setItem('resources', window.resources);
       
       alert('Resource uploaded successfully!');
       
@@ -7906,7 +7999,7 @@
       const content = document.getElementById('teacher-resources-content');
       
       if (!window.resources) {
-        window.resources = JSON.parse(localStorage.getItem('resources') || '[]');
+        window.resources = safeStorage.getItem('resources', []);
       }
       
       const teacherResources = window.resources.filter(r => r.uploadedBy === 'teacher' || r.uploadedBy === 'admin');
@@ -7982,7 +8075,7 @@
       if (!confirm('Are you sure you want to delete this resource?')) return;
       
       window.resources = window.resources.filter(r => r.id !== resourceId);
-      localStorage.setItem('resources', JSON.stringify(window.resources));
+      safeStorage.setItem('resources', window.resources);
       loadTeacherResourcesList();
     }
     
@@ -8209,7 +8302,7 @@
     
     function updateResourceStats() {
       if (!window.resources) {
-        window.resources = JSON.parse(localStorage.getItem('resources') || '[]');
+        window.resources = safeStorage.getItem('resources', []);
       }
       
       const teacherResources = window.resources.filter(r => r.uploadedBy === 'teacher' || r.uploadedBy === 'admin');
@@ -8244,6 +8337,9 @@
     }
     
     function loadTeacherPortal() {
+      // Validate portal access
+      if (!validatePortalAccess('teacher')) return;
+      
       if (!loggedInTeacher) return;
       
       // Use the enhanced version
@@ -8263,15 +8359,22 @@
     }
     
     function loadParentPortal() {
+      // Validate portal access
+      if (!validatePortalAccess('parent')) return;
+      
       if (!loggedInParent) return;
       
-      document.getElementById('parent-student-name').textContent = loggedInParent.name;
-      document.getElementById('parent-student-grade').textContent = loggedInParent.grade;
-      document.getElementById('parent-student-id').textContent = loggedInParent.id;
+      const parentStudentNameEl = safeGetElement('parent-student-name');
+      if (parentStudentNameEl) parentStudentNameEl.textContent = loggedInParent.name;
+      const parentStudentGradeEl = safeGetElement('parent-student-grade');
+      if (parentStudentGradeEl) parentStudentGradeEl.textContent = loggedInParent.grade;
+      const parentStudentIdEl = safeGetElement('parent-student-id');
+      if (parentStudentIdEl) parentStudentIdEl.textContent = loggedInParent.id;
       
       // Calculate stats (same as student portal)
       const feeCalc = calculateStudentFee(loggedInParent.id);
-      document.getElementById('parent-fee-balance').textContent = 'R' + feeCalc.balance.toLocaleString();
+      const parentFeeBalanceEl = safeGetElement('parent-fee-balance');
+      if (parentFeeBalanceEl) parentFeeBalanceEl.textContent = 'R' + feeCalc.balance.toLocaleString();
       
       // Calculate pending homework
       let pendingCount = 0;
@@ -8284,7 +8387,8 @@
           });
         }
       });
-      document.getElementById('parent-pending-homework').textContent = pendingCount;
+      const parentPendingHwEl = safeGetElement('parent-pending-homework');
+      if (parentPendingHwEl) parentPendingHwEl.textContent = pendingCount;
       
       let totalGrade = 0, gradeCount = 0;
       loggedInParent.classIds.forEach(cid => {
@@ -8305,7 +8409,8 @@
         }
       });
       const avgGrade = gradeCount > 0 ? (totalGrade / gradeCount).toFixed(1) : 'N/A';
-      document.getElementById('parent-avg-grade').textContent = avgGrade + '%';
+      const parentAvgGradeEl = safeGetElement('parent-avg-grade');
+      if (parentAvgGradeEl) parentAvgGradeEl.textContent = avgGrade + '%';
       
       let presentCount = 0, totalDays = 0;
       loggedInParent.classIds.forEach(cid => {
@@ -8321,7 +8426,8 @@
         }
       });
       const attendanceRate = totalDays > 0 ? ((presentCount / totalDays) * 100).toFixed(1) : 'N/A';
-      document.getElementById('parent-attendance-rate').textContent = attendanceRate + '%';
+      const parentAttendanceRateEl = safeGetElement('parent-attendance-rate');
+      if (parentAttendanceRateEl) parentAttendanceRateEl.textContent = attendanceRate + '%';
       
       loadParentContent();
     }
@@ -8428,7 +8534,7 @@
             {id: 3, title: 'English Essay', dueDate: '2026-01-15', description: 'Write a 500-word essay on climate change', status: 'overdue', subject: 'English'}
           ];
         });
-        localStorage.setItem('homework', JSON.stringify(homework));
+        safeStorage.setItem('homework', homework);
       }
       
       let homeworkHtml = '<div class="list-group">';
@@ -8679,7 +8785,7 @@
           {id: 2, message: 'Parent-Teacher meeting scheduled for Jan 25', date: new Date(Date.now() - 86400000).toISOString(), read: false},
           {id: 3, message: 'School fees payment reminder', date: new Date(Date.now() - 172800000).toISOString(), read: true}
         ];
-        localStorage.setItem('notifications', JSON.stringify(notifications));
+        safeStorage.setItem('notifications', notifications);
       }
       
       let notifHtml = '<div class="list-group list-group-flush">';
@@ -8725,7 +8831,7 @@
           method: 'Online Payment'
         });
         
-        localStorage.setItem('fees', JSON.stringify(fees));
+        safeStorage.setItem('fees', fees);
         alert(`Payment of R${parseFloat(amount).toLocaleString()} processed successfully!\n\nTransaction Reference: TXN-${Date.now()}`);
         loadParentFees();
       }
@@ -9183,7 +9289,7 @@
         choptsoMessages[currentParentConversationId] = [];
       }
       choptsoMessages[currentParentConversationId].push(message);
-      localStorage.setItem('choptsoMessages', JSON.stringify(choptsoMessages));
+      safeStorage.setItem('choptsoMessages', choptsoMessages);
       
       if (input) input.value = '';
       parentFileAttachment = null;
@@ -9205,7 +9311,7 @@
         reader.onload = (e) => {
           const parentId = `parent-${loggedInParent.id}`;
           choptsoUserProfiles[parentId].profilePic = e.target.result;
-          localStorage.setItem('choptsoUserProfiles', JSON.stringify(choptsoUserProfiles));
+          safeStorage.setItem('choptsoUserProfiles', choptsoUserProfiles);
           document.getElementById('parent-profile-pic').src = e.target.result;
         };
         reader.readAsDataURL(file);
@@ -9234,7 +9340,7 @@
     function updateParentStatus(status) {
       const parentId = `parent-${loggedInParent.id}`;
       choptsoUserProfiles[parentId].status = status;
-      localStorage.setItem('choptsoUserProfiles', JSON.stringify(choptsoUserProfiles));
+      safeStorage.setItem('choptsoUserProfiles', choptsoUserProfiles);
     }
     
     function parentRefreshChat() {
@@ -9305,7 +9411,7 @@
       };
       
       choptsoGroups.push(group);
-      localStorage.setItem('choptsoGroups', JSON.stringify(choptsoGroups));
+      safeStorage.setItem('choptsoGroups', choptsoGroups);
       
       // Close modal
       const modal = bootstrap.Modal.getInstance(document.getElementById('parentCreateGroupModal'));
@@ -9767,12 +9873,24 @@
     }
     
     function createNewUser() {
-      const userType = document.getElementById('new-user-type').value;
-      const userId = document.getElementById('new-user-id').value.trim();
-      const userName = document.getElementById('new-user-name').value.trim();
-      const email = document.getElementById('new-user-email').value.trim();
-      const password = document.getElementById('new-user-password').value;
-      const passwordConfirm = document.getElementById('new-user-password-confirm').value;
+      const newUserTypeEl = safeGetElement('new-user-type');
+      const newUserIdEl = safeGetElement('new-user-id');
+      const newUserNameEl = safeGetElement('new-user-name');
+      const newUserEmailEl = safeGetElement('new-user-email');
+      const newUserPasswordEl = safeGetElement('new-user-password');
+      const newUserPasswordConfirmEl = safeGetElement('new-user-password-confirm');
+      
+      if (!newUserTypeEl || !newUserIdEl || !newUserNameEl || !newUserEmailEl || !newUserPasswordEl || !newUserPasswordConfirmEl) {
+        alert('Form elements not found');
+        return;
+      }
+      
+      const userType = newUserTypeEl.value;
+      const userId = newUserIdEl.value.trim();
+      const userName = newUserNameEl.value.trim();
+      const email = newUserEmailEl.value.trim();
+      const password = newUserPasswordEl.value;
+      const passwordConfirm = newUserPasswordConfirmEl.value;
       
       // Validation
       if (!userType) {
@@ -9808,9 +9926,13 @@
           
           // Add user to local data based on type
           if (userType === 'student') {
-            const grade = document.getElementById('new-student-grade').value;
-            const parent = document.getElementById('new-student-parent').value;
-            const contact = document.getElementById('new-student-contact').value;
+            const newStudentGradeEl = safeGetElement('new-student-grade');
+            const newStudentParentEl = safeGetElement('new-student-parent');
+            const newStudentContactEl = safeGetElement('new-student-contact');
+            
+            const grade = newStudentGradeEl ? newStudentGradeEl.value : '';
+            const parent = newStudentParentEl ? newStudentParentEl.value : '';
+            const contact = newStudentContactEl ? newStudentContactEl.value : '';
             
             const newStudent = {
               id: parseInt(userId) || students.length + 1,
@@ -9822,12 +9944,15 @@
             };
             
             students.push(newStudent);
-            localStorage.setItem('students', JSON.stringify(students));
+            safeStorage.setItem('students', students);
             renderStudents();
             
           } else if (userType === 'teacher') {
-            const subject = document.getElementById('new-teacher-subject').value;
-            const qualification = document.getElementById('new-teacher-qualification').value;
+            const newTeacherSubjectEl = safeGetElement('new-teacher-subject');
+            const newTeacherQualificationEl = safeGetElement('new-teacher-qualification');
+            
+            const subject = newTeacherSubjectEl ? newTeacherSubjectEl.value : '';
+            const qualification = newTeacherQualificationEl ? newTeacherQualificationEl.value : '';
             
             const newTeacher = {
               id: parseInt(userId) || teachers.length + 1,
@@ -9838,7 +9963,7 @@
             };
             
             teachers.push(newTeacher);
-            localStorage.setItem('teachers', JSON.stringify(teachers));
+            safeStorage.setItem('teachers', teachers);
             renderTeachers();
             
           } else if (userType === 'parent') {
@@ -9848,7 +9973,7 @@
             if (student) {
               if (!student.parent || student.parent === 'N/A') {
                 student.parent = userName;
-                localStorage.setItem('students', JSON.stringify(students));
+                safeStorage.setItem('students', students);
               }
             }
           }
@@ -10867,5 +10992,6 @@
       color: #fff;
     }
   </style>
+  <script src="utils.js"></script>
 </body>
 </html>
