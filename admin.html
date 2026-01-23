@@ -46,20 +46,19 @@
     const storage = getStorage(app);
     
     // Protect page: redirect to login if not authenticated
-    onAuthStateChanged(auth, (user) => {
-      if (!user) {
-        window.location.href = 'index.html';
-      }
-      // Optional: refresh token to get latest claims (for future custom claims)
-      // user.getIdToken(true);
+    document.addEventListener('DOMContentLoaded', function() {
+      onAuthStateChanged(auth, (user) => {
+        if (!user) {
+          window.location.href = 'index.html';
+        }
+        // Optional: refresh token to get latest claims (for future custom claims)
+        // user.getIdToken(true);
+      });
     });
     
     // Global logout function
     window.logout = function() {
-      signOut(auth).then(() => {
-        sessionStorage.clear();
-        window.location.href = 'index.html';
-      });
+      syncLogout();
     };
     
     // Make available globally
@@ -3400,22 +3399,22 @@
     }
     
     // Dummy data with persistence
-    let students = JSON.parse(localStorage.getItem('students')) || [
+    let students = safeStorage.getItem('students', [
       { id: 1, name: 'John Doe', grade: '10', parent: 'Jane Doe', contact: '+27 11 234 5678', classIds: [] },
       { id: 2, name: 'Sarah Smith', grade: '11', parent: 'Mike Smith', contact: '+27 11 876 5432', classIds: [] }
-    ];
-    let teachers = JSON.parse(localStorage.getItem('teachers')) || [
+    ]);
+    let teachers = safeStorage.getItem('teachers', [
       { id: 1, name: 'Mr. Johnson', subject: 'Math', qualification: 'B.Ed Mathematics', status: 'Active' },
       { id: 2, name: 'Ms. Lee', subject: 'Science', qualification: 'M.Sc Physics', status: 'Active' }
-    ];
-    let classes = JSON.parse(localStorage.getItem('classes')) || []; // { id, name, grade, teacherId, studentIds: [], capacity: 30, schedule: '' }
-    let attendance = JSON.parse(localStorage.getItem('attendance')) || {}; // { [classId]: { [date]: { [studentId]: {status: 'Present', notes: ''} } } }
-    let grades = JSON.parse(localStorage.getItem('grades')) || {}; // { [classId]: { [studentId]: { math: '', science: '' } } }
-    let messages = JSON.parse(localStorage.getItem('messages')) || [];
-    let fees = JSON.parse(localStorage.getItem('fees')) || {}; // {studentId: {items: [], discounts: [], payments: []}}
-    let expenses = JSON.parse(localStorage.getItem('expenses')) || [];
-    let gradesData = JSON.parse(localStorage.getItem('gradesData')) || {}; // {classId: {term: {studentId: {subject: score, comment: ''}}}}
-    let subjects = JSON.parse(localStorage.getItem('subjects')) || {}; // {classId: [{name: 'Math', weight: 25}, ...]}
+    ]);
+    let classes = safeStorage.getItem('classes', []); // { id, name, grade, teacherId, studentIds: [], capacity: 30, schedule: '' }
+    let attendance = safeStorage.getItem('attendance', {}); // { [classId]: { [date]: { [studentId]: {status: 'Present', notes: ''} } } }
+    let grades = safeStorage.getItem('grades', {}); // { [classId]: { [studentId]: { math: '', science: '' } } }
+    let messages = safeStorage.getItem('messages', []);
+    let fees = safeStorage.getItem('fees', {}); // {studentId: {items: [], discounts: [], payments: []}}
+    let expenses = safeStorage.getItem('expenses', []);
+    let gradesData = safeStorage.getItem('gradesData', {}); // {classId: {term: {studentId: {subject: score, comment: ''}}}}
+    let subjects = safeStorage.getItem('subjects', {}); // {classId: [{name: 'Math', weight: 25}, ...]}
     let currentStudentId = null;
     let loggedInStudent = null;
     let loggedInTeacher = null;
@@ -3425,41 +3424,41 @@
     let attendanceChart = null;
     
     // New data structures for parent portal modules
-    let homework = JSON.parse(localStorage.getItem('homework')) || {}; // {classId: [{id, title, dueDate, description, status}]}
-    let announcements = JSON.parse(localStorage.getItem('announcements')) || [
+    let homework = safeStorage.getItem('homework', {}); // {classId: [{id, title, dueDate, description, status}]}
+    let announcements = safeStorage.getItem('announcements', [
       {id: 1, title: 'School Reopening', date: '2026-01-15', category: 'general', content: 'School will reopen on January 20th, 2026.', priority: 'normal'},
       {id: 2, title: 'Parent-Teacher Meeting', date: '2026-01-25', category: 'events', content: 'Annual parent-teacher meeting scheduled for January 25th.', priority: 'urgent'},
       {id: 3, title: 'Sports Day', date: '2026-02-10', category: 'events', content: 'Annual sports day on February 10th. All students must participate.', priority: 'normal'}
-    ];
+    ]);
     
-    // Initialize announcements in localStorage if not already present
-    if (!localStorage.getItem('announcements')) {
-      localStorage.setItem('announcements', JSON.stringify(announcements));
+    // Initialize announcements if not already present
+    if (safeStorage.getItem('announcements') === null) {
+      safeStorage.setItem('announcements', announcements);
     }
     
-    let events = JSON.parse(localStorage.getItem('events')) || [
+    let events = safeStorage.getItem('events', [
       {id: 1, title: 'School Holiday', date: '2026-01-16', type: 'holiday', description: 'Public Holiday'},
       {id: 2, title: 'Parent-Teacher Meeting', date: '2026-01-25', type: 'meeting', description: 'Annual PTM - 2:00 PM to 5:00 PM'},
       {id: 3, title: 'Sports Day', date: '2026-02-10', type: 'event', description: 'Annual Inter-House Sports Competition'},
       {id: 4, title: 'Mid-Term Exams', date: '2026-02-15', type: 'exam', description: 'Mid-term examinations begin'}
-    ];
+    ]);
     
-    // Initialize events in localStorage if not already present
-    if (!localStorage.getItem('events')) {
-      localStorage.setItem('events', JSON.stringify(events));
+    // Initialize events if not already present
+    if (safeStorage.getItem('events') === null) {
+      safeStorage.setItem('events', events);
     }
     
-    let healthRecords = JSON.parse(localStorage.getItem('healthRecords')) || {}; // {studentId: {bloodGroup, allergies, medications, emergencyContact}}
-    let achievements = JSON.parse(localStorage.getItem('achievements')) || {}; // {studentId: [{title, date, description, category}]}
-    let examTimetable = JSON.parse(localStorage.getItem('examTimetable')) || [
+    let healthRecords = safeStorage.getItem('healthRecords', {}); // {studentId: {bloodGroup, allergies, medications, emergencyContact}}
+    let achievements = safeStorage.getItem('achievements', {}); // {studentId: [{title, date, description, category}]}
+    let examTimetable = safeStorage.getItem('examTimetable', [
       {date: '2026-02-15', subject: 'Mathematics', time: '9:00 AM - 11:00 AM', venue: 'Exam Hall A'},
       {date: '2026-02-16', subject: 'English', time: '9:00 AM - 11:00 AM', venue: 'Exam Hall B'},
       {date: '2026-02-17', subject: 'Science', time: '9:00 AM - 11:00 AM', venue: 'Exam Hall A'}
-    ];
+    ]);
     
-    // Initialize examTimetable in localStorage if not already present
-    if (!localStorage.getItem('examTimetable')) {
-      localStorage.setItem('examTimetable', JSON.stringify(examTimetable));
+    // Initialize examTimetable if not already present
+    if (safeStorage.getItem('examTimetable') === null) {
+      safeStorage.setItem('examTimetable', examTimetable);
     }
     
     let dailyRoutine = [
@@ -3473,7 +3472,7 @@
       {time: '1:30 PM - 2:30 PM', activity: 'Period 5'},
       {time: '2:30 PM - 3:30 PM', activity: 'Period 6 / Extra Curricular'}
     ];
-    let notifications = JSON.parse(localStorage.getItem('notifications')) || [];
+    let notifications = safeStorage.getItem('notifications', []);
 
     // Navigation
     const sections = document.querySelectorAll('.section');
@@ -3611,7 +3610,7 @@
       const amount = parseFloat(document.getElementById('fee-amount').value);
       if (desc && amount > 0) {
         fees[id].items.push({desc, amount});
-        localStorage.setItem('fees', JSON.stringify(fees));
+        safeStorage.setItem('fees', fees);
         renderStudentFeeDetails();
         renderFeesTable();
         document.getElementById('fee-desc').value = '';
@@ -3621,7 +3620,7 @@
 
     function deleteFeeItem(idx) {
       fees[currentStudentId].items.splice(idx, 1);
-      localStorage.setItem('fees', JSON.stringify(fees));
+      safeStorage.setItem('fees', fees);
       renderStudentFeeDetails();
       renderFeesTable();
     }
@@ -3632,7 +3631,7 @@
       const amount = parseFloat(document.getElementById('discount-amount').value);
       if (desc && amount > 0) {
         fees[id].discounts.push({desc, amount});
-        localStorage.setItem('fees', JSON.stringify(fees));
+        safeStorage.setItem('fees', fees);
         renderStudentFeeDetails();
         renderFeesTable();
       }
@@ -3640,7 +3639,7 @@
 
     function deleteDiscount(idx) {
       fees[currentStudentId].discounts.splice(idx, 1);
-      localStorage.setItem('fees', JSON.stringify(fees));
+      safeStorage.setItem('fees', fees);
       renderStudentFeeDetails();
       renderFeesTable();
     }
@@ -3652,7 +3651,7 @@
       const method = document.getElementById('payment-method').value;
       if (amount > 0) {
         fees[id].payments.push({date, amount, method});
-        localStorage.setItem('fees', JSON.stringify(fees));
+        safeStorage.setItem('fees', fees);
         renderStudentFeeDetails();
         renderFeesTable();
       }
@@ -3660,7 +3659,7 @@
 
     function deletePayment(idx) {
       fees[currentStudentId].payments.splice(idx, 1);
-      localStorage.setItem('fees', JSON.stringify(fees));
+      safeStorage.setItem('fees', fees);
       renderStudentFeeDetails();
       renderFeesTable();
     }
@@ -3674,7 +3673,7 @@
           if (!fees[stu.id]) fees[stu.id] = {items: [], discounts: [], payments: []};
           fees[stu.id].items.push({desc, amount: parseFloat(amount)});
         });
-        localStorage.setItem('fees', JSON.stringify(fees));
+        safeStorage.setItem('fees', fees);
         renderFeesTable();
       }
     }
@@ -3687,7 +3686,7 @@
       const amount = parseFloat(document.getElementById('expense-amount').value);
       if (desc && amount > 0) {
         expenses.push({date, desc, category, amount});
-        localStorage.setItem('expenses', JSON.stringify(expenses));
+        safeStorage.setItem('expenses', expenses);
         renderExpensesTable();
         updateDashboardStats();
       }
@@ -3695,7 +3694,7 @@
 
     function deleteExpense(idx) {
       expenses.splice(idx, 1);
-      localStorage.setItem('expenses', JSON.stringify(expenses));
+      safeStorage.setItem('expenses', expenses);
       renderExpensesTable();
       updateDashboardStats();
     }
@@ -3903,7 +3902,7 @@
       if (name && classId) {
         if (!subjects[classId]) subjects[classId] = [];
         subjects[classId].push({name, weight});
-        localStorage.setItem('subjects', JSON.stringify(subjects));
+        safeStorage.setItem('subjects', subjects);
         renderSubjectsList(classId);
         renderGradesTable();
         document.getElementById('new-subject-name').value = '';
@@ -3912,7 +3911,7 @@
 
     function deleteSubject(classId, idx) {
       subjects[classId].splice(idx, 1);
-      localStorage.setItem('subjects', JSON.stringify(subjects));
+      safeStorage.setItem('subjects', subjects);
       renderSubjectsList(classId);
       renderGradesTable();
     }
@@ -4194,9 +4193,9 @@
     }
 
     // Choptso Portal Chat Data Structures
-    let choptsoGroups = JSON.parse(localStorage.getItem('choptsoGroups')) || []; // {id, name, description, members: [], createdBy, createdAt, type: 'teacher'/'parent'}
-    let choptsoUserProfiles = JSON.parse(localStorage.getItem('choptsoUserProfiles')) || {}; // {userId: {profilePic: url, status: 'online/away/busy/offline', displayName}}
-    let choptsoMessages = JSON.parse(localStorage.getItem('choptsoMessages')) || {}; // {conversationId: [{senderId, text, timestamp, attachmentURL}]}
+    let choptsoGroups = safeStorage.getItem('choptsoGroups', []); // {id, name, description, members: [], createdBy, createdAt, type: 'teacher'/'parent'}
+    let choptsoUserProfiles = safeStorage.getItem('choptsoUserProfiles', {}); // {userId: {profilePic: url, status: 'online/away/busy/offline', displayName}}
+    let choptsoMessages = safeStorage.getItem('choptsoMessages', {}); // {conversationId: [{senderId, text, timestamp, attachmentURL}]}
     
     // Current conversation tracking for portals
     let currentTeacherConversationId = null;
@@ -4222,7 +4221,7 @@
           displayName: userName,
           type: userType
         };
-        localStorage.setItem('choptsoUserProfiles', JSON.stringify(choptsoUserProfiles));
+        safeStorage.setItem('choptsoUserProfiles', choptsoUserProfiles);
       }
     }
     
@@ -4699,7 +4698,7 @@
         choptsoMessages[currentTeacherConversationId] = [];
       }
       choptsoMessages[currentTeacherConversationId].push(message);
-      localStorage.setItem('choptsoMessages', JSON.stringify(choptsoMessages));
+      safeStorage.setItem('choptsoMessages', choptsoMessages);
       
       if (input) input.value = '';
       teacherFileAttachment = null;
@@ -4721,7 +4720,7 @@
         reader.onload = (e) => {
           const teacherId = `teacher-${loggedInTeacher.id}`;
           choptsoUserProfiles[teacherId].profilePic = e.target.result;
-          localStorage.setItem('choptsoUserProfiles', JSON.stringify(choptsoUserProfiles));
+          safeStorage.setItem('choptsoUserProfiles', choptsoUserProfiles);
           document.getElementById('teacher-profile-pic').src = e.target.result;
         };
         reader.readAsDataURL(file);
@@ -4750,7 +4749,7 @@
     function updateTeacherStatus(status) {
       const teacherId = `teacher-${loggedInTeacher.id}`;
       choptsoUserProfiles[teacherId].status = status;
-      localStorage.setItem('choptsoUserProfiles', JSON.stringify(choptsoUserProfiles));
+      safeStorage.setItem('choptsoUserProfiles', choptsoUserProfiles);
     }
     
     function teacherRefreshChat() {
@@ -4821,7 +4820,7 @@
       };
       
       choptsoGroups.push(group);
-      localStorage.setItem('choptsoGroups', JSON.stringify(choptsoGroups));
+      safeStorage.setItem('choptsoGroups', choptsoGroups);
       
       // Close modal
       const modal = bootstrap.Modal.getInstance(document.getElementById('teacherCreateGroupModal'));
@@ -5349,7 +5348,7 @@
     function saveMessageLocally(text) {
       if (text) {
         messages.push(text);
-        localStorage.setItem('messages', JSON.stringify(messages));
+        safeStorage.setItem('messages', messages);
         loadLocalMessages(currentConversationId);
       }
     }
@@ -5454,8 +5453,8 @@
           }
         });
         
-        localStorage.setItem('students', JSON.stringify(students));
-        localStorage.setItem('classes', JSON.stringify(classes));
+        safeStorage.setItem('students', students);
+        safeStorage.setItem('classes', classes);
         renderStudents();
         renderClasses();
         updateDashboardStats();
@@ -5478,7 +5477,7 @@
       if (name && subject) {
         const id = teachers.length ? Math.max(...teachers.map(t => t.id)) + 1 : 1;
         teachers.push({ id, name, subject, qualification, status });
-        localStorage.setItem('teachers', JSON.stringify(teachers));
+        safeStorage.setItem('teachers', teachers);
         renderTeachers();
         populateClassSelects();
         updateDashboardStats();
@@ -5497,7 +5496,7 @@
       if (name && grade) {
         const id = classes.length ? Math.max(...classes.map(c => c.id)) + 1 : 1;
         classes.push({ id, name, grade, teacherId, capacity, schedule, studentIds: [] });
-        localStorage.setItem('classes', JSON.stringify(classes));
+        safeStorage.setItem('classes', classes);
         renderClasses();
         populateClassSelects();
         updateDashboardStats();
@@ -5515,8 +5514,8 @@
       classes.forEach(cls => {
         if (cls.studentIds) cls.studentIds = cls.studentIds.filter(sid => sid !== id);
       });
-      localStorage.setItem('students', JSON.stringify(students));
-      localStorage.setItem('classes', JSON.stringify(classes));
+      safeStorage.setItem('students', students);
+      safeStorage.setItem('classes', classes);
       renderStudents();
       renderClasses();
       updateDashboardStats();
@@ -5528,8 +5527,8 @@
       classes.forEach(cls => {
         if (cls.teacherId === id) cls.teacherId = null;
       });
-      localStorage.setItem('teachers', JSON.stringify(teachers));
-      localStorage.setItem('classes', JSON.stringify(classes));
+      safeStorage.setItem('teachers', teachers);
+      safeStorage.setItem('classes', classes);
       renderTeachers();
       renderClasses();
       updateDashboardStats();
@@ -5541,8 +5540,8 @@
       students.forEach(stu => {
         if (stu.classIds) stu.classIds = stu.classIds.filter(cid => cid !== id);
       });
-      localStorage.setItem('classes', JSON.stringify(classes));
-      localStorage.setItem('students', JSON.stringify(students));
+      safeStorage.setItem('classes', classes);
+      safeStorage.setItem('students', students);
       renderClasses();
       renderStudents();
       populateClassSelects();
@@ -5553,12 +5552,12 @@
       const cls = classes.find(c => c.id === classId);
       if (cls && cls.studentIds) {
         cls.studentIds = cls.studentIds.filter(sid => sid !== studentId);
-        localStorage.setItem('classes', JSON.stringify(classes));
+        safeStorage.setItem('classes', classes);
       }
       const stu = students.find(s => s.id === studentId);
       if (stu && stu.classIds) {
         stu.classIds = stu.classIds.filter(cid => cid !== classId);
-        localStorage.setItem('students', JSON.stringify(students));
+        safeStorage.setItem('students', students);
       }
       renderGrades();
       renderClasses();
@@ -5594,7 +5593,7 @@
         attendance[classId][date][sid].notes = input.value;
       });
       
-      localStorage.setItem('attendance', JSON.stringify(attendance));
+      safeStorage.setItem('attendance', attendance);
       
       // Proactive attendance features
       checkAttendanceAlerts(classId, date);
@@ -5751,7 +5750,7 @@
         }
       });
 
-      localStorage.setItem('gradesData', JSON.stringify(gradesData));
+      safeStorage.setItem('gradesData', gradesData);
       
       // Enhanced grade analytics
       analyzeGradeDistribution(classId, term);
@@ -6884,7 +6883,7 @@
       
       // Load resources from storage
       if (!window.resources) {
-        window.resources = JSON.parse(localStorage.getItem('resources') || '[]');
+        window.resources = safeStorage.getItem('resources', []);
       }
       
       // Sample default resources if none exist
@@ -6895,7 +6894,7 @@
           { id: 3, title: 'English Literature Notes', type: 'Document', subject: 'English', url: '#', uploadedBy: 'admin', uploadDate: '2026-01-15', downloads: 0, category: 'Notes' },
           { id: 4, title: 'History Video Lecture', type: 'Video', subject: 'History', url: '#', uploadedBy: 'admin', uploadDate: '2026-01-15', downloads: 0, category: 'Video' }
         ];
-        localStorage.setItem('resources', JSON.stringify(window.resources));
+        safeStorage.setItem('resources', window.resources);
       }
       
       let filteredResources = searchTerm 
@@ -6960,13 +6959,13 @@
     
     function trackResourceDownload(resourceId) {
       if (!window.resources) {
-        window.resources = JSON.parse(localStorage.getItem('resources') || '[]');
+        window.resources = safeStorage.getItem('resources', []);
       }
       
       const resource = window.resources.find(r => r.id === resourceId);
       if (resource) {
         resource.downloads = (resource.downloads || 0) + 1;
-        localStorage.setItem('resources', JSON.stringify(window.resources));
+        safeStorage.setItem('resources', window.resources);
       }
     }
     
@@ -7063,7 +7062,7 @@
       
       // Calculate pending assignments
       if (!window.assignments) {
-        window.assignments = JSON.parse(localStorage.getItem('assignments') || '[]');
+        window.assignments = safeStorage.getItem('assignments', []);
       }
       const activeAssignments = window.assignments.filter(a => a.status === 'active').length;
       document.getElementById('teacher-pending-assignments').textContent = activeAssignments;
@@ -7073,7 +7072,7 @@
       
       // Resources count
       if (!window.resources) {
-        window.resources = JSON.parse(localStorage.getItem('resources') || '[]');
+        window.resources = safeStorage.getItem('resources', []);
       }
       const teacherResources = window.resources.filter(r => r.uploadedBy === 'teacher' || r.uploadedBy === 'admin').length;
       document.getElementById('teacher-resources-count').textContent = teacherResources;
@@ -7215,7 +7214,7 @@
         attendance[classId][date][studentId] = { status, notes };
       });
       
-      localStorage.setItem('attendance', JSON.stringify(attendance));
+      safeStorage.setItem('attendance', attendance);
       alert('Attendance saved successfully!');
     }
     
@@ -7298,7 +7297,7 @@
       
       // Initialize assignments storage
       if (!window.assignments) {
-        window.assignments = JSON.parse(localStorage.getItem('assignments') || '[]');
+        window.assignments = safeStorage.getItem('assignments', []);
       }
       
       // Create new assignment
@@ -7318,7 +7317,7 @@
       };
       
       window.assignments.push(newAssignment);
-      localStorage.setItem('assignments', JSON.stringify(window.assignments));
+      safeStorage.setItem('assignments', window.assignments);
       
       alert(`Assignment "${title}" created successfully!`);
       loadTeacherAssignments();
@@ -7336,7 +7335,7 @@
       
       // Load assignments from storage
       if (!window.assignments) {
-        window.assignments = JSON.parse(localStorage.getItem('assignments') || '[]');
+        window.assignments = safeStorage.getItem('assignments', []);
       }
       
       if (window.assignments.length === 0) {
@@ -7524,7 +7523,7 @@
       if (!confirm('Are you sure you want to delete this assignment?')) return;
       
       window.assignments = window.assignments.filter(a => a.id !== assignmentId);
-      localStorage.setItem('assignments', JSON.stringify(window.assignments));
+      safeStorage.setItem('assignments', window.assignments);
       loadTeacherAssignments();
     }
     
@@ -7539,7 +7538,7 @@
       
       // Initialize lesson plans storage
       if (!window.lessonPlans) {
-        window.lessonPlans = JSON.parse(localStorage.getItem('lessonPlans') || '{}');
+        window.lessonPlans = safeStorage.getItem('lessonPlans', {});
       }
       
       const cls = classes.find(c => c.id == classId);
@@ -7678,7 +7677,7 @@
       const date = prompt('Enter lesson date (YYYY-MM-DD):', new Date().toISOString().split('T')[0]);
       
       if (!window.lessonPlans) {
-        window.lessonPlans = JSON.parse(localStorage.getItem('lessonPlans') || '{}');
+        window.lessonPlans = safeStorage.getItem('lessonPlans', {});
       }
       
       if (!window.lessonPlans[classId]) {
@@ -7697,7 +7696,7 @@
       };
       
       window.lessonPlans[classId].push(newPlan);
-      localStorage.setItem('lessonPlans', JSON.stringify(window.lessonPlans));
+      safeStorage.setItem('lessonPlans', window.lessonPlans);
       
       loadTeacherLessonPlans();
     }
@@ -7714,13 +7713,13 @@
       const newDate = prompt('Edit date:', plan.date);
       if (newDate !== null) plan.date = newDate;
       
-      localStorage.setItem('lessonPlans', JSON.stringify(window.lessonPlans));
+      safeStorage.setItem('lessonPlans', window.lessonPlans);
       loadTeacherLessonPlans();
     }
     
     function markLessonComplete(classId, index) {
       window.lessonPlans[classId][index].status = 'completed';
-      localStorage.setItem('lessonPlans', JSON.stringify(window.lessonPlans));
+      safeStorage.setItem('lessonPlans', window.lessonPlans);
       loadTeacherLessonPlans();
     }
     
@@ -7728,7 +7727,7 @@
       if (!confirm('Delete this lesson plan?')) return;
       
       window.lessonPlans[classId].splice(index, 1);
-      localStorage.setItem('lessonPlans', JSON.stringify(window.lessonPlans));
+      safeStorage.setItem('lessonPlans', window.lessonPlans);
       loadTeacherLessonPlans();
     }
     
@@ -7870,7 +7869,7 @@
       
       // Load resources
       if (!window.resources) {
-        window.resources = JSON.parse(localStorage.getItem('resources') || '[]');
+        window.resources = safeStorage.getItem('resources', []);
       }
       
       // Create new resource
@@ -7890,7 +7889,7 @@
       };
       
       window.resources.push(newResource);
-      localStorage.setItem('resources', JSON.stringify(window.resources));
+      safeStorage.setItem('resources', window.resources);
       
       alert('Resource uploaded successfully!');
       
@@ -7906,7 +7905,7 @@
       const content = document.getElementById('teacher-resources-content');
       
       if (!window.resources) {
-        window.resources = JSON.parse(localStorage.getItem('resources') || '[]');
+        window.resources = safeStorage.getItem('resources', []);
       }
       
       const teacherResources = window.resources.filter(r => r.uploadedBy === 'teacher' || r.uploadedBy === 'admin');
@@ -7982,7 +7981,7 @@
       if (!confirm('Are you sure you want to delete this resource?')) return;
       
       window.resources = window.resources.filter(r => r.id !== resourceId);
-      localStorage.setItem('resources', JSON.stringify(window.resources));
+      safeStorage.setItem('resources', window.resources);
       loadTeacherResourcesList();
     }
     
@@ -8209,7 +8208,7 @@
     
     function updateResourceStats() {
       if (!window.resources) {
-        window.resources = JSON.parse(localStorage.getItem('resources') || '[]');
+        window.resources = safeStorage.getItem('resources', []);
       }
       
       const teacherResources = window.resources.filter(r => r.uploadedBy === 'teacher' || r.uploadedBy === 'admin');
@@ -8428,7 +8427,7 @@
             {id: 3, title: 'English Essay', dueDate: '2026-01-15', description: 'Write a 500-word essay on climate change', status: 'overdue', subject: 'English'}
           ];
         });
-        localStorage.setItem('homework', JSON.stringify(homework));
+        safeStorage.setItem('homework', homework);
       }
       
       let homeworkHtml = '<div class="list-group">';
@@ -8679,7 +8678,7 @@
           {id: 2, message: 'Parent-Teacher meeting scheduled for Jan 25', date: new Date(Date.now() - 86400000).toISOString(), read: false},
           {id: 3, message: 'School fees payment reminder', date: new Date(Date.now() - 172800000).toISOString(), read: true}
         ];
-        localStorage.setItem('notifications', JSON.stringify(notifications));
+        safeStorage.setItem('notifications', notifications);
       }
       
       let notifHtml = '<div class="list-group list-group-flush">';
@@ -8725,7 +8724,7 @@
           method: 'Online Payment'
         });
         
-        localStorage.setItem('fees', JSON.stringify(fees));
+        safeStorage.setItem('fees', fees);
         alert(`Payment of R${parseFloat(amount).toLocaleString()} processed successfully!\n\nTransaction Reference: TXN-${Date.now()}`);
         loadParentFees();
       }
@@ -9183,7 +9182,7 @@
         choptsoMessages[currentParentConversationId] = [];
       }
       choptsoMessages[currentParentConversationId].push(message);
-      localStorage.setItem('choptsoMessages', JSON.stringify(choptsoMessages));
+      safeStorage.setItem('choptsoMessages', choptsoMessages);
       
       if (input) input.value = '';
       parentFileAttachment = null;
@@ -9205,7 +9204,7 @@
         reader.onload = (e) => {
           const parentId = `parent-${loggedInParent.id}`;
           choptsoUserProfiles[parentId].profilePic = e.target.result;
-          localStorage.setItem('choptsoUserProfiles', JSON.stringify(choptsoUserProfiles));
+          safeStorage.setItem('choptsoUserProfiles', choptsoUserProfiles);
           document.getElementById('parent-profile-pic').src = e.target.result;
         };
         reader.readAsDataURL(file);
@@ -9234,7 +9233,7 @@
     function updateParentStatus(status) {
       const parentId = `parent-${loggedInParent.id}`;
       choptsoUserProfiles[parentId].status = status;
-      localStorage.setItem('choptsoUserProfiles', JSON.stringify(choptsoUserProfiles));
+      safeStorage.setItem('choptsoUserProfiles', choptsoUserProfiles);
     }
     
     function parentRefreshChat() {
@@ -9305,7 +9304,7 @@
       };
       
       choptsoGroups.push(group);
-      localStorage.setItem('choptsoGroups', JSON.stringify(choptsoGroups));
+      safeStorage.setItem('choptsoGroups', choptsoGroups);
       
       // Close modal
       const modal = bootstrap.Modal.getInstance(document.getElementById('parentCreateGroupModal'));
@@ -9822,7 +9821,7 @@
             };
             
             students.push(newStudent);
-            localStorage.setItem('students', JSON.stringify(students));
+            safeStorage.setItem('students', students);
             renderStudents();
             
           } else if (userType === 'teacher') {
@@ -9838,7 +9837,7 @@
             };
             
             teachers.push(newTeacher);
-            localStorage.setItem('teachers', JSON.stringify(teachers));
+            safeStorage.setItem('teachers', teachers);
             renderTeachers();
             
           } else if (userType === 'parent') {
@@ -9848,7 +9847,7 @@
             if (student) {
               if (!student.parent || student.parent === 'N/A') {
                 student.parent = userName;
-                localStorage.setItem('students', JSON.stringify(students));
+                safeStorage.setItem('students', students);
               }
             }
           }
@@ -10867,5 +10866,6 @@
       color: #fff;
     }
   </style>
+  <script src="utils.js"></script>
 </body>
 </html>
