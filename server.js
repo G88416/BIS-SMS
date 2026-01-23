@@ -44,9 +44,17 @@ app.use(express.static(path.join(__dirname), {
   index: 'index.html'
 }));
 
+const startTime = Date.now();
+
 // Health check endpoint (no rate limit for monitoring)
 app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'healthy', timestamp: new Date().toISOString() });
+  const uptime = Math.floor((Date.now() - startTime) / 1000);
+  res.status(200).json({ 
+    status: 'healthy', 
+    timestamp: new Date().toISOString(),
+    uptime: uptime,
+    version: require('./package.json').version
+  });
 });
 
 // Fallback to index.html for specific routes (not all paths)
