@@ -3532,11 +3532,11 @@
         totalOutstanding += calc.balance > 0 ? calc.balance : 0;
         const row = document.createElement('tr');
         row.innerHTML = `
-          <td>${stu.name}</td>
+          <td>${escapeHtml(stu.name)}</td>
           <td>R${calc.netDue.toLocaleString()}</td>
           <td>R${calc.paidTotal.toLocaleString()}</td>
           <td class="${calc.balance > 0 ? 'text-danger' : 'text-success'}">R${calc.balance.toLocaleString()}</td>
-          <td class="no-print"><button class="btn btn-sm btn-primary" onclick="openStudentFeeModal(${stu.id}, '${stu.name}')">Manage</button></td>
+          <td class="no-print"><button class="btn btn-sm btn-primary" onclick="openStudentFeeModal(${stu.id}, '${stu.name.replace(/'/g, "\\'")}')">Manage</button></td>
         `;
         table.appendChild(row);
       });
@@ -3550,9 +3550,9 @@
       expenses.forEach((exp, idx) => {
         total += parseFloat(exp.amount) || 0;
         const row = `<tr>
-          <td>${exp.date}</td>
-          <td>${exp.desc}</td>
-          <td>${exp.category}</td>
+          <td>${escapeHtml(exp.date)}</td>
+          <td>${escapeHtml(exp.desc)}</td>
+          <td>${escapeHtml(exp.category)}</td>
           <td>R${parseFloat(exp.amount).toLocaleString()}</td>
           <td class="no-print"><button class="btn btn-sm btn-danger" onclick="deleteExpense(${idx})">Delete</button></td>
         </tr>`;
@@ -3839,7 +3839,7 @@
       classes.forEach(cls => {
         const opt = document.createElement('option');
         opt.value = cls.id;
-        opt.textContent = `${cls.name} (Grade ${cls.grade})`;
+        opt.textContent = `${escapeHtml(cls.name)} (Grade ${escapeHtml(cls.grade)})`;
         select.appendChild(opt);
       });
     }
@@ -3892,7 +3892,7 @@
         if (!stu) return;
         const studentGrades = gradesData[classId]?.[term]?.[sid] || {};
         
-        let row = `<tr><td>${stu.name}</td>`;
+        let row = `<tr><td>${escapeHtml(stu.name)}</td>`;
         let totalWeighted = 0;
         let totalWeight = 0;
         
@@ -3930,7 +3930,7 @@
       list.innerHTML = '';
       subjects[classId].forEach((sub, idx) => {
         list.innerHTML += `<tr>
-          <td>${sub.name} (Weight: ${sub.weight}%)</td>
+          <td>${escapeHtml(sub.name)} (Weight: ${sub.weight}%)</td>
           <td><button class="btn btn-sm btn-danger" onclick="deleteSubject(${classId}, ${idx})">Delete</button></td>
         </tr>`;
       });
@@ -3977,15 +3977,15 @@
         let totalWeighted = 0;
         let totalWeight = subjects[classId].reduce((sum, sub) => sum + sub.weight, 0);
         
-        report += `<div class="card mb-4 p-4"><h5>${stu.name}</h5><table class="table table-bordered"><thead><tr><th>Subject</th><th>Mark</th><th>Weight</th></tr></thead><tbody>`;
+        report += `<div class="card mb-4 p-4"><h5>${escapeHtml(stu.name)}</h5><table class="table table-bordered"><thead><tr><th>Subject</th><th>Mark</th><th>Weight</th></tr></thead><tbody>`;
         subjects[classId].forEach(sub => {
           const score = studentGrades[sub.name] || 'N/A';
           totalWeighted += (parseFloat(score) || 0) * (sub.weight / 100);
-          report += `<tr><td>${sub.name}</td><td>${score}%</td><td>${sub.weight}%</td></tr>`;
+          report += `<tr><td>${escapeHtml(sub.name)}</td><td>${escapeHtml(score)}%</td><td>${sub.weight}%</td></tr>`;
         });
         const avg = totalWeight > 0 ? (totalWeighted / (totalWeight / 100)).toFixed(1) : '0';
         report += `</tbody><tfoot><tr><td><strong>Overall Average</strong></td><td colspan="2"><strong>${avg}%</strong></td></tr></tfoot></table>`;
-        report += `<p><strong>Teacher Comment:</strong> ${studentGrades.comment || 'No comment'}</p></div>`;
+        report += `<p><strong>Teacher Comment:</strong> ${escapeHtml(studentGrades.comment || 'No comment')}</p></div>`;
       });
       
       document.getElementById('class-report-output').innerHTML = report;
@@ -4042,7 +4042,7 @@
         teachers.forEach(tea => {
           const opt = document.createElement('option');
           opt.value = tea.id;
-          opt.textContent = tea.name;
+          opt.textContent = escapeHtml(tea.name);
           classTeacherSelect.appendChild(opt);
         });
       }
@@ -4087,12 +4087,12 @@
           return cls ? cls.name : '';
         }).join(', ') || 'None';
         const row = `<tr>
-          <td>${stu.id}</td>
-          <td>${stu.name}</td>
-          <td>${stu.grade}</td>
-          <td>${stu.parent || 'N/A'}</td>
-          <td>${stu.contact || 'N/A'}</td>
-          <td>${enrolledClasses}</td>
+          <td>${escapeHtml(stu.id)}</td>
+          <td>${escapeHtml(stu.name)}</td>
+          <td>${escapeHtml(stu.grade)}</td>
+          <td>${escapeHtml(stu.parent || 'N/A')}</td>
+          <td>${escapeHtml(stu.contact || 'N/A')}</td>
+          <td>${escapeHtml(enrolledClasses)}</td>
           <td>
             <button class="btn btn-sm btn-primary" onclick="viewCompleteStudentInfo(${stu.id})" title="View Complete Registration"><i class="fas fa-id-card"></i></button>
             <button class="btn btn-sm btn-info" onclick="viewStudentDetails(${stu.id})"><i class="fas fa-eye"></i></button>
@@ -4126,12 +4126,12 @@
       filteredTeachers.forEach(tea => {
         const assignedClasses = classes.filter(c => c.teacherId === tea.id).map(c => c.name).join(', ') || 'None';
         const row = `<tr>
-          <td>${tea.id}</td>
-          <td>${tea.name}</td>
-          <td>${tea.subject}</td>
-          <td>${tea.qualification || 'N/A'}</td>
-          <td><span class="badge bg-${tea.status === 'Active' ? 'success' : 'warning'}">${tea.status || 'Active'}</span></td>
-          <td>${assignedClasses}</td>
+          <td>${escapeHtml(tea.id)}</td>
+          <td>${escapeHtml(tea.name)}</td>
+          <td>${escapeHtml(tea.subject)}</td>
+          <td>${escapeHtml(tea.qualification || 'N/A')}</td>
+          <td><span class="badge bg-${tea.status === 'Active' ? 'success' : 'warning'}">${escapeHtml(tea.status || 'Active')}</span></td>
+          <td>${escapeHtml(assignedClasses)}</td>
           <td>
             <button class="btn btn-sm btn-info" onclick="viewTeacherDetails(${tea.id})"><i class="fas fa-eye"></i></button>
             <button class="btn btn-sm btn-danger" onclick="deleteTeacher(${tea.id})"><i class="fas fa-trash"></i></button>
@@ -4167,13 +4167,13 @@
         const capacity = cls.capacity || 30;
         const capacityColor = enrolledCount >= capacity ? 'danger' : enrolledCount >= capacity * 0.8 ? 'warning' : 'success';
         const row = `<tr>
-          <td>${cls.id}</td>
-          <td>${cls.name}</td>
-          <td>${cls.grade}</td>
-          <td>${teacherName}</td>
+          <td>${escapeHtml(cls.id)}</td>
+          <td>${escapeHtml(cls.name)}</td>
+          <td>${escapeHtml(cls.grade)}</td>
+          <td>${escapeHtml(teacherName)}</td>
           <td><span class="badge bg-${capacityColor}">${capacity}</span></td>
           <td>${enrolledCount}/${capacity}</td>
-          <td><small>${cls.schedule || 'Not set'}</small></td>
+          <td><small>${escapeHtml(cls.schedule || 'Not set')}</small></td>
           <td>
             <button class="btn btn-sm btn-info" onclick="viewClassDetails(${cls.id})"><i class="fas fa-eye"></i></button>
             <button class="btn btn-sm btn-danger" onclick="deleteClass(${cls.id})"><i class="fas fa-trash"></i></button>
@@ -4213,7 +4213,7 @@
               const record = attendance[classId][date][sid] || { status: 'Present', notes: '' };
               
               attendanceTableEl.innerHTML += `<tr>
-                <td>${stu.name}</td>
+                <td>${escapeHtml(stu.name)}</td>
                 <td>
                   <select class="form-select form-select-sm" data-class="${classId}" data-date="${date}" data-id="${sid}" data-type="status">
                     <option value="Present" ${record.status === 'Present' ? 'selected' : ''}>Present</option>
@@ -5189,7 +5189,7 @@
       
       const avatar = document.createElement('div');
       avatar.className = 'choptso-avatar';
-      avatar.textContent = message.senderName ? message.senderName.charAt(0).toUpperCase() : '?';
+      avatar.textContent = message.senderName ? escapeHtml(message.senderName).charAt(0).toUpperCase() : '?';
       
       const content = document.createElement('div');
       content.className = 'choptso-message-content';
@@ -5218,7 +5218,7 @@
         } else {
           messageHTML += `<div class="choptso-attachment">
             <a href="${message.attachmentURL}" target="_blank" class="text-decoration-none">
-              <i class="fas fa-file"></i> ${message.attachmentName || 'File attachment'}
+              <i class="fas fa-file"></i> ${escapeHtml(message.attachmentName || 'File attachment')}
             </a>
           </div>`;
         }
@@ -5229,7 +5229,7 @@
         new Date().toLocaleString();
       
       messageHTML += `<div class="choptso-message-meta">
-        ${isSent ? 'You' : message.senderName} • ${timestamp}
+        ${isSent ? 'You' : escapeHtml(message.senderName)} • ${timestamp}
       </div>`;
       
       content.innerHTML = messageHTML;
@@ -6299,32 +6299,48 @@
       const reader = new FileReader();
       reader.onload = function(e) {
         const csv = e.target.result;
-        const lines = csv.split('\n').filter(line => line.trim());
         
-        if (lines.length < 2) {
+        // Use the parseCSV function from utils.js
+        const parseResult = parseCSV(csv);
+        
+        if (!parseResult.success) {
+          preview.innerHTML = `<div class="alert alert-warning">${escapeHtml(parseResult.error)}</div>`;
+          uploadBtn.disabled = true;
+          return;
+        }
+        
+        const { data, headers } = parseResult;
+        
+        if (data.length === 0) {
           preview.innerHTML = '<div class="alert alert-warning">CSV file is empty or invalid</div>';
           uploadBtn.disabled = true;
           return;
         }
         
-        const headers = lines[0].split(',').map(h => h.trim());
-        const dataLines = lines.slice(1);
+        // Validate required fields
+        const requiredFields = ['Surname', 'First Name', 'Gender', 'Grade'];
+        const validationResult = validateCSVData(data, requiredFields);
+        
+        if (!validationResult.valid) {
+          preview.innerHTML = `<div class="alert alert-danger"><i class="fas fa-exclamation-triangle"></i> ${escapeHtml(validationResult.error)}</div>`;
+          uploadBtn.disabled = true;
+          return;
+        }
         
         let html = '<div class="alert alert-success">';
-        html += `<i class="fas fa-check-circle"></i> Found ${dataLines.length} students to upload`;
+        html += `<i class="fas fa-check-circle"></i> Found ${data.length} students to upload`;
         html += '</div>';
         html += '<div class="table-responsive" style="max-height: 300px; overflow-y: auto;">';
         html += '<table class="table table-sm table-bordered">';
-        html += '<thead><tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr></thead>';
+        html += '<thead><tr>' + headers.map(h => `<th>${escapeHtml(h)}</th>`).join('') + '</tr></thead>';
         html += '<tbody>';
         
-        dataLines.slice(0, 10).forEach(line => {
-          const values = line.split(',').map(v => v.trim());
-          html += '<tr>' + values.map(v => `<td>${v}</td>`).join('') + '</tr>';
+        data.slice(0, 10).forEach(row => {
+          html += '<tr>' + headers.map(h => `<td>${escapeHtml(row[h] !== undefined ? row[h] : '')}</td>`).join('') + '</tr>';
         });
         
-        if (dataLines.length > 10) {
-          html += `<tr><td colspan="${headers.length}" class="text-center text-muted">... and ${dataLines.length - 10} more</td></tr>`;
+        if (data.length > 10) {
+          html += `<tr><td colspan="${headers.length}" class="text-center text-muted">... and ${data.length - 10} more</td></tr>`;
         }
         
         html += '</tbody></table></div>';
@@ -6350,28 +6366,44 @@
       const reader = new FileReader();
       reader.onload = function(e) {
         const csv = e.target.result;
-        const lines = csv.split('\n').filter(line => line.trim());
         
-        if (lines.length < 2) {
+        // Use the parseCSV function from utils.js
+        const parseResult = parseCSV(csv);
+        
+        if (!parseResult.success) {
+          preview.innerHTML = `<div class="alert alert-warning">${escapeHtml(parseResult.error)}</div>`;
+          uploadBtn.disabled = true;
+          return;
+        }
+        
+        const { data, headers } = parseResult;
+        
+        if (data.length === 0) {
           preview.innerHTML = '<div class="alert alert-warning">CSV file is empty or invalid</div>';
           uploadBtn.disabled = true;
           return;
         }
         
-        const headers = lines[0].split(',').map(h => h.trim());
-        const dataLines = lines.slice(1);
+        // Validate required fields
+        const requiredFields = ['Full Name', 'Subject'];
+        const validationResult = validateCSVData(data, requiredFields);
+        
+        if (!validationResult.valid) {
+          preview.innerHTML = `<div class="alert alert-danger"><i class="fas fa-exclamation-triangle"></i> ${escapeHtml(validationResult.error)}</div>`;
+          uploadBtn.disabled = true;
+          return;
+        }
         
         let html = '<div class="alert alert-success">';
-        html += `<i class="fas fa-check-circle"></i> Found ${dataLines.length} teachers to upload`;
+        html += `<i class="fas fa-check-circle"></i> Found ${data.length} teachers to upload`;
         html += '</div>';
         html += '<div class="table-responsive" style="max-height: 300px; overflow-y: auto;">';
         html += '<table class="table table-sm table-bordered">';
-        html += '<thead><tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr></thead>';
+        html += '<thead><tr>' + headers.map(h => `<th>${escapeHtml(h)}</th>`).join('') + '</tr></thead>';
         html += '<tbody>';
         
-        dataLines.forEach(line => {
-          const values = line.split(',').map(v => v.trim());
-          html += '<tr>' + values.map(v => `<td>${v}</td>`).join('') + '</tr>';
+        data.forEach(row => {
+          html += '<tr>' + headers.map(h => `<td>${escapeHtml(row[h] !== undefined ? row[h] : '')}</td>`).join('') + '</tr>';
         });
         
         html += '</tbody></table></div>';
@@ -6394,34 +6426,36 @@
       const reader = new FileReader();
       reader.onload = async function(e) {
         const csv = e.target.result;
-        const lines = csv.split('\n').filter(line => line.trim());
         
-        if (lines.length < 2) {
+        // Use the parseCSV function from utils.js
+        const parseResult = parseCSV(csv);
+        
+        if (!parseResult.success) {
+          alert(`CSV parsing error: ${parseResult.error}`);
+          return;
+        }
+        
+        const { data } = parseResult;
+        
+        if (data.length === 0) {
           alert('The selected CSV file appears to be empty or has no data rows. Please check your file and try again.');
           return;
         }
         
-        const headers = lines[0].split(',').map(h => h.trim());
-        const dataLines = lines.slice(1);
+        // Validate required fields
+        const requiredFields = ['Surname', 'First Name', 'Gender', 'Grade'];
+        const validationResult = validateCSVData(data, requiredFields);
+        
+        if (!validationResult.valid) {
+          alert(`CSV validation error: ${validationResult.error}`);
+          return;
+        }
         
         let successCount = 0;
         let errorCount = 0;
         
-        for (const line of dataLines) {
+        for (const studentData of data) {
           try {
-            const values = line.split(',').map(v => v.trim());
-            const studentData = {};
-            
-            headers.forEach((header, index) => {
-              studentData[header] = values[index] || '';
-            });
-            
-            // Validate required fields
-            if (!studentData['Surname'] || !studentData['First Name'] || !studentData['Gender'] || !studentData['Grade']) {
-              errorCount++;
-              continue;
-            }
-            
             // Create student object
             const newStudent = {
               id: 'S' + (students.length + successCount + 1).toString().padStart(4, '0'),
@@ -6476,34 +6510,36 @@
       const reader = new FileReader();
       reader.onload = async function(e) {
         const csv = e.target.result;
-        const lines = csv.split('\n').filter(line => line.trim());
         
-        if (lines.length < 2) {
+        // Use the parseCSV function from utils.js
+        const parseResult = parseCSV(csv);
+        
+        if (!parseResult.success) {
+          alert(`CSV parsing error: ${parseResult.error}`);
+          return;
+        }
+        
+        const { data } = parseResult;
+        
+        if (data.length === 0) {
           alert('The selected CSV file appears to be empty or has no data rows. Please check your file and try again.');
           return;
         }
         
-        const headers = lines[0].split(',').map(h => h.trim());
-        const dataLines = lines.slice(1);
+        // Validate required fields
+        const requiredFields = ['Full Name', 'Subject'];
+        const validationResult = validateCSVData(data, requiredFields);
+        
+        if (!validationResult.valid) {
+          alert(`CSV validation error: ${validationResult.error}`);
+          return;
+        }
         
         let successCount = 0;
         let errorCount = 0;
         
-        for (const line of dataLines) {
+        for (const teacherData of data) {
           try {
-            const values = line.split(',').map(v => v.trim());
-            const teacherData = {};
-            
-            headers.forEach((header, index) => {
-              teacherData[header] = values[index] || '';
-            });
-            
-            // Validate required fields
-            if (!teacherData['Full Name'] || !teacherData['Subject']) {
-              errorCount++;
-              continue;
-            }
-            
             // Create teacher object
             const newTeacher = {
               id: 'T' + (teachers.length + successCount + 1).toString().padStart(4, '0'),
@@ -6553,34 +6589,34 @@
       }
       
       // Populate learner details
-      document.getElementById('view-student-number').textContent = student.id || '-';
-      document.getElementById('view-learner-surname').textContent = student.surname || '-';
-      document.getElementById('view-learner-firstname').textContent = student.firstname || '-';
-      document.getElementById('view-learner-gender').textContent = student.gender || '-';
-      document.getElementById('view-learner-grade').textContent = student.grade || '-';
-      document.getElementById('view-learner-class').textContent = student.class || '-';
-      document.getElementById('view-learner-cell').textContent = student.learnerCell || '-';
-      document.getElementById('view-learner-email').textContent = student.learnerEmail || '-';
-      document.getElementById('view-learner-language').textContent = student.language || '-';
+      document.getElementById('view-student-number').textContent = escapeHtml(student.id || '-');
+      document.getElementById('view-learner-surname').textContent = escapeHtml(student.surname || '-');
+      document.getElementById('view-learner-firstname').textContent = escapeHtml(student.firstname || '-');
+      document.getElementById('view-learner-gender').textContent = escapeHtml(student.gender || '-');
+      document.getElementById('view-learner-grade').textContent = escapeHtml(student.grade || '-');
+      document.getElementById('view-learner-class').textContent = escapeHtml(student.class || '-');
+      document.getElementById('view-learner-cell').textContent = escapeHtml(student.learnerCell || '-');
+      document.getElementById('view-learner-email').textContent = escapeHtml(student.learnerEmail || '-');
+      document.getElementById('view-learner-language').textContent = escapeHtml(student.language || '-');
       
       // Get enrolled classes
       const enrolledClasses = student.classIds ? student.classIds.map(cid => {
         const cls = classes.find(c => c.id === cid);
         return cls ? cls.name : '';
       }).join(', ') : 'None';
-      document.getElementById('view-enrolled-classes').textContent = enrolledClasses || 'None';
+      document.getElementById('view-enrolled-classes').textContent = escapeHtml(enrolledClasses || 'None');
       
       // Populate father details
-      document.getElementById('view-father-firstname').textContent = student.fatherFirstname || '-';
-      document.getElementById('view-father-surname').textContent = student.fatherSurname || '-';
-      document.getElementById('view-father-email').textContent = student.fatherEmail || '-';
-      document.getElementById('view-father-cell').textContent = student.fatherCell || '-';
+      document.getElementById('view-father-firstname').textContent = escapeHtml(student.fatherFirstname || '-');
+      document.getElementById('view-father-surname').textContent = escapeHtml(student.fatherSurname || '-');
+      document.getElementById('view-father-email').textContent = escapeHtml(student.fatherEmail || '-');
+      document.getElementById('view-father-cell').textContent = escapeHtml(student.fatherCell || '-');
       
       // Populate mother details
-      document.getElementById('view-mother-firstname').textContent = student.motherFirstname || '-';
-      document.getElementById('view-mother-surname').textContent = student.motherSurname || '-';
-      document.getElementById('view-mother-email').textContent = student.motherEmail || '-';
-      document.getElementById('view-mother-cell').textContent = student.motherCell || '-';
+      document.getElementById('view-mother-firstname').textContent = escapeHtml(student.motherFirstname || '-');
+      document.getElementById('view-mother-surname').textContent = escapeHtml(student.motherSurname || '-');
+      document.getElementById('view-mother-email').textContent = escapeHtml(student.motherEmail || '-');
+      document.getElementById('view-mother-cell').textContent = escapeHtml(student.motherCell || '-');
       
       // Show modal (with fallback if Bootstrap is not loaded)
       const modalElement = document.getElementById('viewStudentInfoModal');
