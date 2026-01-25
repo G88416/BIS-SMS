@@ -3572,13 +3572,60 @@
      * @param {Element} container - The container element to search for tabs (defaults to document)
      */
     function initializeBootstrapTabs(container = document) {
-      if (typeof bootstrap !== 'undefined') {
-        const tabElements = container.querySelectorAll('[data-bs-toggle="tab"]');
+      const tabElements = container.querySelectorAll('[data-bs-toggle="tab"]');
+      
+      // If Bootstrap JS is available, use it
+      if (typeof bootstrap !== 'undefined' && bootstrap.Tab) {
         tabElements.forEach(tabEl => {
-          // Only initialize if not already initialized
-          if (!bootstrap.Tab.getInstance(tabEl)) {
-            new bootstrap.Tab(tabEl);
+          // Remove existing instance to ensure clean initialization
+          const existingInstance = bootstrap.Tab.getInstance(tabEl);
+          if (existingInstance) {
+            existingInstance.dispose();
           }
+          
+          // Create new tab instance - Bootstrap automatically handles click events
+          new bootstrap.Tab(tabEl);
+        });
+      } else {
+        // Fallback: Manually implement tab switching when Bootstrap JS is not available
+        tabElements.forEach(tabEl => {
+          // Remove any existing event listeners by cloning
+          const newTabEl = tabEl.cloneNode(true);
+          tabEl.parentNode.replaceChild(newTabEl, tabEl);
+          
+          // Add click event listener
+          newTabEl.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            const targetId = this.getAttribute('href');
+            if (!targetId || targetId === '#') return;
+            
+            const targetPane = document.querySelector(targetId);
+            if (!targetPane) return;
+            
+            // Find the tab container
+            const tabContainer = targetPane.closest('.tab-content');
+            if (!tabContainer) return;
+            
+            // Hide all tab panes in this container
+            const allPanes = tabContainer.querySelectorAll('.tab-pane');
+            allPanes.forEach(pane => {
+              pane.classList.remove('show', 'active');
+            });
+            
+            // Show the target pane
+            targetPane.classList.add('show', 'active');
+            
+            // Update nav links
+            const navContainer = this.closest('.nav-tabs');
+            if (navContainer) {
+              const allNavLinks = navContainer.querySelectorAll('.nav-link');
+              allNavLinks.forEach(link => {
+                link.classList.remove('active');
+              });
+              this.classList.add('active');
+            }
+          });
         });
       }
     }
