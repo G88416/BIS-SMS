@@ -11,7 +11,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js";
     import { getAuth, onAuthStateChanged, signOut, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, where, getDocs, Timestamp, setDoc, doc, limit } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, where, getDocs, getDoc, Timestamp, setDoc, doc, limit } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
     import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
     
     // Your web app's Firebase configuration
@@ -77,6 +77,7 @@
     window.firebaseOnSnapshot = onSnapshot;
     window.firebaseWhere = where;
     window.firebaseGetDocs = getDocs;
+    window.firebaseGetDoc = getDoc;
     window.firebaseTimestamp = Timestamp;
     window.firebaseStorageRef = ref;
     window.firebaseUploadBytes = uploadBytes;
@@ -2531,6 +2532,17 @@
                     <option value="Other">Other</option>
                   </select>
                 </div>
+                <div class="col-md-4">
+                  <label class="form-label">Profile Picture</label>
+                  <input type="file" class="form-control" id="student-profile-pic-input" accept="image/*" onchange="previewStudentProfilePic()">
+                  <small class="text-muted">Upload student photo (max 10MB)</small>
+                </div>
+                <div class="col-md-2">
+                  <label class="form-label">Preview</label>
+                  <div>
+                    <img id="student-profile-pic-preview" src="" alt="" style="max-width: 80px; max-height: 80px; border-radius: 8px; display: none;" class="border">
+                  </div>
+                </div>
                 <div class="col-md-12">
                   <label class="form-label">Select Classes for Enrollment</label>
                   <select class="form-select" id="student-class" multiple size="3">
@@ -2594,8 +2606,13 @@
           </form>
         </div>
         <div class="modal-footer">
+          <span class="me-auto">
+            <span id="student-sync-status" class="badge bg-info" style="display: none;">
+              <i class="fas fa-cloud"></i> Cloud Sync Enabled
+            </span>
+          </span>
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="fas fa-times"></i> Close</button>
-          <button type="button" class="btn btn-success" onclick="addStudent()" data-bs-dismiss="modal"><i class="fas fa-save"></i> Save Student</button>
+          <button type="button" class="btn btn-success" onclick="addStudent()"><i class="fas fa-save"></i> Save Student</button>
         </div>
       </div>
     </div>
@@ -3476,6 +3493,69 @@
       {time: '2:30 PM - 3:30 PM', activity: 'Period 6 / Extra Curricular'}
     ];
     let notifications = safeStorage.getItem('notifications', []);
+
+    // Initialize Firestore real-time sync for students
+    let studentsListener = null;
+    function initFirestoreSync() {
+      if (!window.firebaseAuth || !window.firebaseAuth.currentUser || !window.firebaseDb) {
+        console.log('Firebase not ready for sync, using localStorage only');
+        return;
+      }
+
+      try {
+        // Set up real-time listener for students collection
+        const studentsCollectionRef = window.firebaseCollection(window.firebaseDb, 'students');
+        studentsListener = window.firebaseOnSnapshot(studentsCollectionRef, (snapshot) => {
+          console.log('Students data updated from Firestore');
+          
+          // Merge Firestore data with localStorage
+          snapshot.docChanges().forEach((change) => {
+            const studentData = change.doc.data();
+            const studentId = parseInt(change.doc.id);
+            
+            if (change.type === 'added' || change.type === 'modified') {
+              // Update or add student in local array
+              const index = students.findIndex(s => s.id === studentId);
+              const student = {
+                ...studentData,
+                id: studentId
+              };
+              
+              if (index >= 0) {
+                students[index] = student;
+              } else {
+                students.push(student);
+              }
+            } else if (change.type === 'removed') {
+              // Remove student from local array
+              students = students.filter(s => s.id !== studentId);
+            }
+          });
+          
+          // Save to localStorage and re-render
+          safeStorage.setItem('students', students);
+          if (document.getElementById('students')?.classList.contains('active')) {
+            renderStudents();
+          }
+          updateDashboardStats();
+        }, (error) => {
+          console.error('Error listening to Firestore students:', error);
+        });
+        
+        console.log('Firestore real-time sync initialized for students');
+      } catch (error) {
+        console.error('Error initializing Firestore sync:', error);
+      }
+    }
+
+    // Initialize sync when Firebase auth is ready
+    if (window.firebaseAuth) {
+      window.firebaseAuth.onAuthStateChanged((user) => {
+        if (user) {
+          initFirestoreSync();
+        }
+      });
+    }
 
     // Navigation
     const sections = document.querySelectorAll('.section');
@@ -5417,35 +5497,78 @@
       initChoptso();
     }
 
+    // Preview student profile picture before upload
+    function previewStudentProfilePic() {
+      const fileInput = document.getElementById('student-profile-pic-input');
+      const preview = document.getElementById('student-profile-pic-preview');
+      const file = fileInput.files[0];
+      
+      if (file) {
+        if (!file.type.startsWith('image/')) {
+          alert('Please select an image file');
+          fileInput.value = '';
+          return;
+        }
+        
+        // Check file size (10MB max)
+        if (file.size > 10 * 1024 * 1024) {
+          alert('Image size must be less than 10MB');
+          fileInput.value = '';
+          return;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          preview.src = e.target.result;
+          preview.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+      } else {
+        preview.src = '';
+        preview.style.display = 'none';
+      }
+    }
+
+    // Show cloud sync status when modal opens
+    document.getElementById('addStudentModal')?.addEventListener('shown.bs.modal', function () {
+      const syncStatus = document.getElementById('student-sync-status');
+      if (window.firebaseAuth && window.firebaseAuth.currentUser && window.firebaseDb) {
+        syncStatus.style.display = 'inline-block';
+      } else {
+        syncStatus.style.display = 'none';
+      }
+    });
+
     // Add functions
-    function addStudent() {
-      // Get learner details
-      const surname = document.getElementById('learner-surname').value.trim();
-      const firstname = document.getElementById('learner-firstname').value.trim();
-      const gender = document.getElementById('learner-gender').value;
-      const grade = document.getElementById('learner-grade').value;
-      const classname = document.getElementById('learner-class').value.trim();
-      const learnerCell = document.getElementById('learner-cell').value.trim();
-      const learnerEmail = document.getElementById('learner-email').value.trim();
-      const language = document.getElementById('learner-language').value;
-      
-      // Get father details
-      const fatherFirstname = document.getElementById('father-firstname').value.trim();
-      const fatherSurname = document.getElementById('father-surname').value.trim();
-      const fatherEmail = document.getElementById('father-email').value.trim();
-      const fatherCell = document.getElementById('father-cell').value.trim();
-      
-      // Get mother details
-      const motherFirstname = document.getElementById('mother-firstname').value.trim();
-      const motherSurname = document.getElementById('mother-surname').value.trim();
-      const motherEmail = document.getElementById('mother-email').value.trim();
-      const motherCell = document.getElementById('mother-cell').value.trim();
-      
-      const selectedClasses = Array.from(document.getElementById('student-class').selectedOptions).map(opt => parseInt(opt.value));
-      
-      // Validate required fields
-      if (surname && firstname && gender && grade) {
-        const id = students.length ? Math.max(...students.map(s => s.id)) + 1 : 1;
+    async function addStudent() {
+      try {
+        // Get learner details
+        const surname = document.getElementById('learner-surname').value.trim();
+        const firstname = document.getElementById('learner-firstname').value.trim();
+        const gender = document.getElementById('learner-gender').value;
+        const grade = document.getElementById('learner-grade').value;
+        const classname = document.getElementById('learner-class').value.trim();
+        const learnerCell = document.getElementById('learner-cell').value.trim();
+        const learnerEmail = document.getElementById('learner-email').value.trim();
+        const language = document.getElementById('learner-language').value;
+        
+        // Get father details
+        const fatherFirstname = document.getElementById('father-firstname').value.trim();
+        const fatherSurname = document.getElementById('father-surname').value.trim();
+        const fatherEmail = document.getElementById('father-email').value.trim();
+        const fatherCell = document.getElementById('father-cell').value.trim();
+        
+        // Get mother details
+        const motherFirstname = document.getElementById('mother-firstname').value.trim();
+        const motherSurname = document.getElementById('mother-surname').value.trim();
+        const motherEmail = document.getElementById('mother-email').value.trim();
+        const motherCell = document.getElementById('mother-cell').value.trim();
+        
+        const selectedClasses = Array.from(document.getElementById('student-class').selectedOptions).map(opt => parseInt(opt.value));
+        
+        // Validate required fields
+        if (surname && firstname && gender && grade) {
+          const id = students.length ? Math.max(...students.map(s => s.id)) + 1 : 1;
         
         // Update the displayed student number
         document.getElementById('student-number').value = id;
@@ -5473,6 +5596,30 @@
           }
         }
         
+        // Handle profile picture upload to Firebase Storage
+        let profilePicUrl = '';
+        const fileInput = document.getElementById('student-profile-pic-input');
+        const file = fileInput?.files[0];
+        
+        if (file && window.firebaseAuth && window.firebaseAuth.currentUser) {
+          try {
+            const fileName = `student_${id}_${Date.now()}.${file.name.split('.').pop()}`;
+            const storageRef = window.firebaseStorageRef(window.firebaseStorage, `students/${id}/${fileName}`);
+            
+            await window.firebaseUploadBytes(storageRef, file);
+            profilePicUrl = await window.firebaseGetDownloadURL(storageRef);
+            console.log('Student profile picture uploaded to Firebase Storage:', profilePicUrl);
+          } catch (error) {
+            console.error('Error uploading student profile picture:', error);
+            // Note: We continue with student creation even if photo upload fails
+            // This is intentional - the student record is more important than the photo
+            const proceed = confirm('Warning: Profile picture could not be uploaded to cloud storage.\n\nDo you want to continue saving the student without the photo?');
+            if (!proceed) {
+              return; // Exit the function, don't save student
+            }
+          }
+        }
+        
         // Create new student object with all details
         const newStudent = { 
           id, 
@@ -5496,9 +5643,13 @@
           motherFirstname,
           motherSurname,
           motherEmail,
-          motherCell
+          motherCell,
+          profilePicUrl,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
         };
         
+        // Save to local storage first (for immediate feedback)
         students.push(newStudent);
         
         // Enroll in selected classes
@@ -5512,19 +5663,69 @@
         
         safeStorage.setItem('students', students);
         safeStorage.setItem('classes', classes);
+        
+        // Sync to Firestore (cloud storage)
+        if (window.firebaseAuth && window.firebaseAuth.currentUser && window.firebaseDb) {
+          try {
+            const studentDocRef = window.firebaseDoc(window.firebaseDb, 'students', id.toString());
+            await window.firebaseSetDoc(studentDocRef, {
+              ...newStudent,
+              createdBy: window.firebaseAuth.currentUser.uid,
+              createdAt: window.firebaseTimestamp.now(),
+              updatedAt: window.firebaseTimestamp.now()
+            });
+            console.log('Student data synced to Firestore:', id);
+            
+            // Update class enrollments in Firestore
+            for (const classId of selectedClasses) {
+              const classDocRef = window.firebaseDoc(window.firebaseDb, 'classes', classId.toString());
+              const classDoc = await window.firebaseGetDoc(classDocRef);
+              if (classDoc.exists()) {
+                const classData = classDoc.data();
+                const studentIds = classData.studentIds || [];
+                if (!studentIds.includes(id)) {
+                  studentIds.push(id);
+                  await window.firebaseSetDoc(classDocRef, { studentIds, updatedAt: window.firebaseTimestamp.now() }, { merge: true });
+                }
+              }
+            }
+          } catch (error) {
+            console.error('Error syncing student to Firestore:', error);
+            alert('Student saved locally, but cloud sync failed. Data will sync when connection is restored.');
+          }
+        }
+        
         renderStudents();
         renderClasses();
         updateDashboardStats();
         
-        // Clear form
+        // Clear form and preview
         document.getElementById('studentRegistrationForm').reset();
+        document.getElementById('student-profile-pic-preview').style.display = 'none';
+        document.getElementById('student-profile-pic-preview').src = '';
+        
+        // Close modal
+        const modal = bootstrap.Modal.getInstance(document.getElementById('addStudentModal'));
+        if (modal) {
+          modal.hide();
+        }
         
         // Show success message
-        alert('Student registered successfully!');
-      } else {
-        alert('Please fill in all required fields (Surname, First Name, Gender, and Grade)');
+        alert('Student registered successfully!' + (profilePicUrl ? ' Profile picture uploaded.' : ''));
+      } catch (error) {
+        console.error('Error adding student:', error);
+        alert('An error occurred while adding the student. Please try again.');
+        
+        // Close modal even on error
+        const modal = bootstrap.Modal.getInstance(document.getElementById('addStudentModal'));
+        if (modal) {
+          modal.hide();
+        }
       }
+    } else {
+      alert('Please fill in all required fields (Surname, First Name, Gender, and Grade)');
     }
+  }
 
     function addTeacher() {
       const name = document.getElementById('teacher-name').value.trim();

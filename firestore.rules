@@ -67,7 +67,21 @@ service cloud.firestore {
                      isTeacher() || 
                      (isStudent() && isOwner(studentId)) ||
                      isParentOfStudent(studentId);
-      allow create, update, delete: if isAdmin();
+      allow create: if isAdmin() &&
+                       // Validate required fields
+                       request.resource.data.keys().hasAll(['id', 'name', 'grade', 'firstname', 'surname', 'gender']) &&
+                       // Validate createdAt and updatedAt timestamps
+                       request.resource.data.createdAt is timestamp &&
+                       request.resource.data.updatedAt is timestamp &&
+                       // Validate createdBy is the current user
+                       request.resource.data.createdBy == request.auth.uid;
+      allow update: if isAdmin() &&
+                       // Ensure updatedAt is set
+                       request.resource.data.updatedAt is timestamp &&
+                       // Prevent modification of createdAt and createdBy
+                       request.resource.data.createdAt == resource.data.createdAt &&
+                       request.resource.data.createdBy == resource.data.createdBy;
+      allow delete: if isAdmin();
     }
     
     // Teachers collection
@@ -79,7 +93,11 @@ service cloud.firestore {
     // Classes collection
     match /classes/{classId} {
       allow read: if isAuthenticated();
-      allow create, update, delete: if isAdmin();
+      allow create: if isAdmin();
+      allow update: if isAdmin() &&
+                       // Ensure updatedAt is set when modifying
+                       request.resource.data.updatedAt is timestamp;
+      allow delete: if isAdmin();
     }
     
     // Attendance records
