@@ -3561,6 +3561,27 @@
     const sections = document.querySelectorAll('.section');
     const navLinks = document.querySelectorAll('.sidebar a');
     const pageTitle = document.getElementById('page-title');
+    
+    // Bootstrap tab initialization delay in milliseconds
+    // Ensures DOM and Bootstrap JS are fully ready, and addresses timing issues
+    // with tabs in initially hidden sections
+    const TAB_INIT_DELAY_MS = 100;
+
+    /**
+     * Initialize Bootstrap tabs within a container
+     * @param {Element} container - The container element to search for tabs (defaults to document)
+     */
+    function initializeBootstrapTabs(container = document) {
+      if (typeof bootstrap !== 'undefined') {
+        const tabElements = container.querySelectorAll('[data-bs-toggle="tab"]');
+        tabElements.forEach(tabEl => {
+          // Only initialize if not already initialized
+          if (!bootstrap.Tab.getInstance(tabEl)) {
+            new bootstrap.Tab(tabEl);
+          }
+        });
+      }
+    }
 
     function navigateTo(sectionId) {
       sections.forEach(sec => sec.classList.remove('active'));
@@ -3571,14 +3592,8 @@
 
       // Initialize Bootstrap tabs in the newly visible section
       const activeSection = document.getElementById(sectionId);
-      if (activeSection && typeof bootstrap !== 'undefined') {
-        const tabElements = activeSection.querySelectorAll('[data-bs-toggle="tab"]');
-        tabElements.forEach(tabEl => {
-          // Ensure Bootstrap Tab is initialized
-          if (!bootstrap.Tab.getInstance(tabEl)) {
-            new bootstrap.Tab(tabEl);
-          }
-        });
+      if (activeSection) {
+        initializeBootstrapTabs(activeSection);
       }
 
       // Refresh data on navigation
@@ -3601,13 +3616,10 @@
     });
 
     // Initialize Bootstrap tabs on page load for all sections
-    if (typeof bootstrap !== 'undefined') {
-      document.querySelectorAll('[data-bs-toggle="tab"]').forEach(tabEl => {
-        if (!bootstrap.Tab.getInstance(tabEl)) {
-          new bootstrap.Tab(tabEl);
-        }
-      });
-    }
+    // Use setTimeout to ensure DOM and Bootstrap are fully ready
+    setTimeout(() => {
+      initializeBootstrapTabs();
+    }, TAB_INIT_DELAY_MS);
 
     // Fee Calculations
     function calculateStudentFee(studentId) {
