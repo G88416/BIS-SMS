@@ -3569,6 +3569,18 @@
       document.querySelector(`[data-section="${sectionId}"]`).classList.add('active');
       pageTitle.textContent = sectionId.charAt(0).toUpperCase() + sectionId.slice(1);
 
+      // Initialize Bootstrap tabs in the newly visible section
+      const activeSection = document.getElementById(sectionId);
+      if (activeSection && typeof bootstrap !== 'undefined') {
+        const tabElements = activeSection.querySelectorAll('[data-bs-toggle="tab"]');
+        tabElements.forEach(tabEl => {
+          // Ensure Bootstrap Tab is initialized
+          if (!bootstrap.Tab.getInstance(tabEl)) {
+            new bootstrap.Tab(tabEl);
+          }
+        });
+      }
+
       // Refresh data on navigation
       if (sectionId === 'students') renderStudents();
       if (sectionId === 'teachers') renderTeachers();
@@ -3587,6 +3599,15 @@
         navigateTo(link.dataset.section);
       });
     });
+
+    // Initialize Bootstrap tabs on page load for all sections
+    if (typeof bootstrap !== 'undefined') {
+      document.querySelectorAll('[data-bs-toggle="tab"]').forEach(tabEl => {
+        if (!bootstrap.Tab.getInstance(tabEl)) {
+          new bootstrap.Tab(tabEl);
+        }
+      });
+    }
 
     // Fee Calculations
     function calculateStudentFee(studentId) {
