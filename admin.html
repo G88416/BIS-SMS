@@ -5567,12 +5567,8 @@
         const selectedClasses = Array.from(document.getElementById('student-class').selectedOptions).map(opt => parseInt(opt.value));
         
         // Validate required fields
-        if (!surname || !firstname || !gender || !grade) {
-          alert('Please fill in all required fields (Surname, First Name, Gender, and Grade)');
-          return;
-        }
-        
-        const id = students.length ? Math.max(...students.map(s => s.id)) + 1 : 1;
+        if (surname && firstname && gender && grade) {
+          const id = students.length ? Math.max(...students.map(s => s.id)) + 1 : 1;
         
         // Update the displayed student number
         document.getElementById('student-number').value = id;
@@ -5615,7 +5611,12 @@
             console.log('Student profile picture uploaded to Firebase Storage:', profilePicUrl);
           } catch (error) {
             console.error('Error uploading student profile picture:', error);
-            alert('Warning: Profile picture could not be uploaded to cloud storage. Student will be saved without photo.');
+            // Note: We continue with student creation even if photo upload fails
+            // This is intentional - the student record is more important than the photo
+            const proceed = confirm('Warning: Profile picture could not be uploaded to cloud storage.\n\nDo you want to continue saving the student without the photo?');
+            if (!proceed) {
+              return; // Exit the function, don't save student
+            }
           }
         }
         
@@ -5714,8 +5715,17 @@
       } catch (error) {
         console.error('Error adding student:', error);
         alert('An error occurred while adding the student. Please try again.');
+        
+        // Close modal even on error
+        const modal = bootstrap.Modal.getInstance(document.getElementById('addStudentModal'));
+        if (modal) {
+          modal.hide();
+        }
       }
+    } else {
+      alert('Please fill in all required fields (Surname, First Name, Gender, and Grade)');
     }
+  }
 
     function addTeacher() {
       const name = document.getElementById('teacher-name').value.trim();
