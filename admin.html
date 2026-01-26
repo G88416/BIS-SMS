@@ -47,6 +47,9 @@
         // Initialize Storage
         const storage = getStorage(app);
         
+        // Set Firebase availability flag
+        window.firebaseAvailable = true;
+        
         // Protect page: check auth state immediately
         onAuthStateChanged(auth, (user) => {
           if (!user) {
@@ -86,6 +89,8 @@
       } catch (error) {
         console.error('Firebase could not be loaded:', error);
         console.warn('Application will run in offline mode without Firebase features');
+        // Set Firebase availability flag to false
+        window.firebaseAvailable = false;
         // Application will continue to work without Firebase
       }
     })();
@@ -3643,12 +3648,8 @@
         return;
       }
       
-      // Check if navigation link exists
+      // Get navigation link (optional - section can be shown even without nav link)
       const targetNavLink = document.querySelector(`[data-section="${sectionId}"]`);
-      if (!targetNavLink) {
-        console.warn(`Navigation link for "${sectionId}" not found`);
-        return;
-      }
       
       // Safely remove active class from all sections
       if (sections && sections.length > 0) {
@@ -3660,7 +3661,13 @@
       if (navLinks && navLinks.length > 0) {
         navLinks.forEach(link => link.classList.remove('active'));
       }
-      targetNavLink.classList.add('active');
+      
+      // Add active class to target nav link if it exists
+      if (targetNavLink) {
+        targetNavLink.classList.add('active');
+      } else {
+        console.warn(`Navigation link for "${sectionId}" not found - section shown without nav highlight`);
+      }
       
       // Update page title if element exists
       if (pageTitle) {
