@@ -8,6 +8,8 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Security headers middleware
+// Note: 'unsafe-inline' is currently required for inline scripts in HTML files
+// TODO: Refactor to use external JS files and implement nonce-based CSP
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
@@ -15,12 +17,20 @@ app.use(helmet({
       scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://www.gstatic.com"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://fonts.googleapis.com"],
       fontSrc: ["'self'", "https://cdn.jsdelivr.net", "https://fonts.gstatic.com"],
-      imgSrc: ["'self'", "data:", "https:"],
-      connectSrc: ["'self'", "https://*.firebaseio.com", "https://*.googleapis.com"],
-      frameSrc: ["'none'"]
+      imgSrc: ["'self'", "data:", "https:", "blob:"],
+      connectSrc: ["'self'", "https://*.firebaseio.com", "https://*.googleapis.com", "https://firebasestorage.googleapis.com", "https://*.firebaseapp.com"],
+      frameSrc: ["'none'"],
+      objectSrc: ["'none'"],
+      baseUri: ["'self'"],
+      formAction: ["'self'"]
     }
   },
-  crossOriginEmbedderPolicy: false
+  crossOriginEmbedderPolicy: false,
+  hsts: {
+    maxAge: 31536000,
+    includeSubDomains: true,
+    preload: true
+  }
 }));
 
 // Parse JSON and URL-encoded bodies
