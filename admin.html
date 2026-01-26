@@ -47,13 +47,11 @@
         // Initialize Storage
         const storage = getStorage(app);
         
-        // Protect page: redirect to login if not authenticated
-        document.addEventListener('DOMContentLoaded', function() {
-          onAuthStateChanged(auth, (user) => {
-            if (!user) {
-              window.location.href = 'index.html';
-            }
-          });
+        // Protect page: check auth state immediately
+        onAuthStateChanged(auth, (user) => {
+          if (!user) {
+            window.location.href = 'index.html';
+          }
         });
         
         // Global logout function
