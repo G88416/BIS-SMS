@@ -98,6 +98,8 @@ Once a user is created, provide them with their login credentials:
 | Student | `student{ID}@bis.local` | `student3@bis.local` |
 | Parent | `parent.{childid}@bis.local` | `parent.c331@bis.local` |
 
+> **About the `.local` Domain**: The system uses `.local` domain for internal identification, keeping system accounts separate from personal emails. This is a standard approach for closed institutional systems. For more details, see [FAQ.md](FAQ.md).
+
 ## Security Notes
 
 ⚠️ **Important Security Practices:**

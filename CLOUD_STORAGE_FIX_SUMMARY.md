@@ -78,6 +78,8 @@ The `.local` domain for login is correct and continues to work:
 - Teacher: `teacher1@bis.local` / teacher123
 - Parent: `parent.c331@bis.local` / parent321
 
+> **Note**: The `.local` domain is intentionally used for internal system accounts. It separates school authentication from personal email addresses and doesn't require external email services. See [FAQ.md](FAQ.md) for detailed explanation.
+
 ## Next Steps
 1. Review the testing guide
 2. Test the functionality manually

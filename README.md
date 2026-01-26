@@ -45,6 +45,8 @@ For detailed login information for all user types, see **[LOGIN_CREDENTIALS.md](
 - **Student**: Any Student ID (e.g., `1` or `2`), Password `student123`
 - **Parent**: Child ID `C331`, Access Code `parent321`
 
+> **Note**: The system uses Firebase Authentication with `.local` domain emails (e.g., `admin@bis.local`). See [FAQ.md](FAQ.md) for explanation of why `.local` is used.
+
 ## System Requirements
 
 ### Browser-based (Local Development)
@@ -60,10 +62,15 @@ For detailed login information for all user types, see **[LOGIN_CREDENTIALS.md](
 
 ```
 BIS-SMS/
-├── index.html              # Main login page
-├── admin.html              # Admin dashboard and portals
-├── README.md               # This file
-└── LOGIN_CREDENTIALS.md    # Detailed login credentials documentation
+├── index.html                      # Main login page
+├── admin.html                      # Admin dashboard and portals
+├── parent-portal-module.html       # Parent portal interface
+├── README.md                       # Project overview
+├── FAQ.md                          # Frequently Asked Questions
+├── LOGIN_CREDENTIALS.md            # Login credentials for all user types
+├── USER_MANAGEMENT_GUIDE.md        # User creation and management guide
+├── CLOUD_STORAGE_FIX_SUMMARY.md    # Cloud storage implementation details
+└── (additional documentation files...)
 ```
 
 ## Technologies Used
