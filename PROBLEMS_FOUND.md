@@ -190,7 +190,7 @@ Demo credentials are visible in the source code:
 **Location:** `admin.html` (466.5 KB)
 
 **Issue:**
-Single HTML file contains 2600+ functions/classes, making it difficult to maintain, debug, and optimize.
+Single HTML file is very large, making it difficult to maintain, debug, and optimize.
 
 **Impact:**
 - Poor code maintainability
