@@ -3650,11 +3650,22 @@
         return;
       }
       
-      sections.forEach(sec => sec.classList.remove('active'));
+      // Safely remove active class from all sections
+      if (sections && sections.length > 0) {
+        sections.forEach(sec => sec.classList.remove('active'));
+      }
       targetSection.classList.add('active');
-      navLinks.forEach(link => link.classList.remove('active'));
+      
+      // Safely remove active class from all nav links
+      if (navLinks && navLinks.length > 0) {
+        navLinks.forEach(link => link.classList.remove('active'));
+      }
       targetNavLink.classList.add('active');
-      pageTitle.textContent = sectionId.charAt(0).toUpperCase() + sectionId.slice(1);
+      
+      // Update page title if element exists
+      if (pageTitle) {
+        pageTitle.textContent = sectionId.charAt(0).toUpperCase() + sectionId.slice(1);
+      }
 
       // Initialize Bootstrap tabs in the newly visible section
       initializeBootstrapTabs(targetSection);
