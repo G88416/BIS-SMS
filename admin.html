@@ -3429,8 +3429,13 @@
   <script>
     // Wait for DOM to be ready
     document.addEventListener('DOMContentLoaded', function() {
-      // Check if Bootstrap Tab is available
-      const bootstrapAvailable = typeof bootstrap !== 'undefined' && typeof bootstrap.Tab !== 'undefined';
+      // Check if Bootstrap Tab is available with proper error handling
+      let bootstrapAvailable = false;
+      try {
+        bootstrapAvailable = typeof bootstrap !== 'undefined' && typeof bootstrap.Tab !== 'undefined';
+      } catch (error) {
+        console.warn('Error checking Bootstrap availability:', error);
+      }
       
       if (!bootstrapAvailable) {
         console.warn('Bootstrap JS not loaded. Enabling fallback tab functionality.');
@@ -3442,8 +3447,8 @@
           
           e.preventDefault();
           
-          // Get the target tab pane ID
-          const targetId = tabTrigger.getAttribute('href');
+          // Get the target tab pane ID from href or data-bs-target
+          let targetId = tabTrigger.getAttribute('href') || tabTrigger.getAttribute('data-bs-target');
           if (!targetId || !targetId.startsWith('#')) return;
           
           // Find the nav-tabs container and tab-content container
@@ -3457,9 +3462,11 @@
           }
           
           if (!tabContent) {
-            // Try to find in parent container
-            const parentSection = navTabs.closest('.section') || navTabs.closest('[id$="-portal"]') || document;
-            tabContent = parentSection.querySelector('.tab-content');
+            // Try to find in parent container with optimized scope
+            const parentSection = navTabs.closest('.section') || navTabs.closest('[id$="-portal"]');
+            if (parentSection) {
+              tabContent = parentSection.querySelector('.tab-content');
+            }
           }
           
           if (!tabContent) return;
