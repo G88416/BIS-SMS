@@ -5,84 +5,95 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Bophelong Independent School - Johannesburg</title>
   
-  <!-- Firebase SDK -->
-  <script type="module">
-    // Import the functions you need from the SDKs you need
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js";
-    import { getAuth, onAuthStateChanged, signOut, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, where, getDocs, getDoc, Timestamp, setDoc, doc, limit } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-    import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
-    
-    // Your web app's Firebase configuration
-    const firebaseConfig = {
-      apiKey: "AIzaSyBsUOSF5eENLCq_4fH9lLx_WIVUa6QDeBE",
-      authDomain: "bis-management-system-d77f4.firebaseapp.com",
-      projectId: "bis-management-system-d77f4",
-      storageBucket: "bis-management-system-d77f4.firebasestorage.app",
-      messagingSenderId: "724917351295",
-      appId: "1:724917351295:web:d87a2da7979babda08e04a",
-      measurementId: "G-NQKBSS701Y"
-    };
-    
-    // Initialize Firebase
-    const app = initializeApp(firebaseConfig);
-    
-    // Initialize Analytics with error handling
-    let analytics = null;
-    try {
-      analytics = getAnalytics(app);
-    } catch (error) {
-      console.warn('Firebase Analytics could not be initialized:', error);
-    }
-    
-    // Initialize Auth
-    const auth = getAuth(app);
-    
-    // Initialize Firestore
-    const db = getFirestore(app);
-    
-    // Initialize Storage
-    const storage = getStorage(app);
-    
-    // Protect page: redirect to login if not authenticated
-    document.addEventListener('DOMContentLoaded', function() {
-      onAuthStateChanged(auth, (user) => {
-        if (!user) {
-          window.location.href = 'index.html';
+  <!-- Firebase SDK with error handling -->
+  <script>
+    // Load Firebase dynamically to prevent blocking if CDN fails
+    (async function() {
+      try {
+        const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js");
+        const { getAnalytics } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js");
+        const { getAuth, onAuthStateChanged, signOut, createUserWithEmailAndPassword } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js");
+        const { getFirestore, collection, addDoc, query, orderBy, onSnapshot, where, getDocs, getDoc, Timestamp, setDoc, doc, limit } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js");
+        const { getStorage, ref, uploadBytes, getDownloadURL } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js");
+        
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+          apiKey: "AIzaSyBsUOSF5eENLCq_4fH9lLx_WIVUa6QDeBE",
+          authDomain: "bis-management-system-d77f4.firebaseapp.com",
+          projectId: "bis-management-system-d77f4",
+          storageBucket: "bis-management-system-d77f4.firebasestorage.app",
+          messagingSenderId: "724917351295",
+          appId: "1:724917351295:web:d87a2da7979babda08e04a",
+          measurementId: "G-NQKBSS701Y"
+        };
+        
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        
+        // Initialize Analytics with error handling
+        let analytics = null;
+        try {
+          analytics = getAnalytics(app);
+        } catch (error) {
+          console.warn('Firebase Analytics could not be initialized:', error);
         }
-        // Optional: refresh token to get latest claims (for future custom claims)
-        // user.getIdToken(true);
-      });
-    });
-    
-    // Global logout function
-    window.logout = function() {
-      syncLogout();
-    };
-    
-    // Make available globally
-    window.firebaseApp = app;
-    window.firebaseAnalytics = analytics;
-    window.firebaseAuth = auth;
-    window.firebaseCreateUser = createUserWithEmailAndPassword;
-    window.firebaseDb = db;
-    window.firebaseStorage = storage;
-    window.firebaseCollection = collection;
-    window.firebaseAddDoc = addDoc;
-    window.firebaseSetDoc = setDoc;
-    window.firebaseDoc = doc;
-    window.firebaseQuery = query;
-    window.firebaseOrderBy = orderBy;
-    window.firebaseOnSnapshot = onSnapshot;
-    window.firebaseWhere = where;
-    window.firebaseGetDocs = getDocs;
-    window.firebaseGetDoc = getDoc;
-    window.firebaseTimestamp = Timestamp;
-    window.firebaseStorageRef = ref;
-    window.firebaseUploadBytes = uploadBytes;
-    window.firebaseGetDownloadURL = getDownloadURL;
-    window.firebaseLimit = limit;
+        
+        // Initialize Auth
+        const auth = getAuth(app);
+        
+        // Initialize Firestore
+        const db = getFirestore(app);
+        
+        // Initialize Storage
+        const storage = getStorage(app);
+        
+        // Set Firebase availability flag
+        window.firebaseAvailable = true;
+        
+        // Protect page: check auth state immediately
+        onAuthStateChanged(auth, (user) => {
+          if (!user) {
+            window.location.href = 'index.html';
+          }
+        });
+        
+        // Global logout function
+        window.logout = function() {
+          syncLogout();
+        };
+        
+        // Make available globally
+        window.firebaseApp = app;
+        window.firebaseAnalytics = analytics;
+        window.firebaseAuth = auth;
+        window.firebaseCreateUser = createUserWithEmailAndPassword;
+        window.firebaseDb = db;
+        window.firebaseStorage = storage;
+        window.firebaseCollection = collection;
+        window.firebaseAddDoc = addDoc;
+        window.firebaseSetDoc = setDoc;
+        window.firebaseDoc = doc;
+        window.firebaseQuery = query;
+        window.firebaseOrderBy = orderBy;
+        window.firebaseOnSnapshot = onSnapshot;
+        window.firebaseWhere = where;
+        window.firebaseGetDocs = getDocs;
+        window.firebaseGetDoc = getDoc;
+        window.firebaseTimestamp = Timestamp;
+        window.firebaseStorageRef = ref;
+        window.firebaseUploadBytes = uploadBytes;
+        window.firebaseGetDownloadURL = getDownloadURL;
+        window.firebaseLimit = limit;
+        
+        console.log('Firebase initialized successfully');
+      } catch (error) {
+        console.error('Firebase could not be loaded:', error);
+        console.warn('Application will run in offline mode without Firebase features');
+        // Set Firebase availability flag to false
+        window.firebaseAvailable = false;
+        // Application will continue to work without Firebase
+      }
+    })();
   </script>
   
   <!-- Bootstrap 5 CSS CDN -->
@@ -3630,17 +3641,41 @@
     }
 
     function navigateTo(sectionId) {
-      sections.forEach(sec => sec.classList.remove('active'));
-      document.getElementById(sectionId).classList.add('active');
-      navLinks.forEach(link => link.classList.remove('active'));
-      document.querySelector(`[data-section="${sectionId}"]`).classList.add('active');
-      pageTitle.textContent = sectionId.charAt(0).toUpperCase() + sectionId.slice(1);
+      // Check if section exists
+      const targetSection = document.getElementById(sectionId);
+      if (!targetSection) {
+        console.warn(`Section "${sectionId}" not found`);
+        return;
+      }
+      
+      // Get navigation link (optional - section can be shown even without nav link)
+      const targetNavLink = document.querySelector(`[data-section="${sectionId}"]`);
+      
+      // Safely remove active class from all sections
+      if (sections && sections.length > 0) {
+        sections.forEach(sec => sec.classList.remove('active'));
+      }
+      targetSection.classList.add('active');
+      
+      // Safely remove active class from all nav links
+      if (navLinks && navLinks.length > 0) {
+        navLinks.forEach(link => link.classList.remove('active'));
+      }
+      
+      // Add active class to target nav link if it exists
+      if (targetNavLink) {
+        targetNavLink.classList.add('active');
+      } else {
+        console.warn(`Navigation link for "${sectionId}" not found - section shown without nav highlight`);
+      }
+      
+      // Update page title if element exists
+      if (pageTitle) {
+        pageTitle.textContent = sectionId.charAt(0).toUpperCase() + sectionId.slice(1);
+      }
 
       // Initialize Bootstrap tabs in the newly visible section
-      const activeSection = document.getElementById(sectionId);
-      if (activeSection) {
-        initializeBootstrapTabs(activeSection);
-      }
+      initializeBootstrapTabs(targetSection);
 
       // Refresh data on navigation
       if (sectionId === 'students') renderStudents();
