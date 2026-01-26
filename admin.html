@@ -210,6 +210,14 @@
       }
     }
     
+    /* Tab pane visibility fix for when Bootstrap JS doesn't load */
+    .tab-pane {
+      display: none;
+    }
+    .tab-pane.active.show {
+      display: block;
+    }
+    
     @media print {
       .sidebar, .topbar, .no-print {
         display: none !important;
@@ -3416,6 +3424,79 @@
 
   <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+
+  <!-- Fallback Tab Handler - Works even when Bootstrap JS fails to load -->
+  <script>
+    // Wait for DOM to be ready
+    document.addEventListener('DOMContentLoaded', function() {
+      // Check if Bootstrap Tab is available with proper error handling
+      let bootstrapAvailable = false;
+      try {
+        bootstrapAvailable = typeof bootstrap !== 'undefined' && typeof bootstrap.Tab !== 'undefined';
+      } catch (error) {
+        console.warn('Error checking Bootstrap availability:', error);
+      }
+      
+      if (!bootstrapAvailable) {
+        console.warn('Bootstrap JS not loaded. Enabling fallback tab functionality.');
+        
+        // Implement manual tab switching as fallback
+        document.addEventListener('click', function(e) {
+          const tabTrigger = e.target.closest('[data-bs-toggle="tab"]');
+          if (!tabTrigger) return;
+          
+          e.preventDefault();
+          
+          // Get the target tab pane ID from href or data-bs-target
+          let targetId = tabTrigger.getAttribute('href') || tabTrigger.getAttribute('data-bs-target');
+          if (!targetId || !targetId.startsWith('#')) return;
+          
+          // Find the nav-tabs container and tab-content container
+          const navTabs = tabTrigger.closest('.nav-tabs');
+          if (!navTabs) return;
+          
+          // Find the associated tab-content (next sibling or closest container)
+          let tabContent = navTabs.nextElementSibling;
+          while (tabContent && !tabContent.classList.contains('tab-content')) {
+            tabContent = tabContent.nextElementSibling;
+          }
+          
+          if (!tabContent) {
+            // Try to find in parent container with optimized scope
+            const parentSection = navTabs.closest('.section') || navTabs.closest('[id$="-portal"]');
+            if (parentSection) {
+              tabContent = parentSection.querySelector('.tab-content');
+            }
+          }
+          
+          if (!tabContent) return;
+          
+          // Remove active class from all tabs in this nav-tabs
+          navTabs.querySelectorAll('.nav-link').forEach(link => {
+            link.classList.remove('active');
+          });
+          
+          // Add active class to clicked tab
+          tabTrigger.classList.add('active');
+          
+          // Hide all tab panes in this tab-content
+          tabContent.querySelectorAll('.tab-pane').forEach(pane => {
+            pane.classList.remove('show', 'active');
+          });
+          
+          // Show the target tab pane
+          const targetPane = tabContent.querySelector(targetId);
+          if (targetPane) {
+            targetPane.classList.add('show', 'active');
+          }
+        });
+        
+        console.log('Fallback tab functionality enabled successfully.');
+      } else {
+        console.log('Bootstrap JS loaded successfully. Using native tab functionality.');
+      }
+    });
+  </script>
 
   <!-- Utils JS (must be loaded before app JavaScript) -->
   <script src="utils.js"></script>
