@@ -4882,17 +4882,26 @@
     
     // Upload teacher attachment to Firebase Storage
     async function uploadTeacherAttachment(file) {
-      const currentUser = window.firebaseAuth.currentUser;
-      
-      // Sanitize filename
-      const sanitizedName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-      const filePath = `choptso/${currentUser.uid}/${Date.now()}_${sanitizedName}`;
-      const storageRef = window.firebaseStorageRef(window.firebaseStorage, filePath);
-      
-      await window.firebaseUploadBytes(storageRef, file);
-      const downloadURL = await window.firebaseGetDownloadURL(storageRef);
-      
-      return downloadURL;
+      try {
+        const currentUser = window.firebaseAuth.currentUser;
+        
+        if (!currentUser) {
+          throw new Error('User not authenticated');
+        }
+        
+        // Sanitize filename
+        const sanitizedName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+        const filePath = `choptso/${currentUser.uid}/${Date.now()}_${sanitizedName}`;
+        const storageRef = window.firebaseStorageRef(window.firebaseStorage, filePath);
+        
+        await window.firebaseUploadBytes(storageRef, file);
+        const downloadURL = await window.firebaseGetDownloadURL(storageRef);
+        
+        return downloadURL;
+      } catch (error) {
+        console.error('Error uploading teacher attachment:', error);
+        throw error; // Re-throw so calling function can handle it
+      }
     }
     
     // Fallback function to save to localStorage
@@ -5465,17 +5474,26 @@
     
     // Upload attachment to Firebase Storage
     async function uploadChoptsoAttachment(file) {
-      const currentUser = window.firebaseAuth.currentUser;
-      
-      // Sanitize filename - remove path traversal and special characters
-      const sanitizedName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-      const filePath = `choptso/${currentUser.uid}/${Date.now()}_${sanitizedName}`;
-      const storageRef = window.firebaseStorageRef(window.firebaseStorage, filePath);
-      
-      await window.firebaseUploadBytes(storageRef, file);
-      const downloadURL = await window.firebaseGetDownloadURL(storageRef);
-      
-      return downloadURL;
+      try {
+        const currentUser = window.firebaseAuth.currentUser;
+        
+        if (!currentUser) {
+          throw new Error('User not authenticated');
+        }
+        
+        // Sanitize filename - remove path traversal and special characters
+        const sanitizedName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+        const filePath = `choptso/${currentUser.uid}/${Date.now()}_${sanitizedName}`;
+        const storageRef = window.firebaseStorageRef(window.firebaseStorage, filePath);
+        
+        await window.firebaseUploadBytes(storageRef, file);
+        const downloadURL = await window.firebaseGetDownloadURL(storageRef);
+        
+        return downloadURL;
+      } catch (error) {
+        console.error('Error uploading attachment:', error);
+        throw error; // Re-throw so calling function can handle it
+      }
     }
     
     // Handle file attachment selection
@@ -9539,17 +9557,26 @@
     
     // Upload parent attachment to Firebase Storage
     async function uploadParentAttachment(file) {
-      const currentUser = window.firebaseAuth.currentUser;
-      
-      // Sanitize filename
-      const sanitizedName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-      const filePath = `choptso/${currentUser.uid}/${Date.now()}_${sanitizedName}`;
-      const storageRef = window.firebaseStorageRef(window.firebaseStorage, filePath);
-      
-      await window.firebaseUploadBytes(storageRef, file);
-      const downloadURL = await window.firebaseGetDownloadURL(storageRef);
-      
-      return downloadURL;
+      try {
+        const currentUser = window.firebaseAuth.currentUser;
+        
+        if (!currentUser) {
+          throw new Error('User not authenticated');
+        }
+        
+        // Sanitize filename
+        const sanitizedName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+        const filePath = `choptso/${currentUser.uid}/${Date.now()}_${sanitizedName}`;
+        const storageRef = window.firebaseStorageRef(window.firebaseStorage, filePath);
+        
+        await window.firebaseUploadBytes(storageRef, file);
+        const downloadURL = await window.firebaseGetDownloadURL(storageRef);
+        
+        return downloadURL;
+      } catch (error) {
+        console.error('Error uploading parent attachment:', error);
+        throw error; // Re-throw so calling function can handle it
+      }
     }
     
     // Fallback function to save to localStorage
