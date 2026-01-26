@@ -3577,24 +3577,23 @@
       // If Bootstrap JS is available, use it
       if (typeof bootstrap !== 'undefined' && bootstrap.Tab) {
         tabElements.forEach(tabEl => {
-          // Remove existing instance to ensure clean initialization
+          // Only initialize if not already initialized
           const existingInstance = bootstrap.Tab.getInstance(tabEl);
-          if (existingInstance) {
-            existingInstance.dispose();
+          if (!existingInstance) {
+            // Bootstrap 5 automatically initializes tabs with data-bs-toggle="tab"
+            // but we ensure initialization for dynamically added or initially hidden tabs
+            new bootstrap.Tab(tabEl);
           }
-          
-          // Create new tab instance - Bootstrap automatically handles click events
-          new bootstrap.Tab(tabEl);
         });
       } else {
         // Fallback: Manually implement tab switching when Bootstrap JS is not available
         tabElements.forEach(tabEl => {
-          // Remove any existing event listeners by cloning
-          const newTabEl = tabEl.cloneNode(true);
-          tabEl.parentNode.replaceChild(newTabEl, tabEl);
+          // Check if event listener is already attached
+          if (tabEl.dataset.tabInitialized) return;
+          tabEl.dataset.tabInitialized = 'true';
           
           // Add click event listener
-          newTabEl.addEventListener('click', function(e) {
+          tabEl.addEventListener('click', function(e) {
             e.preventDefault();
             
             const targetId = this.getAttribute('href');
