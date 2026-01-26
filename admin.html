@@ -5,102 +5,87 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Bophelong Independent School - Johannesburg</title>
   
-  <!-- Firebase SDK with error handling -->
-  <script>
-    // Load Firebase dynamically to prevent blocking if CDN fails
-    (async function() {
-      try {
-        const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js");
-        const { getAnalytics } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js");
-        const { getAuth, onAuthStateChanged, signOut, createUserWithEmailAndPassword } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js");
-        const { getFirestore, collection, addDoc, query, orderBy, onSnapshot, where, getDocs, getDoc, Timestamp, setDoc, doc, limit } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js");
-        const { getStorage, ref, uploadBytes, getDownloadURL } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js");
-        
-        // Your web app's Firebase configuration
-        const firebaseConfig = {
-          apiKey: "AIzaSyBsUOSF5eENLCq_4fH9lLx_WIVUa6QDeBE",
-          authDomain: "bis-management-system-d77f4.firebaseapp.com",
-          projectId: "bis-management-system-d77f4",
-          storageBucket: "bis-management-system-d77f4.firebasestorage.app",
-          messagingSenderId: "724917351295",
-          appId: "1:724917351295:web:d87a2da7979babda08e04a",
-          measurementId: "G-NQKBSS701Y"
-        };
-        
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        
-        // Initialize Analytics with error handling
-        let analytics = null;
-        try {
-          analytics = getAnalytics(app);
-        } catch (error) {
-          console.warn('Firebase Analytics could not be initialized:', error);
+  <!-- Firebase SDK -->
+  <script type="module">
+    // Import the functions you need from the SDKs you need
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js";
+    import { getAuth, onAuthStateChanged, signOut, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, where, getDocs, Timestamp, setDoc, doc, limit } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+    
+    // Your web app's Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyBsUOSF5eENLCq_4fH9lLx_WIVUa6QDeBE",
+      authDomain: "bis-management-system-d77f4.firebaseapp.com",
+      projectId: "bis-management-system-d77f4",
+      storageBucket: "bis-management-system-d77f4.firebasestorage.app",
+      messagingSenderId: "724917351295",
+      appId: "1:724917351295:web:d87a2da7979babda08e04a",
+      measurementId: "G-NQKBSS701Y"
+    };
+    
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    
+    // Initialize Analytics with error handling
+    let analytics = null;
+    try {
+      analytics = getAnalytics(app);
+    } catch (error) {
+      console.warn('Firebase Analytics could not be initialized:', error);
+    }
+    
+    // Initialize Auth
+    const auth = getAuth(app);
+    
+    // Initialize Firestore
+    const db = getFirestore(app);
+    
+    // Initialize Storage
+    const storage = getStorage(app);
+    
+    // Protect page: redirect to login if not authenticated
+    document.addEventListener('DOMContentLoaded', function() {
+      onAuthStateChanged(auth, (user) => {
+        if (!user) {
+          window.location.href = 'index.html';
         }
-        
-        // Initialize Auth
-        const auth = getAuth(app);
-        
-        // Initialize Firestore
-        const db = getFirestore(app);
-        
-        // Initialize Storage
-        const storage = getStorage(app);
-        
-        // Set Firebase availability flag
-        window.firebaseAvailable = true;
-        
-        // Protect page: check auth state immediately
-        onAuthStateChanged(auth, (user) => {
-          if (!user) {
-            window.location.href = 'index.html';
-          }
-        });
-        
-        // Global logout function
-        window.logout = function() {
-          syncLogout();
-        };
-        
-        // Make available globally
-        window.firebaseApp = app;
-        window.firebaseAnalytics = analytics;
-        window.firebaseAuth = auth;
-        window.firebaseCreateUser = createUserWithEmailAndPassword;
-        window.firebaseDb = db;
-        window.firebaseStorage = storage;
-        window.firebaseCollection = collection;
-        window.firebaseAddDoc = addDoc;
-        window.firebaseSetDoc = setDoc;
-        window.firebaseDoc = doc;
-        window.firebaseQuery = query;
-        window.firebaseOrderBy = orderBy;
-        window.firebaseOnSnapshot = onSnapshot;
-        window.firebaseWhere = where;
-        window.firebaseGetDocs = getDocs;
-        window.firebaseGetDoc = getDoc;
-        window.firebaseTimestamp = Timestamp;
-        window.firebaseStorageRef = ref;
-        window.firebaseUploadBytes = uploadBytes;
-        window.firebaseGetDownloadURL = getDownloadURL;
-        window.firebaseLimit = limit;
-        
-        console.log('Firebase initialized successfully');
-      } catch (error) {
-        console.error('Firebase could not be loaded:', error);
-        console.warn('Application will run in offline mode without Firebase features');
-        // Set Firebase availability flag to false
-        window.firebaseAvailable = false;
-        // Application will continue to work without Firebase
-      }
-    })();
+        // Optional: refresh token to get latest claims (for future custom claims)
+        // user.getIdToken(true);
+      });
+    });
+    
+    // Global logout function
+    window.logout = function() {
+      syncLogout();
+    };
+    
+    // Make available globally
+    window.firebaseApp = app;
+    window.firebaseAnalytics = analytics;
+    window.firebaseAuth = auth;
+    window.firebaseCreateUser = createUserWithEmailAndPassword;
+    window.firebaseDb = db;
+    window.firebaseStorage = storage;
+    window.firebaseCollection = collection;
+    window.firebaseAddDoc = addDoc;
+    window.firebaseSetDoc = setDoc;
+    window.firebaseDoc = doc;
+    window.firebaseQuery = query;
+    window.firebaseOrderBy = orderBy;
+    window.firebaseOnSnapshot = onSnapshot;
+    window.firebaseWhere = where;
+    window.firebaseGetDocs = getDocs;
+    window.firebaseTimestamp = Timestamp;
+    window.firebaseStorageRef = ref;
+    window.firebaseUploadBytes = uploadBytes;
+    window.firebaseGetDownloadURL = getDownloadURL;
+    window.firebaseLimit = limit;
   </script>
   
   <!-- Bootstrap 5 CSS CDN -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous"/>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" 
-        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" 
-        crossorigin="anonymous"></script>
   
   <!-- Font Awesome for icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
@@ -211,14 +196,6 @@
       .main-content {
         margin-left: 70px;
       }
-    }
-    
-    /* Tab pane visibility fix for when Bootstrap JS doesn't load */
-    .tab-pane {
-      display: none;
-    }
-    .tab-pane.active.show {
-      display: block;
     }
     
     @media print {
@@ -2554,17 +2531,6 @@
                     <option value="Other">Other</option>
                   </select>
                 </div>
-                <div class="col-md-4">
-                  <label class="form-label">Profile Picture</label>
-                  <input type="file" class="form-control" id="student-profile-pic-input" accept="image/*" onchange="previewStudentProfilePic()">
-                  <small class="text-muted">Upload student photo (max 10MB)</small>
-                </div>
-                <div class="col-md-2">
-                  <label class="form-label">Preview</label>
-                  <div>
-                    <img id="student-profile-pic-preview" src="" alt="" style="max-width: 80px; max-height: 80px; border-radius: 8px; display: none;" class="border">
-                  </div>
-                </div>
                 <div class="col-md-12">
                   <label class="form-label">Select Classes for Enrollment</label>
                   <select class="form-select" id="student-class" multiple size="3">
@@ -2628,13 +2594,8 @@
           </form>
         </div>
         <div class="modal-footer">
-          <span class="me-auto">
-            <span id="student-sync-status" class="badge bg-info" style="display: none;">
-              <i class="fas fa-cloud"></i> Cloud Sync Enabled
-            </span>
-          </span>
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="fas fa-times"></i> Close</button>
-          <button type="button" class="btn btn-success" onclick="addStudent()"><i class="fas fa-save"></i> Save Student</button>
+          <button type="button" class="btn btn-success" onclick="addStudent()" data-bs-dismiss="modal"><i class="fas fa-save"></i> Save Student</button>
         </div>
       </div>
     </div>
@@ -3426,80 +3387,7 @@
   </div>
 
   <!-- Bootstrap JS -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
-
-  <!-- Fallback Tab Handler - Works even when Bootstrap JS fails to load -->
-  <script>
-    // Wait for DOM to be ready
-    document.addEventListener('DOMContentLoaded', function() {
-      // Check if Bootstrap Tab is available with proper error handling
-      let bootstrapAvailable = false;
-      try {
-        bootstrapAvailable = typeof bootstrap !== 'undefined' && typeof bootstrap.Tab !== 'undefined';
-      } catch (error) {
-        console.warn('Error checking Bootstrap availability:', error);
-      }
-      
-      if (!bootstrapAvailable) {
-        console.warn('Bootstrap JS not loaded. Enabling fallback tab functionality.');
-        
-        // Implement manual tab switching as fallback
-        document.addEventListener('click', function(e) {
-          const tabTrigger = e.target.closest('[data-bs-toggle="tab"]');
-          if (!tabTrigger) return;
-          
-          e.preventDefault();
-          
-          // Get the target tab pane ID from href or data-bs-target
-          let targetId = tabTrigger.getAttribute('href') || tabTrigger.getAttribute('data-bs-target');
-          if (!targetId || !targetId.startsWith('#')) return;
-          
-          // Find the nav-tabs container and tab-content container
-          const navTabs = tabTrigger.closest('.nav-tabs');
-          if (!navTabs) return;
-          
-          // Find the associated tab-content (next sibling or closest container)
-          let tabContent = navTabs.nextElementSibling;
-          while (tabContent && !tabContent.classList.contains('tab-content')) {
-            tabContent = tabContent.nextElementSibling;
-          }
-          
-          if (!tabContent) {
-            // Try to find in parent container with optimized scope
-            const parentSection = navTabs.closest('.section') || navTabs.closest('[id$="-portal"]');
-            if (parentSection) {
-              tabContent = parentSection.querySelector('.tab-content');
-            }
-          }
-          
-          if (!tabContent) return;
-          
-          // Remove active class from all tabs in this nav-tabs
-          navTabs.querySelectorAll('.nav-link').forEach(link => {
-            link.classList.remove('active');
-          });
-          
-          // Add active class to clicked tab
-          tabTrigger.classList.add('active');
-          
-          // Hide all tab panes in this tab-content
-          tabContent.querySelectorAll('.tab-pane').forEach(pane => {
-            pane.classList.remove('show', 'active');
-          });
-          
-          // Show the target tab pane
-          const targetPane = tabContent.querySelector(targetId);
-          if (targetPane) {
-            targetPane.classList.add('show', 'active');
-          }
-        });
-        
-        console.log('Fallback tab functionality enabled successfully.');
-      } else {
-        console.log('Bootstrap JS loaded successfully. Using native tab functionality.');
-      }
-    });
-  </script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
   <!-- Utils JS (must be loaded before app JavaScript) -->
   <script src="utils.js"></script>
@@ -3589,177 +3477,17 @@
     ];
     let notifications = safeStorage.getItem('notifications', []);
 
-    // Initialize Firestore real-time sync for students
-    let studentsListener = null;
-    function initFirestoreSync() {
-      if (!window.firebaseAuth || !window.firebaseAuth.currentUser || !window.firebaseDb) {
-        console.log('Firebase not ready for sync, using localStorage only');
-        return;
-      }
-
-      try {
-        // Set up real-time listener for students collection
-        const studentsCollectionRef = window.firebaseCollection(window.firebaseDb, 'students');
-        studentsListener = window.firebaseOnSnapshot(studentsCollectionRef, (snapshot) => {
-          console.log('Students data updated from Firestore');
-          
-          // Merge Firestore data with localStorage
-          snapshot.docChanges().forEach((change) => {
-            const studentData = change.doc.data();
-            const studentId = parseInt(change.doc.id);
-            
-            if (change.type === 'added' || change.type === 'modified') {
-              // Update or add student in local array
-              const index = students.findIndex(s => s.id === studentId);
-              const student = {
-                ...studentData,
-                id: studentId
-              };
-              
-              if (index >= 0) {
-                students[index] = student;
-              } else {
-                students.push(student);
-              }
-            } else if (change.type === 'removed') {
-              // Remove student from local array
-              students = students.filter(s => s.id !== studentId);
-            }
-          });
-          
-          // Save to localStorage and re-render
-          safeStorage.setItem('students', students);
-          if (document.getElementById('students')?.classList.contains('active')) {
-            renderStudents();
-          }
-          updateDashboardStats();
-        }, (error) => {
-          console.error('Error listening to Firestore students:', error);
-        });
-        
-        console.log('Firestore real-time sync initialized for students');
-      } catch (error) {
-        console.error('Error initializing Firestore sync:', error);
-      }
-    }
-
-    // Initialize sync when Firebase auth is ready
-    if (window.firebaseAuth) {
-      window.firebaseAuth.onAuthStateChanged((user) => {
-        if (user) {
-          initFirestoreSync();
-        }
-      });
-    }
-
     // Navigation
     const sections = document.querySelectorAll('.section');
     const navLinks = document.querySelectorAll('.sidebar a');
     const pageTitle = document.getElementById('page-title');
-    
-    // Bootstrap tab initialization delay in milliseconds
-    // Ensures DOM and Bootstrap JS are fully ready, and addresses timing issues
-    // with tabs in initially hidden sections
-    const TAB_INIT_DELAY_MS = 100;
-
-    /**
-     * Initialize Bootstrap tabs within a container
-     * @param {Element} container - The container element to search for tabs (defaults to document)
-     */
-    function initializeBootstrapTabs(container = document) {
-      const tabElements = container.querySelectorAll('[data-bs-toggle="tab"]');
-      
-      // If Bootstrap JS is available, use it
-      if (typeof bootstrap !== 'undefined' && bootstrap.Tab) {
-        tabElements.forEach(tabEl => {
-          // Only initialize if not already initialized
-          const existingInstance = bootstrap.Tab.getInstance(tabEl);
-          if (!existingInstance) {
-            // Bootstrap automatically initializes tabs with data-bs-toggle="tab"
-            // but we ensure initialization for dynamically added or initially hidden tabs
-            new bootstrap.Tab(tabEl);
-          }
-        });
-      } else {
-        // Fallback: Manually implement tab switching when Bootstrap JS is not available
-        tabElements.forEach(tabEl => {
-          // Check if event listener is already attached
-          if (tabEl.hasAttribute('data-tab-initialized')) return;
-          tabEl.setAttribute('data-tab-initialized', '');
-          
-          // Add click event listener
-          tabEl.addEventListener('click', function(e) {
-            e.preventDefault();
-            
-            const targetId = this.getAttribute('href');
-            if (!targetId || targetId === '#') return;
-            
-            const targetPane = document.querySelector(targetId);
-            if (!targetPane) return;
-            
-            // Find the tab container
-            const tabContainer = targetPane.closest('.tab-content');
-            if (!tabContainer) return;
-            
-            // Hide all tab panes in this container
-            const allPanes = tabContainer.querySelectorAll('.tab-pane');
-            allPanes.forEach(pane => {
-              pane.classList.remove('show', 'active');
-            });
-            
-            // Show the target pane
-            targetPane.classList.add('show', 'active');
-            
-            // Update nav links
-            const navContainer = this.closest('.nav-tabs');
-            if (navContainer) {
-              const allNavLinks = navContainer.querySelectorAll('.nav-link');
-              allNavLinks.forEach(link => {
-                link.classList.remove('active');
-              });
-              this.classList.add('active');
-            }
-          });
-        });
-      }
-    }
 
     function navigateTo(sectionId) {
-      // Check if section exists
-      const targetSection = document.getElementById(sectionId);
-      if (!targetSection) {
-        console.warn(`Section "${sectionId}" not found`);
-        return;
-      }
-      
-      // Get navigation link (optional - section can be shown even without nav link)
-      const targetNavLink = document.querySelector(`[data-section="${sectionId}"]`);
-      
-      // Safely remove active class from all sections
-      if (sections && sections.length > 0) {
-        sections.forEach(sec => sec.classList.remove('active'));
-      }
-      targetSection.classList.add('active');
-      
-      // Safely remove active class from all nav links
-      if (navLinks && navLinks.length > 0) {
-        navLinks.forEach(link => link.classList.remove('active'));
-      }
-      
-      // Add active class to target nav link if it exists
-      if (targetNavLink) {
-        targetNavLink.classList.add('active');
-      } else {
-        console.warn(`Navigation link for "${sectionId}" not found - section shown without nav highlight`);
-      }
-      
-      // Update page title if element exists
-      if (pageTitle) {
-        pageTitle.textContent = sectionId.charAt(0).toUpperCase() + sectionId.slice(1);
-      }
-
-      // Initialize Bootstrap tabs in the newly visible section
-      initializeBootstrapTabs(targetSection);
+      sections.forEach(sec => sec.classList.remove('active'));
+      document.getElementById(sectionId).classList.add('active');
+      navLinks.forEach(link => link.classList.remove('active'));
+      document.querySelector(`[data-section="${sectionId}"]`).classList.add('active');
+      pageTitle.textContent = sectionId.charAt(0).toUpperCase() + sectionId.slice(1);
 
       // Refresh data on navigation
       if (sectionId === 'students') renderStudents();
@@ -3779,12 +3507,6 @@
         navigateTo(link.dataset.section);
       });
     });
-
-    // Initialize Bootstrap tabs on page load for all sections
-    // Use setTimeout to ensure DOM and Bootstrap are fully ready
-    setTimeout(() => {
-      initializeBootstrapTabs();
-    }, TAB_INIT_DELAY_MS);
 
     // Fee Calculations
     function calculateStudentFee(studentId) {
@@ -5001,26 +4723,17 @@
     
     // Upload teacher attachment to Firebase Storage
     async function uploadTeacherAttachment(file) {
-      try {
-        const currentUser = window.firebaseAuth.currentUser;
-        
-        if (!currentUser) {
-          throw new Error('User not authenticated');
-        }
-        
-        // Sanitize filename
-        const sanitizedName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-        const filePath = `choptso/${currentUser.uid}/${Date.now()}_${sanitizedName}`;
-        const storageRef = window.firebaseStorageRef(window.firebaseStorage, filePath);
-        
-        await window.firebaseUploadBytes(storageRef, file);
-        const downloadURL = await window.firebaseGetDownloadURL(storageRef);
-        
-        return downloadURL;
-      } catch (error) {
-        console.error('Error uploading teacher attachment:', error);
-        throw error; // Re-throw so calling function can handle it
-      }
+      const currentUser = window.firebaseAuth.currentUser;
+      
+      // Sanitize filename
+      const sanitizedName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+      const filePath = `choptso/${currentUser.uid}/${Date.now()}_${sanitizedName}`;
+      const storageRef = window.firebaseStorageRef(window.firebaseStorage, filePath);
+      
+      await window.firebaseUploadBytes(storageRef, file);
+      const downloadURL = await window.firebaseGetDownloadURL(storageRef);
+      
+      return downloadURL;
     }
     
     // Fallback function to save to localStorage
@@ -5593,26 +5306,17 @@
     
     // Upload attachment to Firebase Storage
     async function uploadChoptsoAttachment(file) {
-      try {
-        const currentUser = window.firebaseAuth.currentUser;
-        
-        if (!currentUser) {
-          throw new Error('User not authenticated');
-        }
-        
-        // Sanitize filename - remove path traversal and special characters
-        const sanitizedName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-        const filePath = `choptso/${currentUser.uid}/${Date.now()}_${sanitizedName}`;
-        const storageRef = window.firebaseStorageRef(window.firebaseStorage, filePath);
-        
-        await window.firebaseUploadBytes(storageRef, file);
-        const downloadURL = await window.firebaseGetDownloadURL(storageRef);
-        
-        return downloadURL;
-      } catch (error) {
-        console.error('Error uploading attachment:', error);
-        throw error; // Re-throw so calling function can handle it
-      }
+      const currentUser = window.firebaseAuth.currentUser;
+      
+      // Sanitize filename - remove path traversal and special characters
+      const sanitizedName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+      const filePath = `choptso/${currentUser.uid}/${Date.now()}_${sanitizedName}`;
+      const storageRef = window.firebaseStorageRef(window.firebaseStorage, filePath);
+      
+      await window.firebaseUploadBytes(storageRef, file);
+      const downloadURL = await window.firebaseGetDownloadURL(storageRef);
+      
+      return downloadURL;
     }
     
     // Handle file attachment selection
@@ -5713,78 +5417,35 @@
       initChoptso();
     }
 
-    // Preview student profile picture before upload
-    function previewStudentProfilePic() {
-      const fileInput = document.getElementById('student-profile-pic-input');
-      const preview = document.getElementById('student-profile-pic-preview');
-      const file = fileInput.files[0];
-      
-      if (file) {
-        if (!file.type.startsWith('image/')) {
-          alert('Please select an image file');
-          fileInput.value = '';
-          return;
-        }
-        
-        // Check file size (10MB max)
-        if (file.size > 10 * 1024 * 1024) {
-          alert('Image size must be less than 10MB');
-          fileInput.value = '';
-          return;
-        }
-        
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          preview.src = e.target.result;
-          preview.style.display = 'block';
-        };
-        reader.readAsDataURL(file);
-      } else {
-        preview.src = '';
-        preview.style.display = 'none';
-      }
-    }
-
-    // Show cloud sync status when modal opens
-    document.getElementById('addStudentModal')?.addEventListener('shown.bs.modal', function () {
-      const syncStatus = document.getElementById('student-sync-status');
-      if (window.firebaseAuth && window.firebaseAuth.currentUser && window.firebaseDb) {
-        syncStatus.style.display = 'inline-block';
-      } else {
-        syncStatus.style.display = 'none';
-      }
-    });
-
     // Add functions
-    async function addStudent() {
-      try {
-        // Get learner details
-        const surname = document.getElementById('learner-surname').value.trim();
-        const firstname = document.getElementById('learner-firstname').value.trim();
-        const gender = document.getElementById('learner-gender').value;
-        const grade = document.getElementById('learner-grade').value;
-        const classname = document.getElementById('learner-class').value.trim();
-        const learnerCell = document.getElementById('learner-cell').value.trim();
-        const learnerEmail = document.getElementById('learner-email').value.trim();
-        const language = document.getElementById('learner-language').value;
-        
-        // Get father details
-        const fatherFirstname = document.getElementById('father-firstname').value.trim();
-        const fatherSurname = document.getElementById('father-surname').value.trim();
-        const fatherEmail = document.getElementById('father-email').value.trim();
-        const fatherCell = document.getElementById('father-cell').value.trim();
-        
-        // Get mother details
-        const motherFirstname = document.getElementById('mother-firstname').value.trim();
-        const motherSurname = document.getElementById('mother-surname').value.trim();
-        const motherEmail = document.getElementById('mother-email').value.trim();
-        const motherCell = document.getElementById('mother-cell').value.trim();
-        
-        const selectedClasses = Array.from(document.getElementById('student-class').selectedOptions).map(opt => parseInt(opt.value));
-        
-        // Validate required fields
-        if (surname && firstname && gender && grade) {
-          const id = students.length ? Math.max(...students.map(s => s.id)) + 1 : 1;
+    function addStudent() {
+      // Get learner details
+      const surname = document.getElementById('learner-surname').value.trim();
+      const firstname = document.getElementById('learner-firstname').value.trim();
+      const gender = document.getElementById('learner-gender').value;
+      const grade = document.getElementById('learner-grade').value;
+      const classname = document.getElementById('learner-class').value.trim();
+      const learnerCell = document.getElementById('learner-cell').value.trim();
+      const learnerEmail = document.getElementById('learner-email').value.trim();
+      const language = document.getElementById('learner-language').value;
+      
+      // Get father details
+      const fatherFirstname = document.getElementById('father-firstname').value.trim();
+      const fatherSurname = document.getElementById('father-surname').value.trim();
+      const fatherEmail = document.getElementById('father-email').value.trim();
+      const fatherCell = document.getElementById('father-cell').value.trim();
+      
+      // Get mother details
+      const motherFirstname = document.getElementById('mother-firstname').value.trim();
+      const motherSurname = document.getElementById('mother-surname').value.trim();
+      const motherEmail = document.getElementById('mother-email').value.trim();
+      const motherCell = document.getElementById('mother-cell').value.trim();
+      
+      const selectedClasses = Array.from(document.getElementById('student-class').selectedOptions).map(opt => parseInt(opt.value));
+      
+      // Validate required fields
+      if (surname && firstname && gender && grade) {
+        const id = students.length ? Math.max(...students.map(s => s.id)) + 1 : 1;
         
         // Update the displayed student number
         document.getElementById('student-number').value = id;
@@ -5812,30 +5473,6 @@
           }
         }
         
-        // Handle profile picture upload to Firebase Storage
-        let profilePicUrl = '';
-        const fileInput = document.getElementById('student-profile-pic-input');
-        const file = fileInput?.files[0];
-        
-        if (file && window.firebaseAuth && window.firebaseAuth.currentUser) {
-          try {
-            const fileName = `student_${id}_${Date.now()}.${file.name.split('.').pop()}`;
-            const storageRef = window.firebaseStorageRef(window.firebaseStorage, `students/${id}/${fileName}`);
-            
-            await window.firebaseUploadBytes(storageRef, file);
-            profilePicUrl = await window.firebaseGetDownloadURL(storageRef);
-            console.log('Student profile picture uploaded to Firebase Storage:', profilePicUrl);
-          } catch (error) {
-            console.error('Error uploading student profile picture:', error);
-            // Note: We continue with student creation even if photo upload fails
-            // This is intentional - the student record is more important than the photo
-            const proceed = confirm('Warning: Profile picture could not be uploaded to cloud storage.\n\nDo you want to continue saving the student without the photo?');
-            if (!proceed) {
-              return; // Exit the function, don't save student
-            }
-          }
-        }
-        
         // Create new student object with all details
         const newStudent = { 
           id, 
@@ -5859,13 +5496,9 @@
           motherFirstname,
           motherSurname,
           motherEmail,
-          motherCell,
-          profilePicUrl,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
+          motherCell
         };
         
-        // Save to local storage first (for immediate feedback)
         students.push(newStudent);
         
         // Enroll in selected classes
@@ -5879,69 +5512,19 @@
         
         safeStorage.setItem('students', students);
         safeStorage.setItem('classes', classes);
-        
-        // Sync to Firestore (cloud storage)
-        if (window.firebaseAuth && window.firebaseAuth.currentUser && window.firebaseDb) {
-          try {
-            const studentDocRef = window.firebaseDoc(window.firebaseDb, 'students', id.toString());
-            await window.firebaseSetDoc(studentDocRef, {
-              ...newStudent,
-              createdBy: window.firebaseAuth.currentUser.uid,
-              createdAt: window.firebaseTimestamp.now(),
-              updatedAt: window.firebaseTimestamp.now()
-            });
-            console.log('Student data synced to Firestore:', id);
-            
-            // Update class enrollments in Firestore
-            for (const classId of selectedClasses) {
-              const classDocRef = window.firebaseDoc(window.firebaseDb, 'classes', classId.toString());
-              const classDoc = await window.firebaseGetDoc(classDocRef);
-              if (classDoc.exists()) {
-                const classData = classDoc.data();
-                const studentIds = classData.studentIds || [];
-                if (!studentIds.includes(id)) {
-                  studentIds.push(id);
-                  await window.firebaseSetDoc(classDocRef, { studentIds, updatedAt: window.firebaseTimestamp.now() }, { merge: true });
-                }
-              }
-            }
-          } catch (error) {
-            console.error('Error syncing student to Firestore:', error);
-            alert('Student saved locally, but cloud sync failed. Data will sync when connection is restored.');
-          }
-        }
-        
         renderStudents();
         renderClasses();
         updateDashboardStats();
         
-        // Clear form and preview
+        // Clear form
         document.getElementById('studentRegistrationForm').reset();
-        document.getElementById('student-profile-pic-preview').style.display = 'none';
-        document.getElementById('student-profile-pic-preview').src = '';
-        
-        // Close modal
-        const modal = bootstrap.Modal.getInstance(document.getElementById('addStudentModal'));
-        if (modal) {
-          modal.hide();
-        }
         
         // Show success message
-        alert('Student registered successfully!' + (profilePicUrl ? ' Profile picture uploaded.' : ''));
-      } catch (error) {
-        console.error('Error adding student:', error);
-        alert('An error occurred while adding the student. Please try again.');
-        
-        // Close modal even on error
-        const modal = bootstrap.Modal.getInstance(document.getElementById('addStudentModal'));
-        if (modal) {
-          modal.hide();
-        }
+        alert('Student registered successfully!');
+      } else {
+        alert('Please fill in all required fields (Surname, First Name, Gender, and Grade)');
       }
-    } else {
-      alert('Please fill in all required fields (Surname, First Name, Gender, and Grade)');
     }
-  }
 
     function addTeacher() {
       const name = document.getElementById('teacher-name').value.trim();
@@ -9676,26 +9259,17 @@
     
     // Upload parent attachment to Firebase Storage
     async function uploadParentAttachment(file) {
-      try {
-        const currentUser = window.firebaseAuth.currentUser;
-        
-        if (!currentUser) {
-          throw new Error('User not authenticated');
-        }
-        
-        // Sanitize filename
-        const sanitizedName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-        const filePath = `choptso/${currentUser.uid}/${Date.now()}_${sanitizedName}`;
-        const storageRef = window.firebaseStorageRef(window.firebaseStorage, filePath);
-        
-        await window.firebaseUploadBytes(storageRef, file);
-        const downloadURL = await window.firebaseGetDownloadURL(storageRef);
-        
-        return downloadURL;
-      } catch (error) {
-        console.error('Error uploading parent attachment:', error);
-        throw error; // Re-throw so calling function can handle it
-      }
+      const currentUser = window.firebaseAuth.currentUser;
+      
+      // Sanitize filename
+      const sanitizedName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+      const filePath = `choptso/${currentUser.uid}/${Date.now()}_${sanitizedName}`;
+      const storageRef = window.firebaseStorageRef(window.firebaseStorage, filePath);
+      
+      await window.firebaseUploadBytes(storageRef, file);
+      const downloadURL = await window.firebaseGetDownloadURL(storageRef);
+      
+      return downloadURL;
     }
     
     // Fallback function to save to localStorage
