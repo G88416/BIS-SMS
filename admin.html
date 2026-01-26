@@ -3580,7 +3580,7 @@
           // Only initialize if not already initialized
           const existingInstance = bootstrap.Tab.getInstance(tabEl);
           if (!existingInstance) {
-            // Bootstrap 5 automatically initializes tabs with data-bs-toggle="tab"
+            // Bootstrap automatically initializes tabs with data-bs-toggle="tab"
             // but we ensure initialization for dynamically added or initially hidden tabs
             new bootstrap.Tab(tabEl);
           }
@@ -3589,8 +3589,8 @@
         // Fallback: Manually implement tab switching when Bootstrap JS is not available
         tabElements.forEach(tabEl => {
           // Check if event listener is already attached
-          if (tabEl.dataset.tabInitialized) return;
-          tabEl.dataset.tabInitialized = 'true';
+          if (tabEl.hasAttribute('data-tab-initialized')) return;
+          tabEl.setAttribute('data-tab-initialized', '');
           
           // Add click event listener
           tabEl.addEventListener('click', function(e) {
