@@ -15,12 +15,14 @@ service cloud.firestore {
   match /databases/{database}/documents {
     
     // Helper functions for role-based access control
-    function getUserData() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
-    }
-    
     function userExists() {
       return request.auth != null && exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+    
+    function getUserData() {
+      // Note: This function should only be called after verifying userExists() returns true
+      // All role-checking functions call userExists() before calling getUserData()
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
     }
     
     function isAdmin() {
@@ -92,9 +94,12 @@ service cloud.firestore {
       allow update: if isAdmin() &&
                        // Validate timestamps if provided
                        (!request.resource.data.keys().hasAny(['updatedAt']) || request.resource.data.updatedAt is timestamp) &&
-                       // Prevent modification of createdAt and createdBy if they exist
-                       (!resource.data.keys().hasAny(['createdAt']) || !request.resource.data.keys().hasAny(['createdAt']) || request.resource.data.createdAt == resource.data.createdAt) &&
-                       (!resource.data.keys().hasAny(['createdBy']) || !request.resource.data.keys().hasAny(['createdBy']) || request.resource.data.createdBy == resource.data.createdBy);
+                       // Prevent modification of createdAt if it exists in both old and new documents
+                       ((!resource.data.keys().hasAny(['createdAt']) || !request.resource.data.keys().hasAny(['createdAt'])) || 
+                        request.resource.data.createdAt == resource.data.createdAt) &&
+                       // Prevent modification of createdBy if it exists in both old and new documents
+                       ((!resource.data.keys().hasAny(['createdBy']) || !request.resource.data.keys().hasAny(['createdBy'])) || 
+                        request.resource.data.createdBy == resource.data.createdBy);
       allow delete: if isAdmin();
     }
     

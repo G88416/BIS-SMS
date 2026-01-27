@@ -20,6 +20,8 @@ service firebase.storage {
     }
     
     function getUserData() {
+      // Note: This function should only be called after verifying userDocExists() returns true
+      // All role-checking functions call userDocExists() before calling getUserData()
       return firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data;
     }
     
