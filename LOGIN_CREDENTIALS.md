@@ -4,9 +4,11 @@ This document contains the login credentials for all user types in the Bophelong
 
 ## System Access
 
-The system can be accessed through two main files:
-- **Main Login Page**: `index.html` - Unified login interface for all user types with Firebase Authentication
-- **Application Dashboard**: `admin.html` - Main application interface (accessed after login, protected by Firebase Auth)
+The system is accessed through a single unified application:
+- **Main Application**: `index.html` - Combined login page and dashboard with all portals (Firebase Authentication enabled)
+  - Shows login page initially
+  - After successful login, displays the appropriate dashboard/portal
+  - No page redirects - everything happens on the same page
 
 ---
 
@@ -147,8 +149,9 @@ This system now uses **Firebase Authentication** for secure user login. All user
 ✅ **Secure Logout**: Properly clears Firebase session and application session storage  
 
 ### Security Implementation
-- **Protected Routes**: `admin.html` and `parent-portal-module.html` require authentication
-- **onAuthStateChanged Listener**: Monitors authentication state and redirects if needed
+- **Single-Page Application**: All functionality in `index.html` with dynamic content switching between login and dashboard
+- **Container-based Protection**: Login and dashboard containers are toggled based on authentication state
+- **onAuthStateChanged Listener**: Monitors authentication state and is integrated in the main application
 - **Automatic Sign-Out**: Invalid role/ID combinations trigger automatic sign-out
 - **Session Management**: Uses sessionStorage for temporary session data
 - **Error Handling**: Proper error messages without exposing system details
@@ -191,9 +194,9 @@ This system now uses **Firebase Authentication** for secure user login. All user
 - Verify Firebase configuration is correct
 
 ### Automatically Redirected to Login
-- This is expected behavior if you're not authenticated
-- Protected pages (`admin.html`, `parent-portal-module.html`) require authentication
-- Log in through `index.html` first
+- This is no longer an issue - the application uses a single page
+- If logged out, the login screen will appear automatically
+- No page redirects - everything happens in `index.html`
 
 ### Data Not Showing
 - The system uses browser localStorage for data persistence
