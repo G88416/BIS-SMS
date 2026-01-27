@@ -198,13 +198,17 @@ function onDOMReady(callback) {
   }
 }
 
-// Logout synchronization across tabs
-function syncLogout() {
-  // Clear both session and local storage
-  sessionStorage.clear();
+// Clear authentication data from storage
+function clearAuthData() {
   localStorage.removeItem('userType');
   localStorage.removeItem('userId');
   localStorage.removeItem('authMode');
+}
+
+// Logout synchronization across tabs
+function syncLogout() {
+  // Clear authentication data
+  clearAuthData();
   
   // Broadcast logout to other tabs
   localStorage.setItem('logout-event', Date.now().toString());
@@ -216,10 +220,7 @@ function syncLogout() {
 // Listen for logout events from other tabs
 window.addEventListener('storage', (e) => {
   if (e.key === 'logout-event') {
-    sessionStorage.clear();
-    localStorage.removeItem('userType');
-    localStorage.removeItem('userId');
-    localStorage.removeItem('authMode');
+    clearAuthData();
     window.location.href = 'index.html';
   }
 });
@@ -256,6 +257,7 @@ if (typeof module !== 'undefined' && module.exports) {
     showError,
     showSuccess,
     onDOMReady,
+    clearAuthData,
     syncLogout,
     validatePortalAccess
   };
