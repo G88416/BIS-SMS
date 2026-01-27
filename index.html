@@ -4867,6 +4867,12 @@
       if (!contactsList) return;
       
       try {
+        // Check if Firebase is available
+        if (!window.firebaseDb || !window.firebaseCollection) {
+          contactsList.innerHTML = '<div class="list-group-item text-warning"><i class="fas fa-exclamation-triangle"></i> Firebase not available. Using local mode.</div>';
+          return;
+        }
+        
         // Get all users from Firestore
         const usersQuery = window.firebaseQuery(
           window.firebaseCollection(window.firebaseDb, 'users'),
@@ -5266,10 +5272,12 @@
         // Clear input and attachment
         if (input) input.value = '';
         teacherFileAttachment = null;
-        document.getElementById('teacher-choptso-file-preview').innerHTML = '';
+        const previewEl = document.getElementById('teacher-choptso-file-preview');
+        if (previewEl) previewEl.innerHTML = '';
         
       } catch (error) {
         console.error('Error sending teacher message:', error);
+        alert('Unable to send message via cloud sync. Message saved locally instead.');
         // Fallback to localStorage
         sendTeacherChoptsoMessageToLocalStorage(text);
       }
@@ -5277,17 +5285,30 @@
     
     // Upload teacher attachment to Firebase Storage
     async function uploadTeacherAttachment(file) {
-      const currentUser = window.firebaseAuth.currentUser;
-      
-      // Sanitize filename
-      const sanitizedName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-      const filePath = `choptso/${currentUser.uid}/${Date.now()}_${sanitizedName}`;
-      const storageRef = window.firebaseStorageRef(window.firebaseStorage, filePath);
-      
-      await window.firebaseUploadBytes(storageRef, file);
-      const downloadURL = await window.firebaseGetDownloadURL(storageRef);
-      
-      return downloadURL;
+      try {
+        // Check if Firebase Storage is available
+        if (!window.firebaseStorage || !window.firebaseAuth) {
+          throw new Error('Firebase Storage is not available');
+        }
+        
+        const currentUser = window.firebaseAuth.currentUser;
+        if (!currentUser) {
+          throw new Error('User not authenticated');
+        }
+        
+        // Sanitize filename
+        const sanitizedName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+        const filePath = `choptso/${currentUser.uid}/${Date.now()}_${sanitizedName}`;
+        const storageRef = window.firebaseStorageRef(window.firebaseStorage, filePath);
+        
+        await window.firebaseUploadBytes(storageRef, file);
+        const downloadURL = await window.firebaseGetDownloadURL(storageRef);
+        
+        return downloadURL;
+      } catch (error) {
+        console.error('Error uploading teacher attachment:', error);
+        throw error; // Re-throw to be handled by caller
+      }
     }
     
     // Fallback function to save to localStorage
@@ -5345,15 +5366,17 @@
       if (file) {
         teacherFileAttachment = file;
         const preview = document.getElementById('teacher-choptso-file-preview');
-        preview.innerHTML = `
-          <div class="alert alert-info d-flex align-items-center">
-            <i class="fas fa-file me-2"></i>
-            <span>${escapeHtml(file.name)}</span>
-            <button class="btn btn-sm btn-danger ms-auto" onclick="teacherFileAttachment = null; document.getElementById('teacher-choptso-file-preview').innerHTML = '';">
-              <i class="fas fa-times"></i>
-            </button>
-          </div>
-        `;
+        if (preview) {
+          preview.innerHTML = `
+            <div class="alert alert-info d-flex align-items-center">
+              <i class="fas fa-file me-2"></i>
+              <span>${escapeHtml(file.name)}</span>
+              <button class="btn btn-sm btn-danger ms-auto" onclick="teacherFileAttachment = null; const el = document.getElementById('teacher-choptso-file-preview'); if (el) el.innerHTML = '';">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+          `;
+        }
       }
     }
     
@@ -5676,6 +5699,12 @@
       messagesContainer.innerHTML = '<div class="choptso-loading"><i class="fas fa-spinner fa-spin"></i> Loading messages...</div>';
       
       try {
+        // Check if Firebase is available
+        if (!window.firebaseDb || !window.firebaseAuth) {
+          messagesContainer.innerHTML = '<div class="text-center text-warning py-3"><i class="fas fa-exclamation-triangle"></i> Firebase not available. Messages are stored locally only.</div>';
+          return;
+        }
+        
         const currentUser = window.firebaseAuth.currentUser;
         if (!currentUser) {
           messagesContainer.innerHTML = '<div class="text-center text-danger py-3">Please log in to view messages</div>';
@@ -9434,6 +9463,12 @@
       if (!contactsList) return;
       
       try {
+        // Check if Firebase is available
+        if (!window.firebaseDb || !window.firebaseCollection) {
+          contactsList.innerHTML = '<div class="list-group-item text-warning"><i class="fas fa-exclamation-triangle"></i> Firebase not available. Using local mode.</div>';
+          return;
+        }
+        
         // Get all users from Firestore
         const usersQuery = window.firebaseQuery(
           window.firebaseCollection(window.firebaseDb, 'users'),
@@ -9802,10 +9837,12 @@
         // Clear input and attachment
         if (input) input.value = '';
         parentFileAttachment = null;
-        document.getElementById('parent-choptso-file-preview').innerHTML = '';
+        const previewEl = document.getElementById('parent-choptso-file-preview');
+        if (previewEl) previewEl.innerHTML = '';
         
       } catch (error) {
         console.error('Error sending parent message:', error);
+        alert('Unable to send message via cloud sync. Message saved locally instead.');
         // Fallback to localStorage
         sendParentChoptsoMessageToLocalStorage(text);
       }
@@ -9813,17 +9850,30 @@
     
     // Upload parent attachment to Firebase Storage
     async function uploadParentAttachment(file) {
-      const currentUser = window.firebaseAuth.currentUser;
-      
-      // Sanitize filename
-      const sanitizedName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-      const filePath = `choptso/${currentUser.uid}/${Date.now()}_${sanitizedName}`;
-      const storageRef = window.firebaseStorageRef(window.firebaseStorage, filePath);
-      
-      await window.firebaseUploadBytes(storageRef, file);
-      const downloadURL = await window.firebaseGetDownloadURL(storageRef);
-      
-      return downloadURL;
+      try {
+        // Check if Firebase Storage is available
+        if (!window.firebaseStorage || !window.firebaseAuth) {
+          throw new Error('Firebase Storage is not available');
+        }
+        
+        const currentUser = window.firebaseAuth.currentUser;
+        if (!currentUser) {
+          throw new Error('User not authenticated');
+        }
+        
+        // Sanitize filename
+        const sanitizedName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+        const filePath = `choptso/${currentUser.uid}/${Date.now()}_${sanitizedName}`;
+        const storageRef = window.firebaseStorageRef(window.firebaseStorage, filePath);
+        
+        await window.firebaseUploadBytes(storageRef, file);
+        const downloadURL = await window.firebaseGetDownloadURL(storageRef);
+        
+        return downloadURL;
+      } catch (error) {
+        console.error('Error uploading parent attachment:', error);
+        throw error; // Re-throw to be handled by caller
+      }
     }
     
     // Fallback function to save to localStorage
@@ -9881,15 +9931,17 @@
       if (file) {
         parentFileAttachment = file;
         const preview = document.getElementById('parent-choptso-file-preview');
-        preview.innerHTML = `
-          <div class="alert alert-info d-flex align-items-center">
-            <i class="fas fa-file me-2"></i>
-            <span>${escapeHtml(file.name)}</span>
-            <button class="btn btn-sm btn-danger ms-auto" onclick="parentFileAttachment = null; document.getElementById('parent-choptso-file-preview').innerHTML = '';">
-              <i class="fas fa-times"></i>
-            </button>
-          </div>
-        `;
+        if (preview) {
+          preview.innerHTML = `
+            <div class="alert alert-info d-flex align-items-center">
+              <i class="fas fa-file me-2"></i>
+              <span>${escapeHtml(file.name)}</span>
+              <button class="btn btn-sm btn-danger ms-auto" onclick="parentFileAttachment = null; const el = document.getElementById('parent-choptso-file-preview'); if (el) el.innerHTML = '';">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+          `;
+        }
       }
     }
     
