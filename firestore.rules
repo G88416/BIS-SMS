@@ -15,24 +15,36 @@ service cloud.firestore {
   match /databases/{database}/documents {
     
     // Helper functions for role-based access control
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+    
+    function userExists() {
+      return request.auth != null && exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+    
     function isAdmin() {
       return request.auth != null && 
-             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+             userExists() &&
+             getUserData().role == 'admin';
     }
     
     function isTeacher() {
       return request.auth != null && 
-             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'teacher';
+             userExists() &&
+             getUserData().role == 'teacher';
     }
     
     function isStudent() {
       return request.auth != null && 
-             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'student';
+             userExists() &&
+             getUserData().role == 'student';
     }
     
     function isParent() {
       return request.auth != null && 
-             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'parent';
+             userExists() &&
+             getUserData().role == 'parent';
     }
     
     function isAuthenticated() {
@@ -45,11 +57,13 @@ service cloud.firestore {
     
     function isParentOfStudent(studentId) {
       return isParent() && 
-             studentId in get(/databases/$(database)/documents/users/$(request.auth.uid)).data.childrenIds;
+             'childrenIds' in getUserData() &&
+             studentId in getUserData().childrenIds;
     }
     
     function isTeacherOfClass(classId) {
       return isTeacher() && 
+             exists(/databases/$(database)/documents/classes/$(classId)) &&
              get(/databases/$(database)/documents/classes/$(classId)).data.teacherId == request.auth.uid;
     }
     
@@ -68,19 +82,19 @@ service cloud.firestore {
                      (isStudent() && isOwner(studentId)) ||
                      isParentOfStudent(studentId);
       allow create: if isAdmin() &&
-                       // Validate required fields
-                       request.resource.data.keys().hasAll(['id', 'name', 'grade', 'firstname', 'surname', 'gender']) &&
-                       // Validate createdAt and updatedAt timestamps
-                       request.resource.data.createdAt is timestamp &&
-                       request.resource.data.updatedAt is timestamp &&
-                       // Validate createdBy is the current user
-                       request.resource.data.createdBy == request.auth.uid;
+                       // Validate core required fields
+                       request.resource.data.keys().hasAll(['id', 'name']) &&
+                       // Validate timestamps if provided
+                       (!request.resource.data.keys().hasAny(['createdAt']) || request.resource.data.createdAt is timestamp) &&
+                       (!request.resource.data.keys().hasAny(['updatedAt']) || request.resource.data.updatedAt is timestamp) &&
+                       // Validate createdBy if provided
+                       (!request.resource.data.keys().hasAny(['createdBy']) || request.resource.data.createdBy == request.auth.uid);
       allow update: if isAdmin() &&
-                       // Ensure updatedAt is set
-                       request.resource.data.updatedAt is timestamp &&
-                       // Prevent modification of createdAt and createdBy
-                       request.resource.data.createdAt == resource.data.createdAt &&
-                       request.resource.data.createdBy == resource.data.createdBy;
+                       // Validate timestamps if provided
+                       (!request.resource.data.keys().hasAny(['updatedAt']) || request.resource.data.updatedAt is timestamp) &&
+                       // Prevent modification of createdAt and createdBy if they exist
+                       (!resource.data.keys().hasAny(['createdAt']) || !request.resource.data.keys().hasAny(['createdAt']) || request.resource.data.createdAt == resource.data.createdAt) &&
+                       (!resource.data.keys().hasAny(['createdBy']) || !request.resource.data.keys().hasAny(['createdBy']) || request.resource.data.createdBy == resource.data.createdBy);
       allow delete: if isAdmin();
     }
     
@@ -95,8 +109,8 @@ service cloud.firestore {
       allow read: if isAuthenticated();
       allow create: if isAdmin();
       allow update: if isAdmin() &&
-                       // Ensure updatedAt is set when modifying
-                       request.resource.data.updatedAt is timestamp;
+                       // Validate updatedAt timestamp if provided
+                       (!request.resource.data.keys().hasAny(['updatedAt']) || request.resource.data.updatedAt is timestamp);
       allow delete: if isAdmin();
     }
     
@@ -105,9 +119,9 @@ service cloud.firestore {
     match /attendance/{classId} {
       allow read: if isAdmin() || 
                      isTeacherOfClass(classId) ||
-                     (isStudent() && request.auth.uid in get(/databases/$(database)/documents/classes/$(classId)).data.studentIds) ||
-                     (isParent() && 
-                      get(/databases/$(database)/documents/classes/$(classId)).data.studentIds.hasAny(get(/databases/$(database)/documents/users/$(request.auth.uid)).data.childrenIds));
+                     (isStudent() && exists(/databases/$(database)/documents/classes/$(classId)) && request.auth.uid in get(/databases/$(database)/documents/classes/$(classId)).data.studentIds) ||
+                     (isParent() && exists(/databases/$(database)/documents/classes/$(classId)) && 'childrenIds' in getUserData() && 
+                      get(/databases/$(database)/documents/classes/$(classId)).data.studentIds.hasAny(getUserData().childrenIds));
       allow write: if isAdmin() || isTeacherOfClass(classId);
     }
     
@@ -116,9 +130,9 @@ service cloud.firestore {
     match /grades/{classId} {
       allow read: if isAdmin() || 
                      isTeacherOfClass(classId) ||
-                     (isStudent() && request.auth.uid in get(/databases/$(database)/documents/classes/$(classId)).data.studentIds) ||
-                     (isParent() && 
-                      get(/databases/$(database)/documents/classes/$(classId)).data.studentIds.hasAny(get(/databases/$(database)/documents/users/$(request.auth.uid)).data.childrenIds));
+                     (isStudent() && exists(/databases/$(database)/documents/classes/$(classId)) && request.auth.uid in get(/databases/$(database)/documents/classes/$(classId)).data.studentIds) ||
+                     (isParent() && exists(/databases/$(database)/documents/classes/$(classId)) && 'childrenIds' in getUserData() && 
+                      get(/databases/$(database)/documents/classes/$(classId)).data.studentIds.hasAny(getUserData().childrenIds));
       allow write: if isAdmin() || isTeacherOfClass(classId);
     }
     
@@ -274,8 +288,9 @@ service cloud.firestore {
       allow read: if isAuthenticated() &&
                      (isAdmin() || 
                       isTeacherOfClass(classId) ||
-                      (isStudent() && request.auth.uid in get(/databases/$(database)/documents/classes/$(classId)).data.studentIds) ||
-                      (isParent() && get(/databases/$(database)/documents/classes/$(classId)).data.studentIds.hasAny(get(/databases/$(database)/documents/users/$(request.auth.uid)).data.childrenIds)));
+                      (isStudent() && exists(/databases/$(database)/documents/classes/$(classId)) && request.auth.uid in get(/databases/$(database)/documents/classes/$(classId)).data.studentIds) ||
+                      (isParent() && exists(/databases/$(database)/documents/classes/$(classId)) && 'childrenIds' in getUserData() && 
+                       get(/databases/$(database)/documents/classes/$(classId)).data.studentIds.hasAny(getUserData().childrenIds)));
       allow write: if isAdmin() || isTeacherOfClass(classId);
     }
     

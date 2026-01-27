@@ -14,28 +14,47 @@ service firebase.storage {
       return request.auth != null;
     }
     
+    function userDocExists() {
+      return request.auth != null && 
+             firestore.exists(/databases/(default)/documents/users/$(request.auth.uid));
+    }
+    
+    function getUserData() {
+      return firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data;
+    }
+    
     function isAdmin() {
       return request.auth != null && 
-             firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'admin';
+             userDocExists() &&
+             getUserData().role == 'admin';
     }
     
     function isTeacher() {
       return request.auth != null && 
-             firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'teacher';
+             userDocExists() &&
+             getUserData().role == 'teacher';
     }
     
     function isStudent() {
       return request.auth != null && 
-             firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'student';
+             userDocExists() &&
+             getUserData().role == 'student';
     }
     
     function isParent() {
       return request.auth != null && 
-             firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'parent';
+             userDocExists() &&
+             getUserData().role == 'parent';
     }
     
     function isOwner(userId) {
       return request.auth != null && request.auth.uid == userId;
+    }
+    
+    function isParentOfStudent(studentId) {
+      return isParent() && 
+             'childrenIds' in getUserData() &&
+             studentId in getUserData().childrenIds;
     }
     
     // Validate file size (10MB max for most files)
@@ -125,7 +144,7 @@ service firebase.storage {
     match /health/{studentId}/{fileName} {
       allow read: if isAdmin() || 
                      isOwner(studentId) ||
-                     (isParent() && studentId in firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.childrenIds);
+                     isParentOfStudent(studentId);
       allow write: if isAdmin() && 
                       (isDocument() || isImage()) &&
                       isValidSize();
@@ -153,7 +172,7 @@ service firebase.storage {
                      (isAdmin() || 
                       isTeacher() || 
                       isOwner(studentId) ||
-                      (isParent() && studentId in firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.childrenIds));
+                      isParentOfStudent(studentId));
       allow write: if (isAdmin() || isTeacher()) && 
                       isDocument() &&
                       isValidSize();
@@ -173,7 +192,7 @@ service firebase.storage {
                      (isAdmin() || 
                       isTeacher() || 
                       isOwner(studentId) ||
-                      (isParent() && studentId in firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.childrenIds));
+                      isParentOfStudent(studentId));
       allow write: if (isAdmin() || isTeacher()) && 
                       (isDocument() || isImage()) &&
                       isValidSize();
