@@ -200,8 +200,11 @@ function onDOMReady(callback) {
 
 // Logout synchronization across tabs
 function syncLogout() {
-  // Clear session storage
+  // Clear both session and local storage
   sessionStorage.clear();
+  localStorage.removeItem('userType');
+  localStorage.removeItem('userId');
+  localStorage.removeItem('authMode');
   
   // Broadcast logout to other tabs
   localStorage.setItem('logout-event', Date.now().toString());
@@ -214,14 +217,17 @@ function syncLogout() {
 window.addEventListener('storage', (e) => {
   if (e.key === 'logout-event') {
     sessionStorage.clear();
+    localStorage.removeItem('userType');
+    localStorage.removeItem('userId');
+    localStorage.removeItem('authMode');
     window.location.href = 'index.html';
   }
 });
 
 // Validate portal access
 function validatePortalAccess(requiredUserType) {
-  const userType = sessionStorage.getItem('userType');
-  const userId = sessionStorage.getItem('userId');
+  const userType = localStorage.getItem('userType');
+  const userId = localStorage.getItem('userId');
   
   if (!userType || !userId) {
     console.warn('Unauthorized access attempt - no user session');
