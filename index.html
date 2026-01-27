@@ -719,6 +719,61 @@
         #dashboard-container {
           display: none;
         }
+        
+        /* Enhanced Tab Styles for Better Clickability */
+        .nav-tabs .nav-link,
+        .nav-pills .nav-link {
+          position: relative;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          user-select: none;
+        }
+        
+        .nav-tabs .nav-link:hover,
+        .nav-pills .nav-link:hover {
+          background-color: rgba(0, 123, 255, 0.1);
+          transform: translateY(-1px);
+        }
+        
+        .nav-tabs .nav-link:active,
+        .nav-pills .nav-link:active {
+          transform: translateY(0);
+        }
+        
+        .nav-tabs .nav-link:focus,
+        .nav-pills .nav-link:focus {
+          outline: 2px solid #007bff;
+          outline-offset: 2px;
+          box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        }
+        
+        .nav-tabs .nav-link.active,
+        .nav-pills .nav-link.active {
+          font-weight: 600;
+        }
+        
+        /* Ensure all tabs have pointer cursor */
+        [data-bs-toggle="tab"],
+        [data-bs-toggle="pill"] {
+          cursor: pointer;
+        }
+        
+        /* Add visual feedback for clickable tabs */
+        .nav-tabs .nav-link::after {
+          content: '';
+          position: absolute;
+          bottom: -1px;
+          left: 0;
+          width: 100%;
+          height: 3px;
+          background-color: #007bff;
+          transform: scaleX(0);
+          transition: transform 0.3s ease;
+        }
+        
+        .nav-tabs .nav-link.active::after {
+          transform: scaleX(1);
+        }
       </style>
 </head>
 <body>
@@ -3968,49 +4023,111 @@
         const tabTriggers = document.querySelectorAll('[data-bs-toggle="tab"], [data-bs-toggle="pill"]');
         
         tabTriggers.forEach(trigger => {
+          // Add accessibility attributes
+          const targetId = trigger.getAttribute('href');
+          if (targetId && targetId !== '#') {
+            const targetIdClean = targetId.startsWith('#') ? targetId.substring(1) : targetId;
+            trigger.setAttribute('role', 'tab');
+            trigger.setAttribute('aria-controls', targetIdClean);
+            trigger.setAttribute('tabindex', trigger.classList.contains('active') ? '0' : '-1');
+            trigger.setAttribute('aria-selected', trigger.classList.contains('active') ? 'true' : 'false');
+          }
+          
+          // Click handler
           trigger.addEventListener('click', function(e) {
             e.preventDefault();
-            
-            const targetId = this.getAttribute('href');
-            if (!targetId || targetId === '#') return;
-            
-            const targetPane = document.querySelector(targetId);
-            if (!targetPane) return;
-            
-            // Find the parent tab list
-            const tabList = this.closest('.nav-tabs, .nav-pills');
-            if (!tabList) return;
-            
-            // Find the parent tab content
-            const tabContent = targetPane.closest('.tab-content');
-            if (!tabContent) return;
-            
-            // Remove active class from all tabs in this tab list
-            tabList.querySelectorAll('.nav-link').forEach(link => {
-              link.classList.remove('active');
-            });
-            
-            // Add active class to clicked tab
-            this.classList.add('active');
-            
-            // Remove active and show classes from all panes in this tab content
-            tabContent.querySelectorAll('.tab-pane').forEach(pane => {
-              pane.classList.remove('show', 'active');
-              // Explicitly hide the pane
-              pane.style.display = 'none';
-            });
-            
-            // Add active and show classes to target pane
-            targetPane.classList.add('show', 'active');
-            // Explicitly show the pane
-            targetPane.style.display = 'block';
+            activateTab(this);
+          });
+          
+          // Keyboard support (Enter and Space keys)
+          trigger.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              activateTab(this);
+            }
+            // Arrow key navigation - moves focus only, doesn't activate
+            else if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+              e.preventDefault();
+              const tabList = this.closest('.nav-tabs, .nav-pills');
+              if (!tabList) return;
+              
+              const tabs = Array.from(tabList.querySelectorAll('[data-bs-toggle="tab"], [data-bs-toggle="pill"]'));
+              const currentIndex = tabs.indexOf(this);
+              if (currentIndex === -1) return;
+              
+              let nextIndex;
+              
+              if (e.key === 'ArrowRight') {
+                nextIndex = (currentIndex + 1) % tabs.length;
+              } else {
+                nextIndex = (currentIndex - 1 + tabs.length) % tabs.length;
+              }
+              
+              // Only move focus, don't activate
+              tabs[nextIndex].focus();
+            }
           });
         });
+        
+        // Function to activate a tab
+        function activateTab(trigger) {
+          const targetId = trigger.getAttribute('href');
+          if (!targetId || targetId === '#') return;
+          
+          const targetPane = document.querySelector(targetId);
+          if (!targetPane) return;
+          
+          // Find the parent tab list
+          const tabList = trigger.closest('.nav-tabs, .nav-pills');
+          if (!tabList) return;
+          
+          // Find the parent tab content
+          const tabContent = targetPane.closest('.tab-content');
+          if (!tabContent) return;
+          
+          // Remove active class from all tabs in this tab list
+          tabList.querySelectorAll('.nav-link').forEach(link => {
+            link.classList.remove('active');
+            link.setAttribute('aria-selected', 'false');
+            link.setAttribute('tabindex', '-1');
+          });
+          
+          // Add active class to clicked tab
+          trigger.classList.add('active');
+          trigger.setAttribute('aria-selected', 'true');
+          trigger.setAttribute('tabindex', '0');
+          
+          // Remove active and show classes from all panes in this tab content
+          tabContent.querySelectorAll('.tab-pane').forEach(pane => {
+            pane.classList.remove('show', 'active');
+            // Explicitly hide the pane
+            pane.style.display = 'none';
+          });
+          
+          // Add active and show classes to target pane
+          targetPane.classList.add('show', 'active');
+          // Explicitly show the pane
+          targetPane.style.display = 'block';
+        }
         
         // Initialize: hide all inactive tab panes on page load
         document.querySelectorAll('.tab-pane').forEach(pane => {
           if (!pane.classList.contains('active')) {
             pane.style.display = 'none';
+          }
+        });
+        
+        // Add role="tablist" to all tab containers
+        document.querySelectorAll('.nav-tabs, .nav-pills').forEach(tabList => {
+          if (!tabList.hasAttribute('role')) {
+            tabList.setAttribute('role', 'tablist');
+          }
+        });
+        
+        // Add role="tabpanel" to all tab panes
+        document.querySelectorAll('.tab-pane').forEach(pane => {
+          if (!pane.hasAttribute('role')) {
+            pane.setAttribute('role', 'tabpanel');
           }
         });
       }
