@@ -77,6 +77,21 @@ BIS-SMS/
 - Node.js & Express (Docker deployment)
 - Firebase (Authentication & Hosting)
 
+## Deployment
+
+### GitHub Pages
+The app works seamlessly on GitHub Pages with direct file serving.
+
+### Firebase Hosting
+Firebase Hosting configuration has been optimized for proper static file serving. See [FIREBASE_HOSTING_FIX.md](FIREBASE_HOSTING_FIX.md) for details.
+
+**Quick Deploy:**
+```bash
+firebase deploy --only hosting
+```
+
+For detailed deployment instructions, see [DEPLOY.md](DEPLOY.md).
+
 ## Security Note
 
 ⚠️ This system uses demo credentials for testing purposes. In a production environment, implement proper authentication, password encryption, and security measures.
@@ -97,6 +112,8 @@ BIS-SMS/
 ## Support
 
 For questions or issues, please refer to:
+- [DEPLOY.md](DEPLOY.md) - Deployment instructions
+- [FIREBASE_HOSTING_FIX.md](FIREBASE_HOSTING_FIX.md) - Firebase hosting fix details
 - [LOGIN_CREDENTIALS.md](LOGIN_CREDENTIALS.md) - Login information
 - [SECURITY_FIXES.md](SECURITY_FIXES.md) - Security improvements
 - [FIX_SUMMARY.md](FIX_SUMMARY.md) - Complete fix summary
