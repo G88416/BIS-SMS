@@ -61,7 +61,6 @@ For detailed login information for all user types, see **[LOGIN_CREDENTIALS.md](
 ```
 BIS-SMS/
 ├── index.html              # Main application (login page + dashboard with all portals)
-├── admin.html              # Legacy file (kept for reference, functionality merged into index.html)
 ├── README.md               # This file
 └── LOGIN_CREDENTIALS.md    # Detailed login credentials documentation
 ```

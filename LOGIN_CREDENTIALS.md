@@ -149,9 +149,9 @@ This system now uses **Firebase Authentication** for secure user login. All user
 ✅ **Secure Logout**: Properly clears Firebase session and application session storage  
 
 ### Security Implementation
-- **Single-Page Application**: All functionality in `index.html` with dynamic content switching
+- **Single-Page Application**: All functionality in `index.html` with dynamic content switching between login and dashboard
 - **Container-based Protection**: Login and dashboard containers are toggled based on authentication state
-- **onAuthStateChanged Listener**: Monitors authentication state (integrated in the main application)
+- **onAuthStateChanged Listener**: Monitors authentication state and is integrated in the main application
 - **Automatic Sign-Out**: Invalid role/ID combinations trigger automatic sign-out
 - **Session Management**: Uses sessionStorage for temporary session data
 - **Error Handling**: Proper error messages without exposing system details
