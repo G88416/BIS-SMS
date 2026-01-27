@@ -4029,6 +4029,9 @@
       return div.innerHTML;
     }
     
+    // Constants
+    const DEFAULT_TERM = 'Term 1';
+    
     // Dummy data with persistence
     let students = safeStorage.getItem('students', [
       { id: 1, name: 'John Doe', grade: '10', parent: 'Jane Doe', contact: '+27 11 234 5678', classIds: [] },
@@ -4838,7 +4841,7 @@
         const cls = classes.find(c => c.id === parseInt(classId));
         if (cls && cls.studentIds && cls.studentIds.length > 0) {
           cls.studentIds.forEach(sid => {
-            const stu = students.find(s => s.id === sid);
+            const stu = students.find(s => parseInt(s.id) === parseInt(sid));
             if (stu) {
               // Initialize attendance structure
               if (!attendance[classId]) attendance[classId] = {};
@@ -8003,7 +8006,7 @@
       // Get grades data
       const gradesData = safeStorage.getItem('gradesData', {});
       const classGrades = gradesData[classId] || {};
-      const currentTerm = 'Term 1'; // Default term
+      const currentTerm = DEFAULT_TERM; // Use default term constant
       const termGrades = classGrades[currentTerm] || {};
       
       // Build gradebook table
@@ -8012,7 +8015,7 @@
       html += '<th>Student ID</th><th>Student Name</th><th>Math</th><th>Science</th><th>English</th></tr></thead><tbody>';
       
       cls.studentIds.forEach(sid => {
-        const student = students.find(s => s.id === sid);
+        const student = students.find(s => parseInt(s.id) === parseInt(sid));
         if (student) {
           const studentGrades = termGrades[sid] || {};
           html += `<tr>
@@ -8046,7 +8049,7 @@
         
         // Initialize class and term if not exists
         if (!gradesData[classId]) gradesData[classId] = {};
-        const currentTerm = 'Term 1';
+        const currentTerm = DEFAULT_TERM; // Use default term constant
         if (!gradesData[classId][currentTerm]) gradesData[classId][currentTerm] = {};
         
         // Save each grade
