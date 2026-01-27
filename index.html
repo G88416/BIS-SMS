@@ -10452,8 +10452,9 @@
         localStream = null;
       }
       
-      // Close peer connection
+      // Close peer connection properly
       if (peerConnection) {
+        peerConnection.close();
         peerConnection = null;
       }
       
@@ -10465,6 +10466,7 @@
       
       // Reset states
       callStartTime = null;
+      callType = null;
       isMuted = false;
       isVideoOff = false;
       
@@ -10481,6 +10483,17 @@
         videoBtn.innerHTML = '<i class="fas fa-video"></i>';
         videoBtn.classList.remove('btn-danger');
         videoBtn.classList.add('btn-light');
+      }
+      
+      // Clear video elements
+      const localVideo = document.getElementById('local-video');
+      if (localVideo) {
+        localVideo.srcObject = null;
+      }
+      
+      const remoteVideo = document.getElementById('remote-video');
+      if (remoteVideo) {
+        remoteVideo.srcObject = null;
       }
       
       // Close modal
