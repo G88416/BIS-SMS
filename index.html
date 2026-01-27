@@ -132,16 +132,27 @@
           loginForm.addEventListener('submit', async function(event) {
             event.preventDefault();
             
-            const userType = document.getElementById('userType').value;
-            const username = document.getElementById('username').value.trim();
-            const password = document.getElementById('password').value;
+            const userTypeEl = document.getElementById('userType');
+            const usernameEl = document.getElementById('username');
+            const passwordEl = document.getElementById('password');
             const errorMessage = document.getElementById('errorMessage');
             
-            errorMessage.style.display = 'none';
+            if (!userTypeEl || !usernameEl || !passwordEl) {
+              console.error('Login form elements not found');
+              return;
+            }
+            
+            const userType = userTypeEl.value;
+            const username = usernameEl.value.trim();
+            const password = passwordEl.value;
+            
+            if (errorMessage) errorMessage.style.display = 'none';
             
             if (!userType || !username || !password) {
-              errorMessage.textContent = 'Please fill all fields.';
-              errorMessage.style.display = 'block';
+              if (errorMessage) {
+                errorMessage.textContent = 'Please fill all fields.';
+                errorMessage.style.display = 'block';
+              }
               return;
             }
             
@@ -244,8 +255,11 @@
       
       // Function to show dashboard and hide login
       function showDashboard(role, id) {
-        document.getElementById('login-container').style.display = 'none';
-        document.getElementById('dashboard-container').style.display = 'block';
+        const loginContainer = document.getElementById('login-container');
+        const dashboardContainer = document.getElementById('dashboard-container');
+        
+        if (loginContainer) loginContainer.style.display = 'none';
+        if (dashboardContainer) dashboardContainer.style.display = 'block';
         
         // Handle portal navigation based on role
         if (role !== 'admin') {
@@ -265,8 +279,11 @@
         if (window.firebaseAuth) {
           window.signOut(window.firebaseAuth).catch(console.error);
         }
-        document.getElementById('dashboard-container').style.display = 'none';
-        document.getElementById('login-container').style.display = 'flex';
+        const dashboardContainer = document.getElementById('dashboard-container');
+        const loginContainer = document.getElementById('login-container');
+        
+        if (dashboardContainer) dashboardContainer.style.display = 'none';
+        if (loginContainer) loginContainer.style.display = 'flex';
         window.location.hash = '';
       };
       
@@ -6809,11 +6826,17 @@
       }
     }
 
-    // Event listeners
-    document.getElementById('attendance-class').addEventListener('change', renderAttendance);
+    // Event listeners - add with null checks
+    const attendanceClassEl = document.getElementById('attendance-class');
+    if (attendanceClassEl) {
+      attendanceClassEl.addEventListener('change', renderAttendance);
+    }
     
-    // Attach manage subjects button
-    document.querySelector('[data-bs-target="#manageSubjectsModal"]').onclick = openManageSubjects;
+    // Attach manage subjects button with null check
+    const manageSubjectsBtn = document.querySelector('[data-bs-target="#manageSubjectsModal"]');
+    if (manageSubjectsBtn) {
+      manageSubjectsBtn.onclick = openManageSubjects;
+    }
 
     // Filter functions
     function filterStudents() {
