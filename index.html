@@ -723,12 +723,10 @@
         /* Enhanced Tab Styles for Better Clickability */
         .nav-tabs .nav-link,
         .nav-pills .nav-link {
-          cursor: pointer !important;
+          position: relative;
+          cursor: pointer;
           transition: all 0.3s ease;
           user-select: none;
-          -webkit-user-select: none;
-          -moz-user-select: none;
-          -ms-user-select: none;
         }
         
         .nav-tabs .nav-link:hover,
@@ -757,7 +755,7 @@
         /* Ensure all tabs have pointer cursor */
         [data-bs-toggle="tab"],
         [data-bs-toggle="pill"] {
-          cursor: pointer !important;
+          cursor: pointer;
         }
         
         /* Add visual feedback for clickable tabs */
@@ -4028,14 +4026,11 @@
           // Add accessibility attributes
           const targetId = trigger.getAttribute('href');
           if (targetId && targetId !== '#') {
-            const targetIdClean = targetId.replace('#', '');
+            const targetIdClean = targetId.startsWith('#') ? targetId.substring(1) : targetId;
             trigger.setAttribute('role', 'tab');
             trigger.setAttribute('aria-controls', targetIdClean);
             trigger.setAttribute('tabindex', trigger.classList.contains('active') ? '0' : '-1');
             trigger.setAttribute('aria-selected', trigger.classList.contains('active') ? 'true' : 'false');
-            
-            // Ensure cursor pointer
-            trigger.style.cursor = 'pointer';
           }
           
           // Click handler
@@ -4050,7 +4045,7 @@
               e.preventDefault();
               activateTab(this);
             }
-            // Arrow key navigation
+            // Arrow key navigation - moves focus only, doesn't activate
             else if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
               e.preventDefault();
               const tabList = this.closest('.nav-tabs, .nav-pills');
@@ -4058,6 +4053,8 @@
               
               const tabs = Array.from(tabList.querySelectorAll('[data-bs-toggle="tab"], [data-bs-toggle="pill"]'));
               const currentIndex = tabs.indexOf(this);
+              if (currentIndex === -1) return;
+              
               let nextIndex;
               
               if (e.key === 'ArrowRight') {
@@ -4066,8 +4063,8 @@
                 nextIndex = (currentIndex - 1 + tabs.length) % tabs.length;
               }
               
+              // Only move focus, don't activate
               tabs[nextIndex].focus();
-              activateTab(tabs[nextIndex]);
             }
           });
         });
