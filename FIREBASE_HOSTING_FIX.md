@@ -149,9 +149,9 @@ firebase emulators:start --only hosting
 ```
 
 Then access:
-- http://localhost:5000 → index.html (login page)
-- http://localhost:5000/admin.html → admin dashboard
-- http://localhost:5000/admin → admin.html (with cleanUrls)
+- `http://localhost:5000` → index.html (login page)
+- `http://localhost:5000/admin.html` → admin dashboard
+- `http://localhost:5000/admin` → admin.html (with cleanUrls)
 
 ## Deployment
 
