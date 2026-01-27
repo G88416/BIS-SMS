@@ -6701,9 +6701,8 @@
     
     function studentLogout() {
       loggedInStudent = null;
-      // Return to main login page
-      sessionStorage.clear();
-      window.location.href = 'index.html';
+      // Return to main login page - use syncLogout from utils.js
+      syncLogout();
     }
 
     
@@ -8333,9 +8332,8 @@
     
     function teacherLogout() {
       loggedInTeacher = null;
-      // Return to main login page
-      sessionStorage.clear();
-      window.location.href = 'index.html';
+      // Return to main login page - use syncLogout from utils.js
+      syncLogout();
     }
     
     function loadTeacherPortal() {
@@ -8355,9 +8353,8 @@
     
     function parentLogout() {
       loggedInParent = null;
-      // Return to main login page
-      sessionStorage.clear();
-      window.location.href = 'index.html';
+      // Return to main login page - use syncLogout from utils.js
+      syncLogout();
     }
     
     function loadParentPortal() {
@@ -9721,8 +9718,8 @@
     
     // Handle login redirection from main login page
     window.addEventListener('DOMContentLoaded', function() {
-      const userType = sessionStorage.getItem('userType');
-      const userId = sessionStorage.getItem('userId');
+      const userType = localStorage.getItem('userType');
+      const userId = localStorage.getItem('userId');
       
       // Check URL hash for portal navigation
       const hash = window.location.hash;
@@ -9793,7 +9790,7 @@
     
     // Function to hide sidebar and admin sections for non-admin users
     function hideSidebarForNonAdmin() {
-      const userType = sessionStorage.getItem('userType');
+      const userType = localStorage.getItem('userType');
       if (userType !== 'admin') {
         // Hide all admin-only navigation items
         const adminSections = ['dashboard', 'students', 'teachers', 'classes', 'attendance', 'grades', 'finance', 'reports', 'messages', 'settings'];
@@ -9820,7 +9817,7 @@
         // Update topbar to show logout button
         const topbar = document.querySelector('.topbar > div:last-child');
         if (topbar) {
-          topbar.innerHTML = `<span class="me-3">${sessionStorage.getItem('userId')} (${userType})</span>
+          topbar.innerHTML = `<span class="me-3">${localStorage.getItem('userId')} (${userType})</span>
             <button class="btn btn-danger btn-sm" onclick="logout()">Logout</button>`;
         }
       }
@@ -10087,8 +10084,8 @@
     
     // Logout function
     function logout() {
-      sessionStorage.clear();
-      window.location.href = 'index.html';
+      // Use syncLogout from utils.js for proper cleanup
+      syncLogout();
     }
 
     // ===== Constants =====
