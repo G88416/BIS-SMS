@@ -11929,6 +11929,15 @@
     //  Enhanced initialization after login
     // ────────────────────────────────────────────────
     
+    // Rebind all sidebar clicks to ensure they work
+    document.querySelectorAll('.sidebar a[data-section]').forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const section = link.getAttribute('data-section');
+        navigateTo(section);
+      });
+    });
+    
     function initializeAfterLogin() {
       const userType = sessionStorage.getItem('userType');
       
@@ -11961,6 +11970,15 @@
         setTimeout(initializeAfterLogin, 100);   // give DOM time to appear
       };
     }
+    
+    // Run on page load if already logged in
+    document.addEventListener('DOMContentLoaded', () => {
+      const userType = sessionStorage.getItem('userType');
+      const userId   = sessionStorage.getItem('userId');
+      if (userType && userId) {
+        showDashboard(userType, userId);
+      }
+    });
   </script>
 
   <!-- Dark Mode Styles -->
