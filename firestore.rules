@@ -69,6 +69,14 @@ service cloud.firestore {
              get(/databases/$(database)/documents/classes/$(classId)).data.teacherId == request.auth.uid;
     }
     
+    // Helper functions for field validation
+    function fieldImmutableIfPresent(fieldName) {
+      // Returns true if field doesn't exist in old doc, new doc, or both have same value
+      return (!resource.data.keys().hasAny([fieldName]) || 
+              !request.resource.data.keys().hasAny([fieldName]) || 
+              request.resource.data[fieldName] == resource.data[fieldName]);
+    }
+    
     // Users collection - basic user profiles
     match /users/{userId} {
       allow read: if isAuthenticated();
@@ -94,12 +102,9 @@ service cloud.firestore {
       allow update: if isAdmin() &&
                        // Validate timestamps if provided
                        (!request.resource.data.keys().hasAny(['updatedAt']) || request.resource.data.updatedAt is timestamp) &&
-                       // Prevent modification of createdAt if it exists in both old and new documents
-                       ((!resource.data.keys().hasAny(['createdAt']) || !request.resource.data.keys().hasAny(['createdAt'])) || 
-                        request.resource.data.createdAt == resource.data.createdAt) &&
-                       // Prevent modification of createdBy if it exists in both old and new documents
-                       ((!resource.data.keys().hasAny(['createdBy']) || !request.resource.data.keys().hasAny(['createdBy'])) || 
-                        request.resource.data.createdBy == resource.data.createdBy);
+                       // Prevent modification of immutable fields if they exist
+                       fieldImmutableIfPresent('createdAt') &&
+                       fieldImmutableIfPresent('createdBy');
       allow delete: if isAdmin();
     }
     

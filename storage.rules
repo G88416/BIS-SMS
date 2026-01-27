@@ -14,38 +14,38 @@ service firebase.storage {
       return request.auth != null;
     }
     
-    function userDocExists() {
+    function userExists() {
       return request.auth != null && 
              firestore.exists(/databases/(default)/documents/users/$(request.auth.uid));
     }
     
     function getUserData() {
-      // Note: This function should only be called after verifying userDocExists() returns true
-      // All role-checking functions call userDocExists() before calling getUserData()
+      // Note: This function should only be called after verifying userExists() returns true
+      // All role-checking functions call userExists() before calling getUserData()
       return firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data;
     }
     
     function isAdmin() {
       return request.auth != null && 
-             userDocExists() &&
+             userExists() &&
              getUserData().role == 'admin';
     }
     
     function isTeacher() {
       return request.auth != null && 
-             userDocExists() &&
+             userExists() &&
              getUserData().role == 'teacher';
     }
     
     function isStudent() {
       return request.auth != null && 
-             userDocExists() &&
+             userExists() &&
              getUserData().role == 'student';
     }
     
     function isParent() {
       return request.auth != null && 
-             userDocExists() &&
+             userExists() &&
              getUserData().role == 'parent';
     }
     
