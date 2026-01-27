@@ -4212,6 +4212,30 @@
       safeStorage.setItem('examTimetable', examTimetable);
     }
     
+    // Enhanced mock data initialization (temporary - remove when real Firestore reads work)
+    if (!localStorage.getItem('students')) {
+      const mockStudents = [
+        {id: "S001", name: "Goodness M.", grade: "10A", parent: "Mr M.", contact: "082 123 4567", balance: 4500, classIds: []},
+        {id: "S002", name: "Thabo K.", grade: "9B", parent: "Mrs K.", contact: "083 987 6543", balance: 1200, classIds: []},
+        {id: "S003", name: "Naledi P.", grade: "11A", parent: "Ms P.", contact: "084 555 1234", balance: 3200, classIds: []},
+        {id: "S004", name: "Sipho D.", grade: "10B", parent: "Mr D.", contact: "072 444 9876", balance: 0, classIds: []},
+        {id: "S005", name: "Lerato M.", grade: "9A", parent: "Mrs M.", contact: "081 222 3333", balance: 2500, classIds: []}
+      ];
+      safeStorage.setItem('students', mockStudents);
+      students = mockStudents;
+    }
+
+    if (!localStorage.getItem('teachers')) {
+      const mockTeachers = [
+        {id: "T01", name: "Ms. Nkosi", subject: "Mathematics", qualification: "BSc Ed", status: "Active"},
+        {id: "T02", name: "Mr. Dlamini", subject: "English", qualification: "BA Hons", status: "Active"},
+        {id: "T03", name: "Mrs. Molefe", subject: "Science", qualification: "MSc Physics", status: "Active"},
+        {id: "T04", name: "Mr. Khumalo", subject: "History", qualification: "BA History", status: "Active"}
+      ];
+      safeStorage.setItem('teachers', mockTeachers);
+      teachers = mockTeachers;
+    }
+    
     let dailyRoutine = [
       {time: '7:30 AM - 8:00 AM', activity: 'Assembly'},
       {time: '8:00 AM - 9:00 AM', activity: 'Period 1'},
@@ -4231,11 +4255,28 @@
     const pageTitle = document.getElementById('page-title');
 
     function navigateTo(sectionId) {
-      sections.forEach(sec => sec.classList.remove('active'));
-      document.getElementById(sectionId).classList.add('active');
-      navLinks.forEach(link => link.classList.remove('active'));
-      document.querySelector(`[data-section="${sectionId}"]`).classList.add('active');
-      pageTitle.textContent = sectionId.charAt(0).toUpperCase() + sectionId.slice(1);
+      // Hide all sections
+      sections.forEach(sec => {
+        sec.classList.remove('active');
+        sec.style.display = 'none';
+      });
+
+      // Show requested section
+      const target = document.getElementById(sectionId);
+      if (target) {
+        target.classList.add('active');
+        target.style.display = 'block';
+        
+        // Update page title
+        if (pageTitle) {
+          pageTitle.textContent = target.dataset.title || sectionId.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+        }
+
+        // Update active sidebar item
+        navLinks.forEach(link => {
+          link.classList.toggle('active', link.getAttribute('data-section') === sectionId);
+        });
+      }
 
       // Refresh data on navigation
       if (sectionId === 'students') renderStudents();
@@ -4248,6 +4289,9 @@
       if (sectionId === 'finance') renderFinance();
       if (sectionId === 'reports') generateAdvancedReports();
     }
+    
+    // Make navigateTo globally accessible
+    window.navigateTo = navigateTo;
 
     navLinks.forEach(link => {
       link.addEventListener('click', (e) => {
@@ -11883,6 +11927,61 @@
       const days = Math.floor(hours / 24);
       return `${days}d ago`;
     }
+
+    // ────────────────────────────────────────────────
+    //  Enhanced initialization after login
+    // ────────────────────────────────────────────────
+    
+    // Rebind all sidebar clicks to ensure they work
+    document.querySelectorAll('.sidebar a[data-section]').forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const section = link.getAttribute('data-section');
+        navigateTo(section);
+      });
+    });
+    
+    function initializeAfterLogin() {
+      const userType = sessionStorage.getItem('userType');
+      
+      if (userType === 'admin') {
+        navigateTo('dashboard');
+      } else if (userType === 'student') {
+        navigateTo('student-portal');
+      } else if (userType === 'teacher') {
+        navigateTo('teacher-portal');
+      } else if (userType === 'parent') {
+        navigateTo('parent-portal');
+      } else {
+        navigateTo('dashboard'); // fallback
+      }
+      
+      // Also call render functions to ensure data appears
+      if (typeof updateDashboardStats === 'function') updateDashboardStats();
+      if (typeof renderStudents === 'function') renderStudents();
+      if (typeof renderTeachers === 'function') renderTeachers();
+      if (typeof renderClasses === 'function') renderClasses();
+      if (typeof populateClassSelects === 'function') populateClassSelects();
+      if (typeof populateClassSelect === 'function') populateClassSelect();
+    }
+
+    // Enhance showDashboard to also initialize properly
+    if (typeof window.showDashboard === 'function') {
+      const originalShowDashboard = window.showDashboard;
+      window.showDashboard = function(role, id) {
+        originalShowDashboard(role, id);
+        setTimeout(initializeAfterLogin, 100);   // give DOM time to appear
+      };
+    }
+    
+    // Run on page load if already logged in
+    document.addEventListener('DOMContentLoaded', () => {
+      const userType = sessionStorage.getItem('userType');
+      const userId   = sessionStorage.getItem('userId');
+      if (userType && userId) {
+        showDashboard(userType, userId);
+      }
+    });
   </script>
 
   <!-- Dark Mode Styles -->
