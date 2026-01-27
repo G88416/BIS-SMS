@@ -5,147 +5,234 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BIS-SMS Login</title>
     
-    <!-- Firebase SDK -->
+    <!-- Firebase SDK with Fallback Authentication -->
     <script type="module">
-        // Import the functions you need from the SDKs you need
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js";
-        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        
-        // Your web app's Firebase configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyBsUOSF5eENLCq_4fH9lLx_WIVUa6QDeBE",
-            authDomain: "bis-management-system-d77f4.firebaseapp.com",
-            projectId: "bis-management-system-d77f4",
-            storageBucket: "bis-management-system-d77f4.firebasestorage.app",
-            messagingSenderId: "724917351295",
-            appId: "1:724917351295:web:d87a2da7979babda08e04a",
-            measurementId: "G-NQKBSS701Y"
-        };
-        
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        
-        // Initialize Analytics with error handling
-        let analytics = null;
-        try {
-            analytics = getAnalytics(app);
-        } catch (error) {
-            console.warn('Firebase Analytics could not be initialized:', error);
-        }
-        
-        // Initialize Auth
-        const auth = getAuth(app);
-        
-        // Make available globally
-        window.firebaseApp = app;
-        window.firebaseAnalytics = analytics;
-        window.firebaseAuth = auth;
-        
-        // Handle login form submission
-        document.addEventListener('DOMContentLoaded', function() {
-            const loginForm = document.getElementById('loginForm');
-            if (loginForm) {
-                loginForm.addEventListener('submit', function(event) {
-                    event.preventDefault();
-                    
-                    const userType = document.getElementById('userType').value;
-                    const username = document.getElementById('username').value.trim();
-                    const password = document.getElementById('password').value;
-                    const errorMessage = document.getElementById('errorMessage');
-                    
-                    errorMessage.style.display = 'none';
-                    
-                    if (!userType || !username || !password) {
-                        errorMessage.textContent = 'Please fill all fields.';
-                        errorMessage.style.display = 'block';
-                        return;
+        (async function() {
+            // Firebase availability flag
+            let firebaseAvailable = false;
+            let auth = null;
+            
+            // Try to import and initialize Firebase
+            try {
+                const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js");
+                const { getAnalytics } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js");
+                const { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js");
+                
+                // Your web app's Firebase configuration
+                const firebaseConfig = {
+                    apiKey: "AIzaSyBsUOSF5eENLCq_4fH9lLx_WIVUa6QDeBE",
+                    authDomain: "bis-management-system-d77f4.firebaseapp.com",
+                    projectId: "bis-management-system-d77f4",
+                    storageBucket: "bis-management-system-d77f4.firebasestorage.app",
+                    messagingSenderId: "724917351295",
+                    appId: "1:724917351295:web:d87a2da7979babda08e04a",
+                    measurementId: "G-NQKBSS701Y"
+                };
+                
+                // Initialize Firebase
+                const app = initializeApp(firebaseConfig);
+                
+                // Initialize Analytics with error handling
+                let analytics = null;
+                try {
+                    analytics = getAnalytics(app);
+                } catch (error) {
+                    console.warn('Firebase Analytics could not be initialized:', error);
+                }
+                
+                // Initialize Auth
+                auth = getAuth(app);
+                
+                // Make available globally
+                window.firebaseApp = app;
+                window.firebaseAnalytics = analytics;
+                window.firebaseAuth = auth;
+                window.signInWithEmailAndPassword = signInWithEmailAndPassword;
+                window.signOut = signOut;
+                
+                firebaseAvailable = true;
+                console.log('Firebase initialized successfully');
+            } catch (error) {
+                console.warn('Firebase not available, using fallback authentication:', error);
+                firebaseAvailable = false;
+            }
+            
+            // Demo credentials for fallback authentication
+            const demoCredentials = {
+                admin: { password: 'admin123', id: 'admin' },
+                teacher: { password: 'teacher123', ids: ['1', '2', '3', '4', '5'] },
+                student: { password: 'student123', ids: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'] },
+                parent: { password: 'parent321', ids: ['C331'] }
+            };
+            
+            // Fallback authentication function
+            function fallbackAuthentication(userType, username, password) {
+                const creds = demoCredentials[userType];
+                if (!creds) {
+                    return { success: false, error: 'Invalid user type' };
+                }
+                
+                if (creds.password !== password) {
+                    return { success: false, error: 'Invalid credentials' };
+                }
+                
+                // For admin
+                if (userType === 'admin' && username === 'admin') {
+                    return { success: true, role: 'admin', id: 'admin' };
+                }
+                
+                // For other types, check if ID is valid
+                if (userType === 'teacher' || userType === 'student') {
+                    // Accept any numeric ID for demo purposes
+                    if (/^\d+$/.test(username)) {
+                        return { success: true, role: userType, id: username };
                     }
-                    
-                    // Map to email based on selected userType and username/ID
-                    let email = '';
-                    const domain = 'bis.local';
-                    
-                    if (userType === 'admin') {
-                        email = `admin@${domain}`;
-                    } else if (userType === 'teacher') {
-                        email = `teacher${username}@${domain}`;
-                    } else if (userType === 'student') {
-                        email = `student${username}@${domain}`;
-                    } else if (userType === 'parent') {
-                        email = `parent.${username.toLowerCase()}@${domain}`;  // e.g., C331 → parent.c331@bis.local
+                    return { success: false, error: 'Invalid ID format' };
+                }
+                
+                // For parent, check specific IDs
+                if (userType === 'parent') {
+                    if (creds.ids.includes(username.toUpperCase())) {
+                        return { success: true, role: 'parent', id: username.toUpperCase() };
                     }
-                    
-                    if (!email) {
-                        errorMessage.textContent = 'Invalid user type or ID.';
-                        errorMessage.style.display = 'block';
-                        return;
-                    }
-                    
-                    // Sign in with Firebase Auth
-                    signInWithEmailAndPassword(auth, email, password)
-                        .then((userCredential) => {
-                            const user = userCredential.user;
+                    return { success: false, error: 'Invalid child ID' };
+                }
+                
+                return { success: false, error: 'Invalid credentials' };
+            }
+            
+            // Handle login form submission - setup function
+            function setupLoginHandler() {
+                const loginForm = document.getElementById('loginForm');
+                if (loginForm) {
+                    loginForm.addEventListener('submit', async function(event) {
+                        event.preventDefault();
+                        
+                        const userType = document.getElementById('userType').value;
+                        const username = document.getElementById('username').value.trim();
+                        const password = document.getElementById('password').value;
+                        const errorMessage = document.getElementById('errorMessage');
+                        
+                        errorMessage.style.display = 'none';
+                        
+                        if (!userType || !username || !password) {
+                            errorMessage.textContent = 'Please fill all fields.';
+                            errorMessage.style.display = 'block';
+                            return;
+                        }
+                        
+                        if (firebaseAvailable) {
+                            // Use Firebase authentication
+                            const domain = 'bis.local';
+                            let email = '';
                             
-                            // Derive role and ID from ACTUAL signed-in email (prevents tampering)
-                            const signedEmail = user.email.toLowerCase();
-                            let derivedRole = '';
-                            let derivedId = '';
-                            
-                            if (signedEmail === `admin@${domain}`) {
-                                derivedRole = 'admin';
-                                derivedId = 'admin';
-                            } else if (signedEmail.startsWith(`teacher`) && signedEmail.endsWith(`@${domain}`)) {
-                                derivedRole = 'teacher';
-                                const match = signedEmail.match(/teacher(\d+)@/);
-                                if (match) {
-                                    derivedId = match[1];
-                                }
-                            } else if (signedEmail.startsWith(`student`) && signedEmail.endsWith(`@${domain}`)) {
-                                derivedRole = 'student';
-                                const match = signedEmail.match(/student(\d+)@/);
-                                if (match) {
-                                    derivedId = match[1];
-                                }
-                            } else if (signedEmail.startsWith(`parent.`) && signedEmail.endsWith(`@${domain}`)) {
-                                derivedRole = 'parent';
-                                derivedId = signedEmail.split('parent.')[1].split('@')[0].toUpperCase();  // parent.c331@bis.local → C331
+                            if (userType === 'admin') {
+                                email = `admin@${domain}`;
+                            } else if (userType === 'teacher') {
+                                email = `teacher${username}@${domain}`;
+                            } else if (userType === 'student') {
+                                email = `student${username}@${domain}`;
+                            } else if (userType === 'parent') {
+                                email = `parent.${username.toLowerCase()}@${domain}`;
                             }
                             
-                            // Ensure we got valid role and ID
-                            if (!derivedRole || !derivedId) {
-                                return signOut(auth).then(() => {
+                            if (!email) {
+                                errorMessage.textContent = 'Invalid user type or ID.';
+                                errorMessage.style.display = 'block';
+                                return;
+                            }
+                            
+                            try {
+                                const userCredential = await window.signInWithEmailAndPassword(auth, email, password);
+                                const user = userCredential.user;
+                                
+                                // Derive role and ID from ACTUAL signed-in email
+                                const signedEmail = user.email.toLowerCase();
+                                let derivedRole = '';
+                                let derivedId = '';
+                                
+                                if (signedEmail === `admin@${domain}`) {
+                                    derivedRole = 'admin';
+                                    derivedId = 'admin';
+                                } else if (signedEmail.startsWith(`teacher`) && signedEmail.endsWith(`@${domain}`)) {
+                                    derivedRole = 'teacher';
+                                    const match = signedEmail.match(/teacher(\d+)@/);
+                                    if (match) {
+                                        derivedId = match[1];
+                                    }
+                                } else if (signedEmail.startsWith(`student`) && signedEmail.endsWith(`@${domain}`)) {
+                                    derivedRole = 'student';
+                                    const match = signedEmail.match(/student(\d+)@/);
+                                    if (match) {
+                                        derivedId = match[1];
+                                    }
+                                } else if (signedEmail.startsWith(`parent.`) && signedEmail.endsWith(`@${domain}`)) {
+                                    derivedRole = 'parent';
+                                    derivedId = signedEmail.split('parent.')[1].split('@')[0].toUpperCase();
+                                }
+                                
+                                if (!derivedRole || !derivedId) {
+                                    await window.signOut(auth);
                                     errorMessage.textContent = 'Invalid user account format.';
                                     errorMessage.style.display = 'block';
-                                });
-                            }
-                            
-                            if (derivedRole !== userType || (userType !== 'admin' && derivedId !== username && derivedId.toLowerCase() !== username.toLowerCase())) {
-                                return signOut(auth).then(() => {
+                                    return;
+                                }
+                                
+                                if (derivedRole !== userType || (userType !== 'admin' && derivedId !== username && derivedId.toLowerCase() !== username.toLowerCase())) {
+                                    await window.signOut(auth);
                                     errorMessage.textContent = 'Invalid credentials for selected user type.';
                                     errorMessage.style.display = 'block';
-                                });
+                                    return;
+                                }
+                                
+                                // Store verified data
+                                sessionStorage.setItem('userType', derivedRole);
+                                sessionStorage.setItem('userId', derivedId);
+                                sessionStorage.setItem('authMode', 'firebase');
+                                
+                                // Redirect
+                                let redirectUrl = 'admin.html';
+                                if (derivedRole !== 'admin') {
+                                    redirectUrl += `#${derivedRole}-portal?id=${derivedId}`;
+                                }
+                                window.location.href = redirectUrl;
+                            } catch (error) {
+                                errorMessage.textContent = 'Invalid credentials. Please try again.';
+                                errorMessage.style.display = 'block';
+                                console.error(error);
                             }
+                        } else {
+                            // Use fallback authentication
+                            const result = fallbackAuthentication(userType, username, password);
                             
-                            // Store verified data
-                            sessionStorage.setItem('userType', derivedRole);
-                            sessionStorage.setItem('userId', derivedId);
-                            
-                            // Redirect (same as your original logic)
-                            let redirectUrl = 'admin.html';
-                            if (derivedRole !== 'admin') {
-                                redirectUrl += `#${derivedRole}-portal?id=${derivedId}`;
+                            if (result.success) {
+                                // Store verified data
+                                sessionStorage.setItem('userType', result.role);
+                                sessionStorage.setItem('userId', result.id);
+                                sessionStorage.setItem('authMode', 'fallback');
+                                
+                                // Redirect
+                                let redirectUrl = 'admin.html';
+                                if (result.role !== 'admin') {
+                                    redirectUrl += `#${result.role}-portal?id=${result.id}`;
+                                }
+                                window.location.href = redirectUrl;
+                            } else {
+                                errorMessage.textContent = result.error || 'Invalid credentials. Please try again.';
+                                errorMessage.style.display = 'block';
                             }
-                            window.location.href = redirectUrl;
-                        })
-                        .catch((error) => {
-                            errorMessage.textContent = 'Invalid credentials. Please try again.';
-                            errorMessage.style.display = 'block';
-                            console.error(error);
-                        });
-                });
+                        }
+                    });
+                }
             }
-        });
+            
+            // Setup event handler immediately if DOM is ready, otherwise wait
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', setupLoginHandler);
+            } else {
+                setupLoginHandler();
+            }
+        })();
     </script>
     
     <style>
