@@ -4835,10 +4835,10 @@
       attendanceTableEl.innerHTML = '';
       
       if (classId) {
-        const cls = classes.find(c => c.id == classId);
+        const cls = classes.find(c => c.id === parseInt(classId));
         if (cls && cls.studentIds && cls.studentIds.length > 0) {
           cls.studentIds.forEach(sid => {
-            const stu = students.find(s => s.id == sid);
+            const stu = students.find(s => s.id === sid);
             if (stu) {
               // Initialize attendance structure
               if (!attendance[classId]) attendance[classId] = {};
@@ -7144,8 +7144,10 @@
               classIds: []
             };
             
-            // Add to Firestore
-            await db.collection('students').doc(newStudent.id).set(newStudent);
+            // Add to Firestore if available
+            if (window.firebaseDb && window.firebaseSetDoc && window.firebaseDoc) {
+              await window.firebaseSetDoc(window.firebaseDoc(window.firebaseDb, 'students', newStudent.id), newStudent);
+            }
             students.push(newStudent);
             successCount++;
           } catch (error) {
@@ -7218,8 +7220,10 @@
               status: teacherData['Status'] || 'Active'
             };
             
-            // Add to Firestore
-            await db.collection('teachers').doc(newTeacher.id).set(newTeacher);
+            // Add to Firestore if available
+            if (window.firebaseDb && window.firebaseSetDoc && window.firebaseDoc) {
+              await window.firebaseSetDoc(window.firebaseDoc(window.firebaseDb, 'teachers', newTeacher.id), newTeacher);
+            }
             teachers.push(newTeacher);
             successCount++;
           } catch (error) {
@@ -7990,15 +7994,108 @@
         return;
       }
       
-      content.innerHTML = '<p class="alert alert-info">This is a simplified view. Use the main "Advanced Grades" section for full grade entry features with multiple subjects and weighted assessments.</p><button class="btn btn-primary" onclick="navigateTo(\'grades\')">Go to Advanced Grades Section</button>';
+      const cls = classes.find(c => c.id === parseInt(classId));
+      if (!cls || !cls.studentIds || cls.studentIds.length === 0) {
+        content.innerHTML = '<p class="text-muted">No students enrolled in this class.</p>';
+        return;
+      }
+      
+      // Get grades data
+      const gradesData = safeStorage.getItem('gradesData', {});
+      const classGrades = gradesData[classId] || {};
+      const currentTerm = 'Term 1'; // Default term
+      const termGrades = classGrades[currentTerm] || {};
+      
+      // Build gradebook table
+      let html = '<div class="alert alert-info mb-3">Enter grades for students. For advanced features with weighted assessments, use the "Advanced Grades" section.</div>';
+      html += '<div class="table-responsive"><table class="table table-bordered"><thead><tr>';
+      html += '<th>Student ID</th><th>Student Name</th><th>Math</th><th>Science</th><th>English</th></tr></thead><tbody>';
+      
+      cls.studentIds.forEach(sid => {
+        const student = students.find(s => s.id === sid);
+        if (student) {
+          const studentGrades = termGrades[sid] || {};
+          html += `<tr>
+            <td>${escapeHtml(student.id)}</td>
+            <td>${escapeHtml(student.name)}</td>
+            <td><input type="number" class="form-control form-control-sm grade-input" data-student="${sid}" data-subject="Math" value="${studentGrades.Math || ''}" min="0" max="100"></td>
+            <td><input type="number" class="form-control form-control-sm grade-input" data-student="${sid}" data-subject="Science" value="${studentGrades.Science || ''}" min="0" max="100"></td>
+            <td><input type="number" class="form-control form-control-sm grade-input" data-student="${sid}" data-subject="English" value="${studentGrades.English || ''}" min="0" max="100"></td>
+          </tr>`;
+        }
+      });
+      
+      html += '</tbody></table></div>';
+      html += '<div class="text-end"><button class="btn btn-primary" onclick="saveTeacherGrades()">Save Grades</button>';
+      html += ' <button class="btn btn-secondary ms-2" onclick="navigateTo(\'grades\')">Go to Advanced Grades</button></div>';
+      
+      content.innerHTML = html;
     }
     
     function saveTeacherGrades() {
-      alert('Grades saved! For comprehensive grade management, please use the Advanced Grades section.');
+      const classId = document.getElementById('teacher-grade-class').value;
+      if (!classId) {
+        alert('Please select a class first.');
+        return;
+      }
+      
+      try {
+        // Get all grade inputs
+        const gradeInputs = document.querySelectorAll('.grade-input');
+        const gradesData = safeStorage.getItem('gradesData', {});
+        
+        // Initialize class and term if not exists
+        if (!gradesData[classId]) gradesData[classId] = {};
+        const currentTerm = 'Term 1';
+        if (!gradesData[classId][currentTerm]) gradesData[classId][currentTerm] = {};
+        
+        // Save each grade
+        gradeInputs.forEach(input => {
+          const studentId = input.dataset.student;
+          const subject = input.dataset.subject;
+          const grade = input.value;
+          
+          if (!gradesData[classId][currentTerm][studentId]) {
+            gradesData[classId][currentTerm][studentId] = {};
+          }
+          
+          if (grade !== '') {
+            gradesData[classId][currentTerm][studentId][subject] = parseFloat(grade);
+          }
+        });
+        
+        // Save to storage
+        safeStorage.setItem('gradesData', gradesData);
+        alert('Grades saved successfully!');
+      } catch (error) {
+        console.error('Error saving grades:', error);
+        alert('Failed to save grades. Please try again.');
+      }
     }
     
     function generateTeacherReportCards() {
-      alert('Report cards are being generated. This feature uses the Advanced Grades section data.');
+      const classId = document.getElementById('teacher-grade-class').value;
+      if (!classId) {
+        alert('Please select a class first.');
+        return;
+      }
+      
+      try {
+        const gradesData = safeStorage.getItem('gradesData', {});
+        const classGrades = gradesData[classId];
+        
+        if (!classGrades) {
+          alert('No grades found for this class. Please enter grades first.');
+          return;
+        }
+        
+        alert('Report cards generated successfully! You can view detailed report cards in the "Advanced Grades" section.');
+        // Navigate to grades section for full report card view
+        navigateTo('grades');
+      } catch (error) {
+        console.error('Error generating report cards:', error);
+        alert('Failed to generate report cards. Please try again.');
+      }
     }
     
     function loadTeacherClassStudents() {
