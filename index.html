@@ -718,8 +718,8 @@
                 <h6 class="mb-0"><i class="fas fa-users"></i> Contacts</h6>
               </div>
               <div class="card-body p-0">
-                <div class="p-2 border-bottom">
-                  <input type="text" class="form-control form-control-sm" id="admin-contact-search" placeholder="Search contacts..." oninput="filterAdminContacts()">
+                <div class="p-2 border-bottom bg-light">
+                  <input type="text" class="form-control form-control-sm" id="admin-contact-search" placeholder="Search contacts..." oninput="filterContacts('admin-contact-search', 'choptso-contacts')">
                 </div>
                 <div class="list-group list-group-flush" id="choptso-contacts">
                   <a href="#" class="list-group-item list-group-item-action" onclick="loadConversation('all', event); return false;">
@@ -1717,7 +1717,7 @@
                   </div>
                   <div class="card-body p-0" style="overflow-y: auto;">
                     <div class="p-2 border-bottom bg-light">
-                      <input type="text" class="form-control form-control-sm" id="teacher-contact-search" placeholder="Search contacts..." oninput="filterTeacherContacts()">
+                      <input type="text" class="form-control form-control-sm" id="teacher-contact-search" placeholder="Search contacts..." oninput="filterContacts('teacher-contact-search', 'teacher-choptso-contacts')">
                     </div>
                     <div class="list-group list-group-flush" id="teacher-choptso-contacts">
                       <!-- Contacts will be loaded here -->
@@ -2047,7 +2047,7 @@
               </div>
               <div class="card-body p-0" style="overflow-y: auto;">
                 <div class="p-2 border-bottom bg-light">
-                  <input type="text" class="form-control form-control-sm" id="parent-contact-search" placeholder="Search contacts..." oninput="filterParentContacts()">
+                  <input type="text" class="form-control form-control-sm" id="parent-contact-search" placeholder="Search contacts..." oninput="filterContacts('parent-contact-search', 'parent-choptso-contacts')">
                 </div>
                 <div class="list-group list-group-flush" id="parent-choptso-contacts">
                   <!-- Contacts will be loaded here -->
@@ -4352,23 +4352,6 @@
       }
       startCall('video', currentTeacherConversationId);
     }
-    
-    // Filter teacher contacts based on search query
-    function filterTeacherContacts() {
-      const searchInput = document.getElementById('teacher-contact-search');
-      const searchQuery = searchInput ? searchInput.value.toLowerCase() : '';
-      const contactsList = document.getElementById('teacher-choptso-contacts');
-      const items = contactsList.querySelectorAll('.list-group-item');
-      
-      items.forEach(item => {
-        const text = item.textContent.toLowerCase();
-        if (text.includes(searchQuery)) {
-          item.style.display = '';
-        } else {
-          item.style.display = 'none';
-        }
-      });
-    }
 
     // Choptso Chat Functions
     let currentConversationId = null;
@@ -4480,11 +4463,11 @@
       });
     }
     
-    // Filter admin contacts based on search query
-    function filterAdminContacts() {
-      const searchInput = document.getElementById('admin-contact-search');
+    // Filter contacts based on search query (reusable for all portals)
+    function filterContacts(searchInputId, contactsListId) {
+      const searchInput = document.getElementById(searchInputId);
       const searchQuery = searchInput ? searchInput.value.toLowerCase() : '';
-      const contactsList = document.getElementById('choptso-contacts');
+      const contactsList = document.getElementById(contactsListId);
       const items = contactsList.querySelectorAll('.list-group-item');
       
       items.forEach(item => {
@@ -8624,23 +8607,6 @@
         return;
       }
       startCall('video', currentParentConversationId);
-    }
-    
-    // Filter parent contacts based on search query
-    function filterParentContacts() {
-      const searchInput = document.getElementById('parent-contact-search');
-      const searchQuery = searchInput ? searchInput.value.toLowerCase() : '';
-      const contactsList = document.getElementById('parent-choptso-contacts');
-      const items = contactsList.querySelectorAll('.list-group-item');
-      
-      items.forEach(item => {
-        const text = item.textContent.toLowerCase();
-        if (text.includes(searchQuery)) {
-          item.style.display = '';
-        } else {
-          item.style.display = 'none';
-        }
-      });
     }
     
     function sendParentMessage() {
