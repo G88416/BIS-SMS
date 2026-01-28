@@ -2550,6 +2550,7 @@
           <input type="text" class="form-control mb-2" id="assignment-title" placeholder="Assignment Title">
           <textarea class="form-control mb-2" id="assignment-description" rows="3" placeholder="Description"></textarea>
           <input type="date" class="form-control mb-2" id="assignment-due-date">
+          <input type="number" class="form-control mb-2" id="assignment-points" placeholder="Points (default: 100)" min="1" value="100">
           <select class="form-select mb-2" id="assignment-class">
             <option value="">Select Class</option>
             <!-- Populated dynamically -->
@@ -2557,7 +2558,7 @@
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-          <button type="button" class="btn btn-primary" onclick="createAssignment()" data-bs-dismiss="modal">Create Assignment</button>
+          <button type="button" class="btn btn-primary" onclick="createAssignment()">Create Assignment</button>
         </div>
       </div>
     </div>
@@ -5585,14 +5586,17 @@
       });
       document.getElementById('teacher-total-students').textContent = totalStudents;
       
-      // Calculate pending assignments (placeholder)
-      document.getElementById('teacher-pending-assignments').textContent = '0';
+      // Load assignments and update count
+      loadTeacherAssignments();
       
       // Today's attendance (placeholder)
       document.getElementById('teacher-today-attendance').textContent = '-';
       
-      // Resources count (placeholder)
-      document.getElementById('teacher-resources-count').textContent = '0';
+      // Load resources and update count
+      loadTeacherResources();
+      
+      // Load timetable
+      loadTeacherTimetable();
       
       // Populate all select dropdowns
       populateTeacherSelectsEnhanced();
@@ -5725,6 +5729,7 @@
     
     function loadTeacherGradebook() {
       const classId = document.getElementById('teacher-grade-class').value;
+      const term = document.getElementById('teacher-grade-term').value;
       const content = document.getElementById('teacher-gradebook-content');
       
       if (!classId) {
@@ -5732,15 +5737,244 @@
         return;
       }
       
-      content.innerHTML = '<p class="alert alert-info">This is a simplified view. Use the main "Advanced Grades" section for full grade entry features with multiple subjects and weighted assessments.</p><button class="btn btn-primary" onclick="navigateTo(\'grades\')">Go to Advanced Grades Section</button>';
+      const cls = classes.find(c => c.id === parseInt(classId));
+      if (!cls || !cls.studentIds || cls.studentIds.length === 0) {
+        content.innerHTML = '<p class="text-muted">No students enrolled in this class.</p>';
+        return;
+      }
+      
+      // Get teacher's subject
+      const teacher = loggedInTeacher;
+      const teacherSubject = teacher ? teacher.subject : 'Mathematics';
+      
+      // Initialize grades storage if not exists
+      if (!localStorage.getItem('teacherGrades')) {
+        localStorage.setItem('teacherGrades', JSON.stringify({}));
+      }
+      
+      const allGrades = JSON.parse(localStorage.getItem('teacherGrades') || '{}');
+      const gradeKey = `${classId}-${term}`;
+      
+      let html = `
+        <div class="alert alert-info">
+          <i class="fas fa-info-circle"></i> Enter grades for <strong>${escapeHtml(teacherSubject)}</strong> - ${escapeHtml(term)}
+        </div>
+        <div class="table-responsive">
+          <table class="table table-bordered table-hover">
+            <thead class="table-primary">
+              <tr>
+                <th>Student ID</th>
+                <th>Student Name</th>
+                <th>Assignment (20%)</th>
+                <th>Quiz (20%)</th>
+                <th>Test (30%)</th>
+                <th>Exam (30%)</th>
+                <th>Final Grade</th>
+                <th>Letter Grade</th>
+              </tr>
+            </thead>
+            <tbody>`;
+      
+      cls.studentIds.forEach(sid => {
+        const student = students.find(s => s.id === sid);
+        if (student) {
+          const studentGradeKey = `${gradeKey}-${sid}`;
+          const savedGrades = allGrades[studentGradeKey] || { assignment: '', quiz: '', test: '', exam: '' };
+          
+          html += `
+            <tr>
+              <td>${student.id}</td>
+              <td>${escapeHtml(student.name)}</td>
+              <td><input type="number" class="form-control form-control-sm" min="0" max="100" 
+                  id="grade-assignment-${sid}" value="${savedGrades.assignment}" 
+                  onchange="calculateFinalGrade(${sid})"></td>
+              <td><input type="number" class="form-control form-control-sm" min="0" max="100" 
+                  id="grade-quiz-${sid}" value="${savedGrades.quiz}" 
+                  onchange="calculateFinalGrade(${sid})"></td>
+              <td><input type="number" class="form-control form-control-sm" min="0" max="100" 
+                  id="grade-test-${sid}" value="${savedGrades.test}" 
+                  onchange="calculateFinalGrade(${sid})"></td>
+              <td><input type="number" class="form-control form-control-sm" min="0" max="100" 
+                  id="grade-exam-${sid}" value="${savedGrades.exam}" 
+                  onchange="calculateFinalGrade(${sid})"></td>
+              <td><strong id="final-grade-${sid}">-</strong></td>
+              <td><span id="letter-grade-${sid}" class="badge bg-secondary">-</span></td>
+            </tr>`;
+        }
+      });
+      
+      html += '</tbody></table></div>';
+      content.innerHTML = html;
+      
+      // Calculate initial grades
+      cls.studentIds.forEach(sid => {
+        const student = students.find(s => s.id === sid);
+        if (student) calculateFinalGrade(sid);
+      });
+    }
+    
+    function calculateFinalGrade(studentId) {
+      const assignment = parseFloat(document.getElementById(`grade-assignment-${studentId}`)?.value || 0);
+      const quiz = parseFloat(document.getElementById(`grade-quiz-${studentId}`)?.value || 0);
+      const test = parseFloat(document.getElementById(`grade-test-${studentId}`)?.value || 0);
+      const exam = parseFloat(document.getElementById(`grade-exam-${studentId}`)?.value || 0);
+      
+      // Calculate weighted average
+      const finalGrade = (assignment * 0.20) + (quiz * 0.20) + (test * 0.30) + (exam * 0.30);
+      
+      // Determine letter grade
+      let letterGrade = 'F';
+      let badgeClass = 'bg-danger';
+      if (finalGrade >= 90) { letterGrade = 'A'; badgeClass = 'bg-success'; }
+      else if (finalGrade >= 80) { letterGrade = 'B'; badgeClass = 'bg-info'; }
+      else if (finalGrade >= 70) { letterGrade = 'C'; badgeClass = 'bg-primary'; }
+      else if (finalGrade >= 60) { letterGrade = 'D'; badgeClass = 'bg-warning'; }
+      
+      // Update display
+      const finalGradeEl = document.getElementById(`final-grade-${studentId}`);
+      const letterGradeEl = document.getElementById(`letter-grade-${studentId}`);
+      
+      if (finalGradeEl && letterGradeEl) {
+        if (assignment || quiz || test || exam) {
+          finalGradeEl.textContent = finalGrade.toFixed(1) + '%';
+          letterGradeEl.textContent = letterGrade;
+          letterGradeEl.className = `badge ${badgeClass}`;
+        } else {
+          finalGradeEl.textContent = '-';
+          letterGradeEl.textContent = '-';
+          letterGradeEl.className = 'badge bg-secondary';
+        }
+      }
     }
     
     function saveTeacherGrades() {
-      alert('Grades saved! For comprehensive grade management, please use the Advanced Grades section.');
+      const classId = document.getElementById('teacher-grade-class').value;
+      const term = document.getElementById('teacher-grade-term').value;
+      
+      if (!classId) {
+        alert('Please select a class first.');
+        return;
+      }
+      
+      const cls = classes.find(c => c.id === parseInt(classId));
+      if (!cls || !cls.studentIds) {
+        alert('Invalid class selected.');
+        return;
+      }
+      
+      const allGrades = JSON.parse(localStorage.getItem('teacherGrades') || '{}');
+      const gradeKey = `${classId}-${term}`;
+      
+      let savedCount = 0;
+      cls.studentIds.forEach(sid => {
+        const assignment = document.getElementById(`grade-assignment-${sid}`)?.value || '';
+        const quiz = document.getElementById(`grade-quiz-${sid}`)?.value || '';
+        const test = document.getElementById(`grade-test-${sid}`)?.value || '';
+        const exam = document.getElementById(`grade-exam-${sid}`)?.value || '';
+        
+        if (assignment || quiz || test || exam) {
+          const studentGradeKey = `${gradeKey}-${sid}`;
+          allGrades[studentGradeKey] = { assignment, quiz, test, exam };
+          savedCount++;
+        }
+      });
+      
+      localStorage.setItem('teacherGrades', JSON.stringify(allGrades));
+      alert(`Grades saved successfully for ${savedCount} student(s)!`);
     }
     
     function generateTeacherReportCards() {
-      alert('Report cards are being generated. This feature uses the Advanced Grades section data.');
+      const classId = document.getElementById('teacher-grade-class').value;
+      const term = document.getElementById('teacher-grade-term').value;
+      
+      if (!classId) {
+        alert('Please select a class first.');
+        return;
+      }
+      
+      const cls = classes.find(c => c.id === parseInt(classId));
+      if (!cls) {
+        alert('Invalid class selected.');
+        return;
+      }
+      
+      const teacher = loggedInTeacher;
+      const teacherSubject = teacher ? teacher.subject : 'Mathematics';
+      
+      // Generate report cards window
+      const reportWindow = window.open('', '_blank');
+      let reportHTML = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Report Cards - ${escapeHtml(term)}</title>
+          <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+          <style>
+            @media print {
+              .page-break { page-break-after: always; }
+              .no-print { display: none; }
+            }
+            .report-card { border: 2px solid #000; padding: 20px; margin-bottom: 30px; }
+          </style>
+        </head>
+        <body>
+          <div class="container py-4">
+            <button class="btn btn-primary mb-3 no-print" onclick="window.print()">Print All Report Cards</button>
+      `;
+      
+      const allGrades = JSON.parse(localStorage.getItem('teacherGrades') || '{}');
+      const gradeKey = `${classId}-${term}`;
+      
+      cls.studentIds.forEach((sid, index) => {
+        const student = students.find(s => s.id === sid);
+        if (student) {
+          const studentGradeKey = `${gradeKey}-${sid}`;
+          const grades = allGrades[studentGradeKey] || {};
+          
+          const assignment = parseFloat(grades.assignment || 0);
+          const quiz = parseFloat(grades.quiz || 0);
+          const test = parseFloat(grades.test || 0);
+          const exam = parseFloat(grades.exam || 0);
+          const finalGrade = (assignment * 0.20) + (quiz * 0.20) + (test * 0.30) + (exam * 0.30);
+          
+          let letterGrade = 'F';
+          if (finalGrade >= 90) letterGrade = 'A';
+          else if (finalGrade >= 80) letterGrade = 'B';
+          else if (finalGrade >= 70) letterGrade = 'C';
+          else if (finalGrade >= 60) letterGrade = 'D';
+          
+          reportHTML += `
+            <div class="report-card ${index < cls.studentIds.length - 1 ? 'page-break' : ''}">
+              <div class="text-center mb-4">
+                <h3>Bophelong Independent School</h3>
+                <h5>Report Card - ${escapeHtml(term)}</h5>
+              </div>
+              <table class="table table-bordered">
+                <tr><th>Student Name:</th><td>${escapeHtml(student.name)}</td></tr>
+                <tr><th>Student ID:</th><td>${student.id}</td></tr>
+                <tr><th>Grade:</th><td>${escapeHtml(student.grade)}</td></tr>
+                <tr><th>Subject:</th><td>${escapeHtml(teacherSubject)}</td></tr>
+              </table>
+              <h6 class="mt-4">Grade Breakdown:</h6>
+              <table class="table table-bordered">
+                <tr><th>Component</th><th>Weight</th><th>Score</th></tr>
+                <tr><td>Assignment</td><td>20%</td><td>${assignment}%</td></tr>
+                <tr><td>Quiz</td><td>20%</td><td>${quiz}%</td></tr>
+                <tr><td>Test</td><td>30%</td><td>${test}%</td></tr>
+                <tr><td>Exam</td><td>30%</td><td>${exam}%</td></tr>
+                <tr class="table-primary"><th>Final Grade</th><th></th><th>${finalGrade.toFixed(1)}% (${letterGrade})</th></tr>
+              </table>
+              <div class="mt-4">
+                <p><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
+              </div>
+            </div>
+          `;
+        }
+      });
+      
+      reportHTML += '</div></body></html>';
+      reportWindow.document.write(reportHTML);
+      reportWindow.document.close();
     }
     
     function loadTeacherClassStudents() {
@@ -5782,24 +6016,236 @@
       const description = document.getElementById('assignment-description').value.trim();
       const dueDate = document.getElementById('assignment-due-date').value;
       const classId = document.getElementById('assignment-class').value;
+      const points = document.getElementById('assignment-points').value || 100;
       
       if (!title || !dueDate || !classId) {
         alert('Please fill in all required fields.');
         return;
       }
       
-      alert(`Assignment "${title}" created successfully for class!`);
-      loadTeacherAssignments();
+      // Get or initialize assignments
+      const assignments = JSON.parse(localStorage.getItem('teacherAssignments') || '[]');
+      
+      const newAssignment = {
+        id: Date.now(),
+        title: title,
+        description: description,
+        dueDate: dueDate,
+        classId: parseInt(classId),
+        points: parseInt(points),
+        teacherId: loggedInTeacher ? loggedInTeacher.id : 1,
+        createdDate: new Date().toISOString(),
+        submissions: []
+      };
+      
+      assignments.push(newAssignment);
+      localStorage.setItem('teacherAssignments', JSON.stringify(assignments));
+      
+      alert(`Assignment "${title}" created successfully!`);
+      
+      // Close modal
+      const modal = bootstrap.Modal.getInstance(document.getElementById('addAssignmentModal'));
+      if (modal) modal.hide();
       
       // Clear form
       document.getElementById('assignment-title').value = '';
       document.getElementById('assignment-description').value = '';
       document.getElementById('assignment-due-date').value = '';
+      document.getElementById('assignment-points').value = '';
+      
+      loadTeacherAssignments();
     }
     
     function loadTeacherAssignments() {
       const content = document.getElementById('teacher-assignments-content');
-      content.innerHTML = '<p class="text-muted">No assignments yet. Click "Create New Assignment" to get started.</p>';
+      const assignments = JSON.parse(localStorage.getItem('teacherAssignments') || '[]');
+      
+      // Filter assignments for logged-in teacher's classes
+      const teacherAssignments = assignments.filter(a => {
+        if (!loggedInTeacher) return true;
+        const teacherClasses = classes.filter(c => c.teacherId === loggedInTeacher.id);
+        return teacherClasses.some(c => c.id === a.classId);
+      });
+      
+      if (teacherAssignments.length === 0) {
+        content.innerHTML = '<p class="text-muted">No assignments yet. Click "Create New Assignment" to get started.</p>';
+        return;
+      }
+      
+      let html = '<div class="row g-3">';
+      
+      teacherAssignments.forEach(assignment => {
+        const cls = classes.find(c => c.id === assignment.classId);
+        const className = cls ? cls.name : 'Unknown Class';
+        const dueDate = new Date(assignment.dueDate);
+        const isOverdue = dueDate < new Date();
+        const statusBadge = isOverdue ? 'bg-danger' : 'bg-success';
+        const statusText = isOverdue ? 'Overdue' : 'Active';
+        
+        // Count submissions
+        const totalStudents = cls && cls.studentIds ? cls.studentIds.length : 0;
+        const submissions = assignment.submissions ? assignment.submissions.length : 0;
+        const submissionRate = totalStudents > 0 ? Math.round((submissions / totalStudents) * 100) : 0;
+        
+        html += `
+          <div class="col-md-6 col-lg-4">
+            <div class="card h-100">
+              <div class="card-header bg-primary text-white">
+                <h6 class="mb-0">${escapeHtml(assignment.title)}</h6>
+              </div>
+              <div class="card-body">
+                <p class="small text-muted mb-2"><i class="fas fa-chalkboard"></i> ${escapeHtml(className)}</p>
+                <p class="small mb-2">${escapeHtml(assignment.description || 'No description')}</p>
+                <p class="small mb-2"><i class="fas fa-calendar"></i> Due: ${dueDate.toLocaleDateString()}</p>
+                <p class="small mb-2"><i class="fas fa-star"></i> Points: ${assignment.points}</p>
+                <div class="mb-2">
+                  <span class="badge ${statusBadge}">${statusText}</span>
+                </div>
+                <div class="progress mb-2" style="height: 20px;">
+                  <div class="progress-bar ${submissionRate >= 80 ? 'bg-success' : submissionRate >= 50 ? 'bg-warning' : 'bg-danger'}" 
+                       style="width: ${submissionRate}%">${submissionRate}%</div>
+                </div>
+                <p class="small text-muted mb-0">Submissions: ${submissions}/${totalStudents}</p>
+              </div>
+              <div class="card-footer">
+                <button class="btn btn-sm btn-info me-2" onclick="viewAssignmentSubmissions(${assignment.id})">
+                  <i class="fas fa-eye"></i> View Submissions
+                </button>
+                <button class="btn btn-sm btn-danger" onclick="deleteAssignment(${assignment.id})">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+      
+      html += '</div>';
+      content.innerHTML = html;
+      
+      // Update stats
+      const pendingEl = document.getElementById('teacher-pending-assignments');
+      if (pendingEl) {
+        const activeAssignments = teacherAssignments.filter(a => new Date(a.dueDate) >= new Date());
+        pendingEl.textContent = activeAssignments.length;
+      }
+    }
+    
+    function viewAssignmentSubmissions(assignmentId) {
+      const assignments = JSON.parse(localStorage.getItem('teacherAssignments') || '[]');
+      const assignment = assignments.find(a => a.id === assignmentId);
+      
+      if (!assignment) {
+        alert('Assignment not found.');
+        return;
+      }
+      
+      const cls = classes.find(c => c.id === assignment.classId);
+      if (!cls) {
+        alert('Class not found.');
+        return;
+      }
+      
+      // Generate submissions view
+      let html = `
+        <div class="modal fade" id="submissionsModal" tabindex="-1">
+          <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">Submissions: ${escapeHtml(assignment.title)}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+              </div>
+              <div class="modal-body">
+                <table class="table table-striped">
+                  <thead>
+                    <tr>
+                      <th>Student</th>
+                      <th>Status</th>
+                      <th>Submitted</th>
+                      <th>Grade</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+      `;
+      
+      cls.studentIds.forEach(sid => {
+        const student = students.find(s => s.id === sid);
+        if (student) {
+          const submission = assignment.submissions ? assignment.submissions.find(s => s.studentId === sid) : null;
+          const status = submission ? 'Submitted' : 'Not Submitted';
+          const statusBadge = submission ? 'bg-success' : 'bg-warning';
+          const submittedDate = submission ? new Date(submission.date).toLocaleDateString() : '-';
+          const grade = submission && submission.grade !== undefined ? submission.grade : '-';
+          
+          html += `
+            <tr>
+              <td>${escapeHtml(student.name)}</td>
+              <td><span class="badge ${statusBadge}">${status}</span></td>
+              <td>${submittedDate}</td>
+              <td><input type="number" class="form-control form-control-sm" style="width: 80px;" 
+                    min="0" max="${assignment.points}" value="${grade !== '-' ? grade : ''}" 
+                    id="grade-${assignmentId}-${sid}" ${!submission ? 'disabled' : ''}></td>
+              <td>
+                ${submission ? `<button class="btn btn-sm btn-primary" onclick="saveSubmissionGrade(${assignmentId}, ${sid})">Save</button>` : ''}
+              </td>
+            </tr>
+          `;
+        }
+      });
+      
+      html += `
+                  </tbody>
+                </table>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      // Remove existing modal if present
+      const existingModal = document.getElementById('submissionsModal');
+      if (existingModal) existingModal.remove();
+      
+      // Add and show modal
+      document.body.insertAdjacentHTML('beforeend', html);
+      const modal = new bootstrap.Modal(document.getElementById('submissionsModal'));
+      modal.show();
+    }
+    
+    function saveSubmissionGrade(assignmentId, studentId) {
+      const gradeInput = document.getElementById(`grade-${assignmentId}-${studentId}`);
+      const grade = parseFloat(gradeInput.value);
+      
+      if (isNaN(grade)) {
+        alert('Please enter a valid grade.');
+        return;
+      }
+      
+      const assignments = JSON.parse(localStorage.getItem('teacherAssignments') || '[]');
+      const assignment = assignments.find(a => a.id === assignmentId);
+      
+      if (assignment && assignment.submissions) {
+        const submission = assignment.submissions.find(s => s.studentId === studentId);
+        if (submission) {
+          submission.grade = grade;
+          localStorage.setItem('teacherAssignments', JSON.stringify(assignments));
+          alert('Grade saved successfully!');
+        }
+      }
+    }
+    
+    function deleteAssignment(assignmentId) {
+      if (!confirm('Are you sure you want to delete this assignment?')) return;
+      
+      const assignments = JSON.parse(localStorage.getItem('teacherAssignments') || '[]');
+      const filtered = assignments.filter(a => a.id !== assignmentId);
+      localStorage.setItem('teacherAssignments', JSON.stringify(filtered));
+      
+      loadTeacherAssignments();
     }
     
     function loadTeacherLessonPlans() {
@@ -5811,7 +6257,379 @@
         return;
       }
       
-      content.innerHTML = '<p class="text-muted">Lesson planning module coming soon. You can track your syllabus progress and create weekly lesson plans here.</p>';
+      const cls = classes.find(c => c.id === parseInt(classId));
+      if (!cls) {
+        content.innerHTML = '<p class="text-muted">Invalid class selected.</p>';
+        return;
+      }
+      
+      const teacher = loggedInTeacher;
+      const teacherSubject = teacher ? teacher.subject : 'Mathematics';
+      
+      // Get lesson plans from localStorage
+      const lessonPlans = JSON.parse(localStorage.getItem('teacherLessonPlans') || '[]');
+      const classPlans = lessonPlans.filter(lp => lp.classId === parseInt(classId));
+      
+      let html = `
+        <div class="mb-4">
+          <button class="btn btn-primary" onclick="showCreateLessonPlan(${classId})">
+            <i class="fas fa-plus"></i> Create New Lesson Plan
+          </button>
+          <button class="btn btn-info ms-2" onclick="viewSyllabusProgress(${classId})">
+            <i class="fas fa-chart-line"></i> View Syllabus Progress
+          </button>
+        </div>
+        
+        <h6 class="mb-3">Lesson Plans for ${escapeHtml(cls.name)} - ${escapeHtml(teacherSubject)}</h6>
+      `;
+      
+      if (classPlans.length === 0) {
+        html += '<div class="alert alert-info">No lesson plans yet. Click "Create New Lesson Plan" to get started.</div>';
+      } else {
+        html += '<div class="accordion" id="lessonPlansAccordion">';
+        
+        classPlans.sort((a, b) => new Date(b.date) - new Date(a.date)).forEach((plan, index) => {
+          const planDate = new Date(plan.date);
+          const statusBadge = plan.completed ? 'bg-success' : 'bg-warning';
+          const statusText = plan.completed ? 'Completed' : 'Planned';
+          
+          html += `
+            <div class="accordion-item">
+              <h2 class="accordion-header">
+                <button class="accordion-button ${index !== 0 ? 'collapsed' : ''}" type="button" 
+                        data-bs-toggle="collapse" data-bs-target="#plan-${plan.id}">
+                  <strong>${escapeHtml(plan.topic)}</strong>
+                  <span class="badge ${statusBadge} ms-2">${statusText}</span>
+                  <small class="text-muted ms-2">${planDate.toLocaleDateString()}</small>
+                </button>
+              </h2>
+              <div id="plan-${plan.id}" class="accordion-collapse collapse ${index === 0 ? 'show' : ''}" 
+                   data-bs-parent="#lessonPlansAccordion">
+                <div class="accordion-body">
+                  <div class="row">
+                    <div class="col-md-6">
+                      <p><strong>Date:</strong> ${planDate.toLocaleDateString()}</p>
+                      <p><strong>Duration:</strong> ${plan.duration || '45'} minutes</p>
+                      <p><strong>Objectives:</strong></p>
+                      <ul>
+                        ${plan.objectives ? plan.objectives.split('\n').map(obj => `<li>${escapeHtml(obj)}</li>`).join('') : '<li>No objectives specified</li>'}
+                      </ul>
+                    </div>
+                    <div class="col-md-6">
+                      <p><strong>Materials Needed:</strong></p>
+                      <ul>
+                        ${plan.materials ? plan.materials.split('\n').map(mat => `<li>${escapeHtml(mat)}</li>`).join('') : '<li>No materials specified</li>'}
+                      </ul>
+                      <p><strong>Homework:</strong> ${escapeHtml(plan.homework || 'None')}</p>
+                    </div>
+                  </div>
+                  <div class="mt-3">
+                    <p><strong>Activities:</strong></p>
+                    <p>${escapeHtml(plan.activities || 'No activities specified')}</p>
+                  </div>
+                  <div class="mt-3">
+                    <p><strong>Notes:</strong></p>
+                    <p>${escapeHtml(plan.notes || 'No notes')}</p>
+                  </div>
+                  <div class="mt-3">
+                    <button class="btn btn-sm btn-success me-2" onclick="toggleLessonComplete(${plan.id})">
+                      <i class="fas fa-check"></i> ${plan.completed ? 'Mark Incomplete' : 'Mark Complete'}
+                    </button>
+                    <button class="btn btn-sm btn-primary me-2" onclick="editLessonPlan(${plan.id})">
+                      <i class="fas fa-edit"></i> Edit
+                    </button>
+                    <button class="btn btn-sm btn-danger" onclick="deleteLessonPlan(${plan.id})">
+                      <i class="fas fa-trash"></i> Delete
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+        });
+        
+        html += '</div>';
+      }
+      
+      content.innerHTML = html;
+    }
+    
+    function showCreateLessonPlan(classId) {
+      const cls = classes.find(c => c.id === classId);
+      const teacher = loggedInTeacher;
+      const teacherSubject = teacher ? teacher.subject : 'Mathematics';
+      
+      const modalHTML = `
+        <div class="modal fade" id="createLessonPlanModal" tabindex="-1">
+          <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+              <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">Create Lesson Plan - ${escapeHtml(cls.name)}</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+              </div>
+              <div class="modal-body">
+                <form id="lessonPlanForm">
+                  <input type="hidden" id="lesson-class-id" value="${classId}">
+                  <div class="row">
+                    <div class="col-md-6 mb-3">
+                      <label class="form-label">Topic/Title *</label>
+                      <input type="text" class="form-control" id="lesson-topic" required>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                      <label class="form-label">Date *</label>
+                      <input type="date" class="form-control" id="lesson-date" required>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                      <label class="form-label">Duration (min)</label>
+                      <input type="number" class="form-control" id="lesson-duration" value="45">
+                    </div>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">Learning Objectives (one per line)</label>
+                    <textarea class="form-control" id="lesson-objectives" rows="3" 
+                              placeholder="Example:\nUnderstand the concept of...\nApply knowledge to solve..."></textarea>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">Activities & Procedures</label>
+                    <textarea class="form-control" id="lesson-activities" rows="4" 
+                              placeholder="Describe the lesson activities, teaching methods, and procedures..."></textarea>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">Materials Needed (one per line)</label>
+                    <textarea class="form-control" id="lesson-materials" rows="2" 
+                              placeholder="Example:\nTextbook pages 45-50\nWhiteboard\nCalculators"></textarea>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">Homework Assignment</label>
+                    <input type="text" class="form-control" id="lesson-homework" 
+                           placeholder="Example: Complete exercises 1-10 on page 50">
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">Additional Notes</label>
+                    <textarea class="form-control" id="lesson-notes" rows="2"></textarea>
+                  </div>
+                </form>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveLessonPlan()">Save Lesson Plan</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      // Remove existing modal
+      const existing = document.getElementById('createLessonPlanModal');
+      if (existing) existing.remove();
+      
+      document.body.insertAdjacentHTML('beforeend', modalHTML);
+      const modal = new bootstrap.Modal(document.getElementById('createLessonPlanModal'));
+      modal.show();
+      
+      // Set default date to today
+      document.getElementById('lesson-date').valueAsDate = new Date();
+    }
+    
+    function saveLessonPlan() {
+      const topic = document.getElementById('lesson-topic').value.trim();
+      const date = document.getElementById('lesson-date').value;
+      const classId = parseInt(document.getElementById('lesson-class-id').value);
+      
+      if (!topic || !date) {
+        alert('Please fill in required fields (Topic and Date).');
+        return;
+      }
+      
+      const lessonPlans = JSON.parse(localStorage.getItem('teacherLessonPlans') || '[]');
+      
+      const newPlan = {
+        id: Date.now(),
+        classId: classId,
+        teacherId: loggedInTeacher ? loggedInTeacher.id : 1,
+        topic: topic,
+        date: date,
+        duration: document.getElementById('lesson-duration').value || '45',
+        objectives: document.getElementById('lesson-objectives').value.trim(),
+        activities: document.getElementById('lesson-activities').value.trim(),
+        materials: document.getElementById('lesson-materials').value.trim(),
+        homework: document.getElementById('lesson-homework').value.trim(),
+        notes: document.getElementById('lesson-notes').value.trim(),
+        completed: false,
+        createdDate: new Date().toISOString()
+      };
+      
+      lessonPlans.push(newPlan);
+      localStorage.setItem('teacherLessonPlans', JSON.stringify(lessonPlans));
+      
+      const modal = bootstrap.Modal.getInstance(document.getElementById('createLessonPlanModal'));
+      if (modal) modal.hide();
+      
+      alert('Lesson plan created successfully!');
+      loadTeacherLessonPlans();
+    }
+    
+    function toggleLessonComplete(planId) {
+      const lessonPlans = JSON.parse(localStorage.getItem('teacherLessonPlans') || '[]');
+      const plan = lessonPlans.find(p => p.id === planId);
+      
+      if (plan) {
+        plan.completed = !plan.completed;
+        localStorage.setItem('teacherLessonPlans', JSON.stringify(lessonPlans));
+        loadTeacherLessonPlans();
+      }
+    }
+    
+    function editLessonPlan(planId) {
+      alert('Edit lesson plan feature - coming soon! For now, you can delete and recreate the lesson plan.');
+    }
+    
+    function deleteLessonPlan(planId) {
+      if (!confirm('Are you sure you want to delete this lesson plan?')) return;
+      
+      const lessonPlans = JSON.parse(localStorage.getItem('teacherLessonPlans') || '[]');
+      const filtered = lessonPlans.filter(p => p.id !== planId);
+      localStorage.setItem('teacherLessonPlans', JSON.stringify(filtered));
+      
+      loadTeacherLessonPlans();
+    }
+    
+    function viewSyllabusProgress(classId) {
+      const lessonPlans = JSON.parse(localStorage.getItem('teacherLessonPlans') || '[]');
+      const classPlans = lessonPlans.filter(lp => lp.classId === classId);
+      
+      const total = classPlans.length;
+      const completed = classPlans.filter(p => p.completed).length;
+      const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+      
+      alert(`Syllabus Progress:\n\nTotal Lessons: ${total}\nCompleted: ${completed}\nProgress: ${percentage}%\n\nKeep up the great work!`);
+    }
+    
+    function loadTeacherTimetable() {
+      const content = document.getElementById('teacher-timetable-content');
+      const teacher = loggedInTeacher;
+      
+      if (!teacher) {
+        content.innerHTML = '<p class="text-muted">Please log in to view timetable.</p>';
+        return;
+      }
+      
+      // Get or initialize timetable
+      const timetables = JSON.parse(localStorage.getItem('teacherTimetables') || '{}');
+      const teacherTimetable = timetables[teacher.id] || getDefaultTimetable(teacher.id);
+      
+      const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+      const periods = [
+        { name: 'Period 1', time: '08:00 - 08:45' },
+        { name: 'Period 2', time: '08:50 - 09:35' },
+        { name: 'Period 3', time: '09:40 - 10:25' },
+        { name: 'Break', time: '10:25 - 10:45' },
+        { name: 'Period 4', time: '10:45 - 11:30' },
+        { name: 'Period 5', time: '11:35 - 12:20' },
+        { name: 'Lunch', time: '12:20 - 13:00' },
+        { name: 'Period 6', time: '13:00 - 13:45' },
+        { name: 'Period 7', time: '13:50 - 14:35' }
+      ];
+      
+      let html = `
+        <div class="mb-3">
+          <button class="btn btn-primary me-2" onclick="editTeacherTimetable()">
+            <i class="fas fa-edit"></i> Edit Timetable
+          </button>
+          <button class="btn btn-success" onclick="printTimetable()">
+            <i class="fas fa-print"></i> Print Timetable
+          </button>
+        </div>
+        
+        <div class="card">
+          <div class="card-header bg-primary text-white">
+            <h6 class="mb-0"><i class="fas fa-calendar-week"></i> Weekly Timetable - ${escapeHtml(teacher.name)}</h6>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-bordered table-sm mb-0" style="min-width: 800px;">
+                <thead class="table-light">
+                  <tr>
+                    <th style="width: 120px;">Time</th>
+      `;
+      
+      days.forEach(day => {
+        html += `<th class="text-center">${day}</th>`;
+      });
+      
+      html += '</tr></thead><tbody>';
+      
+      periods.forEach(period => {
+        html += `<tr>`;
+        html += `<td class="fw-bold">${period.name}<br><small class="text-muted">${period.time}</small></td>`;
+        
+        days.forEach(day => {
+          const slot = teacherTimetable[day] ? teacherTimetable[day][period.name] : null;
+          
+          if (period.name === 'Break' || period.name === 'Lunch') {
+            html += `<td class="text-center bg-light text-muted">${period.name}</td>`;
+          } else if (slot) {
+            const cls = classes.find(c => c.id === slot.classId);
+            const className = cls ? cls.name : 'Unknown';
+            html += `<td class="text-center">
+              <div class="p-2" style="background: #e3f2fd; border-radius: 5px;">
+                <strong>${escapeHtml(slot.subject || teacher.subject)}</strong><br>
+                <small>${escapeHtml(className)}</small><br>
+                <small class="text-muted">${escapeHtml(slot.room || 'Room TBA')}</small>
+              </div>
+            </td>`;
+          } else {
+            html += `<td class="text-center text-muted">Free</td>`;
+          }
+        });
+        
+        html += '</tr>';
+      });
+      
+      html += '</tbody></table></div></div></div>';
+      
+      content.innerHTML = html;
+    }
+    
+    function getDefaultTimetable(teacherId) {
+      // Generate a sample timetable
+      const teacher = teachers.find(t => t.id === teacherId) || loggedInTeacher;
+      const teacherClasses = classes.filter(c => c.teacherId === teacherId);
+      
+      const timetable = {};
+      const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+      const periods = ['Period 1', 'Period 2', 'Period 3', 'Period 4', 'Period 5', 'Period 6', 'Period 7'];
+      
+      // Assign classes to random periods
+      days.forEach(day => {
+        timetable[day] = {};
+        const availablePeriods = [...periods];
+        
+        // Assign 3-4 classes per day
+        const classCount = Math.min(teacherClasses.length, Math.floor(Math.random() * 2) + 3);
+        for (let i = 0; i < classCount && availablePeriods.length > 0; i++) {
+          const periodIndex = Math.floor(Math.random() * availablePeriods.length);
+          const period = availablePeriods[periodIndex];
+          availablePeriods.splice(periodIndex, 1);
+          
+          const cls = teacherClasses[i % teacherClasses.length];
+          timetable[day][period] = {
+            classId: cls.id,
+            subject: teacher ? teacher.subject : 'Mathematics',
+            room: `Room ${Math.floor(Math.random() * 20) + 1}`
+          };
+        }
+      });
+      
+      return timetable;
+    }
+    
+    function editTeacherTimetable() {
+      alert('Timetable editing interface - coming soon!\n\nFor now, the system generates a default timetable based on your assigned classes. Advanced editing features will be available in a future update.');
+    }
+    
+    function printTimetable() {
+      window.print();
     }
     
     function sendTeacherAnnouncement() {
@@ -5843,16 +6661,521 @@
         return;
       }
       
+      const cls = classes.find(c => c.id === parseInt(classId));
+      if (!cls) {
+        alert('Invalid class selected.');
+        return;
+      }
+      
       const content = document.getElementById('teacher-report-content');
-      content.innerHTML = `<div class="alert alert-success mt-3">Generating ${escapeHtml(reportType)} for the selected class...</div>`;
+      content.innerHTML = `<div class="alert alert-info"><i class="fas fa-spinner fa-spin"></i> Generating ${escapeHtml(reportType)}...</div>`;
       
       setTimeout(() => {
-        content.innerHTML += '<p>Report generated successfully. You can now print this page.</p>';
-      }, 1000);
+        let reportHTML = '';
+        
+        if (reportType === 'Attendance Summary') {
+          reportHTML = generateAttendanceReport(cls);
+        } else if (reportType === 'Performance Report') {
+          reportHTML = generatePerformanceReport(cls);
+        } else if (reportType === 'Behavior Report') {
+          reportHTML = generateBehaviorReport(cls);
+        }
+        
+        content.innerHTML = reportHTML;
+      }, 500);
+    }
+    
+    function generateAttendanceReport(cls) {
+      const attendance = JSON.parse(localStorage.getItem('attendance') || '{}');
+      const classKey = `class-${cls.id}`;
+      const classAttendance = attendance[classKey] || {};
+      
+      let html = `
+        <div class="card">
+          <div class="card-header bg-success text-white">
+            <h5 class="mb-0"><i class="fas fa-calendar-check"></i> Attendance Summary Report</h5>
+          </div>
+          <div class="card-body">
+            <h6>Class: ${escapeHtml(cls.name)} (Grade ${cls.grade})</h6>
+            <p class="text-muted">Generated: ${new Date().toLocaleString()}</p>
+            <hr>
+            
+            <table class="table table-striped table-bordered">
+              <thead class="table-primary">
+                <tr>
+                  <th>Student ID</th>
+                  <th>Student Name</th>
+                  <th>Present</th>
+                  <th>Absent</th>
+                  <th>Late</th>
+                  <th>Attendance Rate</th>
+                </tr>
+              </thead>
+              <tbody>
+      `;
+      
+      cls.studentIds.forEach(sid => {
+        const student = students.find(s => s.id === sid);
+        if (student) {
+          let present = 0, absent = 0, late = 0;
+          
+          // Count attendance records
+          Object.keys(classAttendance).forEach(date => {
+            const dateRecords = classAttendance[date];
+            if (dateRecords && dateRecords[sid]) {
+              const status = dateRecords[sid].status;
+              if (status === 'Present') present++;
+              else if (status === 'Absent') absent++;
+              else if (status === 'Late') late++;
+            }
+          });
+          
+          const total = present + absent + late;
+          const rate = total > 0 ? ((present + late) / total * 100).toFixed(1) : 'N/A';
+          const rateClass = rate !== 'N/A' && parseFloat(rate) >= 90 ? 'text-success' : 
+                           rate !== 'N/A' && parseFloat(rate) >= 75 ? 'text-warning' : 'text-danger';
+          
+          html += `
+            <tr>
+              <td>${student.id}</td>
+              <td>${escapeHtml(student.name)}</td>
+              <td class="text-center">${present}</td>
+              <td class="text-center">${absent}</td>
+              <td class="text-center">${late}</td>
+              <td class="text-center fw-bold ${rateClass}">${rate}${rate !== 'N/A' ? '%' : ''}</td>
+            </tr>
+          `;
+        }
+      });
+      
+      html += `
+              </tbody>
+            </table>
+            
+            <div class="mt-4 text-end no-print">
+              <button class="btn btn-primary" onclick="window.print()">
+                <i class="fas fa-print"></i> Print Report
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      return html;
+    }
+    
+    function generatePerformanceReport(cls) {
+      const allGrades = JSON.parse(localStorage.getItem('teacherGrades') || '{}');
+      const teacher = loggedInTeacher;
+      const teacherSubject = teacher ? teacher.subject : 'Mathematics';
+      const term = document.getElementById('teacher-grade-term') ? document.getElementById('teacher-grade-term').value : 'Term 1 2026';
+      const gradeKey = `${cls.id}-${term}`;
+      
+      let html = `
+        <div class="card">
+          <div class="card-header bg-info text-white">
+            <h5 class="mb-0"><i class="fas fa-chart-bar"></i> Performance Report</h5>
+          </div>
+          <div class="card-body">
+            <h6>Class: ${escapeHtml(cls.name)} (Grade ${cls.grade})</h6>
+            <p><strong>Subject:</strong> ${escapeHtml(teacherSubject)} | <strong>Term:</strong> ${escapeHtml(term)}</p>
+            <p class="text-muted">Generated: ${new Date().toLocaleString()}</p>
+            <hr>
+            
+            <table class="table table-striped table-bordered">
+              <thead class="table-primary">
+                <tr>
+                  <th>Student ID</th>
+                  <th>Student Name</th>
+                  <th>Assignment</th>
+                  <th>Quiz</th>
+                  <th>Test</th>
+                  <th>Exam</th>
+                  <th>Final Grade</th>
+                  <th>Letter</th>
+                </tr>
+              </thead>
+              <tbody>
+      `;
+      
+      let totalFinalGrade = 0;
+      let gradeCount = 0;
+      
+      cls.studentIds.forEach(sid => {
+        const student = students.find(s => s.id === sid);
+        if (student) {
+          const studentGradeKey = `${gradeKey}-${sid}`;
+          const grades = allGrades[studentGradeKey] || {};
+          
+          const assignment = parseFloat(grades.assignment || 0);
+          const quiz = parseFloat(grades.quiz || 0);
+          const test = parseFloat(grades.test || 0);
+          const exam = parseFloat(grades.exam || 0);
+          
+          let finalGrade = 0;
+          let letterGrade = '-';
+          let gradeClass = 'text-secondary';
+          
+          if (assignment || quiz || test || exam) {
+            finalGrade = (assignment * 0.20) + (quiz * 0.20) + (test * 0.30) + (exam * 0.30);
+            totalFinalGrade += finalGrade;
+            gradeCount++;
+            
+            if (finalGrade >= 90) { letterGrade = 'A'; gradeClass = 'text-success'; }
+            else if (finalGrade >= 80) { letterGrade = 'B'; gradeClass = 'text-info'; }
+            else if (finalGrade >= 70) { letterGrade = 'C'; gradeClass = 'text-primary'; }
+            else if (finalGrade >= 60) { letterGrade = 'D'; gradeClass = 'text-warning'; }
+            else { letterGrade = 'F'; gradeClass = 'text-danger'; }
+          }
+          
+          html += `
+            <tr>
+              <td>${student.id}</td>
+              <td>${escapeHtml(student.name)}</td>
+              <td class="text-center">${assignment || '-'}</td>
+              <td class="text-center">${quiz || '-'}</td>
+              <td class="text-center">${test || '-'}</td>
+              <td class="text-center">${exam || '-'}</td>
+              <td class="text-center fw-bold ${gradeClass}">${finalGrade > 0 ? finalGrade.toFixed(1) + '%' : '-'}</td>
+              <td class="text-center"><span class="badge ${gradeClass.replace('text-', 'bg-')}">${letterGrade}</span></td>
+            </tr>
+          `;
+        }
+      });
+      
+      const classAverage = gradeCount > 0 ? (totalFinalGrade / gradeCount).toFixed(1) : 'N/A';
+      
+      html += `
+              </tbody>
+              <tfoot class="table-light">
+                <tr>
+                  <th colspan="6" class="text-end">Class Average:</th>
+                  <th class="text-center fw-bold">${classAverage}${classAverage !== 'N/A' ? '%' : ''}</th>
+                  <th></th>
+                </tr>
+              </tfoot>
+            </table>
+            
+            <div class="mt-4 text-end no-print">
+              <button class="btn btn-primary" onclick="window.print()">
+                <i class="fas fa-print"></i> Print Report
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      return html;
+    }
+    
+    function generateBehaviorReport(cls) {
+      let html = `
+        <div class="card">
+          <div class="card-header bg-warning">
+            <h5 class="mb-0"><i class="fas fa-user-check"></i> Behavior Report</h5>
+          </div>
+          <div class="card-body">
+            <h6>Class: ${escapeHtml(cls.name)} (Grade ${cls.grade})</h6>
+            <p class="text-muted">Generated: ${new Date().toLocaleString()}</p>
+            <hr>
+            
+            <div class="alert alert-info">
+              <i class="fas fa-info-circle"></i> Behavior tracking is a placeholder feature. 
+              In a full implementation, this would show detailed behavior records, incidents, 
+              and positive reinforcements for each student.
+            </div>
+            
+            <table class="table table-striped table-bordered">
+              <thead class="table-primary">
+                <tr>
+                  <th>Student ID</th>
+                  <th>Student Name</th>
+                  <th>Conduct</th>
+                  <th>Participation</th>
+                  <th>Notes</th>
+                </tr>
+              </thead>
+              <tbody>
+      `;
+      
+      cls.studentIds.forEach(sid => {
+        const student = students.find(s => s.id === sid);
+        if (student) {
+          // Generate sample behavior data
+          const conducts = ['Excellent', 'Good', 'Satisfactory', 'Needs Improvement'];
+          const conduct = conducts[Math.floor(Math.random() * conducts.length)];
+          const participation = conducts[Math.floor(Math.random() * conducts.length)];
+          
+          const conductClass = conduct === 'Excellent' ? 'text-success' : 
+                              conduct === 'Good' ? 'text-info' : 
+                              conduct === 'Satisfactory' ? 'text-warning' : 'text-danger';
+          
+          html += `
+            <tr>
+              <td>${student.id}</td>
+              <td>${escapeHtml(student.name)}</td>
+              <td class="fw-bold ${conductClass}">${conduct}</td>
+              <td>${participation}</td>
+              <td>Regular attendance and engagement</td>
+            </tr>
+          `;
+        }
+      });
+      
+      html += `
+              </tbody>
+            </table>
+            
+            <div class="mt-4 text-end no-print">
+              <button class="btn btn-primary" onclick="window.print()">
+                <i class="fas fa-print"></i> Print Report
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      return html;
     }
     
     function uploadTeacherResource() {
-      alert('Resource upload feature coming soon! You will be able to upload PDFs, documents, and other study materials for your students.');
+      const modalHTML = `
+        <div class="modal fade" id="uploadResourceModal" tabindex="-1">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="fas fa-upload"></i> Upload Resource</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+              </div>
+              <div class="modal-body">
+                <form id="resourceUploadForm">
+                  <div class="mb-3">
+                    <label class="form-label">Resource Title *</label>
+                    <input type="text" class="form-control" id="resource-title" required>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">Description</label>
+                    <textarea class="form-control" id="resource-description" rows="2"></textarea>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">Category *</label>
+                    <select class="form-select" id="resource-category" required>
+                      <option value="">Choose category...</option>
+                      <option value="Lecture Notes">Lecture Notes</option>
+                      <option value="Worksheets">Worksheets</option>
+                      <option value="Practice Tests">Practice Tests</option>
+                      <option value="Study Guides">Study Guides</option>
+                      <option value="Videos">Videos</option>
+                      <option value="Presentations">Presentations</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">Share with Class *</label>
+                    <select class="form-select" id="resource-class" required>
+                      <option value="">Choose class...</option>
+                      <option value="all">All My Classes</option>
+                    </select>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">File/Link *</label>
+                    <div class="input-group">
+                      <input type="text" class="form-control" id="resource-link" 
+                             placeholder="Enter file URL or upload file (simulated)">
+                      <button class="btn btn-outline-secondary" type="button" onclick="simulateFileUpload()">
+                        <i class="fas fa-file-upload"></i> Browse
+                      </button>
+                    </div>
+                    <small class="text-muted">In production, this would allow actual file uploads</small>
+                  </div>
+                </form>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveTeacherResource()">Upload Resource</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      // Remove existing modal
+      const existing = document.getElementById('uploadResourceModal');
+      if (existing) existing.remove();
+      
+      document.body.insertAdjacentHTML('beforeend', modalHTML);
+      const modal = new bootstrap.Modal(document.getElementById('uploadResourceModal'));
+      modal.show();
+      
+      // Populate class select
+      const classSelect = document.getElementById('resource-class');
+      if (loggedInTeacher) {
+        const teacherClasses = classes.filter(c => c.teacherId === loggedInTeacher.id);
+        teacherClasses.forEach(cls => {
+          const opt = document.createElement('option');
+          opt.value = cls.id;
+          opt.textContent = `${cls.name} (Grade ${cls.grade})`;
+          classSelect.appendChild(opt);
+        });
+      }
+    }
+    
+    function simulateFileUpload() {
+      const link = document.getElementById('resource-link');
+      const filename = prompt('Enter filename (for simulation):', 'example-document.pdf');
+      if (filename) {
+        link.value = `uploads/${filename}`;
+      }
+    }
+    
+    function saveTeacherResource() {
+      const title = document.getElementById('resource-title').value.trim();
+      const description = document.getElementById('resource-description').value.trim();
+      const category = document.getElementById('resource-category').value;
+      const classId = document.getElementById('resource-class').value;
+      const link = document.getElementById('resource-link').value.trim();
+      
+      if (!title || !category || !classId || !link) {
+        alert('Please fill in all required fields.');
+        return;
+      }
+      
+      const resources = JSON.parse(localStorage.getItem('teacherResources') || '[]');
+      
+      const newResource = {
+        id: Date.now(),
+        teacherId: loggedInTeacher ? loggedInTeacher.id : 1,
+        title: title,
+        description: description,
+        category: category,
+        classId: classId,
+        link: link,
+        uploadDate: new Date().toISOString(),
+        downloads: 0
+      };
+      
+      resources.push(newResource);
+      localStorage.setItem('teacherResources', JSON.stringify(resources));
+      
+      const modal = bootstrap.Modal.getInstance(document.getElementById('uploadResourceModal'));
+      if (modal) modal.hide();
+      
+      alert('Resource uploaded successfully!');
+      loadTeacherResources();
+    }
+    
+    function loadTeacherResources() {
+      const content = document.getElementById('teacher-resources-content');
+      const resources = JSON.parse(localStorage.getItem('teacherResources') || '[]');
+      
+      // Filter resources for this teacher
+      const teacherResources = resources.filter(r => {
+        if (!loggedInTeacher) return true;
+        return r.teacherId === loggedInTeacher.id;
+      });
+      
+      if (teacherResources.length === 0) {
+        content.innerHTML = '<div class="alert alert-info">No resources uploaded yet. Click "Upload New Resource" to share materials with your students.</div>';
+        return;
+      }
+      
+      // Group by category
+      const byCategory = {};
+      teacherResources.forEach(res => {
+        if (!byCategory[res.category]) byCategory[res.category] = [];
+        byCategory[res.category].push(res);
+      });
+      
+      let html = '';
+      
+      Object.keys(byCategory).sort().forEach(category => {
+        html += `
+          <div class="card mb-3">
+            <div class="card-header bg-light">
+              <h6 class="mb-0"><i class="fas fa-folder-open"></i> ${escapeHtml(category)}</h6>
+            </div>
+            <div class="card-body">
+              <div class="list-group list-group-flush">
+        `;
+        
+        byCategory[category].forEach(resource => {
+          const uploadDate = new Date(resource.uploadDate).toLocaleDateString();
+          const cls = classes.find(c => c.id === parseInt(resource.classId));
+          const className = resource.classId === 'all' ? 'All Classes' : (cls ? cls.name : 'Unknown');
+          
+          // Determine file type icon
+          let fileIcon = 'fa-file';
+          if (resource.link.includes('.pdf')) fileIcon = 'fa-file-pdf text-danger';
+          else if (resource.link.includes('.doc')) fileIcon = 'fa-file-word text-primary';
+          else if (resource.link.includes('.ppt')) fileIcon = 'fa-file-powerpoint text-warning';
+          else if (resource.link.includes('.xls')) fileIcon = 'fa-file-excel text-success';
+          else if (resource.link.includes('http')) fileIcon = 'fa-link text-info';
+          
+          html += `
+            <div class="list-group-item">
+              <div class="d-flex justify-content-between align-items-start">
+                <div class="flex-grow-1">
+                  <h6 class="mb-1">
+                    <i class="fas ${fileIcon} me-2"></i>
+                    ${escapeHtml(resource.title)}
+                  </h6>
+                  <p class="mb-1 small">${escapeHtml(resource.description || 'No description')}</p>
+                  <small class="text-muted">
+                    <i class="fas fa-chalkboard me-1"></i> ${escapeHtml(className)}
+                    <i class="fas fa-calendar ms-3 me-1"></i> ${uploadDate}
+                    <i class="fas fa-download ms-3 me-1"></i> ${resource.downloads} downloads
+                  </small>
+                </div>
+                <div class="btn-group">
+                  <button class="btn btn-sm btn-primary" onclick="viewResource('${resource.link}', ${resource.id})">
+                    <i class="fas fa-eye"></i> View
+                  </button>
+                  <button class="btn btn-sm btn-danger" onclick="deleteResource(${resource.id})">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          `;
+        });
+        
+        html += '</div></div></div>';
+      });
+      
+      content.innerHTML = html;
+      
+      // Update resources count
+      const countEl = document.getElementById('teacher-resources-count');
+      if (countEl) countEl.textContent = teacherResources.length;
+    }
+    
+    function viewResource(link, resourceId) {
+      // Increment download count
+      const resources = JSON.parse(localStorage.getItem('teacherResources') || '[]');
+      const resource = resources.find(r => r.id === resourceId);
+      if (resource) {
+        resource.downloads = (resource.downloads || 0) + 1;
+        localStorage.setItem('teacherResources', JSON.stringify(resources));
+      }
+      
+      // Open link
+      if (link.startsWith('http')) {
+        window.open(link, '_blank');
+      } else {
+        alert(`Resource would be downloaded: ${link}\n\nIn production, this would download or display the file.`);
+      }
+      
+      loadTeacherResources();
+    }
+    
+    function deleteResource(resourceId) {
+      if (!confirm('Are you sure you want to delete this resource?')) return;
+      
+      const resources = JSON.parse(localStorage.getItem('teacherResources') || '[]');
+      const filtered = resources.filter(r => r.id !== resourceId);
+      localStorage.setItem('teacherResources', JSON.stringify(filtered));
+      
+      loadTeacherResources();
     }
     
     function teacherLogout() {
