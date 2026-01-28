@@ -1586,9 +1586,13 @@
             <div id="teacher-attendance-content"></div>
             <div class="mt-3">
               <button class="btn btn-primary me-2" onclick="saveTeacherAttendance()">Save Attendance</button>
-              <button class="btn btn-success" onclick="exportAttendanceToCloud()">
+              <button class="btn btn-success" onclick="exportAttendanceToCloud()" 
+                      title="Export attendance register to Firebase Cloud Storage for backup and record-keeping">
                 <i class="fas fa-cloud-upload-alt"></i> Save to Cloud Storage
               </button>
+              <small class="text-muted d-block mt-2">
+                <i class="fas fa-info-circle"></i> Cloud storage saves a permanent backup of attendance records
+              </small>
             </div>
           </div>
 
@@ -2916,6 +2920,42 @@
     // ============================================================================
     
     /**
+     * Get user-friendly error message from Firebase error
+     * @param {Error} error - Firebase error object
+     * @returns {string} - User-friendly error message
+     */
+    function getUploadErrorMessage(error) {
+      if (!error) return 'Unknown error occurred';
+      
+      const errorCode = error.code || '';
+      const errorMessage = error.message || error.toString();
+      
+      // Common Firebase Storage error codes
+      if (errorCode.includes('storage/unauthorized')) {
+        return 'You do not have permission to upload this file.';
+      } else if (errorCode.includes('storage/canceled')) {
+        return 'Upload was cancelled.';
+      } else if (errorCode.includes('storage/unknown')) {
+        return 'An unknown error occurred. Please try again.';
+      } else if (errorCode.includes('storage/object-not-found')) {
+        return 'File not found.';
+      } else if (errorCode.includes('storage/quota-exceeded')) {
+        return 'Storage quota exceeded. Please contact administrator.';
+      } else if (errorCode.includes('storage/unauthenticated')) {
+        return 'You must be logged in to upload files.';
+      } else if (errorCode.includes('storage/retry-limit-exceeded')) {
+        return 'Upload failed after multiple retries. Please check your connection.';
+      } else if (errorMessage.includes('File size')) {
+        return 'File is too large. Maximum size is 50MB.';
+      } else if (errorMessage.includes('network')) {
+        return 'Network error. Please check your internet connection.';
+      }
+      
+      // Return original message if no match
+      return `Upload failed: ${errorMessage}`;
+    }
+    
+    /**
      * Upload a file to Firebase Storage
      * @param {File} file - The file to upload
      * @param {string} path - The storage path (e.g., 'students/1/document.pdf')
@@ -2929,7 +2969,7 @@
         return downloadURL;
       } catch (error) {
         console.error('Error uploading file:', error);
-        throw error;
+        throw new Error(getUploadErrorMessage(error));
       }
     }
     
@@ -2950,13 +2990,25 @@
     }
     
     /**
+     * Get file extension from filename
+     * @param {string} filename - The filename
+     * @returns {string} - File extension
+     */
+    function getFileExtension(filename) {
+      if (!filename || typeof filename !== 'string') return '';
+      const lastDotIndex = filename.lastIndexOf('.');
+      if (lastDotIndex === -1) return '';
+      return filename.slice(lastDotIndex + 1);
+    }
+    
+    /**
      * Upload file to student folder
      * @param {string} studentId - Student ID
      * @param {File} file - File to upload
      * @returns {Promise<string>} - Download URL
      */
     async function uploadStudentFile(studentId, file) {
-      const fileName = `${Date.now()}_${file.name}`;
+      const fileName = generateUniqueFilename(file.name);
       const path = `students/${studentId}/${fileName}`;
       return await uploadToStorage(file, path);
     }
@@ -2968,7 +3020,7 @@
      * @returns {Promise<string>} - Download URL
      */
     async function uploadTeacherFile(teacherId, file) {
-      const fileName = `${Date.now()}_${file.name}`;
+      const fileName = generateUniqueFilename(file.name);
       const path = `teachers/${teacherId}/${fileName}`;
       return await uploadToStorage(file, path);
     }
@@ -2980,7 +3032,7 @@
      * @returns {Promise<string>} - Download URL
      */
     async function uploadParentFile(parentId, file) {
-      const fileName = `${Date.now()}_${file.name}`;
+      const fileName = generateUniqueFilename(file.name);
       const path = `parents/${parentId}/${fileName}`;
       return await uploadToStorage(file, path);
     }
@@ -2993,7 +3045,7 @@
      * @returns {Promise<string>} - Download URL
      */
     async function uploadAssignmentFile(teacherId, assignmentId, file) {
-      const fileName = `${Date.now()}_${file.name}`;
+      const fileName = generateUniqueFilename(file.name);
       const path = `teacher-portal/${teacherId}/assignments/${assignmentId}/${fileName}`;
       return await uploadToStorage(file, path);
     }
@@ -3005,7 +3057,7 @@
      * @returns {Promise<string>} - Download URL
      */
     async function uploadAttendanceRegister(teacherId, file) {
-      const fileName = `${Date.now()}_${file.name}`;
+      const fileName = generateUniqueFilename(file.name);
       const path = `teacher-portal/${teacherId}/attendance/${fileName}`;
       return await uploadToStorage(file, path);
     }
@@ -3017,7 +3069,7 @@
      * @returns {Promise<string>} - Download URL
      */
     async function uploadTeacherWork(teacherId, file) {
-      const fileName = `${Date.now()}_${file.name}`;
+      const fileName = generateUniqueFilename(file.name);
       const path = `teacher-portal/${teacherId}/work/${fileName}`;
       return await uploadToStorage(file, path);
     }
@@ -3036,12 +3088,30 @@
     }
     
     /**
-     * Get file extension from filename
-     * @param {string} filename - The filename
-     * @returns {string} - File extension
+     * Sanitize filename for safe storage
+     * @param {string} filename - Original filename
+     * @returns {string} - Sanitized filename
      */
-    function getFileExtension(filename) {
-      return filename.slice((filename.lastIndexOf(".") - 1 >>> 0) + 2);
+    function sanitizeFilename(filename) {
+      // Remove or replace problematic characters
+      return filename
+        .replace(/[^a-zA-Z0-9._-]/g, '_') // Replace special chars with underscore
+        .replace(/_{2,}/g, '_') // Replace multiple underscores with single
+        .substring(0, 200); // Limit length to 200 chars
+    }
+    
+    /**
+     * Generate unique filename with timestamp and random component
+     * @param {string} originalName - Original filename
+     * @returns {string} - Unique sanitized filename
+     */
+    function generateUniqueFilename(originalName) {
+      const sanitized = sanitizeFilename(originalName);
+      const timestamp = Date.now();
+      const random = Math.floor(Math.random() * 10000);
+      const extension = getFileExtension(sanitized);
+      const nameWithoutExt = sanitized.substring(0, sanitized.lastIndexOf('.'));
+      return extension ? `${timestamp}_${random}_${nameWithoutExt}.${extension}` : `${timestamp}_${random}_${sanitized}`;
     }
     
     /**
@@ -5943,12 +6013,12 @@
         if (cls && cls.studentIds) {
           cls.studentIds.forEach(studentId => {
             const student = students.find(s => s.id === studentId);
-            const attRecord = attendanceData[studentId] || { status: 'Present', notes: '' };
+            const attendanceRecord = attendanceData[studentId] || { status: 'Present', notes: '' };
             report.attendance.push({
               studentId: studentId,
               studentName: student ? student.name : 'Unknown',
-              status: attRecord.status,
-              notes: attRecord.notes
+              status: attendanceRecord.status,
+              notes: attendanceRecord.notes
             });
           });
         }
@@ -5965,20 +6035,25 @@
         alert(`Attendance register saved to cloud storage successfully!\nFile: ${fileName}`);
         
         // Optionally, store the URL in localStorage for future reference
-        const savedRegisters = JSON.parse(localStorage.getItem('savedAttendanceRegisters') || '[]');
-        savedRegisters.push({
-          fileName: fileName,
-          url: downloadURL,
-          classId: classId,
-          className: className,
-          date: date,
-          uploadedAt: new Date().toISOString()
-        });
-        localStorage.setItem('savedAttendanceRegisters', JSON.stringify(savedRegisters));
+        try {
+          const savedRegisters = JSON.parse(localStorage.getItem('savedAttendanceRegisters') || '[]');
+          savedRegisters.push({
+            fileName: fileName,
+            url: downloadURL,
+            classId: classId,
+            className: className,
+            date: date,
+            uploadedAt: new Date().toISOString()
+          });
+          localStorage.setItem('savedAttendanceRegisters', JSON.stringify(savedRegisters));
+        } catch (storageError) {
+          console.warn('Failed to save register info to localStorage:', storageError);
+          // Not critical, continue without localStorage
+        }
         
       } catch (error) {
         console.error('Error saving attendance to cloud:', error);
-        alert('Failed to save attendance to cloud storage. Please try again.');
+        alert(`Failed to save attendance to cloud storage.\n\nError: ${error.message || 'Unknown error'}\n\nPlease try again or contact support if the problem persists.`);
       }
     }
     
@@ -6281,6 +6356,25 @@
         return;
       }
       
+      // Validate due date
+      const dueDateObj = new Date(dueDate);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (dueDateObj < today) {
+        if (!confirm('The due date is in the past. Do you want to continue?')) {
+          return;
+        }
+      }
+      
+      // Validate file sizes (50MB limit for assignments)
+      const MAX_FILE_SIZE = 50 * 1024 * 1024;
+      for (let i = 0; i < files.length; i++) {
+        if (files[i].size > MAX_FILE_SIZE) {
+          alert(`File "${files[i].name}" is too large. Maximum size is 50MB.`);
+          return;
+        }
+      }
+      
       // Disable create button while uploading
       const createBtn = document.getElementById('create-assignment-btn');
       const originalBtnText = createBtn.innerHTML;
@@ -6296,6 +6390,8 @@
         
         // Upload files to Firebase Storage
         const attachments = [];
+        const failedFiles = [];
+        
         if (files.length > 0) {
           for (let i = 0; i < files.length; i++) {
             const file = files[i];
@@ -6309,7 +6405,18 @@
               });
             } catch (error) {
               console.error(`Error uploading file ${file.name}:`, error);
-              alert(`Failed to upload ${file.name}. Please try again.`);
+              failedFiles.push({ name: file.name, error: error.message });
+            }
+          }
+          
+          // Show summary of failed uploads if any
+          if (failedFiles.length > 0) {
+            const failedList = failedFiles.map(f => `- ${f.name}: ${f.error}`).join('\n');
+            const continueAnyway = confirm(
+              `${failedFiles.length} file(s) failed to upload:\n\n${failedList}\n\nDo you want to create the assignment with the ${attachments.length} successfully uploaded file(s)?`
+            );
+            if (!continueAnyway) {
+              return;
             }
           }
         }
@@ -6348,7 +6455,7 @@
         loadTeacherAssignments();
       } catch (error) {
         console.error('Error creating assignment:', error);
-        alert('An error occurred while creating the assignment. Please try again.');
+        alert(`An error occurred while creating the assignment: ${error.message || 'Unknown error'}`);
       } finally {
         // Re-enable create button
         createBtn.disabled = false;
@@ -6375,6 +6482,25 @@
             html += '</ul></div>';
             fileList.innerHTML = html;
           } else {
+            fileList.innerHTML = '';
+          }
+        });
+      }
+      
+      // Clear assignment modal when closed
+      const assignmentModal = document.getElementById('addAssignmentModal');
+      if (assignmentModal) {
+        assignmentModal.addEventListener('hidden.bs.modal', function() {
+          // Clear form fields
+          document.getElementById('assignment-title').value = '';
+          document.getElementById('assignment-description').value = '';
+          document.getElementById('assignment-due-date').value = '';
+          document.getElementById('assignment-points').value = '100';
+          if (assignmentFileInput) {
+            assignmentFileInput.value = '';
+          }
+          const fileList = document.getElementById('assignment-file-list');
+          if (fileList) {
             fileList.innerHTML = '';
           }
         });
@@ -7410,6 +7536,13 @@
         return;
       }
       
+      // Validate file size (50MB limit for work documents)
+      const MAX_FILE_SIZE = 50 * 1024 * 1024;
+      if (file.size > MAX_FILE_SIZE) {
+        alert(`File "${file.name}" is too large. Maximum size is 50MB.`);
+        return;
+      }
+      
       // Disable save button while uploading
       const saveBtn = document.getElementById('save-resource-btn');
       const originalBtnText = saveBtn.innerHTML;
@@ -7447,7 +7580,7 @@
         loadTeacherResources();
       } catch (error) {
         console.error('Error uploading resource:', error);
-        alert('Failed to upload resource. Please try again.');
+        alert(`Failed to upload resource.\n\nError: ${error.message || 'Unknown error'}\n\nPlease try again or contact support if the problem persists.`);
       } finally {
         // Re-enable save button
         saveBtn.disabled = false;
