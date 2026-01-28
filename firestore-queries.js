@@ -178,25 +178,23 @@ export async function getStudentsByGrade(grade) {
 
 /**
  * Get a single student by ID
- * @param {string} studentId - Student ID
+ * @param {string} studentId - Student ID (document ID)
  * @returns {Promise<Object>} Student data
  */
 export async function getStudentById(studentId) {
   try {
-    const studentDoc = await window.firebaseGetDocs(
-      window.firebaseQuery(
-        window.firebaseCollection(window.firebaseDb, 'students'),
-        window.firebaseWhere('id', '==', studentId)
-      )
-    );
+    // Use getDoc to fetch a single document by ID
+    const { getDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+    const studentDocRef = window.firebaseDoc(window.firebaseDb, 'students', studentId);
+    const studentDoc = await getDoc(studentDocRef);
     
-    if (studentDoc.empty) {
+    if (!studentDoc.exists()) {
       throw new Error('Student not found');
     }
     
     return {
-      id: studentDoc.docs[0].id,
-      ...studentDoc.docs[0].data()
+      id: studentDoc.id,
+      ...studentDoc.data()
     };
   } catch (error) {
     console.error('Error fetching student:', error);
@@ -354,7 +352,6 @@ export async function getAllClasses() {
   try {
     const classesQuery = window.firebaseQuery(
       window.firebaseCollection(window.firebaseDb, 'classes'),
-      window.firebaseOrderBy('grade'),
       window.firebaseOrderBy('name')
     );
     
@@ -438,38 +435,41 @@ export async function getClassesByTeacher(teacherId) {
 
 /**
  * Get class with enrolled students
- * @param {string} classId - Class ID
+ * @param {string} classId - Class ID (document ID)
  * @returns {Promise<Object>} Class data with student details
  */
 export async function getClassWithStudents(classId) {
   try {
-    const classDoc = await window.firebaseDoc(window.firebaseDb, 'classes', classId);
-    const classSnapshot = await window.firebaseGetDocs(
-      window.firebaseQuery(
-        window.firebaseCollection(window.firebaseDb, 'classes'),
-        window.firebaseWhere(window.firebaseDoc.id, '==', classId)
-      )
-    );
+    // Use getDoc to fetch a single document by ID
+    const { getDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+    const classDocRef = window.firebaseDoc(window.firebaseDb, 'classes', classId);
+    const classDoc = await getDoc(classDocRef);
     
-    if (classSnapshot.empty) {
+    if (!classDoc.exists()) {
       throw new Error('Class not found');
     }
     
-    const classData = classSnapshot.docs[0].data();
+    const classData = classDoc.data();
     
     // Fetch enrolled students if studentIds exist
     if (classData.studentIds && classData.studentIds.length > 0) {
-      const studentsPromises = classData.studentIds.map(studentId => 
-        getStudentById(studentId)
-      );
-      const students = await Promise.all(studentsPromises);
+      // Fetch students in batches to avoid too many simultaneous requests
+      const students = [];
+      for (const studentId of classData.studentIds) {
+        try {
+          const student = await getStudentById(studentId);
+          students.push(student);
+        } catch (error) {
+          console.warn(`Could not fetch student ${studentId}:`, error);
+        }
+      }
       classData.students = students;
     } else {
       classData.students = [];
     }
     
     return {
-      id: classSnapshot.docs[0].id,
+      id: classDoc.id,
       ...classData
     };
   } catch (error) {
@@ -486,25 +486,21 @@ export async function getClassWithStudents(classId) {
 
 /**
  * Get attendance for a specific class and date
- * @param {string} classId - Class ID
+ * @param {string} classId - Class ID (document ID)
  * @param {string} date - Date in YYYY-MM-DD format
  * @returns {Promise<Object>} Attendance data
  */
 export async function getAttendanceByClassAndDate(classId, date) {
   try {
-    const attendanceDoc = window.firebaseDoc(window.firebaseDb, 'attendance', classId);
-    const attendanceSnapshot = await window.firebaseGetDocs(
-      window.firebaseQuery(
-        window.firebaseCollection(window.firebaseDb, 'attendance'),
-        window.firebaseWhere(window.firebaseDoc.id, '==', classId)
-      )
-    );
+    const { getDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+    const attendanceDocRef = window.firebaseDoc(window.firebaseDb, 'attendance', classId);
+    const attendanceDoc = await getDoc(attendanceDocRef);
     
-    if (attendanceSnapshot.empty) {
+    if (!attendanceDoc.exists()) {
       return { classId, date, records: {} };
     }
     
-    const attendanceData = attendanceSnapshot.docs[0].data();
+    const attendanceData = attendanceDoc.data();
     
     // Return attendance for the specific date
     return {
@@ -559,6 +555,8 @@ export async function getAttendanceByClassAndDateRange(classId, startDate, endDa
  */
 export async function getStudentAttendanceSummary(studentId) {
   try {
+    const { getDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+    
     // Get all classes the student is enrolled in
     const classesQuery = window.firebaseQuery(
       window.firebaseCollection(window.firebaseDb, 'classes'),
@@ -575,15 +573,11 @@ export async function getStudentAttendanceSummary(studentId) {
       const classId = classDoc.id;
       
       // Get attendance records for this class
-      const attendanceDoc = await window.firebaseGetDocs(
-        window.firebaseQuery(
-          window.firebaseCollection(window.firebaseDb, 'attendance'),
-          window.firebaseWhere(window.firebaseDoc.id, '==', classId)
-        )
-      );
+      const attendanceDocRef = window.firebaseDoc(window.firebaseDb, 'attendance', classId);
+      const attendanceDoc = await getDoc(attendanceDocRef);
       
-      if (!attendanceDoc.empty) {
-        const attendanceData = attendanceDoc.docs[0].data();
+      if (attendanceDoc.exists()) {
+        const attendanceData = attendanceDoc.data();
         
         // Iterate through all dates in attendance
         Object.keys(attendanceData).forEach(date => {
@@ -622,25 +616,21 @@ export async function getStudentAttendanceSummary(studentId) {
 
 /**
  * Get grades for a specific class and term
- * @param {string} classId - Class ID
+ * @param {string} classId - Class ID (document ID)
  * @param {string} term - Term (e.g., "Term 1 2026")
  * @returns {Promise<Object>} Grades data
  */
 export async function getGradesByClassAndTerm(classId, term) {
   try {
-    const gradesDoc = window.firebaseDoc(window.firebaseDb, 'gradesData', classId);
-    const gradesSnapshot = await window.firebaseGetDocs(
-      window.firebaseQuery(
-        window.firebaseCollection(window.firebaseDb, 'gradesData'),
-        window.firebaseWhere(window.firebaseDoc.id, '==', classId)
-      )
-    );
+    const { getDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+    const gradesDocRef = window.firebaseDoc(window.firebaseDb, 'gradesData', classId);
+    const gradesDoc = await getDoc(gradesDocRef);
     
-    if (gradesSnapshot.empty) {
+    if (!gradesDoc.exists()) {
       return { classId, term, grades: {} };
     }
     
-    const gradesData = gradesSnapshot.docs[0].data();
+    const gradesData = gradesDoc.data();
     
     return {
       classId,
@@ -735,24 +725,20 @@ export async function getClassGradeStatistics(classId, term) {
 
 /**
  * Get subjects for a class
- * @param {string} classId - Class ID
+ * @param {string} classId - Class ID (document ID)
  * @returns {Promise<Array>} Array of subjects with weights
  */
 export async function getClassSubjects(classId) {
   try {
-    const subjectsDoc = window.firebaseDoc(window.firebaseDb, 'subjects', classId);
-    const subjectsSnapshot = await window.firebaseGetDocs(
-      window.firebaseQuery(
-        window.firebaseCollection(window.firebaseDb, 'subjects'),
-        window.firebaseWhere(window.firebaseDoc.id, '==', classId)
-      )
-    );
+    const { getDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+    const subjectsDocRef = window.firebaseDoc(window.firebaseDb, 'subjects', classId);
+    const subjectsDoc = await getDoc(subjectsDocRef);
     
-    if (subjectsSnapshot.empty) {
+    if (!subjectsDoc.exists()) {
       return [];
     }
     
-    const subjectsData = subjectsSnapshot.docs[0].data();
+    const subjectsData = subjectsDoc.data();
     return subjectsData.subjects || [];
   } catch (error) {
     console.error('Error fetching class subjects:', error);
@@ -794,20 +780,16 @@ export async function getAllFees() {
 
 /**
  * Get fees for a specific student
- * @param {string} studentId - Student ID
+ * @param {string} studentId - Student ID (document ID)
  * @returns {Promise<Object>} Fee record with items, discounts, and payments
  */
 export async function getStudentFees(studentId) {
   try {
-    const feeDoc = window.firebaseDoc(window.firebaseDb, 'fees', studentId);
-    const feeSnapshot = await window.firebaseGetDocs(
-      window.firebaseQuery(
-        window.firebaseCollection(window.firebaseDb, 'fees'),
-        window.firebaseWhere(window.firebaseDoc.id, '==', studentId)
-      )
-    );
+    const { getDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+    const feeDocRef = window.firebaseDoc(window.firebaseDb, 'fees', studentId);
+    const feeDoc = await getDoc(feeDocRef);
     
-    if (feeSnapshot.empty) {
+    if (!feeDoc.exists()) {
       return {
         studentId,
         items: [],
@@ -818,7 +800,7 @@ export async function getStudentFees(studentId) {
     
     return {
       studentId,
-      ...feeSnapshot.docs[0].data()
+      ...feeDoc.data()
     };
   } catch (error) {
     console.error('Error fetching student fees:', error);
