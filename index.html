@@ -10,7 +10,7 @@
         // Import the functions you need from the SDKs you need
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js";
-        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         
         // Your web app's Firebase configuration
         const firebaseConfig = {
@@ -41,6 +41,40 @@
         window.firebaseApp = app;
         window.firebaseAnalytics = analytics;
         window.firebaseAuth = auth;
+        
+        // Session timeout configuration (30 minutes)
+        const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes in milliseconds
+        let sessionTimeoutId = null;
+        
+        // Function to reset session timeout
+        function resetSessionTimeout() {
+            // Clear existing timeout
+            if (sessionTimeoutId) {
+                clearTimeout(sessionTimeoutId);
+            }
+            
+            // Set new timeout
+            sessionTimeoutId = setTimeout(() => {
+                if (auth.currentUser) {
+                    signOut(auth).then(() => {
+                        sessionStorage.clear();
+                        alert('Your session has expired due to inactivity. Please log in again.');
+                        window.location.reload();
+                    });
+                }
+            }, SESSION_TIMEOUT);
+        }
+        
+        // Track user activity to reset timeout
+        const activityEvents = ['mousedown', 'keydown', 'scroll', 'touchstart'];
+        activityEvents.forEach(event => {
+            document.addEventListener(event, resetSessionTimeout, true);
+        });
+        
+        // Initialize session timeout when page loads
+        if (auth.currentUser) {
+            resetSessionTimeout();
+        }
         
         // Handle login form submission
         document.addEventListener('DOMContentLoaded', function() {
@@ -153,7 +187,117 @@
                         });
                 });
             }
+            
+            // Handle password reset form submission
+            const resetForm = document.getElementById('resetPasswordForm');
+            if (resetForm) {
+                resetForm.addEventListener('submit', function(event) {
+                    event.preventDefault();
+                    
+                    const userType = document.getElementById('resetUserType').value;
+                    const username = document.getElementById('resetUsername').value.trim();
+                    const resetMessage = document.getElementById('resetMessage');
+                    const resetSuccess = document.getElementById('resetSuccess');
+                    
+                    resetMessage.style.display = 'none';
+                    resetSuccess.style.display = 'none';
+                    
+                    if (!userType || !username) {
+                        resetMessage.textContent = 'Please fill all fields.';
+                        resetMessage.style.display = 'block';
+                        return;
+                    }
+                    
+                    // Map to email based on selected userType and username/ID
+                    let email = '';
+                    const domain = 'bis.local';
+                    
+                    // Basic input validation to prevent injection
+                    const sanitizedUsername = username.replace(/[^a-zA-Z0-9]/g, '');
+                    if (sanitizedUsername !== username && userType !== 'parent') {
+                        resetMessage.textContent = 'Username/ID must contain only letters and numbers.';
+                        resetMessage.style.display = 'block';
+                        return;
+                    }
+                    
+                    if (userType === 'admin') {
+                        email = `admin@${domain}`;
+                    } else if (userType === 'teacher') {
+                        email = `teacher${sanitizedUsername}@${domain}`;
+                    } else if (userType === 'student') {
+                        email = `student${sanitizedUsername}@${domain}`;
+                    } else if (userType === 'parent') {
+                        email = `parent.${username.toLowerCase()}@${domain}`;
+                    }
+                    
+                    if (!email) {
+                        resetMessage.textContent = 'Invalid user type or ID.';
+                        resetMessage.style.display = 'block';
+                        return;
+                    }
+                    
+                    // Send password reset email
+                    sendPasswordResetEmail(auth, email)
+                        .then(() => {
+                            resetSuccess.textContent = '✓ Password reset email sent! Please check your inbox.';
+                            resetSuccess.style.display = 'block';
+                            resetForm.reset();
+                            
+                            // Auto-close modal after 3 seconds
+                            setTimeout(() => {
+                                closeForgotPassword();
+                            }, 3000);
+                        })
+                        .catch((error) => {
+                            console.error('Password reset error:', error);
+                            if (error.code === 'auth/user-not-found') {
+                                resetMessage.textContent = 'No account found with this username/ID.';
+                            } else if (error.code === 'auth/invalid-email') {
+                                resetMessage.textContent = 'Invalid email format. Please contact administrator.';
+                            } else if (error.code === 'auth/too-many-requests') {
+                                resetMessage.textContent = 'Too many requests. Please try again later.';
+                            } else {
+                                resetMessage.textContent = 'Failed to send reset email. Please try again.';
+                            }
+                            resetMessage.style.display = 'block';
+                        });
+                });
+            }
         });
+        
+        // Google Sign-In function
+        window.signInWithGoogle = function() {
+            const provider = new GoogleAuthProvider();
+            const errorMessage = document.getElementById('errorMessage');
+            
+            errorMessage.style.display = 'none';
+            
+            signInWithPopup(auth, provider)
+                .then((result) => {
+                    const user = result.user;
+                    
+                    // For Google sign-in, we'll treat users as parents by default
+                    // In production, you'd want to check user roles from Firestore
+                    sessionStorage.setItem('userType', 'parent');
+                    sessionStorage.setItem('userId', user.email.split('@')[0]);
+                    sessionStorage.setItem('displayName', user.displayName || '');
+                    sessionStorage.setItem('photoURL', user.photoURL || '');
+                    
+                    // Redirect to parent portal
+                    window.location.href = 'admin.html#parent-portal?id=' + user.email.split('@')[0];
+                })
+                .catch((error) => {
+                    console.error('Google Sign-In error:', error);
+                    if (error.code === 'auth/popup-closed-by-user') {
+                        errorMessage.textContent = 'Sign-in cancelled.';
+                    } else if (error.code === 'auth/popup-blocked') {
+                        errorMessage.textContent = 'Pop-up blocked. Please allow pop-ups for this site.';
+                    } else {
+                        errorMessage.textContent = 'Failed to sign in with Google. Please try again.';
+                    }
+                    errorMessage.style.display = 'block';
+                });
+        };
     </script>
     
     <style>
@@ -426,7 +570,27 @@
                 </div>
                 <button type="submit">Login</button>
             </form>
+            
+            <!-- Social Login Section -->
+            <div style="margin-top: 25px; text-align: center;">
+                <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                    <div style="flex: 1; height: 1px; background: rgba(255, 255, 255, 0.3);"></div>
+                    <span style="padding: 0 15px; color: rgba(255, 255, 255, 0.8); font-size: 14px;">OR</span>
+                    <div style="flex: 1; height: 1px; background: rgba(255, 255, 255, 0.3);"></div>
+                </div>
+                <button type="button" id="googleSignInBtn" onclick="signInWithGoogle()" style="background: white; color: #333; display: flex; align-items: center; justify-content: center; gap: 10px; border: none;">
+                    <svg width="18" height="18" viewBox="0 0 18 18">
+                        <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"/>
+                        <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/>
+                        <path fill="#FBBC05" d="M3.964 10.71c-.18-.54-.282-1.117-.282-1.71s.102-1.17.282-1.71V4.958H.957C.347 6.173 0 7.548 0 9s.348 2.827.957 4.042l3.007-2.332z"/>
+                        <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/>
+                    </svg>
+                    Sign in with Google
+                </button>
+            </div>
+            
             <div class="info-link">
+                <a onclick="showForgotPassword()" onkeypress="if(event.key==='Enter') showForgotPassword()" tabindex="0" role="button" style="margin-right: 15px;">Forgot Password?</a>
                 <a onclick="showCredentials()" onkeypress="if(event.key==='Enter') showCredentials()" tabindex="0" role="button">View Login Credentials</a>
             </div>
         </div>
@@ -469,6 +633,37 @@
         </div>
     </div>
 
+    <!-- Forgot Password Modal -->
+    <div id="forgotPasswordModal" class="credentials-modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <span class="close-modal" onclick="closeForgotPassword()">&times;</span>
+            <h2>Reset Password</h2>
+            <p style="color: #666; margin-bottom: 20px;">Enter your username/ID and user type to receive a password reset email.</p>
+            
+            <div id="resetMessage" class="error-message" style="margin-bottom: 15px;"></div>
+            <div id="resetSuccess" style="display: none; color: #28a745; background: rgba(40, 167, 69, 0.2); padding: 10px; border-radius: 8px; margin-bottom: 15px; text-align: center;"></div>
+            
+            <form id="resetPasswordForm">
+                <div class="form-group">
+                    <label style="color: #333;">User Type</label>
+                    <select id="resetUserType" required style="color: #333;">
+                        <option value="">Select User Type</option>
+                        <option value="admin">Administrator</option>
+                        <option value="teacher">Teacher</option>
+                        <option value="student">Student</option>
+                        <option value="parent">Parent/Guardian</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label style="color: #333;">Username / ID</label>
+                    <input type="text" id="resetUsername" placeholder="Enter your username or ID" required style="color: #333; border-bottom-color: #ccc;">
+                </div>
+                <button type="submit" style="background: #3498db; border-color: #3498db;">Send Reset Email</button>
+                <button type="button" onclick="closeForgotPassword()" style="background: #95a5a6; border-color: #95a5a6; margin-top: 10px;">Cancel</button>
+            </form>
+        </div>
+    </div>
+
     <script>
         function showCredentials() {
             document.getElementById('credentialsModal').style.display = 'block';
@@ -478,11 +673,26 @@
             document.getElementById('credentialsModal').style.display = 'none';
         }
 
+        function showForgotPassword() {
+            document.getElementById('forgotPasswordModal').style.display = 'block';
+            document.getElementById('resetMessage').style.display = 'none';
+            document.getElementById('resetSuccess').style.display = 'none';
+            document.getElementById('resetPasswordForm').reset();
+        }
+
+        function closeForgotPassword() {
+            document.getElementById('forgotPasswordModal').style.display = 'none';
+        }
+
         // Close modal when clicking outside of it
         document.addEventListener('click', function(event) {
-            const modal = document.getElementById('credentialsModal');
-            if (event.target === modal) {
-                modal.style.display = 'none';
+            const credModal = document.getElementById('credentialsModal');
+            const resetModal = document.getElementById('forgotPasswordModal');
+            if (event.target === credModal) {
+                credModal.style.display = 'none';
+            }
+            if (event.target === resetModal) {
+                resetModal.style.display = 'none';
             }
         });
     </script>

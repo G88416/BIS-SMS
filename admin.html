@@ -45,10 +45,42 @@
     // Initialize Storage
     const storage = getStorage(app);
     
+    // Session timeout configuration (30 minutes)
+    const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes in milliseconds
+    let sessionTimeoutId = null;
+    
+    // Function to reset session timeout
+    function resetSessionTimeout() {
+      // Clear existing timeout
+      if (sessionTimeoutId) {
+        clearTimeout(sessionTimeoutId);
+      }
+      
+      // Set new timeout
+      sessionTimeoutId = setTimeout(() => {
+        if (auth.currentUser) {
+          signOut(auth).then(() => {
+            sessionStorage.clear();
+            alert('Your session has expired due to inactivity. Please log in again.');
+            window.location.href = 'index.html';
+          });
+        }
+      }, SESSION_TIMEOUT);
+    }
+    
+    // Track user activity to reset timeout
+    const activityEvents = ['mousedown', 'keydown', 'scroll', 'touchstart'];
+    activityEvents.forEach(event => {
+      document.addEventListener(event, resetSessionTimeout, true);
+    });
+    
     // Protect page: redirect to login if not authenticated
     onAuthStateChanged(auth, (user) => {
       if (!user) {
         window.location.href = 'index.html';
+      } else {
+        // Initialize session timeout when user is authenticated
+        resetSessionTimeout();
       }
       // Optional: refresh token to get latest claims (for future custom claims)
       // user.getIdToken(true);
