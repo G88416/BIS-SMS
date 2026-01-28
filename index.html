@@ -718,6 +718,9 @@
                 <h6 class="mb-0"><i class="fas fa-users"></i> Contacts</h6>
               </div>
               <div class="card-body p-0">
+                <div class="p-2 border-bottom">
+                  <input type="text" class="form-control form-control-sm" id="admin-contact-search" placeholder="Search contacts..." oninput="filterAdminContacts()">
+                </div>
                 <div class="list-group list-group-flush" id="choptso-contacts">
                   <a href="#" class="list-group-item list-group-item-action" onclick="loadConversation('all', event); return false;">
                     <i class="fas fa-users"></i> All Users (Broadcast)
@@ -1713,6 +1716,9 @@
                     <h6 class="mb-0"><i class="fas fa-users"></i> Contacts & Groups</h6>
                   </div>
                   <div class="card-body p-0" style="overflow-y: auto;">
+                    <div class="p-2 border-bottom bg-light">
+                      <input type="text" class="form-control form-control-sm" id="teacher-contact-search" placeholder="Search contacts..." oninput="filterTeacherContacts()">
+                    </div>
                     <div class="list-group list-group-flush" id="teacher-choptso-contacts">
                       <!-- Contacts will be loaded here -->
                     </div>
@@ -2040,6 +2046,9 @@
                 <h6 class="mb-0"><i class="fas fa-users"></i> Contacts & Groups</h6>
               </div>
               <div class="card-body p-0" style="overflow-y: auto;">
+                <div class="p-2 border-bottom bg-light">
+                  <input type="text" class="form-control form-control-sm" id="parent-contact-search" placeholder="Search contacts..." oninput="filterParentContacts()">
+                </div>
                 <div class="list-group list-group-flush" id="parent-choptso-contacts">
                   <!-- Contacts will be loaded here -->
                 </div>
@@ -4343,6 +4352,23 @@
       }
       startCall('video', currentTeacherConversationId);
     }
+    
+    // Filter teacher contacts based on search query
+    function filterTeacherContacts() {
+      const searchInput = document.getElementById('teacher-contact-search');
+      const searchQuery = searchInput ? searchInput.value.toLowerCase() : '';
+      const contactsList = document.getElementById('teacher-choptso-contacts');
+      const items = contactsList.querySelectorAll('.list-group-item');
+      
+      items.forEach(item => {
+        const text = item.textContent.toLowerCase();
+        if (text.includes(searchQuery)) {
+          item.style.display = '';
+        } else {
+          item.style.display = 'none';
+        }
+      });
+    }
 
     // Choptso Chat Functions
     let currentConversationId = null;
@@ -4451,6 +4477,23 @@
           </div>
         `;
         contactsList.appendChild(contactItem);
+      });
+    }
+    
+    // Filter admin contacts based on search query
+    function filterAdminContacts() {
+      const searchInput = document.getElementById('admin-contact-search');
+      const searchQuery = searchInput ? searchInput.value.toLowerCase() : '';
+      const contactsList = document.getElementById('choptso-contacts');
+      const items = contactsList.querySelectorAll('.list-group-item');
+      
+      items.forEach(item => {
+        const text = item.textContent.toLowerCase();
+        if (text.includes(searchQuery)) {
+          item.style.display = '';
+        } else {
+          item.style.display = 'none';
+        }
       });
     }
     
@@ -8581,6 +8624,23 @@
         return;
       }
       startCall('video', currentParentConversationId);
+    }
+    
+    // Filter parent contacts based on search query
+    function filterParentContacts() {
+      const searchInput = document.getElementById('parent-contact-search');
+      const searchQuery = searchInput ? searchInput.value.toLowerCase() : '';
+      const contactsList = document.getElementById('parent-choptso-contacts');
+      const items = contactsList.querySelectorAll('.list-group-item');
+      
+      items.forEach(item => {
+        const text = item.textContent.toLowerCase();
+        if (text.includes(searchQuery)) {
+          item.style.display = '';
+        } else {
+          item.style.display = 'none';
+        }
+      });
     }
     
     function sendParentMessage() {
