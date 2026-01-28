@@ -622,10 +622,9 @@ const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes
 For questions or issues related to Firebase integration:
 
 1. Check this documentation first
-2. Review [FIREBASE_INTEGRATION.md](FIREBASE_INTEGRATION.md)
-3. Check [SECURITY_FIXES.md](SECURITY_FIXES.md)
-4. Consult [Firebase Documentation](https://firebase.google.com/docs)
-5. Open an issue in the repository
+2. Review existing Firebase documentation files in the repository
+3. Consult [Firebase Documentation](https://firebase.google.com/docs)
+4. Open an issue in the repository
 
 ---
 

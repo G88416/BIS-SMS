@@ -85,6 +85,7 @@ export async function safeFirestoreWrite(operation, maxRetries = 3) {
 // Safe Firestore read with caching
 const readCache = new Map();
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+const MAX_CACHE_SIZE = 100; // Maximum number of cached entries
 
 export async function safeFirestoreRead(operation, cacheKey = null, useCache = true) {
   await waitForFirebase();
@@ -94,14 +95,23 @@ export async function safeFirestoreRead(operation, cacheKey = null, useCache = t
     const cached = readCache.get(cacheKey);
     if (Date.now() - cached.timestamp < CACHE_DURATION) {
       return cached.data;
+    } else {
+      // Remove expired entry
+      readCache.delete(cacheKey);
     }
   }
   
   try {
     const data = await operation();
     
-    // Cache the result
+    // Cache the result with LRU eviction
     if (useCache && cacheKey) {
+      // If cache is full, remove oldest entry
+      if (readCache.size >= MAX_CACHE_SIZE) {
+        const firstKey = readCache.keys().next().value;
+        readCache.delete(firstKey);
+      }
+      
       readCache.set(cacheKey, {
         data,
         timestamp: Date.now()
@@ -112,7 +122,7 @@ export async function safeFirestoreRead(operation, cacheKey = null, useCache = t
   } catch (error) {
     console.error('Firestore read error:', error);
     
-    // Return cached data if available on error
+    // Return cached data if available on error (even if expired)
     if (useCache && cacheKey && readCache.has(cacheKey)) {
       console.warn('Using cached data due to error');
       return readCache.get(cacheKey).data;
@@ -162,26 +172,32 @@ export async function uploadFileWithProgress(file, path, onProgress = null) {
   return new Promise((resolve, reject) => {
     try {
       const storageRef = window.firebaseStorageRef(window.firebaseStorage, path);
-      const uploadTask = window.firebaseUploadBytes(storageRef, file);
       
-      if (onProgress) {
-        uploadTask.on('state_changed',
-          (snapshot) => {
-            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-            onProgress(progress, snapshot);
-          },
-          (error) => reject(error),
-          async () => {
-            const downloadURL = await window.firebaseGetDownloadURL(uploadTask.snapshot.ref);
-            resolve(downloadURL);
+      // Use uploadBytesResumable for progress tracking, not uploadBytes
+      import('https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js')
+        .then(({ uploadBytesResumable }) => {
+          const uploadTask = uploadBytesResumable(storageRef, file);
+          
+          if (onProgress) {
+            uploadTask.on('state_changed',
+              (snapshot) => {
+                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                onProgress(progress, snapshot);
+              },
+              (error) => reject(error),
+              async () => {
+                const downloadURL = await window.firebaseGetDownloadURL(uploadTask.snapshot.ref);
+                resolve(downloadURL);
+              }
+            );
+          } else {
+            uploadTask.then(async (snapshot) => {
+              const downloadURL = await window.firebaseGetDownloadURL(snapshot.ref);
+              resolve(downloadURL);
+            }).catch(reject);
           }
-        );
-      } else {
-        uploadTask.then(async (snapshot) => {
-          const downloadURL = await window.firebaseGetDownloadURL(snapshot.ref);
-          resolve(downloadURL);
-        }).catch(reject);
-      }
+        })
+        .catch(reject);
     } catch (error) {
       reject(error);
     }

@@ -276,25 +276,30 @@
                 .then((result) => {
                     const user = result.user;
                     
-                    // For Google sign-in, we'll treat users as parents by default
-                    // In production, you'd want to check user roles from Firestore
+                    // Important: In production, verify user role from Firestore before granting access
+                    // For now, Google sign-in users are assigned 'parent' role
+                    // TODO: Implement role verification via Firestore lookup
                     sessionStorage.setItem('userType', 'parent');
                     sessionStorage.setItem('userId', user.email.split('@')[0]);
                     sessionStorage.setItem('displayName', user.displayName || '');
                     sessionStorage.setItem('photoURL', user.photoURL || '');
                     
                     // Redirect to parent portal
-                    window.location.href = 'admin.html#parent-portal?id=' + user.email.split('@')[0];
+                    window.location.href = 'admin.html#parent-portal?id=' + encodeURIComponent(user.email.split('@')[0]);
                 })
                 .catch((error) => {
                     console.error('Google Sign-In error:', error);
+                    let errorMsg = 'Failed to sign in with Google. Please try again.';
+                    
                     if (error.code === 'auth/popup-closed-by-user') {
-                        errorMessage.textContent = 'Sign-in cancelled.';
+                        errorMsg = 'Sign-in cancelled.';
                     } else if (error.code === 'auth/popup-blocked') {
-                        errorMessage.textContent = 'Pop-up blocked. Please allow pop-ups for this site.';
-                    } else {
-                        errorMessage.textContent = 'Failed to sign in with Google. Please try again.';
+                        errorMsg = 'Pop-up blocked. Please allow pop-ups for this site.';
+                    } else if (error.code === 'auth/unauthorized-domain') {
+                        errorMsg = 'This domain is not authorized for Google Sign-In.';
                     }
+                    
+                    errorMessage.textContent = errorMsg;
                     errorMessage.style.display = 'block';
                 });
         };
