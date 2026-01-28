@@ -66,12 +66,20 @@
                     let email = '';
                     const domain = 'bis.local';
                     
+                    // Basic input validation to prevent injection
+                    const sanitizedUsername = username.replace(/[^a-zA-Z0-9]/g, '');
+                    if (sanitizedUsername !== username && userType !== 'parent') {
+                        errorMessage.textContent = 'Username/ID must contain only letters and numbers.';
+                        errorMessage.style.display = 'block';
+                        return;
+                    }
+                    
                     if (userType === 'admin') {
                         email = `admin@${domain}`;
                     } else if (userType === 'teacher') {
-                        email = `teacher${username}@${domain}`;
+                        email = `teacher${sanitizedUsername}@${domain}`;
                     } else if (userType === 'student') {
-                        email = `student${username}@${domain}`;
+                        email = `student${sanitizedUsername}@${domain}`;
                     } else if (userType === 'parent') {
                         email = `parent.${username.toLowerCase()}@${domain}`;  // e.g., C331 → parent.c331@bis.local
                     }
