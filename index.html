@@ -1584,7 +1584,16 @@
               </div>
             </div>
             <div id="teacher-attendance-content"></div>
-            <button class="btn btn-primary mt-3" onclick="saveTeacherAttendance()">Save Attendance</button>
+            <div class="mt-3">
+              <button class="btn btn-primary me-2" onclick="saveTeacherAttendance()">Save Attendance</button>
+              <button class="btn btn-success" onclick="exportAttendanceToCloud()" 
+                      title="Export attendance register to Firebase Cloud Storage for backup and record-keeping">
+                <i class="fas fa-cloud-upload-alt"></i> Save to Cloud Storage
+              </button>
+              <small class="text-muted d-block mt-2">
+                <i class="fas fa-info-circle"></i> Cloud storage saves a permanent backup of attendance records
+              </small>
+            </div>
           </div>
 
           <!-- Gradebook & Mark Entry Tab -->
@@ -2555,10 +2564,16 @@
             <option value="">Select Class</option>
             <!-- Populated dynamically -->
           </select>
+          <div class="mb-2">
+            <label class="form-label">Attach Files (Optional)</label>
+            <input type="file" class="form-control" id="assignment-files" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.gif,.mp4,.txt">
+            <small class="text-muted">You can attach documents, images, or videos to this assignment.</small>
+          </div>
+          <div id="assignment-file-list" class="small text-muted"></div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-          <button type="button" class="btn btn-primary" onclick="createAssignment()">Create Assignment</button>
+          <button type="button" class="btn btn-primary" onclick="createAssignment()" id="create-assignment-btn">Create Assignment</button>
         </div>
       </div>
     </div>
@@ -2899,6 +2914,238 @@
       div.textContent = text;
       return div.innerHTML;
     }
+    
+    // ============================================================================
+    // Firebase Storage Utility Functions
+    // ============================================================================
+    
+    /**
+     * Get user-friendly error message from Firebase error
+     * @param {Error} error - Firebase error object
+     * @returns {string} - User-friendly error message
+     */
+    function getUploadErrorMessage(error) {
+      if (!error) return 'Unknown error occurred';
+      
+      const errorCode = error.code || '';
+      const errorMessage = error.message || error.toString();
+      
+      // Common Firebase Storage error codes
+      if (errorCode.includes('storage/unauthorized')) {
+        return 'You do not have permission to upload this file.';
+      } else if (errorCode.includes('storage/canceled')) {
+        return 'Upload was cancelled.';
+      } else if (errorCode.includes('storage/unknown')) {
+        return 'An unknown error occurred. Please try again.';
+      } else if (errorCode.includes('storage/object-not-found')) {
+        return 'File not found.';
+      } else if (errorCode.includes('storage/quota-exceeded')) {
+        return 'Storage quota exceeded. Please contact administrator.';
+      } else if (errorCode.includes('storage/unauthenticated')) {
+        return 'You must be logged in to upload files.';
+      } else if (errorCode.includes('storage/retry-limit-exceeded')) {
+        return 'Upload failed after multiple retries. Please check your connection.';
+      } else if (errorMessage.includes('File size')) {
+        return 'File is too large. Maximum size is 50MB.';
+      } else if (errorMessage.includes('network')) {
+        return 'Network error. Please check your internet connection.';
+      }
+      
+      // Return original message if no match
+      return `Upload failed: ${errorMessage}`;
+    }
+    
+    /**
+     * Upload a file to Firebase Storage
+     * @param {File} file - The file to upload
+     * @param {string} path - The storage path (e.g., 'students/1/document.pdf')
+     * @returns {Promise<string>} - The download URL of the uploaded file
+     */
+    async function uploadToStorage(file, path) {
+      try {
+        const storageRef = window.firebaseStorageRef(window.firebaseStorage, path);
+        await window.firebaseUploadBytes(storageRef, file);
+        const downloadURL = await window.firebaseGetDownloadURL(storageRef);
+        return downloadURL;
+      } catch (error) {
+        console.error('Error uploading file:', error);
+        throw new Error(getUploadErrorMessage(error));
+      }
+    }
+    
+    /**
+     * Get download URL for a file in Firebase Storage
+     * @param {string} path - The storage path
+     * @returns {Promise<string>} - The download URL
+     */
+    async function getStorageURL(path) {
+      try {
+        const storageRef = window.firebaseStorageRef(window.firebaseStorage, path);
+        const downloadURL = await window.firebaseGetDownloadURL(storageRef);
+        return downloadURL;
+      } catch (error) {
+        console.error('Error getting download URL:', error);
+        throw error;
+      }
+    }
+    
+    /**
+     * Get file extension from filename
+     * @param {string} filename - The filename
+     * @returns {string} - File extension
+     */
+    function getFileExtension(filename) {
+      if (!filename || typeof filename !== 'string') return '';
+      const lastDotIndex = filename.lastIndexOf('.');
+      if (lastDotIndex === -1) return '';
+      return filename.slice(lastDotIndex + 1);
+    }
+    
+    /**
+     * Upload file to student folder
+     * @param {string} studentId - Student ID
+     * @param {File} file - File to upload
+     * @returns {Promise<string>} - Download URL
+     */
+    async function uploadStudentFile(studentId, file) {
+      const fileName = generateUniqueFilename(file.name);
+      const path = `students/${studentId}/${fileName}`;
+      return await uploadToStorage(file, path);
+    }
+    
+    /**
+     * Upload file to teacher folder
+     * @param {string} teacherId - Teacher ID
+     * @param {File} file - File to upload
+     * @returns {Promise<string>} - Download URL
+     */
+    async function uploadTeacherFile(teacherId, file) {
+      const fileName = generateUniqueFilename(file.name);
+      const path = `teachers/${teacherId}/${fileName}`;
+      return await uploadToStorage(file, path);
+    }
+    
+    /**
+     * Upload file to parent folder
+     * @param {string} parentId - Parent ID
+     * @param {File} file - File to upload
+     * @returns {Promise<string>} - Download URL
+     */
+    async function uploadParentFile(parentId, file) {
+      const fileName = generateUniqueFilename(file.name);
+      const path = `parents/${parentId}/${fileName}`;
+      return await uploadToStorage(file, path);
+    }
+    
+    /**
+     * Upload assignment file to teacher portal
+     * @param {string} teacherId - Teacher ID
+     * @param {string} assignmentId - Assignment ID
+     * @param {File} file - File to upload
+     * @returns {Promise<string>} - Download URL
+     */
+    async function uploadAssignmentFile(teacherId, assignmentId, file) {
+      const fileName = generateUniqueFilename(file.name);
+      const path = `teacher-portal/${teacherId}/assignments/${assignmentId}/${fileName}`;
+      return await uploadToStorage(file, path);
+    }
+    
+    /**
+     * Upload attendance register to teacher portal
+     * @param {string} teacherId - Teacher ID
+     * @param {File} file - File to upload (JSON, CSV, or document)
+     * @returns {Promise<string>} - Download URL
+     */
+    async function uploadAttendanceRegister(teacherId, file) {
+      const fileName = generateUniqueFilename(file.name);
+      const path = `teacher-portal/${teacherId}/attendance/${fileName}`;
+      return await uploadToStorage(file, path);
+    }
+    
+    /**
+     * Upload work document to teacher portal
+     * @param {string} teacherId - Teacher ID
+     * @param {File} file - File to upload
+     * @returns {Promise<string>} - Download URL
+     */
+    async function uploadTeacherWork(teacherId, file) {
+      const fileName = generateUniqueFilename(file.name);
+      const path = `teacher-portal/${teacherId}/work/${fileName}`;
+      return await uploadToStorage(file, path);
+    }
+    
+    /**
+     * Format file size for display
+     * @param {number} bytes - File size in bytes
+     * @returns {string} - Formatted file size
+     */
+    function formatFileSize(bytes) {
+      if (bytes === 0) return '0 Bytes';
+      const k = 1024;
+      const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+    }
+    
+    /**
+     * Sanitize filename for safe storage
+     * @param {string} filename - Original filename
+     * @returns {string} - Sanitized filename
+     */
+    function sanitizeFilename(filename) {
+      // Remove or replace problematic characters
+      return filename
+        .replace(/[^a-zA-Z0-9._-]/g, '_') // Replace special chars with underscore
+        .replace(/_{2,}/g, '_') // Replace multiple underscores with single
+        .substring(0, 200); // Limit length to 200 chars
+    }
+    
+    /**
+     * Generate unique filename with timestamp and random component
+     * @param {string} originalName - Original filename
+     * @returns {string} - Unique sanitized filename
+     */
+    function generateUniqueFilename(originalName) {
+      const sanitized = sanitizeFilename(originalName);
+      const timestamp = Date.now();
+      const random = Math.floor(Math.random() * 10000);
+      const extension = getFileExtension(sanitized);
+      const nameWithoutExt = sanitized.substring(0, sanitized.lastIndexOf('.'));
+      return extension ? `${timestamp}_${random}_${nameWithoutExt}.${extension}` : `${timestamp}_${random}_${sanitized}`;
+    }
+    
+    /**
+     * Get icon class for file type
+     * @param {string} filename - The filename
+     * @returns {string} - Font Awesome icon class
+     */
+    function getFileIcon(filename) {
+      const ext = getFileExtension(filename).toLowerCase();
+      const iconMap = {
+        'pdf': 'fa-file-pdf text-danger',
+        'doc': 'fa-file-word text-primary',
+        'docx': 'fa-file-word text-primary',
+        'xls': 'fa-file-excel text-success',
+        'xlsx': 'fa-file-excel text-success',
+        'ppt': 'fa-file-powerpoint text-warning',
+        'pptx': 'fa-file-powerpoint text-warning',
+        'jpg': 'fa-file-image text-info',
+        'jpeg': 'fa-file-image text-info',
+        'png': 'fa-file-image text-info',
+        'gif': 'fa-file-image text-info',
+        'mp4': 'fa-file-video text-purple',
+        'avi': 'fa-file-video text-purple',
+        'mov': 'fa-file-video text-purple',
+        'txt': 'fa-file-alt text-secondary',
+        'csv': 'fa-file-csv text-success',
+        'json': 'fa-file-code text-dark'
+      };
+      return iconMap[ext] || 'fa-file text-secondary';
+    }
+    
+    // ============================================================================
+    // End of Firebase Storage Utility Functions
+    // ============================================================================
     
     // Dummy data with persistence
     let students = JSON.parse(localStorage.getItem('students')) || [
@@ -5727,6 +5974,89 @@
       alert('Attendance saved successfully!');
     }
     
+    async function exportAttendanceToCloud() {
+      const classId = document.getElementById('teacher-attendance-class').value;
+      const date = document.getElementById('teacher-attendance-date').value;
+      
+      if (!classId || !date) {
+        alert('Please select a class and date first.');
+        return;
+      }
+      
+      if (!loggedInTeacher) {
+        alert('You must be logged in as a teacher to save to cloud storage.');
+        return;
+      }
+      
+      // Save current attendance first
+      saveTeacherAttendance();
+      
+      try {
+        const cls = classes.find(c => c.id === parseInt(classId));
+        const className = cls ? cls.name : 'Unknown';
+        
+        // Get attendance data for this class and date
+        const attendanceData = attendance[classId] && attendance[classId][date] ? attendance[classId][date] : {};
+        
+        // Create a detailed attendance report
+        const report = {
+          className: className,
+          classId: classId,
+          date: date,
+          teacherId: loggedInTeacher.id,
+          teacherName: loggedInTeacher.name,
+          exportedAt: new Date().toISOString(),
+          attendance: []
+        };
+        
+        // Add student attendance records
+        if (cls && cls.studentIds) {
+          cls.studentIds.forEach(studentId => {
+            const student = students.find(s => s.id === studentId);
+            const attendanceRecord = attendanceData[studentId] || { status: 'Present', notes: '' };
+            report.attendance.push({
+              studentId: studentId,
+              studentName: student ? student.name : 'Unknown',
+              status: attendanceRecord.status,
+              notes: attendanceRecord.notes
+            });
+          });
+        }
+        
+        // Convert to JSON blob
+        const jsonData = JSON.stringify(report, null, 2);
+        const blob = new Blob([jsonData], { type: 'application/json' });
+        const fileName = `attendance_${className.replace(/\s+/g, '_')}_${date}.json`;
+        const file = new File([blob], fileName, { type: 'application/json' });
+        
+        // Upload to Firebase Storage
+        const downloadURL = await uploadAttendanceRegister(loggedInTeacher.id, file);
+        
+        alert(`Attendance register saved to cloud storage successfully!\nFile: ${fileName}`);
+        
+        // Optionally, store the URL in localStorage for future reference
+        try {
+          const savedRegisters = JSON.parse(localStorage.getItem('savedAttendanceRegisters') || '[]');
+          savedRegisters.push({
+            fileName: fileName,
+            url: downloadURL,
+            classId: classId,
+            className: className,
+            date: date,
+            uploadedAt: new Date().toISOString()
+          });
+          localStorage.setItem('savedAttendanceRegisters', JSON.stringify(savedRegisters));
+        } catch (storageError) {
+          console.warn('Failed to save register info to localStorage:', storageError);
+          // Not critical, continue without localStorage
+        }
+        
+      } catch (error) {
+        console.error('Error saving attendance to cloud:', error);
+        alert(`Failed to save attendance to cloud storage.\n\nError: ${error.message || 'Unknown error'}\n\nPlease try again or contact support if the problem persists.`);
+      }
+    }
+    
     function loadTeacherGradebook() {
       const classId = document.getElementById('teacher-grade-class').value;
       const term = document.getElementById('teacher-grade-term').value;
@@ -6012,50 +6342,170 @@
       content.innerHTML = html;
     }
     
-    function createAssignment() {
+    async function createAssignment() {
       const title = document.getElementById('assignment-title').value.trim();
       const description = document.getElementById('assignment-description').value.trim();
       const dueDate = document.getElementById('assignment-due-date').value;
       const classId = document.getElementById('assignment-class').value;
       const points = document.getElementById('assignment-points').value || 100;
+      const fileInput = document.getElementById('assignment-files');
+      const files = fileInput.files;
       
       if (!title || !dueDate || !classId) {
         alert('Please fill in all required fields.');
         return;
       }
       
-      // Get or initialize assignments
-      const assignments = JSON.parse(localStorage.getItem('teacherAssignments') || '[]');
+      // Validate due date
+      const dueDateObj = new Date(dueDate);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (dueDateObj < today) {
+        if (!confirm('The due date is in the past. Do you want to continue?')) {
+          return;
+        }
+      }
       
-      const newAssignment = {
-        id: Date.now(),
-        title: title,
-        description: description,
-        dueDate: dueDate,
-        classId: parseInt(classId),
-        points: parseInt(points),
-        teacherId: loggedInTeacher ? loggedInTeacher.id : 1,
-        createdDate: new Date().toISOString(),
-        submissions: []
-      };
+      // Validate file sizes (50MB limit for assignments)
+      const MAX_FILE_SIZE = 50 * 1024 * 1024;
+      for (let i = 0; i < files.length; i++) {
+        if (files[i].size > MAX_FILE_SIZE) {
+          alert(`File "${files[i].name}" is too large. Maximum size is 50MB.`);
+          return;
+        }
+      }
       
-      assignments.push(newAssignment);
-      localStorage.setItem('teacherAssignments', JSON.stringify(assignments));
+      // Disable create button while uploading
+      const createBtn = document.getElementById('create-assignment-btn');
+      const originalBtnText = createBtn.innerHTML;
+      createBtn.disabled = true;
+      createBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Creating...';
       
-      alert(`Assignment "${title}" created successfully!`);
-      
-      // Close modal
-      const modal = bootstrap.Modal.getInstance(document.getElementById('addAssignmentModal'));
-      if (modal) modal.hide();
-      
-      // Clear form
-      document.getElementById('assignment-title').value = '';
-      document.getElementById('assignment-description').value = '';
-      document.getElementById('assignment-due-date').value = '';
-      document.getElementById('assignment-points').value = '100';
-      
-      loadTeacherAssignments();
+      try {
+        // Get or initialize assignments
+        const assignments = JSON.parse(localStorage.getItem('teacherAssignments') || '[]');
+        
+        const assignmentId = Date.now();
+        const teacherId = loggedInTeacher ? loggedInTeacher.id : 1;
+        
+        // Upload files to Firebase Storage
+        const attachments = [];
+        const failedFiles = [];
+        
+        if (files.length > 0) {
+          for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            try {
+              const downloadURL = await uploadAssignmentFile(teacherId, assignmentId, file);
+              attachments.push({
+                name: file.name,
+                url: downloadURL,
+                size: file.size,
+                type: file.type
+              });
+            } catch (error) {
+              console.error(`Error uploading file ${file.name}:`, error);
+              failedFiles.push({ name: file.name, error: error.message });
+            }
+          }
+          
+          // Show summary of failed uploads if any
+          if (failedFiles.length > 0) {
+            const failedList = failedFiles.map(f => `- ${f.name}: ${f.error}`).join('\n');
+            const continueAnyway = confirm(
+              `${failedFiles.length} file(s) failed to upload:\n\n${failedList}\n\nDo you want to create the assignment with the ${attachments.length} successfully uploaded file(s)?`
+            );
+            if (!continueAnyway) {
+              return;
+            }
+          }
+        }
+        
+        const newAssignment = {
+          id: assignmentId,
+          title: title,
+          description: description,
+          dueDate: dueDate,
+          classId: parseInt(classId),
+          points: parseInt(points),
+          teacherId: teacherId,
+          createdDate: new Date().toISOString(),
+          submissions: [],
+          attachments: attachments
+        };
+        
+        assignments.push(newAssignment);
+        localStorage.setItem('teacherAssignments', JSON.stringify(assignments));
+        
+        const fileMsg = attachments.length > 0 ? ` with ${attachments.length} file(s)` : '';
+        alert(`Assignment "${title}" created successfully${fileMsg}!`);
+        
+        // Close modal
+        const modal = bootstrap.Modal.getInstance(document.getElementById('addAssignmentModal'));
+        if (modal) modal.hide();
+        
+        // Clear form
+        document.getElementById('assignment-title').value = '';
+        document.getElementById('assignment-description').value = '';
+        document.getElementById('assignment-due-date').value = '';
+        document.getElementById('assignment-points').value = '100';
+        fileInput.value = '';
+        document.getElementById('assignment-file-list').innerHTML = '';
+        
+        loadTeacherAssignments();
+      } catch (error) {
+        console.error('Error creating assignment:', error);
+        alert(`An error occurred while creating the assignment: ${error.message || 'Unknown error'}`);
+      } finally {
+        // Re-enable create button
+        createBtn.disabled = false;
+        createBtn.innerHTML = originalBtnText;
+      }
     }
+    
+    // Show file preview when files are selected in assignment modal
+    document.addEventListener('DOMContentLoaded', function() {
+      const assignmentFileInput = document.getElementById('assignment-files');
+      if (assignmentFileInput) {
+        assignmentFileInput.addEventListener('change', function(e) {
+          const fileList = document.getElementById('assignment-file-list');
+          const files = e.target.files;
+          
+          if (files.length > 0) {
+            let html = '<div class="mt-2"><strong>Selected files:</strong><ul class="small mb-0">';
+            for (let i = 0; i < files.length; i++) {
+              const file = files[i];
+              const icon = getFileIcon(file.name);
+              const size = formatFileSize(file.size);
+              html += `<li><i class="fas ${icon}"></i> ${escapeHtml(file.name)} (${size})</li>`;
+            }
+            html += '</ul></div>';
+            fileList.innerHTML = html;
+          } else {
+            fileList.innerHTML = '';
+          }
+        });
+      }
+      
+      // Clear assignment modal when closed
+      const assignmentModal = document.getElementById('addAssignmentModal');
+      if (assignmentModal) {
+        assignmentModal.addEventListener('hidden.bs.modal', function() {
+          // Clear form fields
+          document.getElementById('assignment-title').value = '';
+          document.getElementById('assignment-description').value = '';
+          document.getElementById('assignment-due-date').value = '';
+          document.getElementById('assignment-points').value = '100';
+          if (assignmentFileInput) {
+            assignmentFileInput.value = '';
+          }
+          const fileList = document.getElementById('assignment-file-list');
+          if (fileList) {
+            fileList.innerHTML = '';
+          }
+        });
+      }
+    });
     
     function loadTeacherAssignments() {
       const content = document.getElementById('teacher-assignments-content');
@@ -6088,6 +6538,26 @@
         const submissions = assignment.submissions ? assignment.submissions.length : 0;
         const submissionRate = totalStudents > 0 ? Math.round((submissions / totalStudents) * 100) : 0;
         
+        // Build attachments HTML
+        let attachmentsHTML = '';
+        if (assignment.attachments && assignment.attachments.length > 0) {
+          attachmentsHTML = '<div class="mb-2"><small class="text-muted"><i class="fas fa-paperclip"></i> Attachments:</small><div class="mt-1">';
+          assignment.attachments.forEach(att => {
+            const icon = getFileIcon(att.name);
+            const size = formatFileSize(att.size);
+            attachmentsHTML += `
+              <div class="d-flex align-items-center mb-1">
+                <i class="fas ${icon} me-1"></i>
+                <a href="${att.url}" target="_blank" class="small text-truncate" style="max-width: 200px;" title="${escapeHtml(att.name)}">
+                  ${escapeHtml(att.name)}
+                </a>
+                <small class="text-muted ms-1">(${size})</small>
+              </div>
+            `;
+          });
+          attachmentsHTML += '</div></div>';
+        }
+        
         html += `
           <div class="col-md-6 col-lg-4">
             <div class="card h-100">
@@ -6099,6 +6569,7 @@
                 <p class="small mb-2">${escapeHtml(assignment.description || 'No description')}</p>
                 <p class="small mb-2"><i class="fas fa-calendar"></i> Due: ${dueDate.toLocaleDateString()}</p>
                 <p class="small mb-2"><i class="fas fa-star"></i> Points: ${assignment.points}</p>
+                ${attachmentsHTML}
                 <div class="mb-2">
                   <span class="badge ${statusBadge}">${statusText}</span>
                 </div>
@@ -6995,21 +7466,17 @@
                     </select>
                   </div>
                   <div class="mb-3">
-                    <label class="form-label">File/Link *</label>
-                    <div class="input-group">
-                      <input type="text" class="form-control" id="resource-link" 
-                             placeholder="Enter file URL or upload file (simulated)">
-                      <button class="btn btn-outline-secondary" type="button" onclick="simulateFileUpload()">
-                        <i class="fas fa-file-upload"></i> Browse
-                      </button>
-                    </div>
-                    <small class="text-muted">In production, this would allow actual file uploads</small>
+                    <label class="form-label">Upload File *</label>
+                    <input type="file" class="form-control" id="resource-file" required
+                           accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.gif,.mp4,.txt">
+                    <small class="text-muted">Upload documents, images, or videos to share with students</small>
                   </div>
+                  <div id="resource-file-preview" class="small text-muted"></div>
                 </form>
               </div>
               <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="saveTeacherResource()">Upload Resource</button>
+                <button type="button" class="btn btn-primary" onclick="saveTeacherResource()" id="save-resource-btn">Upload Resource</button>
               </div>
             </div>
           </div>
@@ -7035,50 +7502,90 @@
           classSelect.appendChild(opt);
         });
       }
+      
+      // Add file preview
+      const fileInput = document.getElementById('resource-file');
+      fileInput.addEventListener('change', function(e) {
+        const preview = document.getElementById('resource-file-preview');
+        const file = e.target.files[0];
+        if (file) {
+          const icon = getFileIcon(file.name);
+          const size = formatFileSize(file.size);
+          preview.innerHTML = `<div class="mt-2"><i class="fas ${icon}"></i> <strong>${escapeHtml(file.name)}</strong> (${size})</div>`;
+        } else {
+          preview.innerHTML = '';
+        }
+      });
     }
     
-    function simulateFileUpload() {
-      const link = document.getElementById('resource-link');
-      const filename = prompt('Enter filename (for simulation):', 'example-document.pdf');
-      if (filename) {
-        link.value = `uploads/${filename}`;
-      }
-    }
-    
-    function saveTeacherResource() {
+    async function saveTeacherResource() {
       const title = document.getElementById('resource-title').value.trim();
       const description = document.getElementById('resource-description').value.trim();
       const category = document.getElementById('resource-category').value;
       const classId = document.getElementById('resource-class').value;
-      const link = document.getElementById('resource-link').value.trim();
+      const fileInput = document.getElementById('resource-file');
+      const file = fileInput.files[0];
       
-      if (!title || !category || !classId || !link) {
-        alert('Please fill in all required fields.');
+      if (!title || !category || !classId || !file) {
+        alert('Please fill in all required fields and select a file.');
         return;
       }
       
-      const resources = JSON.parse(localStorage.getItem('teacherResources') || '[]');
+      if (!loggedInTeacher) {
+        alert('You must be logged in as a teacher to upload resources.');
+        return;
+      }
       
-      const newResource = {
-        id: Date.now(),
-        teacherId: loggedInTeacher ? loggedInTeacher.id : 1,
-        title: title,
-        description: description,
-        category: category,
-        classId: classId,
-        link: link,
-        uploadDate: new Date().toISOString(),
-        downloads: 0
-      };
+      // Validate file size (50MB limit for work documents)
+      const MAX_FILE_SIZE = 50 * 1024 * 1024;
+      if (file.size > MAX_FILE_SIZE) {
+        alert(`File "${file.name}" is too large. Maximum size is 50MB.`);
+        return;
+      }
       
-      resources.push(newResource);
-      localStorage.setItem('teacherResources', JSON.stringify(resources));
+      // Disable save button while uploading
+      const saveBtn = document.getElementById('save-resource-btn');
+      const originalBtnText = saveBtn.innerHTML;
+      saveBtn.disabled = true;
+      saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Uploading...';
       
-      const modal = bootstrap.Modal.getInstance(document.getElementById('uploadResourceModal'));
-      if (modal) modal.hide();
-      
-      alert('Resource uploaded successfully!');
-      loadTeacherResources();
+      try {
+        // Upload file to Firebase Storage
+        const downloadURL = await uploadTeacherWork(loggedInTeacher.id, file);
+        
+        const resources = JSON.parse(localStorage.getItem('teacherResources') || '[]');
+        
+        const newResource = {
+          id: Date.now(),
+          teacherId: loggedInTeacher.id,
+          title: title,
+          description: description,
+          category: category,
+          classId: classId,
+          fileName: file.name,
+          fileSize: file.size,
+          fileType: file.type,
+          fileUrl: downloadURL,
+          uploadDate: new Date().toISOString(),
+          downloads: 0
+        };
+        
+        resources.push(newResource);
+        localStorage.setItem('teacherResources', JSON.stringify(resources));
+        
+        const modal = bootstrap.Modal.getInstance(document.getElementById('uploadResourceModal'));
+        if (modal) modal.hide();
+        
+        alert('Resource uploaded successfully!');
+        loadTeacherResources();
+      } catch (error) {
+        console.error('Error uploading resource:', error);
+        alert(`Failed to upload resource.\n\nError: ${error.message || 'Unknown error'}\n\nPlease try again or contact support if the problem persists.`);
+      } finally {
+        // Re-enable save button
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = originalBtnText;
+      }
     }
     
     function loadTeacherResources() {
@@ -7120,13 +7627,22 @@
           const cls = classes.find(c => c.id === parseInt(resource.classId));
           const className = resource.classId === 'all' ? 'All Classes' : (cls ? cls.name : 'Unknown');
           
-          // Determine file type icon
+          // Get file icon - check for new fileUrl format first, fallback to link
           let fileIcon = 'fa-file';
-          if (resource.link.includes('.pdf')) fileIcon = 'fa-file-pdf text-danger';
-          else if (resource.link.includes('.doc')) fileIcon = 'fa-file-word text-primary';
-          else if (resource.link.includes('.ppt')) fileIcon = 'fa-file-powerpoint text-warning';
-          else if (resource.link.includes('.xls')) fileIcon = 'fa-file-excel text-success';
-          else if (resource.link.includes('http')) fileIcon = 'fa-link text-info';
+          let fileUrl = resource.fileUrl || resource.link;
+          let fileName = resource.fileName || 'file';
+          let fileSize = resource.fileSize ? formatFileSize(resource.fileSize) : '';
+          
+          if (resource.fileName) {
+            fileIcon = getFileIcon(resource.fileName);
+          } else if (resource.link) {
+            // Legacy format - try to detect from link
+            if (resource.link.includes('.pdf')) fileIcon = 'fa-file-pdf text-danger';
+            else if (resource.link.includes('.doc')) fileIcon = 'fa-file-word text-primary';
+            else if (resource.link.includes('.ppt')) fileIcon = 'fa-file-powerpoint text-warning';
+            else if (resource.link.includes('.xls')) fileIcon = 'fa-file-excel text-success';
+            else if (resource.link.includes('http')) fileIcon = 'fa-link text-info';
+          }
           
           html += `
             <div class="list-group-item">
@@ -7140,11 +7656,12 @@
                   <small class="text-muted">
                     <i class="fas fa-chalkboard me-1"></i> ${escapeHtml(className)}
                     <i class="fas fa-calendar ms-3 me-1"></i> ${uploadDate}
+                    ${fileSize ? `<i class="fas fa-file ms-3 me-1"></i> ${fileSize}` : ''}
                     <i class="fas fa-download ms-3 me-1"></i> ${resource.downloads} downloads
                   </small>
                 </div>
                 <div class="btn-group">
-                  <button class="btn btn-sm btn-primary" onclick="viewResource('${resource.link}', ${resource.id})">
+                  <button class="btn btn-sm btn-primary" onclick="viewResource('${fileUrl}', ${resource.id})">
                     <i class="fas fa-eye"></i> View
                   </button>
                   <button class="btn btn-sm btn-danger" onclick="deleteResource(${resource.id})">
@@ -7175,8 +7692,8 @@
         localStorage.setItem('teacherResources', JSON.stringify(resources));
       }
       
-      // Open link
-      if (link.startsWith('http')) {
+      // Open link - Firebase Storage URLs always start with https
+      if (link && (link.startsWith('http://') || link.startsWith('https://'))) {
         window.open(link, '_blank');
       } else {
         alert(`Resource would be downloaded: ${link}\n\nIn production, this would download or display the file.`);

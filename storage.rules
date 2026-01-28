@@ -124,6 +124,40 @@ service firebase.storage {
                       isValidSize();
     }
     
+    // Parent documents and photos
+    match /parents/{parentId}/{fileName} {
+      allow read: if isAuthenticated() && (isOwner(parentId) || isAdmin());
+      allow write: if (isAdmin() || isOwner(parentId)) && 
+                      (isImage() || isDocument()) &&
+                      isValidSize();
+    }
+    
+    // Teacher Portal - Assignments uploaded by teachers
+    match /teacher-portal/{teacherId}/assignments/{assignmentId}/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if (isAdmin() || isOwner(teacherId)) && 
+                      (isDocument() || isImage() || isVideo()) &&
+                      isValidLargeSize();
+    }
+    
+    // Teacher Portal - Attendance registers
+    match /teacher-portal/{teacherId}/attendance/{fileName} {
+      allow read: if isAuthenticated() && (isAdmin() || isOwner(teacherId) || isTeacher());
+      allow write: if (isAdmin() || isOwner(teacherId)) && 
+                      (isDocument() || 
+                       request.resource.contentType.matches('application/json') ||
+                       request.resource.contentType.matches('text/csv')) &&
+                      isValidSize();
+    }
+    
+    // Teacher Portal - Work documents and materials
+    match /teacher-portal/{teacherId}/work/{fileName} {
+      allow read: if isAuthenticated() && (isAdmin() || isOwner(teacherId) || isTeacher());
+      allow write: if (isAdmin() || isOwner(teacherId)) && 
+                      (isDocument() || isImage() || isVideo()) &&
+                      isValidLargeSize();
+    }
+    
     // Homework submissions by students
     match /homework/{classId}/{studentId}/{fileName} {
       allow read: if isAuthenticated() && 
