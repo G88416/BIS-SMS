@@ -74,7 +74,13 @@ BIS-SMS/
 - Font Awesome for icons
 - Local Storage for data persistence
 - Node.js & Express (Docker deployment)
-- Firebase (Authentication & Hosting)
+- **Firebase** (Authentication, Firestore, Storage, Analytics & Hosting)
+  - **Enhanced Authentication**: Email/Password, Google OAuth, Password Reset
+  - **Session Management**: 30-minute auto-timeout, activity tracking
+  - **Security Features**: Email verification, password complexity, session protection
+  - **Cloud Storage**: Firestore database with offline support
+  - **File Storage**: Firebase Storage for documents and media
+  - **Analytics**: User action tracking and page view monitoring
 
 ## Deployment
 

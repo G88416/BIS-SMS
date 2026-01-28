@@ -10,7 +10,7 @@
     // Import the functions you need from the SDKs you need
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js";
-    import { getAuth, onAuthStateChanged, signOut, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getAuth, onAuthStateChanged, signOut, createUserWithEmailAndPassword, sendEmailVerification, updatePassword, reauthenticateWithCredential, EmailAuthProvider } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
     import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, where, getDocs, Timestamp, setDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
     import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
     
@@ -45,10 +45,42 @@
     // Initialize Storage
     const storage = getStorage(app);
     
+    // Session timeout configuration (30 minutes)
+    const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes in milliseconds
+    let sessionTimeoutId = null;
+    
+    // Function to reset session timeout
+    function resetSessionTimeout() {
+      // Clear existing timeout
+      if (sessionTimeoutId) {
+        clearTimeout(sessionTimeoutId);
+      }
+      
+      // Set new timeout
+      sessionTimeoutId = setTimeout(() => {
+        if (auth.currentUser) {
+          signOut(auth).then(() => {
+            sessionStorage.clear();
+            alert('Your session has expired due to inactivity. Please log in again.');
+            window.location.href = 'index.html';
+          });
+        }
+      }, SESSION_TIMEOUT);
+    }
+    
+    // Track user activity to reset timeout
+    const activityEvents = ['mousedown', 'keydown', 'scroll', 'touchstart'];
+    activityEvents.forEach(event => {
+      document.addEventListener(event, resetSessionTimeout, true);
+    });
+    
     // Protect page: redirect to login if not authenticated
     onAuthStateChanged(auth, (user) => {
       if (!user) {
         window.location.href = 'index.html';
+      } else {
+        // Initialize session timeout when user is authenticated
+        resetSessionTimeout();
       }
       // Optional: refresh token to get latest claims (for future custom claims)
       // user.getIdToken(true);
@@ -67,6 +99,10 @@
     window.firebaseAnalytics = analytics;
     window.firebaseAuth = auth;
     window.firebaseCreateUser = createUserWithEmailAndPassword;
+    window.firebaseSendEmailVerification = sendEmailVerification;
+    window.firebaseUpdatePassword = updatePassword;
+    window.firebaseReauthenticate = reauthenticateWithCredential;
+    window.firebaseEmailAuthProvider = EmailAuthProvider;
     window.firebaseDb = db;
     window.firebaseStorage = storage;
     window.firebaseCollection = collection;
@@ -82,6 +118,50 @@
     window.firebaseStorageRef = ref;
     window.firebaseUploadBytes = uploadBytes;
     window.firebaseGetDownloadURL = getDownloadURL;
+    
+    // Enhanced Analytics Event Tracking
+    window.trackEvent = function(eventName, eventParams = {}) {
+      if (analytics) {
+        try {
+          // Add common parameters
+          const enhancedParams = {
+            ...eventParams,
+            user_type: sessionStorage.getItem('userType') || 'unknown',
+            user_id: sessionStorage.getItem('userId') || 'unknown',
+            timestamp: new Date().toISOString()
+          };
+          
+          // Import logEvent dynamically for analytics
+          import("https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js")
+            .then(({ logEvent }) => {
+              logEvent(analytics, eventName, enhancedParams);
+              console.log(`Analytics: ${eventName}`, enhancedParams);
+            })
+            .catch(err => console.warn('Analytics event failed:', err));
+        } catch (error) {
+          console.warn('Failed to track event:', error);
+        }
+      }
+    };
+    
+    // Track page views automatically
+    window.trackPageView = function(pageName) {
+      window.trackEvent('page_view', {
+        page_title: pageName || document.title,
+        page_location: window.location.href,
+        page_path: window.location.pathname + window.location.hash
+      });
+    };
+    
+    // Track user actions
+    window.trackUserAction = function(action, category, label = '', value = 0) {
+      window.trackEvent('user_action', {
+        action: action,
+        category: category,
+        label: label,
+        value: value
+      });
+    };
   </script>
   
   <!-- Bootstrap 5 CSS CDN -->
