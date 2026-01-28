@@ -718,6 +718,9 @@
                 <h6 class="mb-0"><i class="fas fa-users"></i> Contacts</h6>
               </div>
               <div class="card-body p-0">
+                <div class="p-2 border-bottom bg-light">
+                  <input type="text" class="form-control form-control-sm" id="admin-contact-search" placeholder="Search contacts..." oninput="filterContacts('admin-contact-search', 'choptso-contacts')">
+                </div>
                 <div class="list-group list-group-flush" id="choptso-contacts">
                   <a href="#" class="list-group-item list-group-item-action" onclick="loadConversation('all', event); return false;">
                     <i class="fas fa-users"></i> All Users (Broadcast)
@@ -1713,6 +1716,9 @@
                     <h6 class="mb-0"><i class="fas fa-users"></i> Contacts & Groups</h6>
                   </div>
                   <div class="card-body p-0" style="overflow-y: auto;">
+                    <div class="p-2 border-bottom bg-light">
+                      <input type="text" class="form-control form-control-sm" id="teacher-contact-search" placeholder="Search contacts..." oninput="filterContacts('teacher-contact-search', 'teacher-choptso-contacts')">
+                    </div>
                     <div class="list-group list-group-flush" id="teacher-choptso-contacts">
                       <!-- Contacts will be loaded here -->
                     </div>
@@ -2040,6 +2046,9 @@
                 <h6 class="mb-0"><i class="fas fa-users"></i> Contacts & Groups</h6>
               </div>
               <div class="card-body p-0" style="overflow-y: auto;">
+                <div class="p-2 border-bottom bg-light">
+                  <input type="text" class="form-control form-control-sm" id="parent-contact-search" placeholder="Search contacts..." oninput="filterContacts('parent-contact-search', 'parent-choptso-contacts')">
+                </div>
                 <div class="list-group list-group-flush" id="parent-choptso-contacts">
                   <!-- Contacts will be loaded here -->
                 </div>
@@ -4451,6 +4460,27 @@
           </div>
         `;
         contactsList.appendChild(contactItem);
+      });
+    }
+    
+    // Filter contacts based on search query (reusable for all portals)
+    function filterContacts(searchInputId, contactsListId) {
+      const searchInput = document.getElementById(searchInputId);
+      if (!searchInput) return;
+      
+      const searchQuery = searchInput.value.toLowerCase();
+      const contactsList = document.getElementById(contactsListId);
+      if (!contactsList) return;
+      
+      const items = contactsList.querySelectorAll('.list-group-item');
+      
+      items.forEach(item => {
+        const text = item.textContent.toLowerCase();
+        if (text.includes(searchQuery)) {
+          item.style.display = '';
+        } else {
+          item.style.display = 'none';
+        }
       });
     }
     
