@@ -5835,7 +5835,8 @@
       const letterGradeEl = document.getElementById(`letter-grade-${studentId}`);
       
       if (finalGradeEl && letterGradeEl) {
-        if (assignment || quiz || test || exam) {
+        const hasAnyGrade = (assignment > 0 || quiz > 0 || test > 0 || exam > 0);
+        if (hasAnyGrade) {
           finalGradeEl.textContent = finalGrade.toFixed(1) + '%';
           letterGradeEl.textContent = letterGrade;
           letterGradeEl.className = `badge ${badgeClass}`;
@@ -6051,7 +6052,7 @@
       document.getElementById('assignment-title').value = '';
       document.getElementById('assignment-description').value = '';
       document.getElementById('assignment-due-date').value = '';
-      document.getElementById('assignment-points').value = '';
+      document.getElementById('assignment-points').value = '100';
       
       loadTeacherAssignments();
     }
@@ -6228,7 +6229,18 @@
       const assignments = JSON.parse(localStorage.getItem('teacherAssignments') || '[]');
       const assignment = assignments.find(a => a.id === assignmentId);
       
-      if (assignment && assignment.submissions) {
+      if (!assignment) {
+        alert('Assignment not found.');
+        return;
+      }
+      
+      // Validate grade is within assignment points
+      if (grade < 0 || grade > assignment.points) {
+        alert(`Grade must be between 0 and ${assignment.points} points.`);
+        return;
+      }
+      
+      if (assignment.submissions) {
         const submission = assignment.submissions.find(s => s.studentId === studentId);
         if (submission) {
           submission.grade = grade;
@@ -6428,7 +6440,9 @@
       modal.show();
       
       // Set default date to today
-      document.getElementById('lesson-date').valueAsDate = new Date();
+      const today = new Date();
+      const dateStr = today.toISOString().split('T')[0];
+      document.getElementById('lesson-date').value = dateStr;
     }
     
     function saveLessonPlan() {
@@ -6596,28 +6610,31 @@
       const teacher = teachers.find(t => t.id === teacherId) || loggedInTeacher;
       const teacherClasses = classes.filter(c => c.teacherId === teacherId);
       
+      if (teacherClasses.length === 0) {
+        return {};
+      }
+      
       const timetable = {};
       const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
       const periods = ['Period 1', 'Period 2', 'Period 3', 'Period 4', 'Period 5', 'Period 6', 'Period 7'];
       
-      // Assign classes to random periods
-      days.forEach(day => {
+      // Assign classes to periods deterministically based on teacher ID
+      let classIndex = 0;
+      days.forEach((day, dayIndex) => {
         timetable[day] = {};
-        const availablePeriods = [...periods];
+        const periodsToFill = Math.min(teacherClasses.length, 4);
         
-        // Assign 3-4 classes per day
-        const classCount = Math.min(teacherClasses.length, Math.floor(Math.random() * 2) + 3);
-        for (let i = 0; i < classCount && availablePeriods.length > 0; i++) {
-          const periodIndex = Math.floor(Math.random() * availablePeriods.length);
-          const period = availablePeriods[periodIndex];
-          availablePeriods.splice(periodIndex, 1);
+        for (let i = 0; i < periodsToFill; i++) {
+          const periodIndex = (dayIndex * 2 + i) % periods.length;
+          const period = periods[periodIndex];
           
-          const cls = teacherClasses[i % teacherClasses.length];
+          const cls = teacherClasses[classIndex % teacherClasses.length];
           timetable[day][period] = {
             classId: cls.id,
             subject: teacher ? teacher.subject : 'Mathematics',
-            room: `Room ${Math.floor(Math.random() * 20) + 1}`
+            room: `Room ${(teacherId + classIndex) % 20 + 1}`
           };
+          classIndex++;
         }
       });
       
