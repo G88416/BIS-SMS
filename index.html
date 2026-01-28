@@ -4466,8 +4466,12 @@
     // Filter contacts based on search query (reusable for all portals)
     function filterContacts(searchInputId, contactsListId) {
       const searchInput = document.getElementById(searchInputId);
-      const searchQuery = searchInput ? searchInput.value.toLowerCase() : '';
+      if (!searchInput) return;
+      
+      const searchQuery = searchInput.value.toLowerCase();
       const contactsList = document.getElementById(contactsListId);
+      if (!contactsList) return;
+      
       const items = contactsList.querySelectorAll('.list-group-item');
       
       items.forEach(item => {
