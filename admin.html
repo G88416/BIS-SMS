@@ -3697,7 +3697,13 @@
         const firestoreAttendance = {};
         attendanceSnapshot.forEach((doc) => {
           const data = doc.data();
-          firestoreAttendance[doc.id] = data;
+          // Reconstruct nested structure: classId -> date -> studentId -> record
+          const classId = String(data.classId);
+          const date = data.date;
+          if (!firestoreAttendance[classId]) {
+            firestoreAttendance[classId] = {};
+          }
+          firestoreAttendance[classId][date] = data.records || {};
         });
         
         if (Object.keys(firestoreAttendance).length > 0) {
@@ -3716,7 +3722,13 @@
         const firestoreGrades = {};
         gradesSnapshot.forEach((doc) => {
           const data = doc.data();
-          firestoreGrades[doc.id] = data;
+          // Reconstruct nested structure: classId -> term -> studentId -> grades
+          const classId = String(data.classId);
+          const term = data.term;
+          if (!firestoreGrades[classId]) {
+            firestoreGrades[classId] = {};
+          }
+          firestoreGrades[classId][term] = data.grades || {};
         });
         
         if (Object.keys(firestoreGrades).length > 0) {
@@ -3735,7 +3747,13 @@
         const firestoreFees = {};
         feesSnapshot.forEach((doc) => {
           const data = doc.data();
-          firestoreFees[doc.id] = data;
+          // Use numeric student ID as key
+          const studentId = parseInt(doc.id) || data.studentId;
+          firestoreFees[studentId] = {
+            items: data.items || [],
+            discounts: data.discounts || [],
+            payments: data.payments || []
+          };
         });
         
         if (Object.keys(firestoreFees).length > 0) {
@@ -5930,8 +5948,12 @@
     function deleteStudent(id) {
       students = students.filter(stu => stu.id !== id);
       // Remove from all classes
+      const modifiedClasses = [];
       classes.forEach(cls => {
-        if (cls.studentIds) cls.studentIds = cls.studentIds.filter(sid => sid !== id);
+        if (cls.studentIds && cls.studentIds.includes(id)) {
+          cls.studentIds = cls.studentIds.filter(sid => sid !== id);
+          modifiedClasses.push(cls);
+        }
       });
       
       // Save to localStorage
@@ -5948,6 +5970,18 @@
           console.error('Error deleting student from Firestore:', error);
         });
       
+      // Update modified classes in Firestore
+      modifiedClasses.forEach(cls => {
+        const classDocRef = doc(db, 'classes', String(cls.id));
+        setDoc(classDocRef, {
+          ...cls,
+          numericId: cls.id,
+          updatedAt: new Date().toISOString()
+        }, { merge: true })
+          .then(() => console.log(`Class ${cls.id} updated in Firestore`))
+          .catch((error) => console.error(`Error updating class ${cls.id} in Firestore:`, error));
+      });
+      
       renderStudents();
       renderClasses();
       updateDashboardStats();
@@ -5955,9 +5989,13 @@
 
     function deleteTeacher(id) {
       teachers = teachers.filter(tea => tea.id !== id);
-      // Unassign from classes
+      // Unassign from classes and track modified classes
+      const modifiedClasses = [];
       classes.forEach(cls => {
-        if (cls.teacherId === id) cls.teacherId = null;
+        if (cls.teacherId === id) {
+          cls.teacherId = null;
+          modifiedClasses.push(cls);
+        }
       });
       
       // Save to localStorage
@@ -5973,6 +6011,18 @@
         .catch((error) => {
           console.error('Error deleting teacher from Firestore:', error);
         });
+      
+      // Update modified classes in Firestore
+      modifiedClasses.forEach(cls => {
+        const classDocRef = doc(db, 'classes', String(cls.id));
+        setDoc(classDocRef, {
+          ...cls,
+          numericId: cls.id,
+          updatedAt: new Date().toISOString()
+        }, { merge: true })
+          .then(() => console.log(`Class ${cls.id} updated in Firestore`))
+          .catch((error) => console.error(`Error updating class ${cls.id} in Firestore:`, error));
+      });
       
       renderTeachers();
       renderClasses();
