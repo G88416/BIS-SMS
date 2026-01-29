@@ -11,6 +11,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         
         // Your web app's Firebase configuration
         const firebaseConfig = {
@@ -37,10 +38,14 @@
         // Initialize Auth
         const auth = getAuth(app);
         
+        // Initialize Firestore
+        const db = getFirestore(app);
+        
         // Make available globally
         window.firebaseApp = app;
         window.firebaseAnalytics = analytics;
         window.firebaseAuth = auth;
+        window.firebaseDb = db;
         
         // Session timeout configuration (30 minutes)
         const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes in milliseconds
@@ -266,42 +271,76 @@
         });
         
         // Google Sign-In function
-        window.signInWithGoogle = function() {
+        window.signInWithGoogle = async function() {
             const provider = new GoogleAuthProvider();
             const errorMessage = document.getElementById('errorMessage');
             
             errorMessage.style.display = 'none';
             
-            signInWithPopup(auth, provider)
-                .then((result) => {
-                    const user = result.user;
+            try {
+                const result = await signInWithPopup(auth, provider);
+                const user = result.user;
+                
+                // Verify user role from Firestore
+                try {
+                    const userDocRef = doc(db, 'users', user.uid);
+                    const userDoc = await getDoc(userDocRef);
                     
-                    // Important: In production, verify user role from Firestore before granting access
-                    // For now, Google sign-in users are assigned 'parent' role
-                    // TODO: Implement role verification via Firestore lookup
-                    sessionStorage.setItem('userType', 'parent');
-                    sessionStorage.setItem('userId', user.email.split('@')[0]);
-                    sessionStorage.setItem('displayName', user.displayName || '');
-                    sessionStorage.setItem('photoURL', user.photoURL || '');
-                    
-                    // Redirect to parent portal
-                    window.location.href = 'admin.html#parent-portal?id=' + encodeURIComponent(user.email.split('@')[0]);
-                })
-                .catch((error) => {
-                    console.error('Google Sign-In error:', error);
-                    let errorMsg = 'Failed to sign in with Google. Please try again.';
-                    
-                    if (error.code === 'auth/popup-closed-by-user') {
-                        errorMsg = 'Sign-in cancelled.';
-                    } else if (error.code === 'auth/popup-blocked') {
-                        errorMsg = 'Pop-up blocked. Please allow pop-ups for this site.';
-                    } else if (error.code === 'auth/unauthorized-domain') {
-                        errorMsg = 'This domain is not authorized for Google Sign-In.';
+                    if (userDoc.exists()) {
+                        const userData = userDoc.data();
+                        const userRole = userData.role || userData.userType;
+                        const userId = userData.userId || userData.id || user.email.split('@')[0];
+                        
+                        // Validate that user has a valid role
+                        const validRoles = ['admin', 'teacher', 'student', 'parent'];
+                        if (!userRole || !validRoles.includes(userRole)) {
+                            await signOut(auth);
+                            errorMessage.textContent = 'Your account does not have a valid role assigned. Please contact the administrator.';
+                            errorMessage.style.display = 'block';
+                            return;
+                        }
+                        
+                        // Store verified data from Firestore
+                        sessionStorage.setItem('userType', userRole);
+                        sessionStorage.setItem('userId', userId);
+                        sessionStorage.setItem('displayName', user.displayName || userData.name || '');
+                        sessionStorage.setItem('photoURL', user.photoURL || '');
+                        
+                        // Redirect based on role
+                        let redirectUrl = 'admin.html';
+                        if (userRole !== 'admin') {
+                            redirectUrl += `#${userRole}-portal?id=${encodeURIComponent(userId)}`;
+                        }
+                        window.location.href = redirectUrl;
+                    } else {
+                        // User not found in Firestore - sign them out
+                        await signOut(auth);
+                        errorMessage.textContent = 'Your Google account is not registered in the system. Please contact the administrator or use email/password login.';
+                        errorMessage.style.display = 'block';
                     }
-                    
-                    errorMessage.textContent = errorMsg;
+                } catch (firestoreError) {
+                    console.error('Firestore lookup error:', firestoreError);
+                    await signOut(auth);
+                    errorMessage.textContent = 'Failed to verify your account. Please try again or contact the administrator.';
                     errorMessage.style.display = 'block';
-                });
+                }
+            } catch (error) {
+                console.error('Google Sign-In error:', error);
+                let errorMsg = 'Failed to sign in with Google. Please try again.';
+                
+                if (error.code === 'auth/popup-closed-by-user') {
+                    errorMsg = 'Sign-in cancelled.';
+                } else if (error.code === 'auth/popup-blocked') {
+                    errorMsg = 'Pop-up blocked. Please allow pop-ups for this site.';
+                } else if (error.code === 'auth/unauthorized-domain') {
+                    errorMsg = 'This domain is not authorized for Google Sign-In.';
+                } else if (error.code === 'auth/network-request-failed') {
+                    errorMsg = 'Network error. Please check your connection and try again.';
+                }
+                
+                errorMessage.textContent = errorMsg;
+                errorMessage.style.display = 'block';
+            }
         };
     </script>
     
