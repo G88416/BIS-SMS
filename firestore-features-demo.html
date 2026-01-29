@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Firestore Advanced Features Demo - BIS-SMS</title>
+  
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <style>
+    body {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    
+    .demo-container {
+      background: white;
+      border-radius: 10px;
+      padding: 30px;
+      margin: 20px auto;
+      max-width: 1200px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+    
+    .feature-card {
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+      transition: all 0.3s;
+    }
+    
+    .feature-card:hover {
+      border-color: #667eea;
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+    }
+    
+    .feature-icon {
+      font-size: 2rem;
+      color: #667eea;
+      margin-bottom: 10px;
+    }
+    
+    .status-indicator {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-right: 8px;
+    }
+    
+    .status-online {
+      background-color: #28a745;
+    }
+    
+    .status-offline {
+      background-color: #dc3545;
+    }
+    
+    .log-entry {
+      padding: 10px;
+      border-left: 3px solid #667eea;
+      margin-bottom: 8px;
+      background: #f8f9fa;
+      font-size: 0.9rem;
+    }
+    
+    .pagination-controls {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-top: 15px;
+    }
+    
+    .data-table {
+      font-size: 0.9rem;
+    }
+    
+    .success-message {
+      background: #d4edda;
+      border: 1px solid #c3e6cb;
+      color: #155724;
+      padding: 12px;
+      border-radius: 4px;
+      margin: 10px 0;
+    }
+    
+    .error-message {
+      background: #f8d7da;
+      border: 1px solid #f5c6cb;
+      color: #721c24;
+      padding: 12px;
+      border-radius: 4px;
+      margin: 10px 0;
+    }
+    
+    .badge-action {
+      font-size: 0.75rem;
+      padding: 4px 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="demo-container">
+    <div class="text-center mb-4">
+      <h1><i class="fas fa-rocket"></i> BIS-SMS Advanced Features Demo</h1>
+      <p class="text-muted">Demonstrating real-time sync, pagination, audit logging, and backups</p>
+      <div id="connectionStatus" class="mt-2">
+        <span class="status-indicator status-offline"></span>
+        <span>Initializing...</span>
+      </div>
+    </div>
+    
+    <!-- Feature 1: Real-time Sync -->
+    <div class="feature-card">
+      <div class="d-flex align-items-center mb-3">
+        <i class="fas fa-sync-alt feature-icon me-3"></i>
+        <div>
+          <h3>Real-time Data Sync</h3>
+          <p class="text-muted mb-0">Live updates using onSnapshot()</p>
+        </div>
+      </div>
+      
+      <div class="row">
+        <div class="col-md-6">
+          <button class="btn btn-primary" onclick="subscribeToAnnouncements()">
+            <i class="fas fa-play"></i> Subscribe to Announcements
+          </button>
+          <button class="btn btn-secondary" onclick="unsubscribeAll()">
+            <i class="fas fa-stop"></i> Unsubscribe All
+          </button>
+          <div class="mt-2">
+            <small>Active Subscriptions: <span id="subscriptionCount" class="badge bg-info">0</span></small>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div id="realtimeData" style="max-height: 200px; overflow-y: auto;">
+            <p class="text-muted">Click "Subscribe" to see live updates</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Feature 2: Pagination -->
+    <div class="feature-card">
+      <div class="d-flex align-items-center mb-3">
+        <i class="fas fa-list feature-icon me-3"></i>
+        <div>
+          <h3>Pagination</h3>
+          <p class="text-muted mb-0">Efficient handling of large datasets</p>
+        </div>
+      </div>
+      
+      <div>
+        <button class="btn btn-primary" onclick="loadFirstPage()">
+          <i class="fas fa-database"></i> Load Students (Paginated)
+        </button>
+        
+        <div id="paginationData" class="mt-3">
+          <p class="text-muted">Click "Load Students" to see pagination in action</p>
+        </div>
+        
+        <div class="pagination-controls" id="paginationControls" style="display: none;">
+          <button class="btn btn-sm btn-outline-primary" id="firstBtn" onclick="loadFirstPage()">
+            <i class="fas fa-angle-double-left"></i> First
+          </button>
+          <button class="btn btn-sm btn-outline-primary" id="prevBtn" onclick="loadPreviousPage()">
+            <i class="fas fa-angle-left"></i> Previous
+          </button>
+          <span class="mx-2">Page <span id="currentPage">1</span></span>
+          <button class="btn btn-sm btn-outline-primary" id="nextBtn" onclick="loadNextPage()">
+            Next <i class="fas fa-angle-right"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Feature 3: Audit Logging -->
+    <div class="feature-card">
+      <div class="d-flex align-items-center mb-3">
+        <i class="fas fa-history feature-icon me-3"></i>
+        <div>
+          <h3>Audit Logging</h3>
+          <p class="text-muted mb-0">Track all user actions and changes</p>
+        </div>
+      </div>
+      
+      <div class="row">
+        <div class="col-md-6">
+          <button class="btn btn-success" onclick="testAuditLog()">
+            <i class="fas fa-plus"></i> Create Test Log
+          </button>
+          <button class="btn btn-info" onclick="loadAuditLogs()">
+            <i class="fas fa-search"></i> View Recent Logs
+          </button>
+          <button class="btn btn-warning" onclick="showAuditStats()">
+            <i class="fas fa-chart-bar"></i> Statistics
+          </button>
+        </div>
+        <div class="col-md-6">
+          <div id="auditLogData" style="max-height: 250px; overflow-y: auto;">
+            <p class="text-muted">Click "View Recent Logs" to see audit trail</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Feature 4: Backups -->
+    <div class="feature-card">
+      <div class="d-flex align-items-center mb-3">
+        <i class="fas fa-download feature-icon me-3"></i>
+        <div>
+          <h3>Data Backup & Restore</h3>
+          <p class="text-muted mb-0">Export and import database backups</p>
+        </div>
+      </div>
+      
+      <div class="row">
+        <div class="col-md-6">
+          <h5>Create Backup</h5>
+          <div class="mb-3">
+            <label class="form-label">Select Collections:</label>
+            <select class="form-select" id="backupPreset">
+              <option value="CORE">Core Data (Users, Students, Teachers, Classes)</option>
+              <option value="ACADEMIC">Academic Data</option>
+              <option value="FINANCIAL">Financial Data</option>
+              <option value="ALL">All Collections</option>
+            </select>
+          </div>
+          <button class="btn btn-primary" onclick="createBackup()">
+            <i class="fas fa-save"></i> Create & Download Backup
+          </button>
+          <button class="btn btn-info" onclick="listBackups()">
+            <i class="fas fa-list"></i> List Backups
+          </button>
+        </div>
+        <div class="col-md-6">
+          <h5>Restore Backup</h5>
+          <input type="file" class="form-control mb-2" id="backupFile" accept=".json">
+          <button class="btn btn-warning" onclick="restoreBackup()">
+            <i class="fas fa-upload"></i> Restore from File
+          </button>
+          <button class="btn btn-secondary" onclick="validateBackupFile()">
+            <i class="fas fa-check"></i> Validate File
+          </button>
+        </div>
+      </div>
+      
+      <div id="backupStatus" class="mt-3"></div>
+    </div>
+    
+    <!-- Documentation Links -->
+    <div class="text-center mt-4">
+      <h5>Documentation</h5>
+      <div class="d-flex justify-content-center gap-3 flex-wrap">
+        <a href="FIRESTORE_ADVANCED_FEATURES.md" class="btn btn-outline-primary btn-sm">
+          <i class="fas fa-book"></i> Advanced Features Guide
+        </a>
+        <a href="AUTOMATED_BACKUP_GUIDE.md" class="btn btn-outline-primary btn-sm">
+          <i class="fas fa-file-alt"></i> Backup Configuration
+        </a>
+        <a href="README.md" class="btn btn-outline-primary btn-sm">
+          <i class="fas fa-home"></i> Main README
+        </a>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+    import { 
+      getFirestore, collection, getDocs, getDoc, doc, addDoc, updateDoc, deleteDoc,
+      query, where, orderBy, limit, startAfter, onSnapshot, serverTimestamp
+    } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+    import { getAuth } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+    
+    // Note: You need to configure Firebase with your project credentials
+    const firebaseConfig = {
+      // Add your Firebase configuration here
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_AUTH_DOMAIN",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_STORAGE_BUCKET",
+      messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
+    
+    try {
+      const app = initializeApp(firebaseConfig);
+      window.firebaseDb = getFirestore(app);
+      window.firebaseAuth = getAuth(app);
+      
+      // Make Firebase functions available globally
+      window.firebaseCollection = collection;
+      window.firebaseGetDocs = getDocs;
+      window.firebaseGetDoc = getDoc;
+      window.firebaseDoc = doc;
+      window.firebaseAddDoc = addDoc;
+      window.firebaseUpdateDoc = updateDoc;
+      window.firebaseDeleteDoc = deleteDoc;
+      window.firebaseQuery = query;
+      window.firebaseWhere = where;
+      window.firebaseOrderBy = orderBy;
+      window.firebaseLimit = limit;
+      window.firebaseStartAfter = startAfter;
+      window.firebaseOnSnapshot = onSnapshot;
+      window.firebaseServerTimestamp = serverTimestamp;
+      
+      updateConnectionStatus(true);
+      console.log('✓ Firebase initialized');
+    } catch (error) {
+      console.error('Firebase initialization failed:', error);
+      updateConnectionStatus(false);
+      showError('Firebase initialization failed. Please configure your Firebase credentials.');
+    }
+  </script>
+  
+  <!-- Load our modules -->
+  <script type="module" src="./firestore-realtime.js"></script>
+  <script type="module" src="./firestore-pagination.js"></script>
+  <script type="module" src="./firestore-audit.js"></script>
+  <script type="module" src="./firestore-backup.js"></script>
+  
+  <script>
+    let currentPaginator = null;
+    let announcementUnsubscribe = null;
+    
+    function updateConnectionStatus(online) {
+      const statusEl = document.getElementById('connectionStatus');
+      if (online) {
+        statusEl.innerHTML = '<span class="status-indicator status-online"></span><span>Online - Ready</span>';
+      } else {
+        statusEl.innerHTML = '<span class="status-indicator status-offline"></span><span>Offline</span>';
+      }
+    }
+    
+    function showSuccess(message) {
+      return `<div class="success-message"><i class="fas fa-check-circle"></i> ${message}</div>`;
+    }
+    
+    function showError(message) {
+      return `<div class="error-message"><i class="fas fa-exclamation-circle"></i> ${message}</div>`;
+    }
+    
+    // Real-time Sync Functions
+    function subscribeToAnnouncements() {
+      if (!window.FirestoreRealtime) {
+        alert('FirestoreRealtime module not loaded yet. Please wait...');
+        return;
+      }
+      
+      if (announcementUnsubscribe) {
+        alert('Already subscribed! Unsubscribe first.');
+        return;
+      }
+      
+      announcementUnsubscribe = window.FirestoreRealtime.subscribeToAnnouncements(
+        (result) => {
+          const dataEl = document.getElementById('realtimeData');
+          if (result.data.length === 0) {
+            dataEl.innerHTML = '<p class="text-muted">No announcements found</p>';
+          } else {
+            dataEl.innerHTML = result.data.map(item => `
+              <div class="log-entry">
+                <strong>${item.title || 'Announcement'}</strong><br>
+                <small class="text-muted">${new Date(item.date).toLocaleDateString()}</small>
+              </div>
+            `).join('');
+          }
+          updateSubscriptionCount();
+        },
+        (error) => {
+          console.error('Subscription error:', error);
+          document.getElementById('realtimeData').innerHTML = showError('Subscription failed: ' + error.message);
+        },
+        5
+      );
+      
+      document.getElementById('realtimeData').innerHTML = showSuccess('Subscribed! Listening for updates...');
+    }
+    
+    function unsubscribeAll() {
+      if (!window.FirestoreRealtime) return;
+      
+      if (announcementUnsubscribe) {
+        announcementUnsubscribe();
+        announcementUnsubscribe = null;
+      }
+      
+      window.FirestoreRealtime.unsubscribeAll();
+      document.getElementById('realtimeData').innerHTML = '<p class="text-muted">Unsubscribed from all updates</p>';
+      updateSubscriptionCount();
+    }
+    
+    function updateSubscriptionCount() {
+      if (!window.FirestoreRealtime) return;
+      const count = window.FirestoreRealtime.getActiveSubscriptionsCount();
+      document.getElementById('subscriptionCount').textContent = count;
+    }
+    
+    // Pagination Functions
+    async function loadFirstPage() {
+      if (!window.FirestorePagination) {
+        alert('FirestorePagination module not loaded yet. Please wait...');
+        return;
+      }
+      
+      try {
+        if (!currentPaginator) {
+          currentPaginator = window.FirestorePagination.createStudentsPaginator(10);
+        }
+        
+        const page = await currentPaginator.first();
+        displayPage(page);
+      } catch (error) {
+        console.error('Pagination error:', error);
+        document.getElementById('paginationData').innerHTML = showError('Failed to load: ' + error.message);
+      }
+    }
+    
+    async function loadNextPage() {
+      if (!currentPaginator) return;
+      
+      try {
+        const page = await currentPaginator.next();
+        displayPage(page);
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    }
+    
+    async function loadPreviousPage() {
+      if (!currentPaginator) return;
+      
+      try {
+        const page = await currentPaginator.previous();
+        displayPage(page);
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    }
+    
+    function displayPage(page) {
+      const dataEl = document.getElementById('paginationData');
+      const controlsEl = document.getElementById('paginationControls');
+      
+      if (page.data.length === 0) {
+        dataEl.innerHTML = '<p class="text-muted">No students found</p>';
+        controlsEl.style.display = 'none';
+        return;
+      }
+      
+      dataEl.innerHTML = `
+        <table class="table table-striped data-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Grade</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${page.data.map(student => `
+              <tr>
+                <td>${student.id || 'N/A'}</td>
+                <td>${student.name || 'N/A'}</td>
+                <td>${student.grade || 'N/A'}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+      
+      controlsEl.style.display = 'flex';
+      document.getElementById('currentPage').textContent = page.page || 1;
+      document.getElementById('prevBtn').disabled = !page.hasPrev;
+      document.getElementById('nextBtn').disabled = !page.hasNext;
+      document.getElementById('firstBtn').disabled = !page.hasPrev;
+    }
+    
+    // Audit Logging Functions
+    async function testAuditLog() {
+      if (!window.FirestoreAudit) {
+        alert('FirestoreAudit module not loaded yet. Please wait...');
+        return;
+      }
+      
+      try {
+        await window.FirestoreAudit.logCustomAction(
+          'DEMO_ACTION',
+          'demo',
+          { message: 'This is a test audit log entry', timestamp: new Date().toISOString() }
+        );
+        
+        document.getElementById('auditLogData').innerHTML = showSuccess('Test audit log created successfully!');
+      } catch (error) {
+        console.error('Error:', error);
+        document.getElementById('auditLogData').innerHTML = showError('Failed to create log: ' + error.message);
+      }
+    }
+    
+    async function loadAuditLogs() {
+      if (!window.FirestoreAudit) return;
+      
+      try {
+        const logs = await window.FirestoreAudit.getRecentAuditLogs(10);
+        const dataEl = document.getElementById('auditLogData');
+        
+        if (logs.length === 0) {
+          dataEl.innerHTML = '<p class="text-muted">No audit logs found</p>';
+          return;
+        }
+        
+        dataEl.innerHTML = logs.map(log => `
+          <div class="log-entry">
+            <span class="badge bg-${log.status === 'SUCCESS' ? 'success' : 'danger'} badge-action">${log.action}</span>
+            <strong>${log.resource || 'N/A'}</strong>
+            <br>
+            <small>User: ${log.userName || 'Unknown'} (${log.userRole || 'N/A'})</small>
+            <br>
+            <small class="text-muted">${log.timestamp ? new Date(log.timestamp.seconds * 1000).toLocaleString() : 'N/A'}</small>
+          </div>
+        `).join('');
+      } catch (error) {
+        console.error('Error:', error);
+        document.getElementById('auditLogData').innerHTML = showError('Failed to load logs: ' + error.message);
+      }
+    }
+    
+    async function showAuditStats() {
+      if (!window.FirestoreAudit) return;
+      
+      try {
+        const stats = await window.FirestoreAudit.getAuditStatistics();
+        const dataEl = document.getElementById('auditLogData');
+        
+        dataEl.innerHTML = `
+          <div class="log-entry">
+            <h6>Audit Statistics</h6>
+            <p><strong>Total Logs:</strong> ${stats.totalLogs}</p>
+            <p><strong>Failures:</strong> ${stats.failures}</p>
+            <p><strong>Success Rate:</strong> ${((stats.byStatus.SUCCESS || 0) / stats.totalLogs * 100).toFixed(1)}%</p>
+            <p><strong>By Action:</strong> ${JSON.stringify(stats.byAction)}</p>
+          </div>
+        `;
+      } catch (error) {
+        console.error('Error:', error);
+        document.getElementById('auditLogData').innerHTML = showError('Failed to load stats: ' + error.message);
+      }
+    }
+    
+    // Backup Functions
+    async function createBackup() {
+      if (!window.FirestoreBackup) {
+        alert('FirestoreBackup module not loaded yet. Please wait...');
+        return;
+      }
+      
+      const statusEl = document.getElementById('backupStatus');
+      statusEl.innerHTML = '<div class="alert alert-info">Creating backup... This may take a moment.</div>';
+      
+      try {
+        const preset = document.getElementById('backupPreset').value;
+        const collections = window.FirestoreBackup.BACKUP_PRESETS[preset];
+        
+        const backup = await window.FirestoreBackup.backupDatabase(collections, {
+          backupType: 'manual',
+          description: `Demo backup - ${preset} collections`
+        });
+        
+        window.FirestoreBackup.exportBackupToJSON(backup);
+        
+        statusEl.innerHTML = showSuccess(`Backup created and downloaded! (${Object.keys(backup.collections).length} collections)`);
+      } catch (error) {
+        console.error('Error:', error);
+        statusEl.innerHTML = showError('Backup failed: ' + error.message);
+      }
+    }
+    
+    async function listBackups() {
+      if (!window.FirestoreBackup) return;
+      
+      const statusEl = document.getElementById('backupStatus');
+      
+      try {
+        const backups = await window.FirestoreBackup.listBackups(10);
+        
+        if (backups.length === 0) {
+          statusEl.innerHTML = '<p class="text-muted">No backup metadata found in database</p>';
+          return;
+        }
+        
+        statusEl.innerHTML = `
+          <h6>Recent Backups:</h6>
+          ${backups.map(b => `
+            <div class="log-entry">
+              <strong>${b.description || 'Backup'}</strong> (${b.backupType})<br>
+              <small>${new Date(b.timestamp).toLocaleString()}</small>
+            </div>
+          `).join('')}
+        `;
+      } catch (error) {
+        console.error('Error:', error);
+        statusEl.innerHTML = showError('Failed to list backups: ' + error.message);
+      }
+    }
+    
+    async function validateBackupFile() {
+      if (!window.FirestoreBackup) return;
+      
+      const fileInput = document.getElementById('backupFile');
+      const file = fileInput.files[0];
+      const statusEl = document.getElementById('backupStatus');
+      
+      if (!file) {
+        statusEl.innerHTML = showError('Please select a backup file first');
+        return;
+      }
+      
+      try {
+        const backupData = await window.FirestoreBackup.importBackupFromJSON(file);
+        const validation = window.FirestoreBackup.validateBackup(backupData);
+        
+        if (validation.valid) {
+          statusEl.innerHTML = showSuccess('Backup file is valid! ' + 
+            (validation.warnings.length > 0 ? '<br>Warnings: ' + validation.warnings.join(', ') : ''));
+        } else {
+          statusEl.innerHTML = showError('Invalid backup file: ' + validation.errors.join(', '));
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        statusEl.innerHTML = showError('Validation failed: ' + error.message);
+      }
+    }
+    
+    async function restoreBackup() {
+      if (!window.FirestoreBackup) return;
+      
+      const fileInput = document.getElementById('backupFile');
+      const file = fileInput.files[0];
+      const statusEl = document.getElementById('backupStatus');
+      
+      if (!file) {
+        statusEl.innerHTML = showError('Please select a backup file first');
+        return;
+      }
+      
+      if (!confirm('WARNING: This will replace existing data. Are you sure?')) {
+        return;
+      }
+      
+      statusEl.innerHTML = '<div class="alert alert-warning">Restoring backup... Do not close this page.</div>';
+      
+      try {
+        const backupData = await window.FirestoreBackup.importBackupFromJSON(file);
+        const validation = window.FirestoreBackup.validateBackup(backupData);
+        
+        if (!validation.valid) {
+          statusEl.innerHTML = showError('Cannot restore: ' + validation.errors.join(', '));
+          return;
+        }
+        
+        const results = await window.FirestoreBackup.restoreDatabase(backupData, {
+          clearExisting: true
+        });
+        
+        let successCount = 0;
+        let failCount = 0;
+        Object.values(results.collections).forEach(r => {
+          if (r.status === 'success') successCount++;
+          else failCount++;
+        });
+        
+        statusEl.innerHTML = showSuccess(
+          `Restore completed! ${successCount} collections restored successfully` +
+          (failCount > 0 ? `, ${failCount} failed` : '')
+        );
+      } catch (error) {
+        console.error('Error:', error);
+        statusEl.innerHTML = showError('Restore failed: ' + error.message);
+      }
+    }
+    
+    // Initialize
+    window.addEventListener('load', () => {
+      updateSubscriptionCount();
+      
+      // Monitor connection
+      if (window.FirestoreRealtime) {
+        window.FirestoreRealtime.monitorRealtimeConnection((status) => {
+          updateConnectionStatus(status.online);
+        });
+      }
+    });
+  </script>
+  
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
