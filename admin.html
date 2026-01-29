@@ -1775,14 +1775,56 @@
 
           <!-- Assignment Management Tab -->
           <div class="tab-pane fade" id="teacher-assignments">
-            <h5>Create & Grade Assignments</h5>
-            <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addAssignmentModal">Create New Assignment</button>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h5>Create & Grade Assignments</h5>
+              <div>
+                <button class="btn btn-info btn-sm me-2" onclick="showAssignmentAnalytics()"><i class="fas fa-chart-bar"></i> View Analytics</button>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addAssignmentModal"><i class="fas fa-plus"></i> Create New Assignment</button>
+              </div>
+            </div>
+            <div id="assignment-analytics" class="row mb-3" style="display: none;">
+              <div class="col-md-3">
+                <div class="card bg-primary text-white">
+                  <div class="card-body text-center">
+                    <h6>Total Assignments</h6>
+                    <h3 id="analytics-total">0</h3>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="card bg-success text-white">
+                  <div class="card-body text-center">
+                    <h6>Avg Completion</h6>
+                    <h3 id="analytics-completion">0%</h3>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="card bg-warning text-white">
+                  <div class="card-body text-center">
+                    <h6>Pending Grading</h6>
+                    <h3 id="analytics-pending">0</h3>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="card bg-info text-white">
+                  <div class="card-body text-center">
+                    <h6>Avg Grade</h6>
+                    <h3 id="analytics-avg-grade">-</h3>
+                  </div>
+                </div>
+              </div>
+            </div>
             <div id="teacher-assignments-content"></div>
           </div>
 
           <!-- Lesson Planning Tab -->
           <div class="tab-pane fade" id="teacher-lesson-planning">
-            <h5>Lesson Plans & Syllabus Tracking</h5>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h5>Lesson Plans & Syllabus Tracking</h5>
+              <button class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#lessonTemplatesModal"><i class="fas fa-book-open"></i> Lesson Templates</button>
+            </div>
             <div class="row mb-3">
               <div class="col-md-6">
                 <label class="form-label">Select Class</label>
@@ -2820,6 +2862,77 @@
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="fas fa-times"></i> Close</button>
           <button type="button" class="btn btn-success" id="confirmBulkGradesBtn" onclick="confirmBulkGrades()" disabled><i class="fas fa-check"></i> Import Grades</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lesson Templates Modal -->
+  <div class="modal fade" id="lessonTemplatesModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header bg-info text-white">
+          <h5 class="modal-title"><i class="fas fa-book-open"></i> Lesson Plan Templates</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <p class="text-muted">Select a template to quickly create a lesson plan with pre-filled content.</p>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="card h-100">
+                <div class="card-body">
+                  <h6 class="card-title"><i class="fas fa-calculator"></i> Mathematics - Algebra</h6>
+                  <p class="card-text small">Introduction to algebraic expressions and equations</p>
+                  <button class="btn btn-sm btn-primary" onclick="applyLessonTemplate('algebra')">Use Template</button>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="card h-100">
+                <div class="card-body">
+                  <h6 class="card-title"><i class="fas fa-book"></i> English - Literature Analysis</h6>
+                  <p class="card-text small">Analyzing themes and characters in literature</p>
+                  <button class="btn btn-sm btn-primary" onclick="applyLessonTemplate('literature')">Use Template</button>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="card h-100">
+                <div class="card-body">
+                  <h6 class="card-title"><i class="fas fa-flask"></i> Science - Scientific Method</h6>
+                  <p class="card-text small">Understanding hypothesis, experimentation, and analysis</p>
+                  <button class="btn btn-sm btn-primary" onclick="applyLessonTemplate('science')">Use Template</button>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="card h-100">
+                <div class="card-body">
+                  <h6 class="card-title"><i class="fas fa-globe"></i> Geography - Map Reading</h6>
+                  <p class="card-text small">Reading and interpreting maps and coordinates</p>
+                  <button class="btn btn-sm btn-primary" onclick="applyLessonTemplate('geography')">Use Template</button>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="card h-100">
+                <div class="card-body">
+                  <h6 class="card-title"><i class="fas fa-history"></i> History - Critical Thinking</h6>
+                  <p class="card-text small">Analyzing historical events and their impact</p>
+                  <button class="btn btn-sm btn-primary" onclick="applyLessonTemplate('history')">Use Template</button>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="card h-100">
+                <div class="card-body">
+                  <h6 class="card-title"><i class="fas fa-comments"></i> Life Skills - Communication</h6>
+                  <p class="card-text small">Effective communication and interpersonal skills</p>
+                  <button class="btn btn-sm btn-primary" onclick="applyLessonTemplate('communication')">Use Template</button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -3900,6 +4013,56 @@
         tbody += row;
       });
       document.getElementById('grades-table').innerHTML = tbody;
+      
+      // Calculate and display statistics
+      calculateGradeStatistics(classId, term);
+    }
+    
+    // Calculate and display grade statistics
+    function calculateGradeStatistics(classId, term) {
+      const cls = classes.find(c => c.id == classId);
+      if (!cls || !cls.studentIds || cls.studentIds.length === 0) {
+        document.getElementById('grade-statistics').style.display = 'none';
+        return;
+      }
+      
+      const averages = [];
+      let passCount = 0;
+      let atRiskCount = 0;
+      
+      cls.studentIds.forEach(sid => {
+        const studentGrades = gradesData[classId]?.[term]?.[sid] || {};
+        let totalWeighted = 0;
+        let totalWeight = 0;
+        
+        if (subjects[classId]) {
+          subjects[classId].forEach(sub => {
+            const score = parseFloat(studentGrades[sub.name]) || 0;
+            totalWeighted += score * (sub.weight / 100);
+            totalWeight += sub.weight;
+          });
+        }
+        
+        const avg = totalWeight > 0 ? (totalWeighted / (totalWeight / 100)) : 0;
+        averages.push(avg);
+        
+        if (avg >= 50) passCount++;
+        if (avg < 50) atRiskCount++;
+      });
+      
+      if (averages.length > 0) {
+        const classAvg = (averages.reduce((a, b) => a + b, 0) / averages.length).toFixed(1);
+        const highest = Math.max(...averages).toFixed(1);
+        const passRate = ((passCount / averages.length) * 100).toFixed(0);
+        
+        document.getElementById('grade-class-avg').textContent = classAvg + '%';
+        document.getElementById('grade-highest').textContent = highest + '%';
+        document.getElementById('grade-pass-rate').textContent = passRate + '%';
+        document.getElementById('grade-at-risk').textContent = atRiskCount;
+        document.getElementById('grade-statistics').style.display = 'flex';
+      } else {
+        document.getElementById('grade-statistics').style.display = 'none';
+      }
     }
 
     // Manage subjects
@@ -7271,6 +7434,66 @@
       }
     }
     
+    // Assignment Analytics
+    function showAssignmentAnalytics() {
+      const analyticsDiv = document.getElementById('assignment-analytics');
+      const isVisible = analyticsDiv.style.display !== 'none';
+      
+      if (isVisible) {
+        analyticsDiv.style.display = 'none';
+        return;
+      }
+      
+      const assignments = JSON.parse(localStorage.getItem('teacherAssignments') || '[]');
+      
+      // Filter assignments for logged-in teacher
+      const teacherAssignments = assignments.filter(a => {
+        if (!loggedInTeacher) return true;
+        const teacherClasses = classes.filter(c => c.teacherId === loggedInTeacher.id);
+        return teacherClasses.some(c => c.id === a.classId);
+      });
+      
+      if (teacherAssignments.length === 0) {
+        alert('No assignments to analyze yet.');
+        return;
+      }
+      
+      // Calculate statistics
+      let totalSubmissions = 0;
+      let totalStudents = 0;
+      let pendingGrading = 0;
+      let totalGrades = 0;
+      let gradeSum = 0;
+      
+      teacherAssignments.forEach(assignment => {
+        const cls = classes.find(c => c.id === assignment.classId);
+        const classSize = cls && cls.studentIds ? cls.studentIds.length : 0;
+        totalStudents += classSize;
+        
+        if (assignment.submissions) {
+          totalSubmissions += assignment.submissions.length;
+          assignment.submissions.forEach(sub => {
+            if (sub.grade !== undefined && sub.grade !== null && sub.grade !== '') {
+              totalGrades++;
+              gradeSum += parseFloat(sub.grade);
+            } else {
+              pendingGrading++;
+            }
+          });
+        }
+      });
+      
+      const completionRate = totalStudents > 0 ? Math.round((totalSubmissions / totalStudents) * 100) : 0;
+      const avgGrade = totalGrades > 0 ? (gradeSum / totalGrades).toFixed(1) : '-';
+      
+      document.getElementById('analytics-total').textContent = teacherAssignments.length;
+      document.getElementById('analytics-completion').textContent = completionRate + '%';
+      document.getElementById('analytics-pending').textContent = pendingGrading;
+      document.getElementById('analytics-avg-grade').textContent = avgGrade !== '-' ? avgGrade + '%' : '-';
+      
+      analyticsDiv.style.display = 'flex';
+    }
+    
     function viewAssignmentSubmissions(assignmentId) {
       const assignments = JSON.parse(localStorage.getItem('teacherAssignments') || '[]');
       const assignment = assignments.find(a => a.id === assignmentId);
@@ -7505,7 +7728,7 @@
       content.innerHTML = html;
     }
     
-    function showCreateLessonPlan(classId) {
+    function showCreateLessonPlan(classId, templateData = null) {
       const cls = classes.find(c => c.id === classId);
       const teacher = loggedInTeacher;
       const teacherSubject = teacher ? teacher.subject : 'Mathematics';
@@ -7524,7 +7747,7 @@
                   <div class="row">
                     <div class="col-md-6 mb-3">
                       <label class="form-label">Topic/Title *</label>
-                      <input type="text" class="form-control" id="lesson-topic" required>
+                      <input type="text" class="form-control" id="lesson-topic" required value="${templateData ? escapeHtml(templateData.topic) : ''}">
                     </div>
                     <div class="col-md-3 mb-3">
                       <label class="form-label">Date *</label>
@@ -7538,22 +7761,22 @@
                   <div class="mb-3">
                     <label class="form-label">Learning Objectives (one per line)</label>
                     <textarea class="form-control" id="lesson-objectives" rows="3" 
-                              placeholder="Example:\nUnderstand the concept of...\nApply knowledge to solve..."></textarea>
+                              placeholder="Example:\nUnderstand the concept of...\nApply knowledge to solve...">${templateData ? escapeHtml(templateData.objectives) : ''}</textarea>
                   </div>
                   <div class="mb-3">
                     <label class="form-label">Activities & Procedures</label>
                     <textarea class="form-control" id="lesson-activities" rows="4" 
-                              placeholder="Describe the lesson activities, teaching methods, and procedures..."></textarea>
+                              placeholder="Describe the lesson activities, teaching methods, and procedures...">${templateData ? escapeHtml(templateData.activities) : ''}</textarea>
                   </div>
                   <div class="mb-3">
                     <label class="form-label">Materials Needed (one per line)</label>
                     <textarea class="form-control" id="lesson-materials" rows="2" 
-                              placeholder="Example:\nTextbook pages 45-50\nWhiteboard\nCalculators"></textarea>
+                              placeholder="Example:\nTextbook pages 45-50\nWhiteboard\nCalculators">${templateData ? escapeHtml(templateData.materials) : ''}</textarea>
                   </div>
                   <div class="mb-3">
                     <label class="form-label">Homework Assignment</label>
                     <input type="text" class="form-control" id="lesson-homework" 
-                           placeholder="Example: Complete exercises 1-10 on page 50">
+                           placeholder="Example: Complete exercises 1-10 on page 50" value="${templateData ? escapeHtml(templateData.homework) : ''}">
                   </div>
                   <div class="mb-3">
                     <label class="form-label">Additional Notes</label>
@@ -7620,6 +7843,71 @@
       
       alert('Lesson plan created successfully!');
       loadTeacherLessonPlans();
+    }
+    
+    // Apply lesson template
+    function applyLessonTemplate(templateType) {
+      const templates = {
+        algebra: {
+          topic: 'Introduction to Algebraic Expressions',
+          objectives: 'Understand the concept of variables and constants\nSimplify algebraic expressions\nEvaluate expressions for given values',
+          activities: '1. Introduction to variables (10 min)\n2. Guided practice with examples (15 min)\n3. Group work solving problems (15 min)\n4. Review and Q&A (5 min)',
+          materials: 'Textbook Chapter 3\nWorksheet with practice problems\nWhiteboard and markers\nCalculators',
+          homework: 'Complete exercises 1-15 on page 48, showing all work'
+        },
+        literature: {
+          topic: 'Character Analysis in Literature',
+          objectives: 'Identify main and supporting characters\nAnalyze character motivations and development\nDiscuss themes through character actions',
+          activities: '1. Read selected passage together (15 min)\n2. Character mapping exercise (10 min)\n3. Small group discussions (15 min)\n4. Class presentation of findings (5 min)',
+          materials: 'Novel or short story text\nCharacter analysis worksheet\nChart paper and markers',
+          homework: 'Write a one-page character analysis of the protagonist'
+        },
+        science: {
+          topic: 'The Scientific Method',
+          objectives: 'Understand the steps of the scientific method\nFormulate testable hypotheses\nDesign simple experiments',
+          activities: '1. Introduction to scientific method (10 min)\n2. Demonstration experiment (15 min)\n3. Students design their own experiments (15 min)\n4. Share and discuss designs (5 min)',
+          materials: 'Lab equipment for demonstration\nScientific method poster\nExperiment planning worksheets',
+          homework: 'Complete the experiment design worksheet'
+        },
+        geography: {
+          topic: 'Reading Maps and Coordinates',
+          objectives: 'Identify map elements and symbols\nUse latitude and longitude\nCalculate distances using map scales',
+          activities: '1. Introduction to map components (10 min)\n2. Practice finding coordinates (15 min)\n3. Map reading exercises (15 min)\n4. Review and assessment (5 min)',
+          materials: 'Various types of maps\nAtlas\nRulers and compasses\nCoordinate worksheets',
+          homework: 'Complete map reading exercises 1-10'
+        },
+        history: {
+          topic: 'Critical Analysis of Historical Events',
+          objectives: 'Examine historical sources critically\nIdentify bias and perspective\nUnderstand cause and effect in history',
+          activities: '1. Present historical event (10 min)\n2. Analyze primary sources (15 min)\n3. Group debate on interpretations (15 min)\n4. Summarize findings (5 min)',
+          materials: 'Historical documents\nTimeline charts\nDebate guidelines',
+          homework: 'Write a summary analyzing one historical source'
+        },
+        communication: {
+          topic: 'Effective Communication Skills',
+          objectives: 'Practice active listening\nUse appropriate verbal and non-verbal communication\nResolve conflicts constructively',
+          activities: '1. Discussion on communication basics (10 min)\n2. Role-playing exercises (15 min)\n3. Small group practice scenarios (15 min)\n4. Reflection and feedback (5 min)',
+          materials: 'Role-play scenario cards\nCommunication skills handout\nVideo examples (optional)',
+          homework: 'Practice a communication skill and write a reflection'
+        }
+      };
+      
+      const template = templates[templateType];
+      if (!template) return;
+      
+      // Close templates modal
+      const templatesModal = bootstrap.Modal.getInstance(document.getElementById('lessonTemplatesModal'));
+      if (templatesModal) templatesModal.hide();
+      
+      // Get class ID
+      const classId = document.getElementById('teacher-lesson-class').value;
+      if (!classId) {
+        alert('Please select a class first');
+        return;
+      }
+      
+      // Open create lesson modal with template data
+      showCreateLessonPlan(classId, template);
     }
     
     function toggleLessonComplete(planId) {
