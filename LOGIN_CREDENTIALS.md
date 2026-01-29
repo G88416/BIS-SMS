@@ -144,15 +144,18 @@ This system now uses **Firebase Authentication** for secure user login. All user
 ### Authentication & Authorization
 ✅ **Firebase Authentication**: All login attempts are verified through Firebase Authentication services  
 ✅ **Email-based Verification**: User roles are derived from the authenticated email to prevent tampering  
+✅ **Firestore Role Verification**: Google Sign-In users have their roles verified against Firestore database  
 ✅ **Role Validation**: The system validates that the authenticated user matches the selected user type  
 ✅ **Session Protection**: Protected pages redirect to login if the user is not authenticated  
 ✅ **Secure Logout**: Properly clears Firebase session and application session storage  
+✅ **No Hardcoded Roles**: Google OAuth users no longer receive hardcoded 'parent' role - roles are verified in Firestore  
 
 ### Security Implementation
 - **Single-Page Application**: All functionality in `index.html` with dynamic content switching between login and dashboard
 - **Container-based Protection**: Login and dashboard containers are toggled based on authentication state
 - **onAuthStateChanged Listener**: Monitors authentication state and is integrated in the main application
 - **Automatic Sign-Out**: Invalid role/ID combinations trigger automatic sign-out
+- **Firestore Access Control**: Google Sign-In users are validated against Firestore user documents
 - **Session Management**: Uses sessionStorage for temporary session data
 - **Error Handling**: Proper error messages without exposing system details
 
@@ -220,6 +223,71 @@ To add new users to the system:
    - Parent: `parent.{childid}@bis.local`
 6. Set the password
 7. Click **Add User**
+
+---
+
+## Google Sign-In Authentication
+
+The system now supports **Google Sign-In** as an alternative authentication method with enhanced security through Firestore role verification.
+
+### How It Works
+
+1. **User Authentication**: Users click "Sign in with Google" and authenticate with their Google account
+2. **Role Verification**: The system looks up the user's Firebase UID in the Firestore `users` collection
+3. **Access Control**: Only users with a valid user document in Firestore are granted access
+4. **Role Assignment**: The user's role (admin, teacher, student, parent) is determined from their Firestore document
+
+### Setting Up Google Sign-In Users
+
+To enable a Google account for system access:
+
+1. **Add to Firebase Authentication**:
+   - User signs in with Google at least once (this creates their Firebase Auth account)
+   - Or manually add them via Firebase Console → Authentication → Add User
+
+2. **Create Firestore User Document**:
+   - Navigate to Firebase Console → Firestore Database
+   - Go to the `users` collection
+   - Create a new document with the user's Firebase UID as the document ID
+   - Add the following fields:
+     ```
+     {
+       "role": "teacher",           // Required: admin, teacher, student, or parent
+       "userId": "1",               // Required: User's internal ID
+       "name": "John Doe",          // Optional: Display name
+       "email": "john@example.com"  // Optional: Email address
+     }
+     ```
+
+### Example Firestore User Document
+
+```json
+{
+  "role": "teacher",
+  "userId": "101",
+  "name": "Jane Smith",
+  "email": "jane.smith@gmail.com",
+  "department": "Mathematics"
+}
+```
+
+### Security Features
+
+✅ **Firestore Role Verification**: User roles are verified against Firestore database  
+✅ **No Hardcoded Roles**: Eliminates the previous security vulnerability where all Google users were assigned 'parent' role  
+✅ **Automatic Sign-Out**: Users without valid Firestore documents are automatically signed out  
+✅ **Error Handling**: Clear error messages guide users when access is denied  
+✅ **Role Validation**: Only valid roles (admin, teacher, student, parent) are accepted  
+
+### Error Messages
+
+Users may see these messages when using Google Sign-In:
+
+- **"Your account does not have a valid role assigned"**: The user document exists but has an invalid role
+- **"Your Google account is not registered in the system"**: No user document found in Firestore
+- **"Failed to verify your account"**: Firestore lookup error (network or permissions issue)
+- **"Pop-up blocked"**: Browser blocked the Google Sign-In popup window
+- **"Sign-in cancelled"**: User closed the Google Sign-In popup
 
 ---
 
