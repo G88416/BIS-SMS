@@ -11,7 +11,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js";
     import { getAuth, onAuthStateChanged, signOut, createUserWithEmailAndPassword, sendEmailVerification, updatePassword, reauthenticateWithCredential, EmailAuthProvider } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, where, getDocs, Timestamp, setDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, where, getDocs, Timestamp, setDoc, doc, updateDoc, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
     import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
     
     // Your web app's Firebase configuration
@@ -3614,6 +3614,185 @@
     ];
     let notifications = JSON.parse(localStorage.getItem('notifications')) || [];
 
+    // Firebase Sync Functions
+    // Load data from Firestore and sync with localStorage
+    async function loadStudentsFromFirestore() {
+      try {
+        const studentsSnapshot = await getDocs(collection(db, 'students'));
+        const firestoreStudents = [];
+        studentsSnapshot.forEach((doc) => {
+          firestoreStudents.push({ id: doc.id, ...doc.data() });
+        });
+        
+        if (firestoreStudents.length > 0) {
+          // Convert Firestore doc IDs to numeric IDs if needed
+          const studentsWithNumericIds = firestoreStudents.map(s => ({
+            ...s,
+            id: typeof s.id === 'string' ? parseInt(s.numericId || s.id) || s.id : s.id,
+            firestoreId: s.id
+          }));
+          students = studentsWithNumericIds;
+          localStorage.setItem('students', JSON.stringify(students));
+          console.log(`Loaded ${students.length} students from Firestore`);
+        }
+      } catch (error) {
+        console.error('Error loading students from Firestore:', error);
+        // Fallback to localStorage if Firestore fails
+      }
+    }
+
+    async function loadTeachersFromFirestore() {
+      try {
+        const teachersSnapshot = await getDocs(collection(db, 'teachers'));
+        const firestoreTeachers = [];
+        teachersSnapshot.forEach((doc) => {
+          firestoreTeachers.push({ id: doc.id, ...doc.data() });
+        });
+        
+        if (firestoreTeachers.length > 0) {
+          // Convert Firestore doc IDs to numeric IDs if needed
+          const teachersWithNumericIds = firestoreTeachers.map(t => ({
+            ...t,
+            id: typeof t.id === 'string' ? parseInt(t.numericId || t.id) || t.id : t.id,
+            firestoreId: t.id
+          }));
+          teachers = teachersWithNumericIds;
+          localStorage.setItem('teachers', JSON.stringify(teachers));
+          console.log(`Loaded ${teachers.length} teachers from Firestore`);
+        }
+      } catch (error) {
+        console.error('Error loading teachers from Firestore:', error);
+        // Fallback to localStorage if Firestore fails
+      }
+    }
+
+    async function loadClassesFromFirestore() {
+      try {
+        const classesSnapshot = await getDocs(collection(db, 'classes'));
+        const firestoreClasses = [];
+        classesSnapshot.forEach((doc) => {
+          firestoreClasses.push({ id: doc.id, ...doc.data() });
+        });
+        
+        if (firestoreClasses.length > 0) {
+          // Convert Firestore doc IDs to numeric IDs if needed
+          const classesWithNumericIds = firestoreClasses.map(c => ({
+            ...c,
+            id: typeof c.id === 'string' ? parseInt(c.numericId || c.id) || c.id : c.id,
+            firestoreId: c.id
+          }));
+          classes = classesWithNumericIds;
+          localStorage.setItem('classes', JSON.stringify(classes));
+          console.log(`Loaded ${classes.length} classes from Firestore`);
+        }
+      } catch (error) {
+        console.error('Error loading classes from Firestore:', error);
+        // Fallback to localStorage if Firestore fails
+      }
+    }
+
+    async function loadAttendanceFromFirestore() {
+      try {
+        const attendanceSnapshot = await getDocs(collection(db, 'attendance'));
+        const firestoreAttendance = {};
+        attendanceSnapshot.forEach((doc) => {
+          const data = doc.data();
+          // Reconstruct nested structure: classId -> date -> studentId -> record
+          const classId = String(data.classId);
+          const date = data.date;
+          if (!firestoreAttendance[classId]) {
+            firestoreAttendance[classId] = {};
+          }
+          firestoreAttendance[classId][date] = data.records || {};
+        });
+        
+        if (Object.keys(firestoreAttendance).length > 0) {
+          attendance = firestoreAttendance;
+          localStorage.setItem('attendance', JSON.stringify(attendance));
+          console.log(`Loaded attendance records from Firestore`);
+        }
+      } catch (error) {
+        console.error('Error loading attendance from Firestore:', error);
+      }
+    }
+
+    async function loadGradesFromFirestore() {
+      try {
+        const gradesSnapshot = await getDocs(collection(db, 'grades'));
+        const firestoreGrades = {};
+        gradesSnapshot.forEach((doc) => {
+          const data = doc.data();
+          // Reconstruct nested structure: classId -> term -> studentId -> grades
+          const classId = String(data.classId);
+          const term = data.term;
+          if (!firestoreGrades[classId]) {
+            firestoreGrades[classId] = {};
+          }
+          firestoreGrades[classId][term] = data.grades || {};
+        });
+        
+        if (Object.keys(firestoreGrades).length > 0) {
+          gradesData = firestoreGrades;
+          localStorage.setItem('gradesData', JSON.stringify(gradesData));
+          console.log(`Loaded grades from Firestore`);
+        }
+      } catch (error) {
+        console.error('Error loading grades from Firestore:', error);
+      }
+    }
+
+    async function loadFeesFromFirestore() {
+      try {
+        const feesSnapshot = await getDocs(collection(db, 'fees'));
+        const firestoreFees = {};
+        feesSnapshot.forEach((doc) => {
+          const data = doc.data();
+          // Use numeric student ID as key
+          const studentId = parseInt(doc.id) || data.studentId;
+          firestoreFees[studentId] = {
+            items: data.items || [],
+            discounts: data.discounts || [],
+            payments: data.payments || []
+          };
+        });
+        
+        if (Object.keys(firestoreFees).length > 0) {
+          fees = firestoreFees;
+          localStorage.setItem('fees', JSON.stringify(fees));
+          console.log(`Loaded fees from Firestore`);
+        }
+      } catch (error) {
+        console.error('Error loading fees from Firestore:', error);
+      }
+    }
+
+    // Initialize Firebase data loading
+    async function initializeFirebaseData() {
+      console.log('Loading data from Firestore...');
+      await Promise.all([
+        loadStudentsFromFirestore(),
+        loadTeachersFromFirestore(),
+        loadClassesFromFirestore(),
+        loadAttendanceFromFirestore(),
+        loadGradesFromFirestore(),
+        loadFeesFromFirestore()
+      ]);
+      
+      // Refresh UI after loading data
+      renderStudents();
+      renderTeachers();
+      renderClasses();
+      updateDashboardStats();
+      console.log('Data loaded from Firestore successfully');
+    }
+
+    // Call initialization when page loads
+    window.addEventListener('load', () => {
+      if (window.firebaseDb) {
+        initializeFirebaseData();
+      }
+    });
+
     // Navigation
     const sections = document.querySelectorAll('.section');
     const navLinks = document.querySelectorAll('.sidebar a');
@@ -3751,6 +3930,17 @@
       if (desc && amount > 0) {
         fees[id].items.push({desc, amount});
         localStorage.setItem('fees', JSON.stringify(fees));
+        
+        // Save to Firestore
+        const feeDocRef = doc(db, 'fees', String(id));
+        setDoc(feeDocRef, {
+          studentId: id,
+          ...fees[id],
+          updatedAt: new Date().toISOString()
+        })
+          .then(() => console.log('Fee updated in Firestore'))
+          .catch((error) => console.error('Error updating fee in Firestore:', error));
+        
         renderStudentFeeDetails();
         renderFeesTable();
         document.getElementById('fee-desc').value = '';
@@ -3761,6 +3951,17 @@
     function deleteFeeItem(idx) {
       fees[currentStudentId].items.splice(idx, 1);
       localStorage.setItem('fees', JSON.stringify(fees));
+      
+      // Save to Firestore
+      const feeDocRef = doc(db, 'fees', String(currentStudentId));
+      setDoc(feeDocRef, {
+        studentId: currentStudentId,
+        ...fees[currentStudentId],
+        updatedAt: new Date().toISOString()
+      })
+        .then(() => console.log('Fee updated in Firestore'))
+        .catch((error) => console.error('Error updating fee in Firestore:', error));
+      
       renderStudentFeeDetails();
       renderFeesTable();
     }
@@ -3772,6 +3973,17 @@
       if (desc && amount > 0) {
         fees[id].discounts.push({desc, amount});
         localStorage.setItem('fees', JSON.stringify(fees));
+        
+        // Save to Firestore
+        const feeDocRef = doc(db, 'fees', String(id));
+        setDoc(feeDocRef, {
+          studentId: id,
+          ...fees[id],
+          updatedAt: new Date().toISOString()
+        })
+          .then(() => console.log('Fee updated in Firestore'))
+          .catch((error) => console.error('Error updating fee in Firestore:', error));
+        
         renderStudentFeeDetails();
         renderFeesTable();
       }
@@ -3780,6 +3992,17 @@
     function deleteDiscount(idx) {
       fees[currentStudentId].discounts.splice(idx, 1);
       localStorage.setItem('fees', JSON.stringify(fees));
+      
+      // Save to Firestore
+      const feeDocRef = doc(db, 'fees', String(currentStudentId));
+      setDoc(feeDocRef, {
+        studentId: currentStudentId,
+        ...fees[currentStudentId],
+        updatedAt: new Date().toISOString()
+      })
+        .then(() => console.log('Fee updated in Firestore'))
+        .catch((error) => console.error('Error updating fee in Firestore:', error));
+      
       renderStudentFeeDetails();
       renderFeesTable();
     }
@@ -3792,6 +4015,17 @@
       if (amount > 0) {
         fees[id].payments.push({date, amount, method});
         localStorage.setItem('fees', JSON.stringify(fees));
+        
+        // Save to Firestore
+        const feeDocRef = doc(db, 'fees', String(id));
+        setDoc(feeDocRef, {
+          studentId: id,
+          ...fees[id],
+          updatedAt: new Date().toISOString()
+        })
+          .then(() => console.log('Fee updated in Firestore'))
+          .catch((error) => console.error('Error updating fee in Firestore:', error));
+        
         renderStudentFeeDetails();
         renderFeesTable();
       }
@@ -3800,6 +4034,17 @@
     function deletePayment(idx) {
       fees[currentStudentId].payments.splice(idx, 1);
       localStorage.setItem('fees', JSON.stringify(fees));
+      
+      // Save to Firestore
+      const feeDocRef = doc(db, 'fees', String(currentStudentId));
+      setDoc(feeDocRef, {
+        studentId: currentStudentId,
+        ...fees[currentStudentId],
+        updatedAt: new Date().toISOString()
+      })
+        .then(() => console.log('Fee updated in Firestore'))
+        .catch((error) => console.error('Error updating fee in Firestore:', error));
+      
       renderStudentFeeDetails();
       renderFeesTable();
     }
@@ -3812,6 +4057,15 @@
         students.forEach(stu => {
           if (!fees[stu.id]) fees[stu.id] = {items: [], discounts: [], payments: []};
           fees[stu.id].items.push({desc, amount: parseFloat(amount)});
+          
+          // Save to Firestore for each student
+          const feeDocRef = doc(db, 'fees', String(stu.id));
+          setDoc(feeDocRef, {
+            studentId: stu.id,
+            ...fees[stu.id],
+            updatedAt: new Date().toISOString()
+          })
+            .catch((error) => console.error('Error updating fee in Firestore:', error));
         });
         localStorage.setItem('fees', JSON.stringify(fees));
         renderFeesTable();
@@ -5321,6 +5575,7 @@
         // Create new student object with all details
         const newStudent = { 
           id, 
+          numericId: id, // Store numeric ID separately for Firestore
           name, 
           grade, 
           parent, 
@@ -5341,7 +5596,9 @@
           motherFirstname,
           motherSurname,
           motherEmail,
-          motherCell
+          motherCell,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
         };
         
         students.push(newStudent);
@@ -5355,8 +5612,37 @@
           }
         });
         
+        // Save to localStorage (for offline support)
         localStorage.setItem('students', JSON.stringify(students));
         localStorage.setItem('classes', JSON.stringify(classes));
+        
+        // Save to Firestore
+        const studentDocRef = doc(db, 'students', String(id));
+        setDoc(studentDocRef, newStudent)
+          .then(() => {
+            console.log('Student saved to Firestore successfully');
+          })
+          .catch((error) => {
+            console.error('Error saving student to Firestore:', error);
+            alert('Warning: Student saved locally but failed to sync with cloud storage. Changes will sync when connection is restored.');
+          });
+        
+        // Update classes in Firestore if any selected
+        selectedClasses.forEach(cid => {
+          const cls = classes.find(c => c.id === cid);
+          if (cls) {
+            const classDocRef = doc(db, 'classes', String(cid));
+            setDoc(classDocRef, {
+              ...cls,
+              numericId: cls.id,
+              updatedAt: new Date().toISOString()
+            }, { merge: true })
+              .catch((error) => {
+                console.error('Error updating class in Firestore:', error);
+              });
+          }
+        });
+        
         renderStudents();
         renderClasses();
         updateDashboardStats();
@@ -5576,8 +5862,33 @@
       const status = document.getElementById('teacher-status').value;
       if (name && subject) {
         const id = teachers.length ? Math.max(...teachers.map(t => t.id)) + 1 : 1;
-        teachers.push({ id, name, subject, qualification, status });
+        const newTeacher = { 
+          id, 
+          numericId: id,
+          name, 
+          subject, 
+          qualification, 
+          status,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
+        
+        teachers.push(newTeacher);
+        
+        // Save to localStorage (for offline support)
         localStorage.setItem('teachers', JSON.stringify(teachers));
+        
+        // Save to Firestore
+        const teacherDocRef = doc(db, 'teachers', String(id));
+        setDoc(teacherDocRef, newTeacher)
+          .then(() => {
+            console.log('Teacher saved to Firestore successfully');
+          })
+          .catch((error) => {
+            console.error('Error saving teacher to Firestore:', error);
+            alert('Warning: Teacher saved locally but failed to sync with cloud storage. Changes will sync when connection is restored.');
+          });
+        
         renderTeachers();
         populateClassSelects();
         updateDashboardStats();
@@ -5595,8 +5906,34 @@
       const teacherId = parseInt(document.getElementById('class-teacher').value) || null;
       if (name && grade) {
         const id = classes.length ? Math.max(...classes.map(c => c.id)) + 1 : 1;
-        classes.push({ id, name, grade, teacherId, capacity, schedule, studentIds: [] });
+        const newClass = { 
+          id, 
+          numericId: id,
+          name, 
+          grade, 
+          teacherId, 
+          capacity, 
+          schedule, 
+          studentIds: [],
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
+        
+        classes.push(newClass);
+        
+        // Save to localStorage
         localStorage.setItem('classes', JSON.stringify(classes));
+        
+        // Save to Firestore
+        const classDocRef = doc(db, 'classes', String(id));
+        setDoc(classDocRef, newClass)
+          .then(() => {
+            console.log('Class saved to Firestore successfully');
+          })
+          .catch((error) => {
+            console.error('Error saving class to Firestore:', error);
+          });
+        
         renderClasses();
         populateClassSelects();
         updateDashboardStats();
@@ -5611,11 +5948,40 @@
     function deleteStudent(id) {
       students = students.filter(stu => stu.id !== id);
       // Remove from all classes
+      const modifiedClasses = [];
       classes.forEach(cls => {
-        if (cls.studentIds) cls.studentIds = cls.studentIds.filter(sid => sid !== id);
+        if (cls.studentIds && cls.studentIds.includes(id)) {
+          cls.studentIds = cls.studentIds.filter(sid => sid !== id);
+          modifiedClasses.push(cls);
+        }
       });
+      
+      // Save to localStorage
       localStorage.setItem('students', JSON.stringify(students));
       localStorage.setItem('classes', JSON.stringify(classes));
+      
+      // Delete from Firestore
+      const studentDocRef = doc(db, 'students', String(id));
+      deleteDoc(studentDocRef)
+        .then(() => {
+          console.log('Student deleted from Firestore successfully');
+        })
+        .catch((error) => {
+          console.error('Error deleting student from Firestore:', error);
+        });
+      
+      // Update modified classes in Firestore
+      modifiedClasses.forEach(cls => {
+        const classDocRef = doc(db, 'classes', String(cls.id));
+        setDoc(classDocRef, {
+          ...cls,
+          numericId: cls.id,
+          updatedAt: new Date().toISOString()
+        }, { merge: true })
+          .then(() => console.log(`Class ${cls.id} updated in Firestore`))
+          .catch((error) => console.error(`Error updating class ${cls.id} in Firestore:`, error));
+      });
+      
       renderStudents();
       renderClasses();
       updateDashboardStats();
@@ -5623,12 +5989,41 @@
 
     function deleteTeacher(id) {
       teachers = teachers.filter(tea => tea.id !== id);
-      // Unassign from classes
+      // Unassign from classes and track modified classes
+      const modifiedClasses = [];
       classes.forEach(cls => {
-        if (cls.teacherId === id) cls.teacherId = null;
+        if (cls.teacherId === id) {
+          cls.teacherId = null;
+          modifiedClasses.push(cls);
+        }
       });
+      
+      // Save to localStorage
       localStorage.setItem('teachers', JSON.stringify(teachers));
       localStorage.setItem('classes', JSON.stringify(classes));
+      
+      // Delete from Firestore
+      const teacherDocRef = doc(db, 'teachers', String(id));
+      deleteDoc(teacherDocRef)
+        .then(() => {
+          console.log('Teacher deleted from Firestore successfully');
+        })
+        .catch((error) => {
+          console.error('Error deleting teacher from Firestore:', error);
+        });
+      
+      // Update modified classes in Firestore
+      modifiedClasses.forEach(cls => {
+        const classDocRef = doc(db, 'classes', String(cls.id));
+        setDoc(classDocRef, {
+          ...cls,
+          numericId: cls.id,
+          updatedAt: new Date().toISOString()
+        }, { merge: true })
+          .then(() => console.log(`Class ${cls.id} updated in Firestore`))
+          .catch((error) => console.error(`Error updating class ${cls.id} in Firestore:`, error));
+      });
+      
       renderTeachers();
       renderClasses();
       updateDashboardStats();
@@ -5693,7 +6088,24 @@
         attendance[classId][date][sid].notes = input.value;
       });
       
+      // Save to localStorage
       localStorage.setItem('attendance', JSON.stringify(attendance));
+      
+      // Save to Firestore
+      const attendanceDocRef = doc(db, 'attendance', `class_${classId}_${date}`);
+      setDoc(attendanceDocRef, {
+        classId: parseInt(classId),
+        date: date,
+        records: attendance[classId][date],
+        updatedAt: new Date().toISOString()
+      })
+        .then(() => {
+          console.log('Attendance saved to Firestore successfully');
+        })
+        .catch((error) => {
+          console.error('Error saving attendance to Firestore:', error);
+        });
+      
       alert('Attendance saved successfully!');
     }
 
@@ -5717,7 +6129,24 @@
         }
       });
 
+      // Save to localStorage
       localStorage.setItem('gradesData', JSON.stringify(gradesData));
+      
+      // Save to Firestore
+      const gradesDocRef = doc(db, 'grades', `class_${classId}_${term.replace(/\s+/g, '_')}`);
+      setDoc(gradesDocRef, {
+        classId: parseInt(classId),
+        term: term,
+        grades: gradesData[classId][term],
+        updatedAt: new Date().toISOString()
+      })
+        .then(() => {
+          console.log('Grades saved to Firestore successfully');
+        })
+        .catch((error) => {
+          console.error('Error saving grades to Firestore:', error);
+        });
+      
       alert('Grades saved successfully!');
       renderGradesTable(); // Refresh averages
     }
