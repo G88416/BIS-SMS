@@ -68,12 +68,16 @@ The security rules implement a **role-based access control (RBAC)** system with 
   - Admins
   - Teacher of the class
   - Students enrolled in the class
-  - Parents of students in the class
+  - Parents (all parents can read attendance for all classes - **application-level filtering recommended**)
 - **Write**: Admins or teacher of the class
 
+**Note**: Due to Realtime Database rules limitations, parents can read attendance for all classes. Application logic should filter results to show only classes where their children are enrolled.
+
 #### Grades (`/grades/$classId`)
-- **Read**: Same as Attendance
+- **Read**: Same as Attendance (admins, teacher, students, parents)
 - **Write**: Admins or teacher of the class
+
+**Note**: Parents can read grades for all classes - application-level filtering recommended to show only their children's classes.
 
 #### Grades Data (`/gradesData/$studentId`)
 - **Read**:
@@ -88,8 +92,10 @@ The security rules implement a **role-based access control (RBAC)** system with 
 - **Write**: Admins or teacher of the class
 
 #### Homework (`/homework/$classId`)
-- **Read**: Same as Attendance (admins, teacher, students, parents)
+- **Read**: Admins, teacher of the class, students enrolled in the class, parents (all classes)
 - **Write**: Admins or teacher of the class
+
+**Note**: Parents can read homework for all classes - application-level filtering recommended.
 
 #### Assignments (`/assignments/$assignmentId`)
 - **Read**: All authenticated users
@@ -211,13 +217,19 @@ The security rules implement a **role-based access control (RBAC)** system with 
 
 #### Resource Downloads (`/resourceDownloads/$downloadId`)
 - **Read**: All authenticated users
-- **Write**: Admins (or any user can create new downloads)
+- **Write**: 
+  - Admins (full access)
+  - Any authenticated user can create downloads (must include their own userId)
+
+**Note**: When creating a download record, it must contain the authenticated user's ID to prevent fraudulent tracking.
 
 ### System Collections
 
 #### Notifications (`/notifications/$userId`)
 - **Read**: The user themselves
-- **Write**: Any authenticated user (can create notifications)
+- **Write**: The user themselves or admins
+
+**Note**: Only the notification owner or admins can create notifications. This prevents spam.
 
 #### Call History (`/callHistory/$callId`)
 - **Read**:
@@ -231,11 +243,13 @@ The security rules implement a **role-based access control (RBAC)** system with 
 
 #### Audit Logs (`/auditLogs/$logId`)
 - **Read**: Admins only
-- **Write**: Any authenticated user can create logs for themselves
+- **Write**: Any authenticated user can create logs for themselves (write-once only, no updates or deletions)
 - **Validation**:
   - Must have: `userId`, `timestamp`, `action`, `status`
   - Status must be either: `SUCCESS` or `FAILURE`
-  - Logs are write-once (cannot be updated after creation)
+  - Logs are immutable - cannot be updated or deleted after creation
+
+**Security**: The write rule explicitly prevents deletion by requiring `newData.exists()`, ensuring audit logs remain tamper-proof.
 
 #### Backup Metadata (`/backupMetadata/$backupId`)
 - **Read**: Admins only
@@ -298,6 +312,42 @@ firebase emulators:exec --only database "npm test"
 4. **Data validation**: Critical fields are validated on write operations
 5. **Immutable logs**: Audit logs cannot be modified or deleted
 6. **Parent-child relationships**: Parents can only access their children's data
+
+## Important Security Considerations
+
+### Parent Access Limitations
+
+Due to Firebase Realtime Database rules limitations, it's not possible to efficiently validate that a parent's child is enrolled in a specific class within the database rules. Therefore:
+
+- **Attendance, Grades, and Homework**: Parents can read data for all classes at the database rule level
+- **Mitigation**: Application logic MUST filter results to show parents only classes where their children are enrolled
+- **Recommendation**: Use Firebase Security Rules for authentication and role validation, but implement fine-grained access control in application code
+
+### Application-Level Security
+
+The following security checks should be implemented at the application level:
+
+1. **Parent-Child Relationship Validation**: 
+   - Before displaying attendance, grades, or homework to parents, verify that at least one of their children is enrolled in the class
+   - Query the `classes/$classId/studentIds` and cross-reference with the parent's `childrenIds`
+
+2. **Notification Creation**:
+   - While the rules now restrict notification creation to the owner or admins, consider implementing a notification service that validates the notification content and recipient
+
+3. **Download Tracking**:
+   - Ensure download records include the authenticated user's ID
+   - Validate download permissions at the application level before allowing file access
+
+### Defense in Depth
+
+These rules provide a strong foundation for security, but should be part of a comprehensive security strategy:
+
+1. **Firebase Authentication**: Use Firebase Auth for user identity management
+2. **HTTPS Only**: Always use HTTPS to prevent man-in-the-middle attacks
+3. **Rate Limiting**: Implement rate limiting to prevent abuse
+4. **Input Validation**: Validate all user input before writing to the database
+5. **Monitoring**: Monitor unusual access patterns or failed authentication attempts
+6. **Regular Audits**: Review audit logs regularly for suspicious activity
 
 ## Relationship to Firestore Rules
 
