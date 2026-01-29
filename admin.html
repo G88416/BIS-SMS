@@ -489,6 +489,7 @@
         </div>
         <div class="col-md-5 text-end">
           <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addStudentModal"><i class="fas fa-plus"></i> Add Student</button>
+          <button class="btn btn-info" data-bs-toggle="modal" data-bs-target="#bulkImportStudentsModal"><i class="fas fa-upload"></i> Bulk Import</button>
           <button class="btn btn-success" onclick="exportStudentsCSV()"><i class="fas fa-download"></i> Export CSV</button>
         </div>
       </div>
@@ -684,15 +685,31 @@
         <!-- Reports & Statistics Tab -->
         <div class="tab-pane fade" id="attendance-reports-tab">
           <div class="row mb-3">
-            <div class="col-md-6">
+            <div class="col-md-3">
               <label class="form-label">Select Class</label>
               <select class="form-select" id="report-class" onchange="generateAttendanceReport()">
                 <option value="">Select Class</option>
               </select>
             </div>
-            <div class="col-md-6 d-flex align-items-end">
-              <button class="btn btn-primary" onclick="generateAttendanceReport()">Generate Report</button>
-              <button class="btn btn-success ms-2 no-print" onclick="window.print()">Print Report</button>
+            <div class="col-md-3">
+              <label class="form-label">Start Date</label>
+              <input type="date" class="form-control" id="report-start-date" onchange="generateAttendanceReport()">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">End Date</label>
+              <input type="date" class="form-control" id="report-end-date" onchange="generateAttendanceReport()">
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+              <button class="btn btn-primary" onclick="generateAttendanceReport()"><i class="fas fa-chart-bar"></i> Generate Report</button>
+              <button class="btn btn-success ms-2 no-print" onclick="window.print()"><i class="fas fa-print"></i> Print</button>
+            </div>
+          </div>
+          <div class="row mb-3">
+            <div class="col-12">
+              <button class="btn btn-outline-primary btn-sm me-2" onclick="setReportDateRange('week')">This Week</button>
+              <button class="btn btn-outline-primary btn-sm me-2" onclick="setReportDateRange('month')">This Month</button>
+              <button class="btn btn-outline-primary btn-sm me-2" onclick="setReportDateRange('term')">This Term</button>
+              <button class="btn btn-outline-primary btn-sm" onclick="setReportDateRange('all')">All Time</button>
             </div>
           </div>
           <div id="attendance-report-content"></div>
@@ -722,8 +739,9 @@
           </select>
         </div>
         <div class="col-md-4 d-flex align-items-end">
-          <button class="btn btn-primary me-2 no-print" data-bs-toggle="modal" data-bs-target="#manageSubjectsModal">Manage Subjects</button>
-          <button class="btn btn-success no-print" onclick="saveGrades()">Save All Grades</button>
+          <button class="btn btn-primary me-2 no-print" data-bs-toggle="modal" data-bs-target="#manageSubjectsModal"><i class="fas fa-book"></i> Manage Subjects</button>
+          <button class="btn btn-info me-2 no-print" data-bs-toggle="modal" data-bs-target="#bulkImportGradesModal"><i class="fas fa-upload"></i> Bulk Import Grades</button>
+          <button class="btn btn-success no-print" onclick="saveGrades()"><i class="fas fa-save"></i> Save All Grades</button>
         </div>
       </div>
       
@@ -738,6 +756,45 @@
           <div class="text-end mt-3">
             <button class="btn btn-info no-print" onclick="generateClassReport()">Generate Class Report Card</button>
             <button class="btn btn-success no-print ms-2" onclick="window.print()">Print Report Cards</button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Grade Statistics Dashboard -->
+      <div id="grade-statistics" class="row mt-4 no-print" style="display:none;">
+        <div class="col-12">
+          <h5>Class Statistics</h5>
+        </div>
+        <div class="col-md-3">
+          <div class="card bg-primary text-white">
+            <div class="card-body text-center">
+              <h6>Class Average</h6>
+              <h3 id="grade-class-avg">-</h3>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card bg-success text-white">
+            <div class="card-body text-center">
+              <h6>Highest Grade</h6>
+              <h3 id="grade-highest">-</h3>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card bg-info text-white">
+            <div class="card-body text-center">
+              <h6>Pass Rate</h6>
+              <h3 id="grade-pass-rate">-</h3>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card bg-warning text-white">
+            <div class="card-body text-center">
+              <h6>Students at Risk</h6>
+              <h3 id="grade-at-risk">-</h3>
+            </div>
           </div>
         </div>
       </div>
@@ -1718,14 +1775,56 @@
 
           <!-- Assignment Management Tab -->
           <div class="tab-pane fade" id="teacher-assignments">
-            <h5>Create & Grade Assignments</h5>
-            <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addAssignmentModal">Create New Assignment</button>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h5>Create & Grade Assignments</h5>
+              <div>
+                <button class="btn btn-info btn-sm me-2" onclick="showAssignmentAnalytics()"><i class="fas fa-chart-bar"></i> View Analytics</button>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addAssignmentModal"><i class="fas fa-plus"></i> Create New Assignment</button>
+              </div>
+            </div>
+            <div id="assignment-analytics" class="row mb-3" style="display: none;">
+              <div class="col-md-3">
+                <div class="card bg-primary text-white">
+                  <div class="card-body text-center">
+                    <h6>Total Assignments</h6>
+                    <h3 id="analytics-total">0</h3>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="card bg-success text-white">
+                  <div class="card-body text-center">
+                    <h6>Avg Completion</h6>
+                    <h3 id="analytics-completion">0%</h3>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="card bg-warning text-white">
+                  <div class="card-body text-center">
+                    <h6>Pending Grading</h6>
+                    <h3 id="analytics-pending">0</h3>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="card bg-info text-white">
+                  <div class="card-body text-center">
+                    <h6>Avg Grade</h6>
+                    <h3 id="analytics-avg-grade">-</h3>
+                  </div>
+                </div>
+              </div>
+            </div>
             <div id="teacher-assignments-content"></div>
           </div>
 
           <!-- Lesson Planning Tab -->
           <div class="tab-pane fade" id="teacher-lesson-planning">
-            <h5>Lesson Plans & Syllabus Tracking</h5>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h5>Lesson Plans & Syllabus Tracking</h5>
+              <button class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#lessonTemplatesModal"><i class="fas fa-book-open"></i> Lesson Templates</button>
+            </div>
             <div class="row mb-3">
               <div class="col-md-6">
                 <label class="form-label">Select Class</label>
@@ -2361,6 +2460,63 @@
     </div>
   </div>
 
+  <!-- Bulk Import Students Modal -->
+  <div class="modal fade" id="bulkImportStudentsModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+      <div class="modal-content">
+        <div class="modal-header bg-info text-white">
+          <h5 class="modal-title"><i class="fas fa-upload"></i> Bulk Import Students</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="alert alert-info">
+            <h6><i class="fas fa-info-circle"></i> CSV Format Instructions</h6>
+            <p class="mb-2">Upload a CSV file with the following columns (in order):</p>
+            <code>surname,firstname,gender,grade,class,cell,email,language,father_firstname,father_surname,father_email,father_cell,mother_firstname,mother_surname,mother_email,mother_cell</code>
+            <p class="mt-2 mb-0"><strong>Example:</strong></p>
+            <code>Mandela,Nelson,Male,10,10A,0821234567,nelson@example.com,English,John,Mandela,john@example.com,0827654321,Mary,Mandela,mary@example.com,0828765432</code>
+            <p class="mt-2 mb-0"><small><strong>Note:</strong> Gender should be "Male" or "Female". Grade should be 8-12. Language options: English, Afrikaans, Zulu, Xhosa, Sotho</small></p>
+          </div>
+          
+          <div class="mb-3">
+            <label class="form-label"><i class="fas fa-file-csv"></i> Select CSV File</label>
+            <input type="file" class="form-control" id="bulkImportFile" accept=".csv">
+          </div>
+          
+          <div class="mb-3">
+            <button class="btn btn-primary" onclick="previewBulkImport()"><i class="fas fa-eye"></i> Preview Import</button>
+            <button class="btn btn-secondary" onclick="downloadStudentTemplate()"><i class="fas fa-download"></i> Download Template</button>
+          </div>
+          
+          <div id="bulkImportPreview" style="display: none;">
+            <h6 class="mt-3">Import Preview</h6>
+            <div id="bulkImportStats" class="alert alert-secondary mb-3"></div>
+            <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+              <table class="table table-sm table-bordered">
+                <thead class="table-light sticky-top">
+                  <tr>
+                    <th>Status</th>
+                    <th>Name</th>
+                    <th>Grade</th>
+                    <th>Gender</th>
+                    <th>Contact</th>
+                    <th>Parent Info</th>
+                    <th>Validation</th>
+                  </tr>
+                </thead>
+                <tbody id="bulkImportPreviewTable"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="fas fa-times"></i> Close</button>
+          <button type="button" class="btn btn-success" id="confirmBulkImportBtn" onclick="confirmBulkImport()" disabled><i class="fas fa-check"></i> Import Students</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- View Complete Student Information Modal -->
   <div class="modal fade" id="viewStudentInfoModal" tabindex="-1">
     <div class="modal-dialog modal-xl">
@@ -2631,6 +2787,152 @@
             <button class="btn btn-primary" onclick="addSubject()">Add</button>
           </div>
           <table class="table"><tbody id="subjects-list"></tbody></table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bulk Import Grades Modal -->
+  <div class="modal fade" id="bulkImportGradesModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+      <div class="modal-content">
+        <div class="modal-header bg-info text-white">
+          <h5 class="modal-title"><i class="fas fa-upload"></i> Bulk Import Grades</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="alert alert-info">
+            <h6><i class="fas fa-info-circle"></i> CSV Format Instructions</h6>
+            <p class="mb-2">Upload a CSV file with the following columns (in order):</p>
+            <code>student_id,student_name,subject,grade,comment</code>
+            <p class="mt-2 mb-0"><strong>Example:</strong></p>
+            <code>1,John Doe,Mathematics,85,Excellent work<br>1,John Doe,English,78,Good progress<br>2,Jane Smith,Mathematics,92,Outstanding</code>
+            <p class="mt-2 mb-0"><small><strong>Note:</strong> Grades should be 0-100. Make sure the class and term are selected before importing.</small></p>
+          </div>
+          
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label class="form-label">Select Class for Import</label>
+              <select class="form-select" id="bulkGradesClass">
+                <option value="">Select Class</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Select Term for Import</label>
+              <select class="form-select" id="bulkGradesTerm">
+                <option>Term 1 2026</option>
+                <option>Term 2 2026</option>
+                <option>Term 3 2026</option>
+                <option>Term 4 2026</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="mb-3">
+            <label class="form-label"><i class="fas fa-file-csv"></i> Select CSV File</label>
+            <input type="file" class="form-control" id="bulkGradesFile" accept=".csv">
+          </div>
+          
+          <div class="mb-3">
+            <button class="btn btn-primary" onclick="previewBulkGrades()"><i class="fas fa-eye"></i> Preview Import</button>
+            <button class="btn btn-secondary" onclick="downloadGradesTemplate()"><i class="fas fa-download"></i> Download Template</button>
+          </div>
+          
+          <div id="bulkGradesPreview" style="display: none;">
+            <h6 class="mt-3">Import Preview</h6>
+            <div id="bulkGradesStats" class="alert alert-secondary mb-3"></div>
+            <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+              <table class="table table-sm table-bordered">
+                <thead class="table-light sticky-top">
+                  <tr>
+                    <th>Status</th>
+                    <th>Student ID</th>
+                    <th>Student Name</th>
+                    <th>Subject</th>
+                    <th>Grade</th>
+                    <th>Comment</th>
+                    <th>Validation</th>
+                  </tr>
+                </thead>
+                <tbody id="bulkGradesPreviewTable"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="fas fa-times"></i> Close</button>
+          <button type="button" class="btn btn-success" id="confirmBulkGradesBtn" onclick="confirmBulkGrades()" disabled><i class="fas fa-check"></i> Import Grades</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lesson Templates Modal -->
+  <div class="modal fade" id="lessonTemplatesModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header bg-info text-white">
+          <h5 class="modal-title"><i class="fas fa-book-open"></i> Lesson Plan Templates</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <p class="text-muted">Select a template to quickly create a lesson plan with pre-filled content.</p>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="card h-100">
+                <div class="card-body">
+                  <h6 class="card-title"><i class="fas fa-calculator"></i> Mathematics - Algebra</h6>
+                  <p class="card-text small">Introduction to algebraic expressions and equations</p>
+                  <button class="btn btn-sm btn-primary" onclick="applyLessonTemplate('algebra')">Use Template</button>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="card h-100">
+                <div class="card-body">
+                  <h6 class="card-title"><i class="fas fa-book"></i> English - Literature Analysis</h6>
+                  <p class="card-text small">Analyzing themes and characters in literature</p>
+                  <button class="btn btn-sm btn-primary" onclick="applyLessonTemplate('literature')">Use Template</button>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="card h-100">
+                <div class="card-body">
+                  <h6 class="card-title"><i class="fas fa-flask"></i> Science - Scientific Method</h6>
+                  <p class="card-text small">Understanding hypothesis, experimentation, and analysis</p>
+                  <button class="btn btn-sm btn-primary" onclick="applyLessonTemplate('science')">Use Template</button>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="card h-100">
+                <div class="card-body">
+                  <h6 class="card-title"><i class="fas fa-globe"></i> Geography - Map Reading</h6>
+                  <p class="card-text small">Reading and interpreting maps and coordinates</p>
+                  <button class="btn btn-sm btn-primary" onclick="applyLessonTemplate('geography')">Use Template</button>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="card h-100">
+                <div class="card-body">
+                  <h6 class="card-title"><i class="fas fa-history"></i> History - Critical Thinking</h6>
+                  <p class="card-text small">Analyzing historical events and their impact</p>
+                  <button class="btn btn-sm btn-primary" onclick="applyLessonTemplate('history')">Use Template</button>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="card h-100">
+                <div class="card-body">
+                  <h6 class="card-title"><i class="fas fa-comments"></i> Life Skills - Communication</h6>
+                  <p class="card-text small">Effective communication and interpersonal skills</p>
+                  <button class="btn btn-sm btn-primary" onclick="applyLessonTemplate('communication')">Use Template</button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -3711,6 +4013,56 @@
         tbody += row;
       });
       document.getElementById('grades-table').innerHTML = tbody;
+      
+      // Calculate and display statistics
+      calculateGradeStatistics(classId, term);
+    }
+    
+    // Calculate and display grade statistics
+    function calculateGradeStatistics(classId, term) {
+      const cls = classes.find(c => c.id == classId);
+      if (!cls || !cls.studentIds || cls.studentIds.length === 0) {
+        document.getElementById('grade-statistics').style.display = 'none';
+        return;
+      }
+      
+      const averages = [];
+      let passCount = 0;
+      let atRiskCount = 0;
+      
+      cls.studentIds.forEach(sid => {
+        const studentGrades = gradesData[classId]?.[term]?.[sid] || {};
+        let totalWeighted = 0;
+        let totalWeight = 0;
+        
+        if (subjects[classId]) {
+          subjects[classId].forEach(sub => {
+            const score = parseFloat(studentGrades[sub.name]) || 0;
+            totalWeighted += score * (sub.weight / 100);
+            totalWeight += sub.weight;
+          });
+        }
+        
+        const avg = totalWeight > 0 ? (totalWeighted / (totalWeight / 100)) : 0;
+        averages.push(avg);
+        
+        if (avg >= 50) passCount++;
+        if (avg < 50) atRiskCount++;
+      });
+      
+      if (averages.length > 0) {
+        const classAvg = (averages.reduce((a, b) => a + b, 0) / averages.length).toFixed(1);
+        const highest = Math.max(...averages).toFixed(1);
+        const passRate = ((passCount / averages.length) * 100).toFixed(0);
+        
+        document.getElementById('grade-class-avg').textContent = classAvg + '%';
+        document.getElementById('grade-highest').textContent = highest + '%';
+        document.getElementById('grade-pass-rate').textContent = passRate + '%';
+        document.getElementById('grade-at-risk').textContent = atRiskCount;
+        document.getElementById('grade-statistics').style.display = 'flex';
+      } else {
+        document.getElementById('grade-statistics').style.display = 'none';
+      }
     }
 
     // Manage subjects
@@ -5019,6 +5371,204 @@
       }
     }
 
+    // Bulk Import Functions
+    let bulkImportData = [];
+
+    function downloadStudentTemplate() {
+      const template = 'surname,firstname,gender,grade,class,cell,email,language,father_firstname,father_surname,father_email,father_cell,mother_firstname,mother_surname,mother_email,mother_cell\nMandela,Nelson,Male,10,10A,0821234567,nelson@example.com,English,John,Mandela,john@example.com,0827654321,Mary,Mandela,mary@example.com,0828765432\nTutu,Desmond,Male,11,11A,0829876543,desmond@example.com,English,Paul,Tutu,paul@example.com,0821112222,Sarah,Tutu,sarah@example.com,0823334444';
+      const blob = new Blob([template], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'student_import_template.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function previewBulkImport() {
+      const fileInput = document.getElementById('bulkImportFile');
+      if (!fileInput.files || !fileInput.files[0]) {
+        alert('Please select a CSV file first');
+        return;
+      }
+
+      const file = fileInput.files[0];
+      const reader = new FileReader();
+
+      reader.onload = function(e) {
+        const csv = e.target.result;
+        const lines = csv.split('\n').filter(line => line.trim());
+        
+        // Skip header row
+        const dataLines = lines.slice(1);
+        
+        bulkImportData = [];
+        let validCount = 0;
+        let errorCount = 0;
+
+        const previewHtml = dataLines.map((line, index) => {
+          const columns = parseCSVLine(line);
+          
+          if (columns.length < 8) {
+            errorCount++;
+            return `<tr class="table-danger">
+              <td><i class="fas fa-times-circle text-danger"></i></td>
+              <td colspan="5">${escapeHtml(line.substring(0, 50))}...</td>
+              <td><span class="badge bg-danger">Invalid format - insufficient columns</span></td>
+            </tr>`;
+          }
+
+          const [surname, firstname, gender, grade, classname, cell, email, language, 
+                 fatherFirstname, fatherSurname, fatherEmail, fatherCell,
+                 motherFirstname, motherSurname, motherEmail, motherCell] = columns.map(c => c.trim());
+
+          const errors = [];
+          if (!surname) errors.push('Missing surname');
+          if (!firstname) errors.push('Missing firstname');
+          if (!gender || !['Male', 'Female'].includes(gender)) errors.push('Invalid gender');
+          if (!grade || !['8', '9', '10', '11', '12'].includes(grade)) errors.push('Invalid grade');
+
+          const isValid = errors.length === 0;
+          if (isValid) {
+            validCount++;
+            const studentData = {
+              surname, firstname, gender, grade, classname, cell, email, language,
+              fatherFirstname, fatherSurname, fatherEmail, fatherCell,
+              motherFirstname, motherSurname, motherEmail, motherCell
+            };
+            bulkImportData.push(studentData);
+          } else {
+            errorCount++;
+          }
+
+          const name = `${firstname} ${surname}`;
+          const parent = [
+            fatherFirstname ? `Father: ${fatherFirstname} ${fatherSurname}` : '',
+            motherFirstname ? `Mother: ${motherFirstname} ${motherSurname}` : ''
+          ].filter(Boolean).join('; ');
+
+          return `<tr class="${isValid ? 'table-success' : 'table-danger'}">
+            <td><i class="fas fa-${isValid ? 'check-circle text-success' : 'times-circle text-danger'}"></i></td>
+            <td>${escapeHtml(name)}</td>
+            <td>${escapeHtml(grade)}</td>
+            <td>${escapeHtml(gender)}</td>
+            <td>${escapeHtml(cell || email || '-')}</td>
+            <td>${escapeHtml(parent || 'N/A')}</td>
+            <td>${isValid ? '<span class="badge bg-success">Valid</span>' : `<span class="badge bg-danger">${errors.join(', ')}</span>`}</td>
+          </tr>`;
+        }).join('');
+
+        document.getElementById('bulkImportPreviewTable').innerHTML = previewHtml;
+        document.getElementById('bulkImportStats').innerHTML = `
+          <strong>Total rows:</strong> ${dataLines.length} | 
+          <strong class="text-success">Valid:</strong> ${validCount} | 
+          <strong class="text-danger">Errors:</strong> ${errorCount}
+        `;
+        document.getElementById('bulkImportPreview').style.display = 'block';
+        document.getElementById('confirmBulkImportBtn').disabled = validCount === 0;
+      };
+
+      reader.readAsText(file);
+    }
+
+    function parseCSVLine(line) {
+      const result = [];
+      let current = '';
+      let inQuotes = false;
+      
+      for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        
+        if (char === '"') {
+          inQuotes = !inQuotes;
+        } else if (char === ',' && !inQuotes) {
+          result.push(current);
+          current = '';
+        } else {
+          current += char;
+        }
+      }
+      result.push(current);
+      return result;
+    }
+
+    function confirmBulkImport() {
+      if (bulkImportData.length === 0) {
+        alert('No valid students to import');
+        return;
+      }
+
+      let importedCount = 0;
+      let currentMaxId = students.length ? Math.max(...students.map(s => s.id)) : 0;
+
+      bulkImportData.forEach(studentData => {
+        currentMaxId++;
+        const id = currentMaxId;
+
+        const name = `${studentData.firstname} ${studentData.surname}`;
+        
+        let parent = '';
+        let contact = '';
+        
+        if (studentData.fatherFirstname || studentData.fatherSurname) {
+          const fatherName = [studentData.fatherFirstname, studentData.fatherSurname].filter(Boolean).join(' ');
+          if (fatherName) {
+            parent = `Father: ${fatherName}`;
+            contact = studentData.fatherCell || studentData.fatherEmail;
+          }
+        }
+        if (studentData.motherFirstname || studentData.motherSurname) {
+          const motherName = [studentData.motherFirstname, studentData.motherSurname].filter(Boolean).join(' ');
+          if (motherName) {
+            if (parent) parent += '; ';
+            parent += `Mother: ${motherName}`;
+            if (!contact) contact = studentData.motherCell || studentData.motherEmail;
+          }
+        }
+
+        const newStudent = {
+          id,
+          name,
+          grade: studentData.grade,
+          parent,
+          contact,
+          classIds: [],
+          surname: studentData.surname,
+          firstname: studentData.firstname,
+          gender: studentData.gender,
+          classname: studentData.classname,
+          learnerCell: studentData.cell,
+          learnerEmail: studentData.email,
+          language: studentData.language,
+          fatherFirstname: studentData.fatherFirstname,
+          fatherSurname: studentData.fatherSurname,
+          fatherEmail: studentData.fatherEmail,
+          fatherCell: studentData.fatherCell,
+          motherFirstname: studentData.motherFirstname,
+          motherSurname: studentData.motherSurname,
+          motherEmail: studentData.motherEmail,
+          motherCell: studentData.motherCell
+        };
+
+        students.push(newStudent);
+        importedCount++;
+      });
+
+      localStorage.setItem('students', JSON.stringify(students));
+      renderStudents();
+      updateDashboardStats();
+
+      alert(`Successfully imported ${importedCount} student(s)!`);
+      
+      // Reset and close
+      bulkImportData = [];
+      document.getElementById('bulkImportFile').value = '';
+      document.getElementById('bulkImportPreview').style.display = 'none';
+      
+      const modal = bootstrap.Modal.getInstance(document.getElementById('bulkImportStudentsModal'));
+      if (modal) modal.hide();
+    }
+
     function addTeacher() {
       const name = document.getElementById('teacher-name').value.trim();
       const subject = document.getElementById('teacher-subject').value.trim();
@@ -5172,6 +5722,135 @@
       renderGradesTable(); // Refresh averages
     }
     
+    // Bulk Grade Import Functions
+    let bulkGradesData = [];
+
+    function downloadGradesTemplate() {
+      const template = 'student_id,student_name,subject,grade,comment\n1,John Doe,Mathematics,85,Excellent work\n1,John Doe,English,78,Good progress\n2,Jane Smith,Mathematics,92,Outstanding';
+      const blob = new Blob([template], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'grades_import_template.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function previewBulkGrades() {
+      const fileInput = document.getElementById('bulkGradesFile');
+      const classId = document.getElementById('bulkGradesClass').value;
+      
+      if (!classId) {
+        alert('Please select a class first');
+        return;
+      }
+      
+      if (!fileInput.files || !fileInput.files[0]) {
+        alert('Please select a CSV file');
+        return;
+      }
+
+      const file = fileInput.files[0];
+      const reader = new FileReader();
+
+      reader.onload = function(e) {
+        const csv = e.target.result;
+        const lines = csv.split('\n').filter(line => line.trim());
+        const dataLines = lines.slice(1);
+        
+        bulkGradesData = [];
+        let validCount = 0;
+        let errorCount = 0;
+
+        const previewHtml = dataLines.map(line => {
+          const columns = parseCSVLine(line);
+          
+          if (columns.length < 4) {
+            errorCount++;
+            return `<tr class="table-danger">
+              <td><i class="fas fa-times-circle text-danger"></i></td>
+              <td colspan="5">${escapeHtml(line.substring(0, 50))}...</td>
+              <td><span class="badge bg-danger">Invalid format</span></td>
+            </tr>`;
+          }
+
+          const [studentId, studentName, subject, grade, comment] = columns.map(c => c.trim());
+          const errors = [];
+          
+          if (!studentId) errors.push('Missing student ID');
+          if (!subject) errors.push('Missing subject');
+          const gradeNum = parseFloat(grade);
+          if (isNaN(gradeNum) || gradeNum < 0 || gradeNum > 100) errors.push('Invalid grade (0-100)');
+
+          const isValid = errors.length === 0;
+          if (isValid) {
+            validCount++;
+            bulkGradesData.push({ studentId, studentName, subject, grade: gradeNum, comment: comment || '' });
+          } else {
+            errorCount++;
+          }
+
+          return `<tr class="${isValid ? 'table-success' : 'table-danger'}">
+            <td><i class="fas fa-${isValid ? 'check-circle text-success' : 'times-circle text-danger'}"></i></td>
+            <td>${escapeHtml(studentId)}</td>
+            <td>${escapeHtml(studentName)}</td>
+            <td>${escapeHtml(subject)}</td>
+            <td>${escapeHtml(grade)}</td>
+            <td>${escapeHtml(comment || '-')}</td>
+            <td>${isValid ? '<span class="badge bg-success">Valid</span>' : `<span class="badge bg-danger">${errors.join(', ')}</span>`}</td>
+          </tr>`;
+        }).join('');
+
+        document.getElementById('bulkGradesPreviewTable').innerHTML = previewHtml;
+        document.getElementById('bulkGradesStats').innerHTML = `
+          <strong>Total rows:</strong> ${dataLines.length} | 
+          <strong class="text-success">Valid:</strong> ${validCount} | 
+          <strong class="text-danger">Errors:</strong> ${errorCount}
+        `;
+        document.getElementById('bulkGradesPreview').style.display = 'block';
+        document.getElementById('confirmBulkGradesBtn').disabled = validCount === 0;
+      };
+
+      reader.readAsText(file);
+    }
+
+    function confirmBulkGrades() {
+      if (bulkGradesData.length === 0) {
+        alert('No valid grades to import');
+        return;
+      }
+
+      const classId = document.getElementById('bulkGradesClass').value;
+      const term = document.getElementById('bulkGradesTerm').value;
+
+      if (!gradesData[classId]) gradesData[classId] = {};
+      if (!gradesData[classId][term]) gradesData[classId][term] = {};
+
+      let importedCount = 0;
+      bulkGradesData.forEach(gradeEntry => {
+        const sid = gradeEntry.studentId;
+        if (!gradesData[classId][term][sid]) gradesData[classId][term][sid] = {};
+        
+        gradesData[classId][term][sid][gradeEntry.subject] = gradeEntry.grade;
+        if (gradeEntry.comment) {
+          gradesData[classId][term][sid].comment = gradeEntry.comment;
+        }
+        importedCount++;
+      });
+
+      localStorage.setItem('gradesData', JSON.stringify(gradesData));
+      alert(`Successfully imported ${importedCount} grade(s)!`);
+      
+      bulkGradesData = [];
+      document.getElementById('bulkGradesFile').value = '';
+      document.getElementById('bulkGradesPreview').style.display = 'none';
+      
+      const modal = bootstrap.Modal.getInstance(document.getElementById('bulkImportGradesModal'));
+      if (modal) modal.hide();
+      
+      renderGradesTable();
+    }
+    
     // Attendance History
     function renderAttendanceHistory() {
       const classId = document.getElementById('history-class').value;
@@ -5248,6 +5927,35 @@
       content.innerHTML = html;
     }
     
+    // Date range helper for attendance reports
+    function setReportDateRange(range) {
+      const startDate = document.getElementById('report-start-date');
+      const endDate = document.getElementById('report-end-date');
+      const today = new Date();
+      
+      let start = new Date();
+      switch(range) {
+        case 'week':
+          start.setDate(today.getDate() - 7);
+          break;
+        case 'month':
+          start.setMonth(today.getMonth() - 1);
+          break;
+        case 'term':
+          start.setMonth(today.getMonth() - 3);
+          break;
+        case 'all':
+          startDate.value = '';
+          endDate.value = '';
+          generateAttendanceReport();
+          return;
+      }
+      
+      startDate.value = start.toISOString().split('T')[0];
+      endDate.value = today.toISOString().split('T')[0];
+      generateAttendanceReport();
+    }
+    
     // Attendance Report
     function generateAttendanceReport() {
       const classId = document.getElementById('report-class').value;
@@ -5268,6 +5976,12 @@
       let stats = [];
       let totalPresent = 0, totalAbsent = 0, totalLate = 0, totalExcused = 0;
       
+      // Get date range if provided
+      const startDateStr = document.getElementById('report-start-date')?.value;
+      const endDateStr = document.getElementById('report-end-date')?.value;
+      const startDate = startDateStr ? new Date(startDateStr) : null;
+      const endDate = endDateStr ? new Date(endDateStr) : null;
+      
       cls.studentIds.forEach(sid => {
         const stu = students.find(s => s.id == sid);
         if (!stu) return;
@@ -5276,6 +5990,13 @@
         
         if (attendance[classId]) {
           for (let date in attendance[classId]) {
+            // Filter by date range if specified
+            if (startDate || endDate) {
+              const currentDate = new Date(date);
+              if (startDate && currentDate < startDate) continue;
+              if (endDate && currentDate > endDate) continue;
+            }
+            
             if (attendance[classId][date][sid]) {
               const status = attendance[classId][date][sid].status;
               if (counts[status] !== undefined) counts[status]++;
@@ -6713,6 +7434,66 @@
       }
     }
     
+    // Assignment Analytics
+    function showAssignmentAnalytics() {
+      const analyticsDiv = document.getElementById('assignment-analytics');
+      const isVisible = analyticsDiv.style.display !== 'none';
+      
+      if (isVisible) {
+        analyticsDiv.style.display = 'none';
+        return;
+      }
+      
+      const assignments = JSON.parse(localStorage.getItem('teacherAssignments') || '[]');
+      
+      // Filter assignments for logged-in teacher
+      const teacherAssignments = assignments.filter(a => {
+        if (!loggedInTeacher) return true;
+        const teacherClasses = classes.filter(c => c.teacherId === loggedInTeacher.id);
+        return teacherClasses.some(c => c.id === a.classId);
+      });
+      
+      if (teacherAssignments.length === 0) {
+        alert('No assignments to analyze yet.');
+        return;
+      }
+      
+      // Calculate statistics
+      let totalSubmissions = 0;
+      let totalStudents = 0;
+      let pendingGrading = 0;
+      let totalGrades = 0;
+      let gradeSum = 0;
+      
+      teacherAssignments.forEach(assignment => {
+        const cls = classes.find(c => c.id === assignment.classId);
+        const classSize = cls && cls.studentIds ? cls.studentIds.length : 0;
+        totalStudents += classSize;
+        
+        if (assignment.submissions) {
+          totalSubmissions += assignment.submissions.length;
+          assignment.submissions.forEach(sub => {
+            if (sub.grade !== undefined && sub.grade !== null && sub.grade !== '') {
+              totalGrades++;
+              gradeSum += parseFloat(sub.grade);
+            } else {
+              pendingGrading++;
+            }
+          });
+        }
+      });
+      
+      const completionRate = totalStudents > 0 ? Math.round((totalSubmissions / totalStudents) * 100) : 0;
+      const avgGrade = totalGrades > 0 ? (gradeSum / totalGrades).toFixed(1) : '-';
+      
+      document.getElementById('analytics-total').textContent = teacherAssignments.length;
+      document.getElementById('analytics-completion').textContent = completionRate + '%';
+      document.getElementById('analytics-pending').textContent = pendingGrading;
+      document.getElementById('analytics-avg-grade').textContent = avgGrade !== '-' ? avgGrade + '%' : '-';
+      
+      analyticsDiv.style.display = 'flex';
+    }
+    
     function viewAssignmentSubmissions(assignmentId) {
       const assignments = JSON.parse(localStorage.getItem('teacherAssignments') || '[]');
       const assignment = assignments.find(a => a.id === assignmentId);
@@ -6947,7 +7728,7 @@
       content.innerHTML = html;
     }
     
-    function showCreateLessonPlan(classId) {
+    function showCreateLessonPlan(classId, templateData = null) {
       const cls = classes.find(c => c.id === classId);
       const teacher = loggedInTeacher;
       const teacherSubject = teacher ? teacher.subject : 'Mathematics';
@@ -6966,7 +7747,7 @@
                   <div class="row">
                     <div class="col-md-6 mb-3">
                       <label class="form-label">Topic/Title *</label>
-                      <input type="text" class="form-control" id="lesson-topic" required>
+                      <input type="text" class="form-control" id="lesson-topic" required value="${templateData ? escapeHtml(templateData.topic) : ''}">
                     </div>
                     <div class="col-md-3 mb-3">
                       <label class="form-label">Date *</label>
@@ -6980,22 +7761,22 @@
                   <div class="mb-3">
                     <label class="form-label">Learning Objectives (one per line)</label>
                     <textarea class="form-control" id="lesson-objectives" rows="3" 
-                              placeholder="Example:\nUnderstand the concept of...\nApply knowledge to solve..."></textarea>
+                              placeholder="Example:\nUnderstand the concept of...\nApply knowledge to solve...">${templateData ? escapeHtml(templateData.objectives) : ''}</textarea>
                   </div>
                   <div class="mb-3">
                     <label class="form-label">Activities & Procedures</label>
                     <textarea class="form-control" id="lesson-activities" rows="4" 
-                              placeholder="Describe the lesson activities, teaching methods, and procedures..."></textarea>
+                              placeholder="Describe the lesson activities, teaching methods, and procedures...">${templateData ? escapeHtml(templateData.activities) : ''}</textarea>
                   </div>
                   <div class="mb-3">
                     <label class="form-label">Materials Needed (one per line)</label>
                     <textarea class="form-control" id="lesson-materials" rows="2" 
-                              placeholder="Example:\nTextbook pages 45-50\nWhiteboard\nCalculators"></textarea>
+                              placeholder="Example:\nTextbook pages 45-50\nWhiteboard\nCalculators">${templateData ? escapeHtml(templateData.materials) : ''}</textarea>
                   </div>
                   <div class="mb-3">
                     <label class="form-label">Homework Assignment</label>
                     <input type="text" class="form-control" id="lesson-homework" 
-                           placeholder="Example: Complete exercises 1-10 on page 50">
+                           placeholder="Example: Complete exercises 1-10 on page 50" value="${templateData ? escapeHtml(templateData.homework) : ''}">
                   </div>
                   <div class="mb-3">
                     <label class="form-label">Additional Notes</label>
@@ -7062,6 +7843,71 @@
       
       alert('Lesson plan created successfully!');
       loadTeacherLessonPlans();
+    }
+    
+    // Apply lesson template
+    function applyLessonTemplate(templateType) {
+      const templates = {
+        algebra: {
+          topic: 'Introduction to Algebraic Expressions',
+          objectives: 'Understand the concept of variables and constants\nSimplify algebraic expressions\nEvaluate expressions for given values',
+          activities: '1. Introduction to variables (10 min)\n2. Guided practice with examples (15 min)\n3. Group work solving problems (15 min)\n4. Review and Q&A (5 min)',
+          materials: 'Textbook Chapter 3\nWorksheet with practice problems\nWhiteboard and markers\nCalculators',
+          homework: 'Complete exercises 1-15 on page 48, showing all work'
+        },
+        literature: {
+          topic: 'Character Analysis in Literature',
+          objectives: 'Identify main and supporting characters\nAnalyze character motivations and development\nDiscuss themes through character actions',
+          activities: '1. Read selected passage together (15 min)\n2. Character mapping exercise (10 min)\n3. Small group discussions (15 min)\n4. Class presentation of findings (5 min)',
+          materials: 'Novel or short story text\nCharacter analysis worksheet\nChart paper and markers',
+          homework: 'Write a one-page character analysis of the protagonist'
+        },
+        science: {
+          topic: 'The Scientific Method',
+          objectives: 'Understand the steps of the scientific method\nFormulate testable hypotheses\nDesign simple experiments',
+          activities: '1. Introduction to scientific method (10 min)\n2. Demonstration experiment (15 min)\n3. Students design their own experiments (15 min)\n4. Share and discuss designs (5 min)',
+          materials: 'Lab equipment for demonstration\nScientific method poster\nExperiment planning worksheets',
+          homework: 'Complete the experiment design worksheet'
+        },
+        geography: {
+          topic: 'Reading Maps and Coordinates',
+          objectives: 'Identify map elements and symbols\nUse latitude and longitude\nCalculate distances using map scales',
+          activities: '1. Introduction to map components (10 min)\n2. Practice finding coordinates (15 min)\n3. Map reading exercises (15 min)\n4. Review and assessment (5 min)',
+          materials: 'Various types of maps\nAtlas\nRulers and compasses\nCoordinate worksheets',
+          homework: 'Complete map reading exercises 1-10'
+        },
+        history: {
+          topic: 'Critical Analysis of Historical Events',
+          objectives: 'Examine historical sources critically\nIdentify bias and perspective\nUnderstand cause and effect in history',
+          activities: '1. Present historical event (10 min)\n2. Analyze primary sources (15 min)\n3. Group debate on interpretations (15 min)\n4. Summarize findings (5 min)',
+          materials: 'Historical documents\nTimeline charts\nDebate guidelines',
+          homework: 'Write a summary analyzing one historical source'
+        },
+        communication: {
+          topic: 'Effective Communication Skills',
+          objectives: 'Practice active listening\nUse appropriate verbal and non-verbal communication\nResolve conflicts constructively',
+          activities: '1. Discussion on communication basics (10 min)\n2. Role-playing exercises (15 min)\n3. Small group practice scenarios (15 min)\n4. Reflection and feedback (5 min)',
+          materials: 'Role-play scenario cards\nCommunication skills handout\nVideo examples (optional)',
+          homework: 'Practice a communication skill and write a reflection'
+        }
+      };
+      
+      const template = templates[templateType];
+      if (!template) return;
+      
+      // Close templates modal
+      const templatesModal = bootstrap.Modal.getInstance(document.getElementById('lessonTemplatesModal'));
+      if (templatesModal) templatesModal.hide();
+      
+      // Get class ID
+      const classId = document.getElementById('teacher-lesson-class').value;
+      if (!classId) {
+        alert('Please select a class first');
+        return;
+      }
+      
+      // Open create lesson modal with template data
+      showCreateLessonPlan(classId, template);
     }
     
     function toggleLessonComplete(planId) {
