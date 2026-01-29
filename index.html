@@ -288,13 +288,23 @@
                     
                     if (userDoc.exists()) {
                         const userData = userDoc.data();
-                        const userRole = userData.role || userData.userType;
-                        const userId = userData.userId || userData.id || user.email.split('@')[0];
+                        const userRole = userData.role;
+                        const userId = userData.userId || userData.id;
+                        
+                        // Validate that user has both role and userId
+                        if (!userId) {
+                            await signOut(auth);
+                            sessionStorage.clear();
+                            errorMessage.textContent = 'Your account is missing required user ID. Please contact the administrator.';
+                            errorMessage.style.display = 'block';
+                            return;
+                        }
                         
                         // Validate that user has a valid role
                         const validRoles = ['admin', 'teacher', 'student', 'parent'];
                         if (!userRole || !validRoles.includes(userRole)) {
                             await signOut(auth);
+                            sessionStorage.clear();
                             errorMessage.textContent = 'Your account does not have a valid role assigned. Please contact the administrator.';
                             errorMessage.style.display = 'block';
                             return;
@@ -309,19 +319,32 @@
                         // Redirect based on role
                         let redirectUrl = 'admin.html';
                         if (userRole !== 'admin') {
-                            redirectUrl += `#${userRole}-portal?id=${encodeURIComponent(userId)}`;
+                            redirectUrl += `#${userRole}-portal?id=${userId}`;
                         }
                         window.location.href = redirectUrl;
                     } else {
                         // User not found in Firestore - sign them out
                         await signOut(auth);
+                        sessionStorage.clear();
                         errorMessage.textContent = 'Your Google account is not registered in the system. Please contact the administrator or use email/password login.';
                         errorMessage.style.display = 'block';
                     }
                 } catch (firestoreError) {
                     console.error('Firestore lookup error:', firestoreError);
                     await signOut(auth);
-                    errorMessage.textContent = 'Failed to verify your account. Please try again or contact the administrator.';
+                    sessionStorage.clear();
+                    
+                    // Provide specific error messages for common Firestore errors
+                    let errorMsg = 'Failed to verify your account. Please try again or contact the administrator.';
+                    if (firestoreError.code === 'permission-denied') {
+                        errorMsg = 'Access denied. Your account may not have permission to access user data. Please contact the administrator.';
+                    } else if (firestoreError.code === 'unavailable') {
+                        errorMsg = 'Service temporarily unavailable. Please check your connection and try again.';
+                    } else if (firestoreError.code === 'not-found') {
+                        errorMsg = 'User database not found. Please contact the administrator.';
+                    }
+                    
+                    errorMessage.textContent = errorMsg;
                     errorMessage.style.display = 'block';
                 }
             } catch (error) {
