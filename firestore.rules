@@ -409,6 +409,30 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
     
+    // Audit Logs collection
+    // Audit logs are write-only for authenticated users, read-only for admins
+    match /auditLogs/{logId} {
+      allow read: if isAdmin();
+      allow create: if isAuthenticated() && 
+                       request.auth.uid == request.resource.data.userId &&
+                       request.resource.data.timestamp is timestamp &&
+                       request.resource.data.action is string &&
+                       request.resource.data.status in ['SUCCESS', 'FAILURE'];
+      allow update, delete: if false; // Audit logs are immutable
+    }
+    
+    // Backup Metadata collection
+    // Only admins can manage backup metadata
+    match /backupMetadata/{backupId} {
+      allow read: if isAdmin();
+      allow create: if isAdmin() &&
+                       request.resource.data.timestamp is string &&
+                       request.resource.data.backupType is string &&
+                       request.resource.data.version is string;
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+    
     // Default deny all other access
     match /{document=**} {
       allow read, write: if false;

@@ -234,6 +234,13 @@
 
   console.log('✅ Firestore API initialized and available at window.FirestoreAPI');
   
+  // Load additional modules (real-time, pagination, audit, backup)
+  // These modules will be available at:
+  // - window.FirestoreRealtime
+  // - window.FirestorePagination
+  // - window.FirestoreAudit
+  // - window.FirestoreBackup
+  
   // Dispatch event to notify that API is ready
   window.dispatchEvent(new Event('firestoreApiReady'));
 })();
