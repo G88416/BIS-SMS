@@ -5544,10 +5544,11 @@
       
       // Validate required fields
       if (surname && firstname && gender && grade) {
-        const id = students.length ? Math.max(...students.map(s => s.id)) + 1 : 1;
+        // Generate numeric ID for display purposes (used for student number, not document ID)
+        const numericId = students.length ? Math.max(...students.map(s => s.numericId || s.id)) + 1 : 1;
         
         // Update the displayed student number
-        document.getElementById('student-number').value = id;
+        document.getElementById('student-number').value = numericId;
         
         // Build full name
         const name = `${firstname} ${surname}`;
@@ -5574,7 +5575,7 @@
         
         // Create new student object with all details
         const newStudent = { 
-          numericId: id, // Store numeric ID for reference
+          numericId: numericId, // Store numeric ID for reference
           name, 
           grade, 
           parent, 
@@ -5615,34 +5616,34 @@
           // Add to local students array
           students.push(newStudent);
           
-          // Enroll in selected classes
-          selectedClasses.forEach(cid => {
+          // Enroll in selected classes and update Firestore
+          for (const cid of selectedClasses) {
             const cls = classes.find(c => c.id === cid);
             if (cls) {
               if (!cls.studentIds) cls.studentIds = [];
-              cls.studentIds.push(id);
+              cls.studentIds.push(docRef.id); // Use Firestore-generated ID
+              
+              // Update class in Firestore
+              try {
+                await window.firebaseSetDoc(
+                  window.firebaseDoc(window.firebaseDb, 'classes', String(cid)),
+                  {
+                    ...cls,
+                    numericId: cls.id,
+                    updatedAt: new Date().toISOString()
+                  },
+                  { merge: true }
+                );
+              } catch (classError) {
+                console.error('Error updating class in Firestore:', classError);
+                // Continue with other classes even if one fails
+              }
             }
-          });
+          }
           
           // Save to localStorage (for offline support)
           localStorage.setItem('students', JSON.stringify(students));
           localStorage.setItem('classes', JSON.stringify(classes));
-          
-          // Update classes in Firestore if any selected
-          selectedClasses.forEach(cid => {
-            const cls = classes.find(c => c.id === cid);
-            if (cls) {
-              const classDocRef = doc(db, 'classes', String(cid));
-              setDoc(classDocRef, {
-                ...cls,
-                numericId: cls.id,
-                updatedAt: new Date().toISOString()
-              }, { merge: true })
-                .catch((error) => {
-                  console.error('Error updating class in Firestore:', error);
-                });
-            }
-          });
           
           renderStudents();
           renderClasses();
