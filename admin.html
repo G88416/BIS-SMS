@@ -10548,6 +10548,13 @@
         return;
       }
       
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        alert('Please enter a valid email address.');
+        return;
+      }
+      
       if (password !== passwordConfirm) {
         alert('Passwords do not match.');
         return;
@@ -10630,14 +10637,10 @@
           }
           
           // Save user profile to Firestore
-          return setDoc(doc(window.firebaseDb, 'users', user.uid), userProfileData)
+          setDoc(doc(window.firebaseDb, 'users', user.uid), userProfileData)
             .then(() => {
               console.log('User profile saved to Firestore');
-            })
-            .catch((error) => {
-              console.error('Error saving user profile to Firestore:', error);
-            })
-            .finally(() => {
+              
               // Close modal and show success message
               const modal = bootstrap.Modal.getInstance(document.getElementById('addUserModal'));
               modal.hide();
@@ -10651,6 +10654,19 @@
               
               // Refresh user list if on user management section
               refreshUsersList();
+            })
+            .catch((error) => {
+              console.error('Error saving user profile to Firestore:', error);
+              
+              // User created in Auth but not in Firestore - warn about partial success
+              alert(`User created in Firebase Authentication, but profile creation failed.\\n\\nEmail: ${email}\\n\\nThe user may experience issues logging in. Error: ${error.message}`);
+              
+              // Still close modal and clear form
+              const modal = bootstrap.Modal.getInstance(document.getElementById('addUserModal'));
+              modal.hide();
+              document.getElementById('addUserForm').reset();
+              document.getElementById('new-user-email').value = '';
+              updateUserForm();
             });
         })
         .catch((error) => {

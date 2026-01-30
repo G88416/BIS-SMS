@@ -127,6 +127,7 @@
                                         return signOut(auth).then(() => {
                                             errorMessage.textContent = 'Selected user type does not match your account.';
                                             errorMessage.style.display = 'block';
+                                            return Promise.reject(new Error('Role mismatch'));
                                         });
                                     }
                                     
@@ -155,9 +156,12 @@
                             });
                         })
                         .catch((error) => {
-                            errorMessage.textContent = 'Invalid credentials. Please try again.';
-                            errorMessage.style.display = 'block';
-                            console.error(error);
+                            // Only show error if it's not a role mismatch (which we already handled)
+                            if (error.message !== 'Role mismatch') {
+                                errorMessage.textContent = 'Invalid credentials. Please try again.';
+                                errorMessage.style.display = 'block';
+                                console.error(error);
+                            }
                         });
                 });
             }
