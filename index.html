@@ -134,6 +134,16 @@
                                     // Store verified data
                                     sessionStorage.setItem('userType', storedRole);
                                     sessionStorage.setItem('userId', userId);
+                                    sessionStorage.setItem('authMode', 'firebase'); // Set auth mode to indicate real Firebase login
+                                    
+                                    // Auth mode debugging
+                                    console.log("Auth mode:", sessionStorage.getItem('authMode'));
+                                    console.log("Current Firebase user:", user.email, user.uid);
+                                    
+                                    // Check if using fallback mode
+                                    if (sessionStorage.getItem('authMode') === 'fallback') {
+                                        alert("You are using DEMO mode → Firestore writes are blocked!\nPlease login with real credentials.");
+                                    }
                                     
                                     // Redirect based on role
                                     let redirectUrl = 'admin.html';
@@ -146,6 +156,16 @@
                                     // This maintains backward compatibility
                                     sessionStorage.setItem('userType', userType);
                                     sessionStorage.setItem('userId', user.uid);
+                                    sessionStorage.setItem('authMode', 'firebase'); // Set auth mode to indicate real Firebase login
+                                    
+                                    // Auth mode debugging
+                                    console.log("Auth mode:", sessionStorage.getItem('authMode'));
+                                    console.log("Current Firebase user:", user.email, user.uid);
+                                    
+                                    // Check if using fallback mode
+                                    if (sessionStorage.getItem('authMode') === 'fallback') {
+                                        alert("You are using DEMO mode → Firestore writes are blocked!\nPlease login with real credentials.");
+                                    }
                                     
                                     let redirectUrl = 'admin.html';
                                     if (userType !== 'admin') {
@@ -267,6 +287,16 @@
                         sessionStorage.setItem('userId', userId);
                         sessionStorage.setItem('displayName', user.displayName || userData.name || '');
                         sessionStorage.setItem('photoURL', user.photoURL || '');
+                        sessionStorage.setItem('authMode', 'firebase'); // Set auth mode to indicate real Firebase login
+                        
+                        // Auth mode debugging
+                        console.log("Auth mode:", sessionStorage.getItem('authMode'));
+                        console.log("Current Firebase user:", user.email, user.uid);
+                        
+                        // Check if using fallback mode
+                        if (sessionStorage.getItem('authMode') === 'fallback') {
+                            alert("You are using DEMO mode → Firestore writes are blocked!\nPlease login with real credentials.");
+                        }
                         
                         // Redirect based on role
                         let redirectUrl = 'admin.html';
