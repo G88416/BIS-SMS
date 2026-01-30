@@ -3558,6 +3558,7 @@
     let currentStudentId = null;
     let loggedInStudent = null;
     let loggedInTeacher = null;
+    let unsubscribeStudents = null;  // to clean up listener later
     let loggedInParent = null;
     let collectionChart = null;
     let gradeChart = null;
@@ -3779,7 +3780,7 @@
       ]);
       
       // Refresh UI after loading data
-      renderStudents();
+      startListeningToStudents();  // Start real-time listening for students
       renderTeachers();
       renderClasses();
       updateDashboardStats();
@@ -3805,8 +3806,14 @@
       document.querySelector(`[data-section="${sectionId}"]`).classList.add('active');
       pageTitle.textContent = sectionId.charAt(0).toUpperCase() + sectionId.slice(1);
 
+      // Clean up students real-time listener when navigating away
+      if (sectionId !== 'students' && unsubscribeStudents) {
+        unsubscribeStudents();
+        unsubscribeStudents = null;
+      }
+
       // Refresh data on navigation
-      if (sectionId === 'students') renderStudents();
+      if (sectionId === 'students') startListeningToStudents();
       if (sectionId === 'teachers') renderTeachers();
       if (sectionId === 'classes') renderClasses();
       if (sectionId === 'attendance') { populateClassSelects(); renderAttendance(); }
@@ -4465,7 +4472,66 @@
     }
 
     // Render functions
+    function startListeningToStudents() {
+      // Stop any previous listener
+      if (unsubscribeStudents) unsubscribeStudents();
+
+      const q = window.firebaseCollection(window.firebaseDb, "students");
+      // Optional: .orderBy("name") or .where("grade", "==", "10A")
+
+      unsubscribeStudents = window.firebaseOnSnapshot(q, (snapshot) => {
+        const studentsList = [];
+        snapshot.forEach((doc) => {
+          studentsList.push({
+            id: doc.id,          // ← Firestore document ID
+            ...doc.data()
+          });
+        });
+
+        // Update the global students array
+        students = studentsList;
+
+        // Now update your table
+        const tbody = document.getElementById("students-table");
+        if (tbody) {
+          tbody.innerHTML = ""; // clear old rows
+
+          studentsList.forEach(student => {
+            const enrolledClasses = (student.classIds || []).map(cid => {
+              const cls = classes.find(c => c.id === cid);
+              return cls ? cls.name : '';
+            }).join(', ') || 'None';
+            
+            const row = document.createElement("tr");
+            row.innerHTML = `
+              <td>${student.id}</td>
+              <td>${student.name || "-"}</td>
+              <td>${student.grade || "-"}</td>
+              <td>${student.parent || "-"}</td>
+              <td>${student.contact || "-"}</td>
+              <td>${enrolledClasses}</td>
+              <td>
+                <button class="btn btn-sm btn-primary" onclick="viewCompleteStudentInfo('${student.id}')" title="View Complete Registration"><i class="fas fa-id-card"></i></button>
+                <button class="btn btn-sm btn-info" onclick="viewStudentDetails('${student.id}')"><i class="fas fa-eye"></i></button>
+                <button class="btn btn-sm btn-danger" onclick="deleteStudent('${student.id}')"><i class="fas fa-trash"></i></button>
+              </td>
+            `;
+            tbody.appendChild(row);
+          });
+
+          document.getElementById("student-count").textContent = 
+            `${studentsList.length} student${studentsList.length !== 1 ? 's' : ''}`;
+        }
+        
+        populateClassSelects(); // Refresh available classes
+      }, (error) => {
+        console.error("Students listener error:", error);
+      });
+    }
+
     function renderStudents() {
+      // This function is kept for backward compatibility with filters
+      // For real-time updates, use startListeningToStudents() instead
       const table = document.getElementById('students-table');
       table.innerHTML = '';
       
@@ -4480,7 +4546,7 @@
       });
       
       filteredStudents.forEach(stu => {
-        const enrolledClasses = stu.classIds.map(cid => {
+        const enrolledClasses = (stu.classIds || []).map(cid => {
           const cls = classes.find(c => c.id === cid);
           return cls ? cls.name : '';
         }).join(', ') || 'None';
@@ -4492,9 +4558,9 @@
           <td>${stu.contact || 'N/A'}</td>
           <td>${enrolledClasses}</td>
           <td>
-            <button class="btn btn-sm btn-primary" onclick="viewCompleteStudentInfo(${stu.id})" title="View Complete Registration"><i class="fas fa-id-card"></i></button>
-            <button class="btn btn-sm btn-info" onclick="viewStudentDetails(${stu.id})"><i class="fas fa-eye"></i></button>
-            <button class="btn btn-sm btn-danger" onclick="deleteStudent(${stu.id})"><i class="fas fa-trash"></i></button>
+            <button class="btn btn-sm btn-primary" onclick="viewCompleteStudentInfo('${stu.id}')" title="View Complete Registration"><i class="fas fa-id-card"></i></button>
+            <button class="btn btn-sm btn-info" onclick="viewStudentDetails('${stu.id}')"><i class="fas fa-eye"></i></button>
+            <button class="btn btn-sm btn-danger" onclick="deleteStudent('${stu.id}')"><i class="fas fa-trash"></i></button>
           </td>
         </tr>`;
         table.innerHTML += row;
@@ -6560,7 +6626,7 @@
     function exportStudentsCSV() {
       let csv = 'ID,Name,Grade,Parent/Guardian,Contact,Enrolled Classes\n';
       students.forEach(stu => {
-        const enrolledClasses = stu.classIds.map(cid => {
+        const enrolledClasses = (stu.classIds || []).map(cid => {
           const cls = classes.find(c => c.id === cid);
           return cls ? cls.name : '';
         }).join(';');
