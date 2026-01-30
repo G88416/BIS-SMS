@@ -3560,6 +3560,7 @@
     let loggedInTeacher = null;
     let unsubscribeStudents = null;  // to clean up listener later
     let unsubscribeTeachers = null;  // to clean up teacher listener later
+    let unsubscribeSubmissions = null;  // to clean up submissions listener later
     let loggedInParent = null;
     let collectionChart = null;
     let gradeChart = null;
@@ -9258,6 +9259,9 @@
     }
 
     function listenToMySubmissions() {
+      // Stop any previous listener
+      if (unsubscribeSubmissions) unsubscribeSubmissions();
+
       const teacherId = sessionStorage.getItem('userId');
       if (!teacherId) {
         console.error("No teacher ID found in session");
@@ -9270,7 +9274,7 @@
         window.firebaseOrderBy("submittedAt", "desc")
       );
 
-      window.firebaseOnSnapshot(q, (snap) => {
+      unsubscribeSubmissions = window.firebaseOnSnapshot(q, (snap) => {
         const submissions = [];
         snap.forEach((doc) => {
           submissions.push({
