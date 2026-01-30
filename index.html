@@ -8,10 +8,10 @@
     <!-- Firebase SDK -->
     <script type="module">
         // Import the functions you need from the SDKs you need
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js";
-        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-analytics.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, collection, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
         
         // Your web app's Firebase configuration
         const firebaseConfig = {
@@ -89,42 +89,22 @@
                     event.preventDefault();
                     
                     const userType = document.getElementById('userType').value;
-                    const username = document.getElementById('username').value.trim();
+                    const email = document.getElementById('email').value.trim();
                     const password = document.getElementById('password').value;
                     const errorMessage = document.getElementById('errorMessage');
                     
                     errorMessage.style.display = 'none';
                     
-                    if (!userType || !username || !password) {
+                    if (!userType || !email || !password) {
                         errorMessage.textContent = 'Please fill all fields.';
                         errorMessage.style.display = 'block';
                         return;
                     }
                     
-                    // Map to email based on selected userType and username/ID
-                    let email = '';
-                    const domain = 'bis.local';
-                    
-                    // Basic input validation to prevent injection
-                    const sanitizedUsername = username.replace(/[^a-zA-Z0-9]/g, '');
-                    if (sanitizedUsername !== username && userType !== 'parent') {
-                        errorMessage.textContent = 'Username/ID must contain only letters and numbers.';
-                        errorMessage.style.display = 'block';
-                        return;
-                    }
-                    
-                    if (userType === 'admin') {
-                        email = `admin@${domain}`;
-                    } else if (userType === 'teacher') {
-                        email = `teacher${sanitizedUsername}@${domain}`;
-                    } else if (userType === 'student') {
-                        email = `student${sanitizedUsername}@${domain}`;
-                    } else if (userType === 'parent') {
-                        email = `parent.${username.toLowerCase()}@${domain}`;  // e.g., C331 → parent.c331@bis.local
-                    }
-                    
-                    if (!email) {
-                        errorMessage.textContent = 'Invalid user type or ID.';
+                    // Validate email format
+                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    if (!emailRegex.test(email)) {
+                        errorMessage.textContent = 'Please enter a valid email address.';
                         errorMessage.style.display = 'block';
                         return;
                     }
@@ -134,56 +114,45 @@
                         .then((userCredential) => {
                             const user = userCredential.user;
                             
-                            // Derive role and ID from ACTUAL signed-in email (prevents tampering)
-                            const signedEmail = user.email.toLowerCase();
-                            let derivedRole = '';
-                            let derivedId = '';
-                            
-                            if (signedEmail === `admin@${domain}`) {
-                                derivedRole = 'admin';
-                                derivedId = 'admin';
-                            } else if (signedEmail.startsWith(`teacher`) && signedEmail.endsWith(`@${domain}`)) {
-                                derivedRole = 'teacher';
-                                const match = signedEmail.match(/teacher(\d+)@/);
-                                if (match) {
-                                    derivedId = match[1];
+                            // Get user profile from Firestore to validate role
+                            const userDocRef = doc(db, 'users', user.uid);
+                            return getDoc(userDocRef).then((docSnap) => {
+                                if (docSnap.exists()) {
+                                    const userData = docSnap.data();
+                                    const storedRole = userData.role || userData.userType;
+                                    const userId = userData.userId || userData.id || user.uid;
+                                    
+                                    // Validate selected userType matches stored role
+                                    if (storedRole !== userType) {
+                                        return signOut(auth).then(() => {
+                                            errorMessage.textContent = 'Selected user type does not match your account.';
+                                            errorMessage.style.display = 'block';
+                                        });
+                                    }
+                                    
+                                    // Store verified data
+                                    sessionStorage.setItem('userType', storedRole);
+                                    sessionStorage.setItem('userId', userId);
+                                    
+                                    // Redirect based on role
+                                    let redirectUrl = 'admin.html';
+                                    if (storedRole !== 'admin') {
+                                        redirectUrl += `#${storedRole}-portal?id=${userId}`;
+                                    }
+                                    window.location.href = redirectUrl;
+                                } else {
+                                    // If no Firestore profile exists, use the selected userType and uid
+                                    // This maintains backward compatibility
+                                    sessionStorage.setItem('userType', userType);
+                                    sessionStorage.setItem('userId', user.uid);
+                                    
+                                    let redirectUrl = 'admin.html';
+                                    if (userType !== 'admin') {
+                                        redirectUrl += `#${userType}-portal?id=${user.uid}`;
+                                    }
+                                    window.location.href = redirectUrl;
                                 }
-                            } else if (signedEmail.startsWith(`student`) && signedEmail.endsWith(`@${domain}`)) {
-                                derivedRole = 'student';
-                                const match = signedEmail.match(/student(\d+)@/);
-                                if (match) {
-                                    derivedId = match[1];
-                                }
-                            } else if (signedEmail.startsWith(`parent.`) && signedEmail.endsWith(`@${domain}`)) {
-                                derivedRole = 'parent';
-                                derivedId = signedEmail.split('parent.')[1].split('@')[0].toUpperCase();  // parent.c331@bis.local → C331
-                            }
-                            
-                            // Ensure we got valid role and ID
-                            if (!derivedRole || !derivedId) {
-                                return signOut(auth).then(() => {
-                                    errorMessage.textContent = 'Invalid user account format.';
-                                    errorMessage.style.display = 'block';
-                                });
-                            }
-                            
-                            if (derivedRole !== userType || (userType !== 'admin' && derivedId !== username && derivedId.toLowerCase() !== username.toLowerCase())) {
-                                return signOut(auth).then(() => {
-                                    errorMessage.textContent = 'Invalid credentials for selected user type.';
-                                    errorMessage.style.display = 'block';
-                                });
-                            }
-                            
-                            // Store verified data
-                            sessionStorage.setItem('userType', derivedRole);
-                            sessionStorage.setItem('userId', derivedId);
-                            
-                            // Redirect (same as your original logic)
-                            let redirectUrl = 'admin.html';
-                            if (derivedRole !== 'admin') {
-                                redirectUrl += `#${derivedRole}-portal?id=${derivedId}`;
-                            }
-                            window.location.href = redirectUrl;
+                            });
                         })
                         .catch((error) => {
                             errorMessage.textContent = 'Invalid credentials. Please try again.';
@@ -199,44 +168,23 @@
                 resetForm.addEventListener('submit', function(event) {
                     event.preventDefault();
                     
-                    const userType = document.getElementById('resetUserType').value;
-                    const username = document.getElementById('resetUsername').value.trim();
+                    const email = document.getElementById('resetEmail').value.trim();
                     const resetMessage = document.getElementById('resetMessage');
                     const resetSuccess = document.getElementById('resetSuccess');
                     
                     resetMessage.style.display = 'none';
                     resetSuccess.style.display = 'none';
                     
-                    if (!userType || !username) {
-                        resetMessage.textContent = 'Please fill all fields.';
-                        resetMessage.style.display = 'block';
-                        return;
-                    }
-                    
-                    // Map to email based on selected userType and username/ID
-                    let email = '';
-                    const domain = 'bis.local';
-                    
-                    // Basic input validation to prevent injection
-                    const sanitizedUsername = username.replace(/[^a-zA-Z0-9]/g, '');
-                    if (sanitizedUsername !== username && userType !== 'parent') {
-                        resetMessage.textContent = 'Username/ID must contain only letters and numbers.';
-                        resetMessage.style.display = 'block';
-                        return;
-                    }
-                    
-                    if (userType === 'admin') {
-                        email = `admin@${domain}`;
-                    } else if (userType === 'teacher') {
-                        email = `teacher${sanitizedUsername}@${domain}`;
-                    } else if (userType === 'student') {
-                        email = `student${sanitizedUsername}@${domain}`;
-                    } else if (userType === 'parent') {
-                        email = `parent.${username.toLowerCase()}@${domain}`;
-                    }
-                    
                     if (!email) {
-                        resetMessage.textContent = 'Invalid user type or ID.';
+                        resetMessage.textContent = 'Please enter your email address.';
+                        resetMessage.style.display = 'block';
+                        return;
+                    }
+                    
+                    // Validate email format
+                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    if (!emailRegex.test(email)) {
+                        resetMessage.textContent = 'Please enter a valid email address.';
                         resetMessage.style.display = 'block';
                         return;
                     }
@@ -256,9 +204,9 @@
                         .catch((error) => {
                             console.error('Password reset error:', error);
                             if (error.code === 'auth/user-not-found') {
-                                resetMessage.textContent = 'No account found with this username/ID.';
+                                resetMessage.textContent = 'No account found with this email address.';
                             } else if (error.code === 'auth/invalid-email') {
-                                resetMessage.textContent = 'Invalid email format. Please contact administrator.';
+                                resetMessage.textContent = 'Invalid email format.';
                             } else if (error.code === 'auth/too-many-requests') {
                                 resetMessage.textContent = 'Too many requests. Please try again later.';
                             } else {
@@ -628,8 +576,8 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Username / ID</label>
-                    <input type="text" id="username" placeholder="Enter your username or ID" required>
+                    <label>Email</label>
+                    <input type="email" id="email" placeholder="Enter your email address" required>
                 </div>
                 <div class="form-group">
                     <label>Password</label>
@@ -712,18 +660,8 @@
             
             <form id="resetPasswordForm">
                 <div class="form-group">
-                    <label style="color: #333;">User Type</label>
-                    <select id="resetUserType" required style="color: #333;">
-                        <option value="">Select User Type</option>
-                        <option value="admin">Administrator</option>
-                        <option value="teacher">Teacher</option>
-                        <option value="student">Student</option>
-                        <option value="parent">Parent/Guardian</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label style="color: #333;">Username / ID</label>
-                    <input type="text" id="resetUsername" placeholder="Enter your username or ID" required style="color: #333; border-bottom-color: #ccc;">
+                    <label style="color: #333;">Email</label>
+                    <input type="email" id="resetEmail" placeholder="Enter your email address" required style="color: #333; border-bottom-color: #ccc;">
                 </div>
                 <button type="submit" style="background: #3498db; border-color: #3498db;">Send Reset Email</button>
                 <button type="button" onclick="closeForgotPassword()" style="background: #95a5a6; border-color: #95a5a6; margin-top: 10px;">Cancel</button>

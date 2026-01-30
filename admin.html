@@ -8,11 +8,11 @@
   <!-- Firebase SDK -->
   <script type="module">
     // Import the functions you need from the SDKs you need
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js";
-    import { getAuth, onAuthStateChanged, signOut, createUserWithEmailAndPassword, sendEmailVerification, updatePassword, reauthenticateWithCredential, EmailAuthProvider } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, where, getDocs, Timestamp, setDoc, doc, updateDoc, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-    import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-analytics.js";
+    import { getAuth, onAuthStateChanged, signOut, createUserWithEmailAndPassword, sendEmailVerification, updatePassword, reauthenticateWithCredential, EmailAuthProvider } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+    import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, where, getDocs, Timestamp, setDoc, doc, updateDoc, deleteDoc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+    import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-storage.js";
     
     // Your web app's Firebase configuration
     const firebaseConfig = {
@@ -3004,8 +3004,8 @@
 
             <div class="mb-3">
               <label class="form-label">Email <span class="text-danger">*</span></label>
-              <input type="email" class="form-control" id="new-user-email" placeholder="Will be auto-generated" readonly>
-              <small class="text-muted">Email format: admin@bis.local, teacher{ID}@bis.local, student{ID}@bis.local, parent.{childid}@bis.local</small>
+              <input type="email" class="form-control" id="new-user-email" placeholder="Enter user's email address" required>
+              <small class="text-muted">Enter a real email address that the user controls</small>
             </div>
 
             <div class="mb-3">
@@ -10508,12 +10508,11 @@
       studentFields.style.display = 'none';
       teacherFields.style.display = 'none';
       emailField.value = '';
+      emailField.removeAttribute('readonly');
       
       if (!userType) return;
       
-      if (userType === 'admin') {
-        emailField.value = 'admin@bis.local';
-      } else {
+      if (userType !== 'admin') {
         userIdField.style.display = 'block';
         userNameField.style.display = 'block';
         
@@ -10523,21 +10522,6 @@
           teacherFields.style.display = 'block';
         }
       }
-      
-      // Update email when ID changes
-      const userIdInput = document.getElementById('new-user-id');
-      userIdInput.addEventListener('input', function() {
-        const id = this.value.trim();
-        if (id) {
-          if (userType === 'teacher') {
-            emailField.value = `teacher${id}@bis.local`;
-          } else if (userType === 'student') {
-            emailField.value = `student${id}@bis.local`;
-          } else if (userType === 'parent') {
-            emailField.value = `parent.${id.toLowerCase()}@bis.local`;
-          }
-        }
-      });
     }
     
     function createNewUser() {
@@ -10580,6 +10564,16 @@
           const user = userCredential.user;
           console.log('User created in Firebase Auth:', user.uid);
           
+          // Create user profile in Firestore
+          const userProfileData = {
+            email: email,
+            role: userType,
+            userType: userType,
+            userId: userId || user.uid,
+            name: userName || 'N/A',
+            createdAt: serverTimestamp()
+          };
+          
           // Add user to local data based on type
           if (userType === 'student') {
             const grade = document.getElementById('new-student-grade').value;
@@ -10594,6 +10588,10 @@
               contact: contact || 'N/A',
               classIds: []
             };
+            
+            userProfileData.grade = parseInt(grade) || 10;
+            userProfileData.parent = parent || 'N/A';
+            userProfileData.contact = contact || 'N/A';
             
             students.push(newStudent);
             localStorage.setItem('students', JSON.stringify(students));
@@ -10611,6 +10609,9 @@
               status: 'Active'
             };
             
+            userProfileData.subject = subject || 'General';
+            userProfileData.qualification = qualification || 'N/A';
+            
             teachers.push(newTeacher);
             localStorage.setItem('teachers', JSON.stringify(teachers));
             renderTeachers();
@@ -10625,22 +10626,32 @@
                 localStorage.setItem('students', JSON.stringify(students));
               }
             }
+            userProfileData.childId = childId;
           }
           
-          // Close modal and show success message
-          const modal = bootstrap.Modal.getInstance(document.getElementById('addUserModal'));
-          modal.hide();
-          
-          alert(`User created successfully!\\n\\nEmail: ${email}\\nPassword: ${password}\\n\\nThe user can now log in with these credentials.`);
-          
-          // Clear form
-          document.getElementById('addUserForm').reset();
-          document.getElementById('new-user-email').value = '';
-          updateUserForm();
-          
-          // Refresh user list if on user management section
-          refreshUsersList();
-          
+          // Save user profile to Firestore
+          return setDoc(doc(window.firebaseDb, 'users', user.uid), userProfileData)
+            .then(() => {
+              console.log('User profile saved to Firestore');
+            })
+            .catch((error) => {
+              console.error('Error saving user profile to Firestore:', error);
+            })
+            .finally(() => {
+              // Close modal and show success message
+              const modal = bootstrap.Modal.getInstance(document.getElementById('addUserModal'));
+              modal.hide();
+              
+              alert(`User created successfully!\\n\\nEmail: ${email}\\nPassword: ${password}\\n\\nThe user can now log in with these credentials.`);
+              
+              // Clear form
+              document.getElementById('addUserForm').reset();
+              document.getElementById('new-user-email').value = '';
+              updateUserForm();
+              
+              // Refresh user list if on user management section
+              refreshUsersList();
+            });
         })
         .catch((error) => {
           console.error('Error creating user:', error);
@@ -10681,10 +10692,9 @@
       if (teacherTable && teachers.length > 0) {
         let html = '';
         teachers.forEach(teacher => {
-          const email = `teacher${teacher.id}@bis.local`;
           html += `<tr>
             <td>${teacher.id}</td>
-            <td>${email}</td>
+            <td>${teacher.email || 'N/A'}</td>
             <td>${teacher.name}</td>
             <td>-</td>
             <td>-</td>
@@ -10703,10 +10713,9 @@
       if (studentTable && students.length > 0) {
         let html = '';
         students.forEach(student => {
-          const email = `student${student.id}@bis.local`;
           html += `<tr>
             <td>${student.id}</td>
-            <td>${email}</td>
+            <td>${student.email || 'N/A'}</td>
             <td>${student.name}</td>
             <td>-</td>
             <td>-</td>
@@ -10724,7 +10733,7 @@
       const adminTable = document.getElementById('admin-users-table');
       if (adminTable) {
         adminTable.innerHTML = `<tr>
-          <td>admin@bis.local</td>
+          <td>Admin Account</td>
           <td>-</td>
           <td>-</td>
           <td><span class="badge bg-success">Protected</span></td>
