@@ -3559,6 +3559,8 @@
     let loggedInStudent = null;
     let loggedInTeacher = null;
     let unsubscribeStudents = null;  // to clean up listener later
+    let unsubscribeTeachers = null;  // to clean up teacher listener later
+    let unsubscribeSubmissions = null;  // to clean up submissions listener later
     let loggedInParent = null;
     let collectionChart = null;
     let gradeChart = null;
@@ -3781,7 +3783,7 @@
       
       // Refresh UI after loading data
       startListeningToStudents();  // Start real-time listening for students
-      renderTeachers();
+      startListeningToTeachers();  // Start real-time listening for teachers
       renderClasses();
       updateDashboardStats();
       console.log('Data loaded from Firestore successfully');
@@ -3814,7 +3816,7 @@
 
       // Refresh data on navigation
       if (sectionId === 'students') startListeningToStudents();
-      if (sectionId === 'teachers') renderTeachers();
+      if (sectionId === 'teachers') startListeningToTeachers();
       if (sectionId === 'classes') renderClasses();
       if (sectionId === 'attendance') { populateClassSelects(); renderAttendance(); }
       if (sectionId === 'grades') { populateClassSelect(); renderGradesTable(); }
@@ -4526,6 +4528,55 @@
         populateClassSelects(); // Refresh available classes
       }, (error) => {
         console.error("Students listener error:", error);
+      });
+    }
+
+    function startListeningToTeachers() {
+      // Stop any previous listener
+      if (unsubscribeTeachers) unsubscribeTeachers();
+
+      const q = window.firebaseCollection(window.firebaseDb, "teachers");
+
+      unsubscribeTeachers = window.firebaseOnSnapshot(q, (snapshot) => {
+        const teachersList = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+
+        // Update the global teachers array
+        teachers = teachersList;
+
+        // Now update the table
+        const tbody = document.getElementById("teachers-table");
+        if (tbody) {
+          tbody.innerHTML = ""; // clear old rows
+
+          teachersList.forEach(teacher => {
+            const assignedClasses = classes.filter(c => c.teacherId === teacher.id).map(c => c.name).join(', ') || 'None';
+            
+            const row = document.createElement("tr");
+            row.innerHTML = `
+              <td>${teacher.id}</td>
+              <td>${teacher.name || "-"}</td>
+              <td>${teacher.subject || "-"}</td>
+              <td>${teacher.qualification || "N/A"}</td>
+              <td><span class="badge bg-${teacher.status === 'Active' ? 'success' : 'warning'}">${teacher.status || 'Active'}</span></td>
+              <td>${assignedClasses}</td>
+              <td>
+                <button class="btn btn-sm btn-info" onclick="viewTeacherDetails('${teacher.id}')"><i class="fas fa-eye"></i></button>
+                <button class="btn btn-sm btn-danger" onclick="deleteTeacher('${teacher.id}')"><i class="fas fa-trash"></i></button>
+              </td>
+            `;
+            tbody.appendChild(row);
+          });
+
+          const countDiv = document.getElementById('teacher-count');
+          if (countDiv) {
+            countDiv.textContent = `Showing ${teachersList.length} of ${teachersList.length} teachers`;
+          }
+        }
+      }, (error) => {
+        console.error("Teachers listener error:", error);
       });
     }
 
@@ -9185,6 +9236,80 @@
       
       // Initialize Choptso chat for teacher portal
       initTeacherChoptso();
+    }
+
+    // Teacher Work Submission Functions
+    
+    async function submitTeacherWork(workData) {
+      try {
+        const docRef = await window.firebaseAddDoc(
+          window.firebaseCollection(window.firebaseDb, "submissions"),
+          {
+            ...workData,
+            teacherId: sessionStorage.getItem('userId'),
+            submittedAt: window.firebaseTimestamp.now()
+          }
+        );
+        console.log("Work submitted → ", docRef.id);
+        alert("Work submitted successfully!");
+      } catch (err) {
+        console.error(err);
+        alert("Submission failed: " + err.message);
+      }
+    }
+
+    function listenToMySubmissions() {
+      // Stop any previous listener
+      if (unsubscribeSubmissions) unsubscribeSubmissions();
+
+      const teacherId = sessionStorage.getItem('userId');
+      if (!teacherId) {
+        console.error("No teacher ID found in session");
+        return;
+      }
+
+      const q = window.firebaseQuery(
+        window.firebaseCollection(window.firebaseDb, "submissions"),
+        window.firebaseWhere("teacherId", "==", teacherId),
+        window.firebaseOrderBy("submittedAt", "desc")
+      );
+
+      unsubscribeSubmissions = window.firebaseOnSnapshot(q, (snap) => {
+        const submissions = [];
+        snap.forEach((doc) => {
+          submissions.push({
+            id: doc.id,
+            ...doc.data()
+          });
+        });
+
+        // Render list of submissions
+        const submissionsContainer = document.getElementById('teacher-submissions-list');
+        if (submissionsContainer) {
+          submissionsContainer.innerHTML = "";
+          
+          if (submissions.length === 0) {
+            submissionsContainer.innerHTML = "<p class='text-muted'>No submissions yet.</p>";
+          } else {
+            submissions.forEach(sub => {
+              const submittedDate = sub.submittedAt ? new Date(sub.submittedAt.seconds * 1000).toLocaleString() : 'N/A';
+              const submissionCard = document.createElement("div");
+              submissionCard.className = "card mb-3";
+              submissionCard.innerHTML = `
+                <div class="card-body">
+                  <h6 class="card-title">${sub.title || 'Untitled Submission'}</h6>
+                  <p class="card-text small text-muted">Submitted: ${submittedDate}</p>
+                  <p class="card-text">${sub.description || 'No description'}</p>
+                  ${sub.status ? `<span class="badge bg-info">${sub.status}</span>` : ''}
+                </div>
+              `;
+              submissionsContainer.appendChild(submissionCard);
+            });
+          }
+        }
+      }, (error) => {
+        console.error("Error listening to submissions:", error);
+      });
     }
 
     // Parent Portal Functions
