@@ -134,6 +134,13 @@
                                     // Store verified data
                                     sessionStorage.setItem('userType', storedRole);
                                     sessionStorage.setItem('userId', userId);
+                                    sessionStorage.setItem('authMode', 'firebase'); // Set auth mode to indicate real Firebase login
+                                    
+                                    // Auth mode debugging (only in development)
+                                    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                                        console.log("Auth mode:", sessionStorage.getItem('authMode'));
+                                        console.log("Current Firebase user:", user.email, user.uid);
+                                    }
                                     
                                     // Redirect based on role
                                     let redirectUrl = 'admin.html';
@@ -146,6 +153,13 @@
                                     // This maintains backward compatibility
                                     sessionStorage.setItem('userType', userType);
                                     sessionStorage.setItem('userId', user.uid);
+                                    sessionStorage.setItem('authMode', 'firebase'); // Set auth mode to indicate real Firebase login
+                                    
+                                    // Auth mode debugging (only in development)
+                                    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                                        console.log("Auth mode:", sessionStorage.getItem('authMode'));
+                                        console.log("Current Firebase user:", user.email, user.uid);
+                                    }
                                     
                                     let redirectUrl = 'admin.html';
                                     if (userType !== 'admin') {
@@ -267,6 +281,13 @@
                         sessionStorage.setItem('userId', userId);
                         sessionStorage.setItem('displayName', user.displayName || userData.name || '');
                         sessionStorage.setItem('photoURL', user.photoURL || '');
+                        sessionStorage.setItem('authMode', 'firebase'); // Set auth mode to indicate real Firebase login
+                        
+                        // Auth mode debugging (only in development)
+                        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                            console.log("Auth mode:", sessionStorage.getItem('authMode'));
+                            console.log("Current Firebase user:", user.email, user.uid);
+                        }
                         
                         // Redirect based on role
                         let redirectUrl = 'admin.html';

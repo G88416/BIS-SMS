@@ -53,6 +53,27 @@ service cloud.firestore {
       return request.auth != null;
     }
     
+    // Helper function – is user logged in? (alias for isAuthenticated)
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    // Helper function for email-based role checking
+    // Note: These functions provide an alternative, simpler approach to role checking
+    // based on email patterns instead of Firestore document reads. They are not currently
+    // used in the active rules but are available for simpler implementations if needed.
+    // The current implementation uses role-based checking via getUserData() for better
+    // security and flexibility.
+    function hasAdminEmail() {
+      return request.auth != null && 
+             request.auth.token.email.matches('admin@bis\\.local');
+    }
+    
+    function hasTeacherOrAdminEmail() {
+      return request.auth != null && 
+             request.auth.token.email.matches('(admin|teacher[0-9]*)@bis\\.local');
+    }
+    
     function isOwner(userId) {
       return request.auth != null && request.auth.uid == userId;
     }
@@ -78,6 +99,16 @@ service cloud.firestore {
     }
     
     // Users collection - basic user profiles
+    // 
+    // CURRENT IMPLEMENTATION: Secure role-based access control
+    // - Anyone authenticated can read
+    // - Only admins can create
+    // - Admins or the user themselves can update
+    // - Only admins can delete
+    // 
+    // ALTERNATIVE SIMPLER APPROACH (using email-based checks):
+    // allow read: if isSignedIn();
+    // allow write: if isSignedIn() && request.auth.uid == userId;
     match /users/{userId} {
       allow read: if isAuthenticated();
       allow create: if isAdmin();
@@ -86,6 +117,17 @@ service cloud.firestore {
     }
     
     // Students collection
+    // 
+    // CURRENT IMPLEMENTATION: Secure role-based access control
+    // - Only relevant users (admins, teachers, the student themselves, their parents) can read
+    // - Only admins can write
+    // 
+    // ALTERNATIVE SIMPLER APPROACH (using email-based checks):
+    // allow read: if isSignedIn();
+    // allow create, update, delete: if isSignedIn() 
+    //                            && request.auth.token.email.matches('.*@bis\\.local')
+    //                            && (request.auth.token.email.matches('admin@.*') 
+    //                                || request.auth.token.email.matches('teacher.*@.*'));
     match /students/{studentId} {
       allow read: if isAdmin() || 
                      isTeacher() || 
@@ -109,6 +151,12 @@ service cloud.firestore {
     }
     
     // Teachers collection
+    // 
+    // CURRENT IMPLEMENTATION: Anyone signed in can read, only admins can write
+    // 
+    // ALTERNATIVE SIMPLER APPROACH (using email-based checks):
+    // allow read: if isSignedIn();
+    // allow write: if isSignedIn() && request.auth.token.email.matches('admin@bis\\.local');
     match /teachers/{teacherId} {
       allow read: if isAuthenticated();
       allow create, update, delete: if isAdmin();
@@ -384,6 +432,19 @@ service cloud.firestore {
                        isTeacher() || 
                        (isStudent() && request.auth.uid == resource.data.studentId);
       allow delete: if isAdmin();
+    }
+    
+    // Submissions collection (teacher work submissions)
+    match /submissions/{submissionId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && 
+                       request.auth.uid == request.resource.data.teacherId;
+      allow update: if isAuthenticated() && 
+                       (request.auth.uid == resource.data.teacherId || isAdmin()) &&
+                       // Ensure teacherId cannot be changed during update
+                       request.resource.data.teacherId == resource.data.teacherId;
+      allow delete: if isAuthenticated() && 
+                       (request.auth.uid == resource.data.teacherId || isAdmin());
     }
     
     // Lesson plans
