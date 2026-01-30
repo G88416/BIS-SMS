@@ -3806,6 +3806,12 @@
       document.querySelector(`[data-section="${sectionId}"]`).classList.add('active');
       pageTitle.textContent = sectionId.charAt(0).toUpperCase() + sectionId.slice(1);
 
+      // Clean up students real-time listener when navigating away
+      if (sectionId !== 'students' && unsubscribeStudents) {
+        unsubscribeStudents();
+        unsubscribeStudents = null;
+      }
+
       // Refresh data on navigation
       if (sectionId === 'students') startListeningToStudents();
       if (sectionId === 'teachers') renderTeachers();
@@ -6620,7 +6626,7 @@
     function exportStudentsCSV() {
       let csv = 'ID,Name,Grade,Parent/Guardian,Contact,Enrolled Classes\n';
       students.forEach(stu => {
-        const enrolledClasses = stu.classIds.map(cid => {
+        const enrolledClasses = (stu.classIds || []).map(cid => {
           const cls = classes.find(c => c.id === cid);
           return cls ? cls.name : '';
         }).join(';');
