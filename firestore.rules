@@ -59,9 +59,14 @@ service cloud.firestore {
     }
     
     // Helper function for email-based role checking
+    // Note: These functions provide an alternative, simpler approach to role checking
+    // based on email patterns instead of Firestore document reads. They are not currently
+    // used in the active rules but are available for simpler implementations if needed.
+    // The current implementation uses role-based checking via getUserData() for better
+    // security and flexibility.
     function hasAdminEmail() {
       return request.auth != null && 
-             request.auth.token.email.matches('admin@[a-zA-Z0-9.-]+\\.local');
+             request.auth.token.email.matches('admin@bis\\.local');
     }
     
     function hasTeacherOrAdminEmail() {
