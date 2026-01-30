@@ -61,12 +61,12 @@ service cloud.firestore {
     // Helper function for email-based role checking
     function hasAdminEmail() {
       return request.auth != null && 
-             request.auth.token.email.matches('admin@.*\\.local');
+             request.auth.token.email.matches('admin@[a-zA-Z0-9.-]+\\.local');
     }
     
     function hasTeacherOrAdminEmail() {
       return request.auth != null && 
-             request.auth.token.email.matches('(admin@|teacher).*@bis\\.local');
+             request.auth.token.email.matches('(admin|teacher[0-9]*)@bis\\.local');
     }
     
     function isOwner(userId) {
@@ -151,7 +151,7 @@ service cloud.firestore {
     // 
     // ALTERNATIVE SIMPLER APPROACH (using email-based checks):
     // allow read: if isSignedIn();
-    // allow write: if isSignedIn() && request.auth.token.email.matches('admin@.*@bis\\.local');
+    // allow write: if isSignedIn() && request.auth.token.email.matches('admin@bis\\.local');
     match /teachers/{teacherId} {
       allow read: if isAuthenticated();
       allow create, update, delete: if isAdmin();
@@ -434,9 +434,12 @@ service cloud.firestore {
       allow read: if isAuthenticated();
       allow create: if isAuthenticated() && 
                        request.auth.uid == request.resource.data.teacherId;
-      allow update, delete: if isAuthenticated() && 
-                              (request.auth.uid == resource.data.teacherId || 
-                               isAdmin());
+      allow update: if isAuthenticated() && 
+                       (request.auth.uid == resource.data.teacherId || isAdmin()) &&
+                       // Ensure teacherId cannot be changed during update
+                       request.resource.data.teacherId == resource.data.teacherId;
+      allow delete: if isAuthenticated() && 
+                       (request.auth.uid == resource.data.teacherId || isAdmin());
     }
     
     // Lesson plans
