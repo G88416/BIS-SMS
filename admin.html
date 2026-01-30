@@ -5517,7 +5517,7 @@
     }
 
     // Add functions
-    function addStudent() {
+    async function addStudent() {
       // Get learner details
       const surname = document.getElementById('learner-surname').value.trim();
       const firstname = document.getElementById('learner-firstname').value.trim();
@@ -5574,8 +5574,7 @@
         
         // Create new student object with all details
         const newStudent = { 
-          id, 
-          numericId: id, // Store numeric ID separately for Firestore
+          numericId: id, // Store numeric ID for reference
           name, 
           grade, 
           parent, 
@@ -5601,57 +5600,64 @@
           updatedAt: new Date().toISOString()
         };
         
-        students.push(newStudent);
-        
-        // Enroll in selected classes
-        selectedClasses.forEach(cid => {
-          const cls = classes.find(c => c.id === cid);
-          if (cls) {
-            if (!cls.studentIds) cls.studentIds = [];
-            cls.studentIds.push(id);
-          }
-        });
-        
-        // Save to localStorage (for offline support)
-        localStorage.setItem('students', JSON.stringify(students));
-        localStorage.setItem('classes', JSON.stringify(classes));
-        
-        // Save to Firestore
-        const studentDocRef = doc(db, 'students', String(id));
-        setDoc(studentDocRef, newStudent)
-          .then(() => {
-            console.log('Student saved to Firestore successfully');
-          })
-          .catch((error) => {
-            console.error('Error saving student to Firestore:', error);
-            alert('Warning: Student saved locally but failed to sync with cloud storage. Changes will sync when connection is restored.');
+        try {
+          // Save to Firestore with auto-generated ID
+          const docRef = await window.firebaseAddDoc(
+            window.firebaseCollection(window.firebaseDb, "students"),
+            newStudent
+          );
+          
+          console.log("Student added with ID: ", docRef.id);
+          
+          // Update the student object with the Firestore-generated ID
+          newStudent.id = docRef.id;
+          
+          // Add to local students array
+          students.push(newStudent);
+          
+          // Enroll in selected classes
+          selectedClasses.forEach(cid => {
+            const cls = classes.find(c => c.id === cid);
+            if (cls) {
+              if (!cls.studentIds) cls.studentIds = [];
+              cls.studentIds.push(id);
+            }
           });
-        
-        // Update classes in Firestore if any selected
-        selectedClasses.forEach(cid => {
-          const cls = classes.find(c => c.id === cid);
-          if (cls) {
-            const classDocRef = doc(db, 'classes', String(cid));
-            setDoc(classDocRef, {
-              ...cls,
-              numericId: cls.id,
-              updatedAt: new Date().toISOString()
-            }, { merge: true })
-              .catch((error) => {
-                console.error('Error updating class in Firestore:', error);
-              });
-          }
-        });
-        
-        renderStudents();
-        renderClasses();
-        updateDashboardStats();
-        
-        // Clear form
-        document.getElementById('studentRegistrationForm').reset();
-        
-        // Show success message
-        alert('Student registered successfully!');
+          
+          // Save to localStorage (for offline support)
+          localStorage.setItem('students', JSON.stringify(students));
+          localStorage.setItem('classes', JSON.stringify(classes));
+          
+          // Update classes in Firestore if any selected
+          selectedClasses.forEach(cid => {
+            const cls = classes.find(c => c.id === cid);
+            if (cls) {
+              const classDocRef = doc(db, 'classes', String(cid));
+              setDoc(classDocRef, {
+                ...cls,
+                numericId: cls.id,
+                updatedAt: new Date().toISOString()
+              }, { merge: true })
+                .catch((error) => {
+                  console.error('Error updating class in Firestore:', error);
+                });
+            }
+          });
+          
+          renderStudents();
+          renderClasses();
+          updateDashboardStats();
+          
+          // Clear form
+          document.getElementById('studentRegistrationForm').reset();
+          
+          // Show success message
+          alert("Student saved successfully!");
+          
+        } catch (error) {
+          console.error("Error saving student: ", error);
+          alert("Failed to save student: " + error.message);
+        }
       } else {
         alert('Please fill in all required fields (Surname, First Name, Gender, and Grade)');
       }
