@@ -5635,6 +5635,21 @@
 
     // Add functions
     async function addStudent() {
+      // Check auth mode before allowing write operations
+      const authMode = sessionStorage.getItem('authMode');
+      
+      // Debug logging (only in development)
+      if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        console.log("Auth mode:", authMode);
+        console.log("Current Firebase user:", window.firebaseAuth.currentUser?.email, window.firebaseAuth.currentUser?.uid);
+      }
+      
+      // Only allow writes if explicitly using Firebase auth mode
+      if (authMode !== 'firebase') {
+        alert("You are using DEMO mode → Firestore writes are blocked!\nPlease login with real credentials.");
+        return;
+      }
+      
       // Get learner details
       const surname = document.getElementById('learner-surname').value.trim();
       const firstname = document.getElementById('learner-firstname').value.trim();
@@ -5980,6 +5995,21 @@
     }
 
     function addTeacher() {
+      // Check auth mode before allowing write operations
+      const authMode = sessionStorage.getItem('authMode');
+      
+      // Debug logging (only in development)
+      if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        console.log("Auth mode:", authMode);
+        console.log("Current Firebase user:", window.firebaseAuth.currentUser?.email, window.firebaseAuth.currentUser?.uid);
+      }
+      
+      // Only allow writes if explicitly using Firebase auth mode
+      if (authMode !== 'firebase') {
+        alert("You are using DEMO mode → Firestore writes are blocked!\nPlease login with real credentials.");
+        return;
+      }
+      
       const name = document.getElementById('teacher-name').value.trim();
       const subject = document.getElementById('teacher-subject').value.trim();
       const qualification = document.getElementById('teacher-qualification').value.trim();
