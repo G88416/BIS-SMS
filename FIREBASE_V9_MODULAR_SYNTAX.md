@@ -67,7 +67,7 @@ This project uses **CDN-based modular imports** because it's a browser-based app
 ### Example from `admin.html`
 
 ```javascript
-// Modern imports (lines 11-15)
+// Modern imports
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-analytics.js";
 import { getAuth, onAuthStateChanged, signOut, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
@@ -80,7 +80,7 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 const storage = getStorage(app);
 
-// Using serverTimestamp correctly (line 10611)
+// Using serverTimestamp correctly
 const userProfileData = {
   email: email,
   role: userType,
@@ -89,7 +89,7 @@ const userProfileData = {
   createdAt: serverTimestamp()  // ✅ Modern syntax
 };
 
-// Using setDoc correctly (line 10670)
+// Using setDoc correctly
 await setDoc(doc(db, 'users', user.uid), userProfileData);
 ```
 
