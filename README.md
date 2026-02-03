@@ -94,9 +94,11 @@ The system includes advanced Firestore capabilities:
 - **Cursor-based Pagination**: Efficient navigation through large datasets
 - **Comprehensive Audit Logging**: Track all CRUD operations and user actions
 - **Backup & Restore**: Manual and automated backup solutions
+- **Modern Modular Syntax**: Uses Firebase v9+ modular API for optimal performance
 
 📖 See [FIRESTORE_ADVANCED_FEATURES.md](FIRESTORE_ADVANCED_FEATURES.md) for detailed documentation.
 📖 See [AUTOMATED_BACKUP_GUIDE.md](AUTOMATED_BACKUP_GUIDE.md) for backup configuration.
+📖 See [FIREBASE_V9_MODULAR_SYNTAX.md](FIREBASE_V9_MODULAR_SYNTAX.md) for Firebase v9+ syntax guide.
 
 **Try the Demo**: Open [firestore-features-demo.html](firestore-features-demo.html) to see these features in action.
 
