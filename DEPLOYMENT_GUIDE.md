@@ -1,5 +1,35 @@
 # Firebase Rules Deployment Guide
 
+## 🚨 URGENT: Profile Creation Fix Deployment
+
+**If you're here because of the "Missing or insufficient permissions" error affecting users like donald@gmail.com, follow these quick steps:**
+
+### Quick Fix Deployment (5 minutes)
+
+1. **Deploy the updated rules:**
+   ```bash
+   firebase deploy --only firestore:rules
+   ```
+
+2. **For affected user (donald@gmail.com):**
+   - See `FIX_PROFILE_CREATION_ISSUE.md` for manual profile creation steps
+   - OR delete the user from Authentication and recreate them using the fixed admin interface
+
+3. **Test:**
+   - Log in as admin
+   - Create a test user
+   - Verify profile is created in Firestore
+   - Test new user can log in
+
+**What was fixed:**
+- Added secondary Firebase app instance to prevent admin logout during user creation
+- Updated security rules to allow users to create their own profile during initial setup
+- See `FIX_PROFILE_CREATION_ISSUE.md` for full details
+
+---
+
+## General Deployment Guide
+
 This guide provides step-by-step instructions for deploying the Firebase Security Rules to your BIS-SMS project.
 
 ## Prerequisites
