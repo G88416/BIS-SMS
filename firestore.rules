@@ -102,7 +102,7 @@ service cloud.firestore {
     // 
     // CURRENT IMPLEMENTATION: Secure role-based access control
     // - Anyone authenticated can read
-    // - Only admins can create
+    // - Admins can create OR a user can create their own profile during initial setup
     // - Admins or the user themselves can update
     // - Only admins can delete
     // 
@@ -111,7 +111,10 @@ service cloud.firestore {
     // allow write: if isSignedIn() && request.auth.uid == userId;
     match /users/{userId} {
       allow read: if isAuthenticated();
-      allow create: if isAdmin();
+      allow create: if isAdmin() || 
+                       (isAuthenticated() && 
+                        isOwner(userId) && 
+                        !exists(/databases/$(database)/documents/users/$(userId)));
       allow update: if isAdmin() || isOwner(userId);
       allow delete: if isAdmin();
     }
