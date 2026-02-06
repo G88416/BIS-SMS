@@ -28,6 +28,10 @@
     // Initialize Firebase
     const app = initializeApp(firebaseConfig);
     
+    // Initialize a secondary app for user creation without affecting admin session
+    // This allows creating users without signing them in on the main app
+    const secondaryApp = initializeApp(firebaseConfig, 'SecondaryApp');
+    
     // Initialize Analytics with error handling
     let analytics = null;
     try {
@@ -38,6 +42,7 @@
     
     // Initialize Auth
     const auth = getAuth(app);
+    const secondaryAuth = getAuth(secondaryApp);
     
     // Initialize Firestore
     const db = getFirestore(app);
@@ -96,8 +101,10 @@
     
     // Make available globally
     window.firebaseApp = app;
+    window.firebaseSecondaryApp = secondaryApp;
     window.firebaseAnalytics = analytics;
     window.firebaseAuth = auth;
+    window.firebaseSecondaryAuth = secondaryAuth;
     window.firebaseCreateUser = createUserWithEmailAndPassword;
     window.firebaseSendEmailVerification = sendEmailVerification;
     window.firebaseUpdatePassword = updatePassword;
@@ -10596,8 +10603,13 @@
         return;
       }
       
-      // Create user in Firebase Authentication
-      window.firebaseCreateUser(window.firebaseAuth, email, password)
+      // Store current admin user for reference
+      const currentAdminUser = window.firebaseAuth.currentUser;
+      console.log('Admin creating user:', currentAdminUser?.email);
+      
+      // Create user in Firebase Authentication using secondary auth
+      // This prevents the new user from being automatically signed in to the main app
+      window.firebaseCreateUser(window.firebaseSecondaryAuth, email, password)
         .then((userCredential) => {
           const user = userCredential.user;
           console.log('User created in Firebase Auth:', user.uid);
@@ -10667,38 +10679,30 @@
             userProfileData.childId = childId;
           }
           
-          // Save user profile to Firestore
-          window.firebaseSetDoc(window.firebaseDoc(window.firebaseDb, 'users', user.uid), userProfileData)
-            .then(() => {
-              console.log('User profile saved to Firestore');
-              
-              // Close modal and show success message
-              const modal = bootstrap.Modal.getInstance(document.getElementById('addUserModal'));
-              modal.hide();
-              
-              alert(`User created successfully!\\n\\nEmail: ${email}\\nPassword: ${password}\\n\\nThe user can now log in with these credentials.`);
-              
-              // Clear form
-              document.getElementById('addUserForm').reset();
-              document.getElementById('new-user-email').value = '';
-              updateUserForm();
-              
-              // Refresh user list if on user management section
-              refreshUsersList();
-            })
-            .catch((error) => {
-              console.error('Error saving user profile to Firestore:', error);
-              
-              // User created in Auth but not in Firestore - warn about partial success
-              alert(`User created in Firebase Authentication, but profile creation failed.\\n\\nEmail: ${email}\\n\\nThe user may experience issues logging in. Error: ${error.message}`);
-              
-              // Still close modal and clear form
-              const modal = bootstrap.Modal.getInstance(document.getElementById('addUserModal'));
-              modal.hide();
-              document.getElementById('addUserForm').reset();
-              document.getElementById('new-user-email').value = '';
-              updateUserForm();
-            });
+          // Sign out the new user from secondary auth immediately
+          // This ensures they don't interfere with the admin session
+          return window.firebaseSecondaryAuth.signOut().then(() => {
+            console.log('New user signed out from secondary auth');
+            // Now create the profile document while admin is still signed in to main auth
+            return window.firebaseSetDoc(window.firebaseDoc(window.firebaseDb, 'users', user.uid), userProfileData);
+          });
+        })
+        .then(() => {
+          console.log('User profile saved to Firestore');
+          
+          // Close modal and show success message
+          const modal = bootstrap.Modal.getInstance(document.getElementById('addUserModal'));
+          modal.hide();
+          
+          alert(`User created successfully!\\n\\nEmail: ${email}\\nPassword: ${password}\\n\\nThe user can now log in with these credentials.`);
+          
+          // Clear form
+          document.getElementById('addUserForm').reset();
+          document.getElementById('new-user-email').value = '';
+          updateUserForm();
+          
+          // Refresh user list if on user management section
+          refreshUsersList();
         })
         .catch((error) => {
           console.error('Error creating user:', error);
