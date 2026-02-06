@@ -25,6 +25,20 @@ A comprehensive web-based School Management System for managing students, teache
 1. Open `index.html` in your web browser
 2. Select your user type and log in with the credentials below
 
+### Quick Start (Node.js Server)
+
+For running the application with the built-in Express server:
+
+```bash
+# Install dependencies (required on first run)
+npm install
+
+# Start the server
+npm start
+```
+
+Then access the application at: http://localhost:3000
+
 ### Quick Start (Docker)
 
 For production deployment using Docker, see **[README_DOCKER.md](README_DOCKER.md)**
@@ -51,6 +65,11 @@ For detailed login information for all user types, see **[LOGIN_CREDENTIALS.md](
 - Modern web browser (Chrome, Firefox, Safari, Edge)
 - JavaScript enabled
 - Local storage enabled for data persistence
+
+### Node.js Server (Development/Production)
+- Node.js v14 or higher
+- npm (Node Package Manager)
+- Port 3000 available (or configure custom port)
 
 ### Docker-based (Production)
 - Docker and Docker Compose installed
