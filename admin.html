@@ -79,6 +79,36 @@
       document.addEventListener(event, resetSessionTimeout, true);
     });
     
+    // Debug function to check admin status
+    async function debugAdmin() {
+      const user = getAuth().currentUser;
+      if (!user) {
+        console.log("→ Not signed in at all");
+        return;
+      }
+
+      console.log("UID:", user.uid);
+      console.log("Email:", user.email);
+
+      const userDocRef = doc(db, "users", user.uid);
+      const snap = await getDoc(userDocRef);
+
+      if (!snap.exists()) {
+        console.log("→ /users document DOES NOT EXIST");
+        return;
+      }
+
+      const data = snap.data();
+      console.log("Full user data:", data);
+      console.log("Role value:", data?.role);
+
+      if (data?.role === "admin") {
+        console.log("→ Rules SHOULD recognize this user as admin");
+      } else {
+        console.log("→ Rules do NOT recognize this user as admin");
+      }
+    }
+    
     // Protect page: redirect to login if not authenticated
     onAuthStateChanged(auth, (user) => {
       if (!user) {
@@ -6002,7 +6032,7 @@
       if (modal) modal.hide();
     }
 
-    function addTeacher() {
+    async function addTeacher() {
       // Check auth mode before allowing write operations
       const authMode = sessionStorage.getItem('authMode');
       
@@ -6040,6 +6070,9 @@
         // Save to localStorage (for offline support)
         localStorage.setItem('teachers', JSON.stringify(teachers));
         
+        // Debug admin status before save
+        await debugAdmin();
+        
         // Save to Firestore
         const teacherDocRef = doc(db, 'teachers', String(id));
         setDoc(teacherDocRef, newTeacher)
@@ -6060,7 +6093,7 @@
       }
     }
 
-    function addClass() {
+    async function addClass() {
       const name = document.getElementById('class-name').value.trim();
       const grade = document.getElementById('class-grade').value.trim();
       const capacity = parseInt(document.getElementById('class-capacity').value) || 30;
@@ -6085,6 +6118,9 @@
         
         // Save to localStorage
         localStorage.setItem('classes', JSON.stringify(classes));
+        
+        // Debug admin status before save
+        await debugAdmin();
         
         // Save to Firestore
         const classDocRef = doc(db, 'classes', String(id));

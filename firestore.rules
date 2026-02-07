@@ -134,18 +134,13 @@ service cloud.firestore {
     // allow read: if isSignedIn();
     // allow write: if isSignedIn() && request.auth.token.email.matches('admin@bis\\.local');
     match /teachers/{teacherId} {
-      allow read: if isAuthenticated();
-      allow create, update: if isAuthenticated();  // Temporary – anyone logged in can save
+      allow read, create, update: if isAuthenticated();
       allow delete: if isAdmin();
     }
     
     // Classes collection
     match /classes/{classId} {
-      allow read: if isAuthenticated();
-      allow create: if isAdmin();
-      allow update: if isAdmin() &&
-                       // Validate updatedAt timestamp if provided
-                       (!request.resource.data.keys().hasAny(['updatedAt']) || request.resource.data.updatedAt is timestamp);
+      allow read, create, update: if isAuthenticated();
       allow delete: if isAdmin();
     }
     
