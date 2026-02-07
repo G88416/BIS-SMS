@@ -122,9 +122,8 @@ service cloud.firestore {
     // Students collection
     match /students/{studentId} {
       allow read: if isAuthenticated();
-      allow create, update, delete: if isAdmin() || isTeacher();  // Allow teachers too
-      // OR even broader for testing:
-      // allow create, update, delete: if isAuthenticated();
+      allow create, update: if isAuthenticated();  // Temporary – anyone logged in can save
+      allow delete: if isAdmin() || isTeacher();
     }
     
     // Teachers collection
