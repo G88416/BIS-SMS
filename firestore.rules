@@ -135,7 +135,8 @@ service cloud.firestore {
     // allow write: if isSignedIn() && request.auth.token.email.matches('admin@bis\\.local');
     match /teachers/{teacherId} {
       allow read: if isAuthenticated();
-      allow create, update, delete: if isAdmin();
+      allow create, update: if isAuthenticated();  // Temporary – anyone logged in can save
+      allow delete: if isAdmin();
     }
     
     // Classes collection
