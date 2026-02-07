@@ -6,7 +6,7 @@ This document describes the Firebase Realtime Database security rules implemente
 
 ## File Location
 
-- **database.rules.json** - Firebase Realtime Database security rules
+- **database.rules** - Firebase Realtime Database security rules
 
 ## Configuration
 
@@ -15,7 +15,7 @@ The database rules are configured in `firebase.json`:
 ```json
 {
   "database": {
-    "rules": "database.rules.json"
+    "rules": "database.rules"
   }
 }
 ```
@@ -354,7 +354,7 @@ These rules provide a strong foundation for security, but should be part of a co
 This project uses both Firebase Realtime Database and Firestore. The security models are aligned:
 
 - **Firestore** (`firestore.rules`): Primary database for most application data
-- **Realtime Database** (`database.rules.json`): For real-time features and specific use cases
+- **Realtime Database** (`database.rules`): For real-time features and specific use cases
 
 Both implement the same role-based access control model for consistency.
 
