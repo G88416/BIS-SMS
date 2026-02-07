@@ -34,8 +34,8 @@ The system supports four user roles:
 - **Delete**: Admins only
 
 #### Students Collection
-- **Read**: Admins, teachers, the student themselves, or their parents
-- **Write**: Admins only
+- **Read**: All authenticated users
+- **Write**: Admins and teachers
 
 #### Teachers Collection
 - **Read**: All authenticated users

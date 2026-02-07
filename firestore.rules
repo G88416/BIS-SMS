@@ -120,37 +120,11 @@ service cloud.firestore {
     }
     
     // Students collection
-    // 
-    // CURRENT IMPLEMENTATION: Secure role-based access control
-    // - Only relevant users (admins, teachers, the student themselves, their parents) can read
-    // - Only admins can write
-    // 
-    // ALTERNATIVE SIMPLER APPROACH (using email-based checks):
-    // allow read: if isSignedIn();
-    // allow create, update, delete: if isSignedIn() 
-    //                            && request.auth.token.email.matches('.*@bis\\.local')
-    //                            && (request.auth.token.email.matches('admin@.*') 
-    //                                || request.auth.token.email.matches('teacher.*@.*'));
     match /students/{studentId} {
-      allow read: if isAdmin() || 
-                     isTeacher() || 
-                     (isStudent() && isOwner(studentId)) ||
-                     isParentOfStudent(studentId);
-      allow create: if isAdmin() &&
-                       // Validate core required fields
-                       request.resource.data.keys().hasAll(['id', 'name']) &&
-                       // Validate timestamps if provided
-                       (!request.resource.data.keys().hasAny(['createdAt']) || request.resource.data.createdAt is timestamp) &&
-                       (!request.resource.data.keys().hasAny(['updatedAt']) || request.resource.data.updatedAt is timestamp) &&
-                       // Validate createdBy if provided
-                       (!request.resource.data.keys().hasAny(['createdBy']) || request.resource.data.createdBy == request.auth.uid);
-      allow update: if isAdmin() &&
-                       // Validate timestamps if provided
-                       (!request.resource.data.keys().hasAny(['updatedAt']) || request.resource.data.updatedAt is timestamp) &&
-                       // Prevent modification of immutable fields if they exist
-                       fieldImmutableIfPresent('createdAt') &&
-                       fieldImmutableIfPresent('createdBy');
-      allow delete: if isAdmin();
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isAdmin() || isTeacher();  // Allow teachers too
+      // OR even broader for testing:
+      // allow create, update, delete: if isAuthenticated();
     }
     
     // Teachers collection
