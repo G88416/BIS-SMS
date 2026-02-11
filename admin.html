@@ -109,6 +109,9 @@
       }
     }
     
+    // Expose debugAdmin globally so it can be accessed from regular scripts
+    window.debugAdmin = debugAdmin;
+    
     // Protect page: redirect to login if not authenticated
     onAuthStateChanged(auth, (user) => {
       if (!user) {
@@ -5022,7 +5025,7 @@
         
         try {
           // Debug admin status before save
-          await debugAdmin();
+          await window.debugAdmin();
           
           // Save to Firestore with auto-generated ID
           const docRef = await window.firebaseAddDoc(
@@ -5099,7 +5102,7 @@
         
         try {
           // Debug admin status before save
-          await debugAdmin();
+          await window.debugAdmin();
           
           // Save to Firestore with auto-generated ID
           const docRef = await window.firebaseAddDoc(
