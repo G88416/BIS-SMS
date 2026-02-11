@@ -5004,11 +5004,14 @@
       const subject = document.getElementById('teacher-subject').value.trim();
       const qualification = document.getElementById('teacher-qualification').value.trim();
       const status = document.getElementById('teacher-status').value;
+      
+      // Validate required fields
       if (name && subject) {
-        const id = teachers.length ? Math.max(...teachers.map(t => t.id)) + 1 : 1;
+        // Generate numeric ID for display purposes
+        const numericId = teachers.length ? Math.max(...teachers.map(t => t.numericId || 0)) + 1 : 1;
+        
         const newTeacher = { 
-          id, 
-          numericId: id,
+          numericId: numericId,
           name, 
           subject, 
           qualification, 
@@ -5017,45 +5020,73 @@
           updatedAt: new Date().toISOString()
         };
         
-        teachers.push(newTeacher);
-        
-        // Save to localStorage (for offline support)
-        localStorage.setItem('teachers', JSON.stringify(teachers));
-        
-        // Debug admin status before save
-        await debugAdmin();
-        
-        // Save to Firestore
-        const teacherDocRef = doc(db, 'teachers', String(id));
-        setDoc(teacherDocRef, newTeacher)
-          .then(() => {
-            console.log('Teacher saved to Firestore successfully');
-          })
-          .catch((error) => {
-            console.error('Error saving teacher to Firestore:', error);
-            alert('Warning: Teacher saved locally but failed to sync with cloud storage. Changes will sync when connection is restored.');
-          });
-        
-        renderTeachers();
-        populateClassSelects();
-        updateDashboardStats();
-        document.getElementById('teacher-name').value = '';
-        document.getElementById('teacher-subject').value = '';
-        document.getElementById('teacher-qualification').value = '';
+        try {
+          // Debug admin status before save
+          await debugAdmin();
+          
+          // Save to Firestore with auto-generated ID
+          const docRef = await window.firebaseAddDoc(
+            window.firebaseCollection(window.firebaseDb, "teachers"),
+            newTeacher
+          );
+          
+          console.log("Teacher added with ID: ", docRef.id);
+          
+          // Update the teacher object with the Firestore-generated ID
+          newTeacher.id = docRef.id;
+          
+          // Add to local teachers array
+          teachers.push(newTeacher);
+          
+          // Save to localStorage (for offline support)
+          localStorage.setItem('teachers', JSON.stringify(teachers));
+          
+          renderTeachers();
+          populateClassSelects();
+          updateDashboardStats();
+          
+          // Clear form
+          document.getElementById('teacher-name').value = '';
+          document.getElementById('teacher-subject').value = '';
+          document.getElementById('teacher-qualification').value = '';
+          document.getElementById('teacher-status').value = 'Active';
+          
+          // Show success message
+          alert("Teacher saved successfully!");
+          
+        } catch (error) {
+          console.error("Error saving teacher: ", error);
+          alert("Failed to save teacher: " + error.message);
+        }
+      } else {
+        alert('Please fill in all required fields (Name and Subject)');
       }
     }
 
     async function addClass() {
+      // Check auth mode before allowing write operations
+      const authMode = sessionStorage.getItem('authMode');
+      
+      // Only allow writes if explicitly using Firebase auth mode
+      if (authMode !== 'firebase') {
+        alert("You are using DEMO mode → Firestore writes are blocked!\nPlease login with real credentials.");
+        return;
+      }
+      
       const name = document.getElementById('class-name').value.trim();
       const grade = document.getElementById('class-grade').value.trim();
       const capacity = parseInt(document.getElementById('class-capacity').value) || 30;
       const schedule = document.getElementById('class-schedule').value.trim();
-      const teacherId = parseInt(document.getElementById('class-teacher').value) || null;
+      const teacherIdValue = document.getElementById('class-teacher').value;
+      const teacherId = teacherIdValue ? teacherIdValue : null;
+      
+      // Validate required fields
       if (name && grade) {
-        const id = classes.length ? Math.max(...classes.map(c => c.id)) + 1 : 1;
+        // Generate numeric ID for display purposes
+        const numericId = classes.length ? Math.max(...classes.map(c => c.numericId || 0)) + 1 : 1;
+        
         const newClass = { 
-          id, 
-          numericId: id,
+          numericId: numericId,
           name, 
           grade, 
           teacherId, 
@@ -5066,31 +5097,47 @@
           updatedAt: new Date().toISOString()
         };
         
-        classes.push(newClass);
-        
-        // Save to localStorage
-        localStorage.setItem('classes', JSON.stringify(classes));
-        
-        // Debug admin status before save
-        await debugAdmin();
-        
-        // Save to Firestore
-        const classDocRef = doc(db, 'classes', String(id));
-        setDoc(classDocRef, newClass)
-          .then(() => {
-            console.log('Class saved to Firestore successfully');
-          })
-          .catch((error) => {
-            console.error('Error saving class to Firestore:', error);
-          });
-        
-        renderClasses();
-        populateClassSelects();
-        updateDashboardStats();
-        document.getElementById('class-name').value = '';
-        document.getElementById('class-grade').value = '';
-        document.getElementById('class-capacity').value = '30';
-        document.getElementById('class-schedule').value = '';
+        try {
+          // Debug admin status before save
+          await debugAdmin();
+          
+          // Save to Firestore with auto-generated ID
+          const docRef = await window.firebaseAddDoc(
+            window.firebaseCollection(window.firebaseDb, "classes"),
+            newClass
+          );
+          
+          console.log("Class added with ID: ", docRef.id);
+          
+          // Update the class object with the Firestore-generated ID
+          newClass.id = docRef.id;
+          
+          // Add to local classes array
+          classes.push(newClass);
+          
+          // Save to localStorage
+          localStorage.setItem('classes', JSON.stringify(classes));
+          
+          renderClasses();
+          populateClassSelects();
+          updateDashboardStats();
+          
+          // Clear form
+          document.getElementById('class-name').value = '';
+          document.getElementById('class-grade').value = '';
+          document.getElementById('class-capacity').value = '30';
+          document.getElementById('class-schedule').value = '';
+          document.getElementById('class-teacher').value = '';
+          
+          // Show success message
+          alert("Class saved successfully!");
+          
+        } catch (error) {
+          console.error("Error saving class: ", error);
+          alert("Failed to save class: " + error.message);
+        }
+      } else {
+        alert('Please fill in all required fields (Name and Grade)');
       }
     }
 
