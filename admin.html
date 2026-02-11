@@ -931,15 +931,15 @@
               </div>
               <div class="card-footer">
                 <div class="input-group">
-                  <input type="text" class="form-control" id="choptso-message-input" placeholder="Type your message..." onkeypress="if(event.key==='Enter') sendChoptsoMessage()" oninput="updateTypingStatus(true)">
-                  <input type="file" id="choptso-file-input" style="display: none;" onchange="handleFileAttachment()" accept="image/*,.pdf,.doc,.docx,.txt">
-                  <button class="btn btn-outline-secondary" type="button" onclick="document.getElementById('choptso-file-input').click()" title="Attach file">
+                  <input type="text" class="form-control" id="choptso-message-input" placeholder="Type your message...">
+                  <input type="file" id="choptso-file-input" style="display: none;" accept="image/*,.pdf,.doc,.docx,.txt">
+                  <button class="btn btn-outline-secondary" type="button" id="choptso-attach-btn" title="Attach file">
                     <i class="fas fa-paperclip"></i>
                   </button>
-                  <button class="btn btn-outline-secondary" type="button" onclick="toggleAdminVoiceRecording()" title="Voice Note" id="admin-voice-note-btn">
+                  <button class="btn btn-outline-secondary" type="button" id="admin-voice-note-btn" title="Voice Note">
                     <i class="fas fa-microphone"></i>
                   </button>
-                  <button class="btn btn-success" type="button" onclick="sendChoptsoMessage()">
+                  <button class="btn btn-success" type="button" id="choptso-send-btn">
                     <i class="fas fa-paper-plane"></i> Send
                   </button>
                 </div>
@@ -4299,11 +4299,56 @@
     let choptsoUnsubscribe = null;
     let choptsoAttachment = null;
     
+    // Constants for magic numbers
+    const TYPING_INDICATOR_TIMEOUT_MS = 5000;
+    const SEND_SOUND_FREQUENCY = 800;
+    const RECEIVE_SOUND_FREQUENCY = 600;
+    
     // Initialize Choptso Chat
     function initChoptso() {
       loadContacts();
       // Load all users conversation by default
       loadConversation('all');
+      
+      // Add event listeners for message input
+      const messageInput = document.getElementById('choptso-message-input');
+      if (messageInput) {
+        messageInput.addEventListener('keypress', (event) => {
+          if (event.key === 'Enter') {
+            sendChoptsoMessage();
+          }
+        });
+        
+        messageInput.addEventListener('input', () => {
+          updateTypingStatus(true);
+        });
+      }
+      
+      // Add event listener for file input
+      const fileInput = document.getElementById('choptso-file-input');
+      if (fileInput) {
+        fileInput.addEventListener('change', handleFileAttachment);
+      }
+      
+      // Add event listener for attach button
+      const attachBtn = document.getElementById('choptso-attach-btn');
+      if (attachBtn) {
+        attachBtn.addEventListener('click', () => {
+          document.getElementById('choptso-file-input').click();
+        });
+      }
+      
+      // Add event listener for send button
+      const sendBtn = document.getElementById('choptso-send-btn');
+      if (sendBtn) {
+        sendBtn.addEventListener('click', sendChoptsoMessage);
+      }
+      
+      // Add event listener for voice note button
+      const voiceBtn = document.getElementById('admin-voice-note-btn');
+      if (voiceBtn) {
+        voiceBtn.addEventListener('click', toggleAdminVoiceRecording);
+      }
     }
     
     // Load contacts list
@@ -4335,7 +4380,10 @@
             contactItem.href = '#';
             contactItem.className = 'list-group-item list-group-item-action';
             contactItem.setAttribute('data-user-id', userId);
-            contactItem.onclick = (e) => { loadConversation(userId, e); return false; };
+            contactItem.addEventListener('click', (e) => { 
+              e.preventDefault();
+              loadConversation(userId, e); 
+            });
             contactItem.innerHTML = `
               <div class="d-flex align-items-center">
                 <div class="choptso-avatar" style="width: 30px; height: 30px; font-size: 0.8rem;">
@@ -4571,10 +4619,10 @@
           if (!typingIndicator) return;
           
           if (data && data.typing && data.userId !== window.firebaseAuth.currentUser?.uid) {
-            // Check if timestamp exists and is recent (within 5 seconds)
+            // Check if timestamp exists and is recent (within TYPING_INDICATOR_TIMEOUT_MS)
             if (data.timestamp && data.timestamp.seconds) {
               const timeElapsed = Date.now() - data.timestamp.seconds * 1000;
-              if (timeElapsed < 5000) {
+              if (timeElapsed < TYPING_INDICATOR_TIMEOUT_MS) {
                 typingIndicator.innerHTML = '<small class="text-muted ms-2"><i>typing...</i></small>';
               } else {
                 typingIndicator.innerHTML = '';
@@ -4865,8 +4913,14 @@
       
       if (isSent) {
         // Add read receipt checkmarks
-        const isRead = message.readBy && message.readBy.length > 1; // More than just sender
-        const isDelivered = message.delivered || message.readBy;
+        const currentUser = window.firebaseAuth.currentUser;
+        const readBy = message.readBy || [];
+        const senderInReadBy = currentUser && readBy.includes(currentUser.uid);
+        
+        // isRead: someone other than sender has read it
+        const isRead = readBy.length > (senderInReadBy ? 1 : 0);
+        const isDelivered = message.delivered || readBy.length > 0;
+        
         metaHTML += `<span class="choptso-read-receipt">
           ${isRead ? '<i class="fas fa-check-double text-info"></i>' : 
             isDelivered ? '<i class="fas fa-check-double"></i>' : 
@@ -5023,7 +5077,7 @@
           inputArea.parentElement.insertBefore(replyIndicator, inputArea);
         }
         
-        const textPreview = escapeHtml(replyingToMessage.text.substring(0, 50));
+        const textPreview = escapeHtml((replyingToMessage.text || 'Attachment').substring(0, 50));
         const senderName = escapeHtml(replyingToMessage.senderName);
         
         replyIndicator.innerHTML = `
@@ -5253,7 +5307,7 @@
         oscillator.connect(gainNode);
         gainNode.connect(audioContext.destination);
         
-        oscillator.frequency.value = type === 'send' ? 800 : 600;
+        oscillator.frequency.value = type === 'send' ? SEND_SOUND_FREQUENCY : RECEIVE_SOUND_FREQUENCY;
         oscillator.type = 'sine';
         
         gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
