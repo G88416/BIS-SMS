@@ -4365,15 +4365,15 @@
     }
     
     // Load unread message count for a contact
-    async function loadUnreadCount(userId) {
+    async function loadUnreadCount(contactId) {
       try {
         const currentUser = window.firebaseAuth.currentUser;
         if (!currentUser) return;
         
         const messagesQuery = window.firebaseQuery(
           window.firebaseCollection(window.firebaseDb, 'choptsoMessages'),
-          window.firebaseWhere('conversationId', '==', userId),
-          window.firebaseWhere('senderId', '==', userId)
+          window.firebaseWhere('conversationId', '==', contactId),
+          window.firebaseWhere('senderId', '==', contactId)
         );
         
         const snapshot = await window.firebaseGetDocs(messagesQuery);
@@ -4386,7 +4386,7 @@
           }
         });
         
-        const badge = document.querySelector(`.choptso-unread-badge[data-user-id="${userId}"]`);
+        const badge = document.querySelector(`.choptso-unread-badge[data-user-id="${contactId}"]`);
         if (badge && unreadCount > 0) {
           badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
           badge.style.display = 'block';
@@ -4571,10 +4571,16 @@
           if (!typingIndicator) return;
           
           if (data && data.typing && data.userId !== window.firebaseAuth.currentUser?.uid) {
-            const timeElapsed = Date.now() - (data.timestamp?.seconds || 0) * 1000;
-            if (timeElapsed < 5000) {
-              typingIndicator.innerHTML = '<small class="text-muted ms-2"><i>typing...</i></small>';
+            // Check if timestamp exists and is recent (within 5 seconds)
+            if (data.timestamp && data.timestamp.seconds) {
+              const timeElapsed = Date.now() - data.timestamp.seconds * 1000;
+              if (timeElapsed < 5000) {
+                typingIndicator.innerHTML = '<small class="text-muted ms-2"><i>typing...</i></small>';
+              } else {
+                typingIndicator.innerHTML = '';
+              }
             } else {
+              // No timestamp - don't show typing indicator
               typingIndicator.innerHTML = '';
             }
           } else {
@@ -4657,14 +4663,18 @@
         const snapshot = await window.firebaseGetDocs(messagesQuery);
         const userId = currentUser.uid;
         
-        snapshot.forEach(async (doc) => {
+        // Use Promise.all to properly await all updates
+        const updatePromises = [];
+        snapshot.forEach((doc) => {
           const message = doc.data();
           if (!message.readBy || !message.readBy.includes(userId)) {
             const readBy = message.readBy || [];
             readBy.push(userId);
-            await window.firebaseUpdateDoc(doc.ref, { readBy });
+            updatePromises.push(window.firebaseUpdateDoc(doc.ref, { readBy }));
           }
         });
+        
+        await Promise.all(updatePromises);
       } catch (error) {
         console.error('Error marking messages as read:', error);
       }
@@ -4801,7 +4811,7 @@
       
       // Add reply indicator if this is a reply
       if (message.replyTo) {
-        messageHTML += `<div class="choptso-reply-indicator" onclick="scrollToMessage('${message.replyTo.messageId}')">
+        messageHTML += `<div class="choptso-reply-indicator" data-reply-to="${escapeHtml(message.replyTo.messageId)}">
           <div class="choptso-reply-sender">${escapeHtml(message.replyTo.senderName || 'Unknown')}</div>
           <div class="choptso-reply-text">${escapeHtml(message.replyTo.text ? message.replyTo.text.substring(0, 50) : 'Attachment')}</div>
         </div>`;
@@ -4871,13 +4881,32 @@
       // Add message actions menu (only for non-deleted messages)
       if (!message.deleted) {
         messageHTML += `<div class="choptso-message-actions">
-          <button class="btn btn-sm btn-link" onclick="showMessageMenu('${message.id}', event)" title="More options">
+          <button class="btn btn-sm btn-link choptso-menu-btn" data-message-id="${escapeHtml(message.id)}" title="More options">
             <i class="fas fa-chevron-down"></i>
           </button>
         </div>`;
       }
       
       content.innerHTML = messageHTML;
+      
+      // Add event listeners for reply indicators
+      const replyIndicator = content.querySelector('.choptso-reply-indicator');
+      if (replyIndicator) {
+        replyIndicator.addEventListener('click', function() {
+          const replyToId = this.getAttribute('data-reply-to');
+          if (replyToId) scrollToMessage(replyToId);
+        });
+      }
+      
+      // Add event listener for message menu
+      const menuBtn = content.querySelector('.choptso-menu-btn');
+      if (menuBtn) {
+        menuBtn.addEventListener('click', function(event) {
+          event.stopPropagation();
+          const messageId = this.getAttribute('data-message-id');
+          if (messageId) showMessageMenu(messageId, event);
+        });
+      }
       
       messageDiv.appendChild(avatar);
       messageDiv.appendChild(content);
@@ -4905,20 +4934,44 @@
       
       const menu = document.createElement('div');
       menu.className = 'choptso-message-menu';
-      menu.innerHTML = `
-        <button class="dropdown-item" onclick="replyToMessage('${messageId}'); this.parentElement.remove();">
-          <i class="fas fa-reply"></i> Reply
-        </button>
-        <button class="dropdown-item" onclick="addReactionToMessage('${messageId}'); this.parentElement.remove();">
-          <i class="fas fa-smile"></i> React
-        </button>
-        <button class="dropdown-item" onclick="forwardMessage('${messageId}'); this.parentElement.remove();">
-          <i class="fas fa-share"></i> Forward
-        </button>
-        <button class="dropdown-item text-danger" onclick="deleteMessage('${messageId}'); this.parentElement.remove();">
-          <i class="fas fa-trash"></i> Delete
-        </button>
-      `;
+      
+      // Create menu items with event listeners instead of inline onclick
+      const replyBtn = document.createElement('button');
+      replyBtn.className = 'dropdown-item';
+      replyBtn.innerHTML = '<i class="fas fa-reply"></i> Reply';
+      replyBtn.addEventListener('click', () => {
+        replyToMessage(messageId);
+        menu.remove();
+      });
+      
+      const reactBtn = document.createElement('button');
+      reactBtn.className = 'dropdown-item';
+      reactBtn.innerHTML = '<i class="fas fa-smile"></i> React';
+      reactBtn.addEventListener('click', () => {
+        addReactionToMessage(messageId);
+        menu.remove();
+      });
+      
+      const forwardBtn = document.createElement('button');
+      forwardBtn.className = 'dropdown-item';
+      forwardBtn.innerHTML = '<i class="fas fa-share"></i> Forward';
+      forwardBtn.addEventListener('click', () => {
+        forwardMessage(messageId);
+        menu.remove();
+      });
+      
+      const deleteBtn = document.createElement('button');
+      deleteBtn.className = 'dropdown-item text-danger';
+      deleteBtn.innerHTML = '<i class="fas fa-trash"></i> Delete';
+      deleteBtn.addEventListener('click', () => {
+        deleteMessage(messageId);
+        menu.remove();
+      });
+      
+      menu.appendChild(replyBtn);
+      menu.appendChild(reactBtn);
+      menu.appendChild(forwardBtn);
+      menu.appendChild(deleteBtn);
       
       const button = event.target.closest('button');
       button.parentElement.appendChild(menu);
@@ -4939,44 +4992,59 @@
       }, 100);
     }
     
-    // Reply to message
+    // Reply to message - improved to get data from Firestore
     let replyingToMessage = null;
-    function replyToMessage(messageId) {
-      const messageElement = document.querySelector(`[data-message-id="${messageId}"]`);
-      if (!messageElement) return;
-      
-      const messageText = messageElement.querySelector('.choptso-message-text')?.textContent || 'Attachment';
-      const senderName = messageElement.querySelector('.choptso-message-meta')?.textContent?.split('•')[0]?.trim() || 'Unknown';
-      
-      replyingToMessage = {
-        messageId: messageId,
-        text: messageText,
-        senderName: senderName
-      };
-      
-      // Show reply indicator above input
-      const inputArea = document.getElementById('choptso-message-input').parentElement;
-      let replyIndicator = document.getElementById('choptso-reply-indicator');
-      if (!replyIndicator) {
-        replyIndicator = document.createElement('div');
-        replyIndicator.id = 'choptso-reply-indicator';
-        replyIndicator.className = 'choptso-replying-to';
-        inputArea.parentElement.insertBefore(replyIndicator, inputArea);
-      }
-      
-      replyIndicator.innerHTML = `
-        <div class="d-flex align-items-center p-2 border-start border-success border-3 bg-light">
-          <div class="flex-grow-1">
-            <small class="text-success"><i class="fas fa-reply"></i> Replying to ${escapeHtml(senderName)}</small>
-            <div class="text-muted small">${escapeHtml(messageText.substring(0, 50))}</div>
+    async function replyToMessage(messageId) {
+      try {
+        // Get message data from Firestore instead of parsing DOM
+        const messageRef = window.firebaseDoc(window.firebaseDb, 'choptsoMessages', messageId);
+        const messageSnap = await window.firebaseGetDoc(messageRef);
+        
+        if (!messageSnap.exists()) {
+          console.error('Message not found');
+          return;
+        }
+        
+        const messageData = messageSnap.data();
+        
+        replyingToMessage = {
+          messageId: messageId,
+          text: messageData.text || 'Attachment',
+          senderName: messageData.senderName || 'Unknown'
+        };
+        
+        // Show reply indicator above input
+        const inputArea = document.getElementById('choptso-message-input').parentElement;
+        let replyIndicator = document.getElementById('choptso-reply-indicator');
+        if (!replyIndicator) {
+          replyIndicator = document.createElement('div');
+          replyIndicator.id = 'choptso-reply-indicator';
+          replyIndicator.className = 'choptso-replying-to';
+          inputArea.parentElement.insertBefore(replyIndicator, inputArea);
+        }
+        
+        const textPreview = escapeHtml(replyingToMessage.text.substring(0, 50));
+        const senderName = escapeHtml(replyingToMessage.senderName);
+        
+        replyIndicator.innerHTML = `
+          <div class="d-flex align-items-center p-2 border-start border-success border-3 bg-light">
+            <div class="flex-grow-1">
+              <small class="text-success"><i class="fas fa-reply"></i> Replying to ${senderName}</small>
+              <div class="text-muted small">${textPreview}</div>
+            </div>
+            <button class="btn btn-sm btn-link text-secondary" id="cancel-reply-btn">
+              <i class="fas fa-times"></i>
+            </button>
           </div>
-          <button class="btn btn-sm btn-link text-secondary" onclick="cancelReply()">
-            <i class="fas fa-times"></i>
-          </button>
-        </div>
-      `;
-      
-      document.getElementById('choptso-message-input').focus();
+        `;
+        
+        // Add event listener for cancel button
+        document.getElementById('cancel-reply-btn').addEventListener('click', cancelReply);
+        
+        document.getElementById('choptso-message-input').focus();
+      } catch (error) {
+        console.error('Error loading message for reply:', error);
+      }
     }
     
     // Cancel reply
@@ -4989,25 +5057,46 @@
     // Add reaction to message
     function addReactionToMessage(messageId) {
       const emojis = ['👍', '❤️', '😂', '😮', '😢', '🙏'];
-      const emojiList = emojis.map(e => `<button class="btn btn-sm btn-light m-1" onclick="saveReaction('${messageId}', '${e}')">${e}</button>`).join('');
       
-      const modal = `
-        <div class="modal fade show d-block" id="reactionModal" tabindex="-1" style="background: rgba(0,0,0,0.5);">
-          <div class="modal-dialog modal-sm modal-dialog-centered">
-            <div class="modal-content">
-              <div class="modal-header">
-                <h6 class="modal-title">React to message</h6>
-                <button type="button" class="btn-close" onclick="document.getElementById('reactionModal').remove()"></button>
-              </div>
-              <div class="modal-body text-center">
-                ${emojiList}
-              </div>
-            </div>
-          </div>
-        </div>
-      `;
+      const modal = document.createElement('div');
+      modal.className = 'modal fade show d-block';
+      modal.id = 'reactionModal';
+      modal.style.background = 'rgba(0,0,0,0.5)';
+      modal.setAttribute('tabindex', '-1');
       
-      document.body.insertAdjacentHTML('beforeend', modal);
+      const modalDialog = document.createElement('div');
+      modalDialog.className = 'modal-dialog modal-sm modal-dialog-centered';
+      
+      const modalContent = document.createElement('div');
+      modalContent.className = 'modal-content';
+      
+      const modalHeader = document.createElement('div');
+      modalHeader.className = 'modal-header';
+      modalHeader.innerHTML = '<h6 class="modal-title">React to message</h6>';
+      
+      const closeBtn = document.createElement('button');
+      closeBtn.type = 'button';
+      closeBtn.className = 'btn-close';
+      closeBtn.addEventListener('click', () => modal.remove());
+      modalHeader.appendChild(closeBtn);
+      
+      const modalBody = document.createElement('div');
+      modalBody.className = 'modal-body text-center';
+      
+      emojis.forEach(emoji => {
+        const btn = document.createElement('button');
+        btn.className = 'btn btn-sm btn-light m-1';
+        btn.textContent = emoji;
+        btn.addEventListener('click', () => saveReaction(messageId, emoji));
+        modalBody.appendChild(btn);
+      });
+      
+      modalContent.appendChild(modalHeader);
+      modalContent.appendChild(modalBody);
+      modalDialog.appendChild(modalContent);
+      modal.appendChild(modalDialog);
+      
+      document.body.appendChild(modal);
     }
     
     // Save reaction to message
@@ -5048,12 +5137,31 @@
       // Implementation would show contact picker
     }
     
-    // Delete message
+    // Delete message - improved with ownership check
     async function deleteMessage(messageId) {
       if (!confirm('Delete this message for everyone?')) return;
       
       try {
+        const currentUser = window.firebaseAuth.currentUser;
+        if (!currentUser) return;
+        
         const messageRef = window.firebaseDoc(window.firebaseDb, 'choptsoMessages', messageId);
+        const messageSnap = await window.firebaseGetDoc(messageRef);
+        
+        if (!messageSnap.exists()) {
+          alert('Message not found');
+          return;
+        }
+        
+        const message = messageSnap.data();
+        
+        // Check if user is the sender or is admin
+        const userType = sessionStorage.getItem('userType');
+        if (message.senderId !== currentUser.uid && userType !== 'admin') {
+          alert('You can only delete your own messages');
+          return;
+        }
+        
         await window.firebaseUpdateDoc(messageRef, {
           text: 'This message was deleted',
           deleted: true,
