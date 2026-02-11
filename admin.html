@@ -5008,7 +5008,7 @@
       // Validate required fields
       if (name && subject) {
         // Generate numeric ID for display purposes
-        const numericId = teachers.length ? Math.max(...teachers.map(t => t.numericId || t.id)) + 1 : 1;
+        const numericId = teachers.length ? Math.max(...teachers.map(t => t.numericId || 0)) + 1 : 1;
         
         const newTeacher = { 
           numericId: numericId,
@@ -5077,12 +5077,13 @@
       const grade = document.getElementById('class-grade').value.trim();
       const capacity = parseInt(document.getElementById('class-capacity').value) || 30;
       const schedule = document.getElementById('class-schedule').value.trim();
-      const teacherId = parseInt(document.getElementById('class-teacher').value) || null;
+      const teacherIdValue = document.getElementById('class-teacher').value;
+      const teacherId = teacherIdValue ? teacherIdValue : null;
       
       // Validate required fields
       if (name && grade) {
         // Generate numeric ID for display purposes
-        const numericId = classes.length ? Math.max(...classes.map(c => c.numericId || c.id)) + 1 : 1;
+        const numericId = classes.length ? Math.max(...classes.map(c => c.numericId || 0)) + 1 : 1;
         
         const newClass = { 
           numericId: numericId,
