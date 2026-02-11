@@ -149,6 +149,8 @@
     window.firebaseAddDoc = addDoc;
     window.firebaseSetDoc = setDoc;
     window.firebaseDoc = doc;
+    window.firebaseGetDoc = getDoc;
+    window.firebaseUpdateDoc = updateDoc;
     window.firebaseQuery = query;
     window.firebaseOrderBy = orderBy;
     window.firebaseOnSnapshot = onSnapshot;
@@ -4813,12 +4815,14 @@
             Your browser does not support audio playback.
           </audio>
         </div>`;
+      } else if (message.deleted) {
+        messageHTML += `<div class="choptso-message-text text-muted fst-italic"><i class="fas fa-ban me-2"></i>${escapeHtml(message.text || 'This message was deleted')}</div>`;
       } else {
         messageHTML += `<div class="choptso-message-text">${escapeHtml(message.text || '')}</div>`;
       }
       
-      // Add attachment if present
-      if (message.attachmentURL) {
+      // Add attachment if present and not deleted
+      if (message.attachmentURL && !message.deleted) {
         const fileType = message.attachmentType || 'file';
         if (fileType.startsWith('image/')) {
           messageHTML += `<div class="choptso-attachment">
@@ -4864,12 +4868,14 @@
       
       messageHTML += metaHTML + reactionsHTML;
       
-      // Add message actions menu
-      messageHTML += `<div class="choptso-message-actions">
-        <button class="btn btn-sm btn-link" onclick="showMessageMenu('${message.id}', event)" title="More options">
-          <i class="fas fa-chevron-down"></i>
-        </button>
-      </div>`;
+      // Add message actions menu (only for non-deleted messages)
+      if (!message.deleted) {
+        messageHTML += `<div class="choptso-message-actions">
+          <button class="btn btn-sm btn-link" onclick="showMessageMenu('${message.id}', event)" title="More options">
+            <i class="fas fa-chevron-down"></i>
+          </button>
+        </div>`;
+      }
       
       content.innerHTML = messageHTML;
       
