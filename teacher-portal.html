@@ -1,0 +1,1151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Advanced Teacher Portal - BIS-SMS</title>
+  
+  <!-- Firebase SDK -->
+  <script type="module">
+    // Import the functions you need from the SDKs you need
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-analytics.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+    import { getFirestore, doc, getDoc, collection, query, where, getDocs, orderBy, limit, addDoc, updateDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+    import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-storage.js";
+    
+    // Your web app's Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyBsUOSF5eENLCq_4fH9lLx_WIVUa6QDeBE",
+      authDomain: "bis-management-system-d77f4.firebaseapp.com",
+      projectId: "bis-management-system-d77f4",
+      storageBucket: "bis-management-system-d77f4.firebasestorage.app",
+      messagingSenderId: "724917351295",
+      appId: "1:724917351295:web:d87a2da7979babda08e04a",
+      measurementId: "G-NQKBSS701Y"
+    };
+    
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    
+    // Initialize Analytics with error handling
+    let analytics = null;
+    try {
+      analytics = getAnalytics(app);
+    } catch (error) {
+      console.warn('Firebase Analytics could not be initialized:', error);
+    }
+    
+    // Initialize Auth
+    const auth = getAuth(app);
+    
+    // Initialize Firestore
+    const db = getFirestore(app);
+    
+    // Initialize Storage
+    const storage = getStorage(app);
+    
+    // Protect page: redirect to login if not authenticated
+    document.addEventListener('DOMContentLoaded', function() {
+      onAuthStateChanged(auth, async (user) => {
+        if (!user) {
+          window.location.href = 'index.html';
+          return;
+        }
+        
+        // Verify user is a teacher
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        if (!userDoc.exists() || userDoc.data().role !== 'teacher') {
+          alert('Access denied. This portal is for teachers only.');
+          await signOut(auth);
+          window.location.href = 'index.html';
+          return;
+        }
+        
+        // Load teacher data
+        loadTeacherData(user.uid);
+      });
+    });
+    
+    // Global logout function
+    window.logout = async function() {
+      try {
+        await signOut(auth);
+        sessionStorage.clear();
+        localStorage.removeItem('lastActiveTab');
+        window.location.href = 'index.html';
+      } catch (error) {
+        console.error('Logout error:', error);
+        alert('Error logging out. Please try again.');
+      }
+    };
+    
+    // Make available globally
+    window.firebaseApp = app;
+    window.firebaseAnalytics = analytics;
+    window.firebaseAuth = auth;
+    window.firebaseDb = db;
+    window.firebaseStorage = storage;
+    
+    // Make Firestore functions available globally
+    window.addDoc = addDoc;
+    window.updateDoc = updateDoc;
+    window.deleteDoc = deleteDoc;
+    window.serverTimestamp = serverTimestamp;
+    window.uploadBytes = uploadBytes;
+    window.getDownloadURL = getDownloadURL;
+    window.ref = ref;
+  </script>
+  
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  
+  <!-- Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  
+  <!-- Chart.js for analytics -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <style>
+    :root {
+      --primary: #28a745;
+      --secondary: #6c757d;
+      --light-bg: #f8f9fa;
+    }
+    
+    body {
+      background-color: var(--light-bg);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    .card {
+      border: none;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+      margin-bottom: 1.5rem;
+    }
+    
+    .stat-icon {
+      font-size: 2.2rem;
+      opacity: 0.9;
+    }
+    
+    .badge-status {
+      padding: 0.5rem 1rem;
+      font-size: 0.875rem;
+    }
+    
+    .nav-tabs .nav-link {
+      color: var(--secondary);
+    }
+    
+    .nav-tabs .nav-link.active {
+      color: var(--primary);
+      border-bottom: 2px solid var(--primary);
+    }
+    
+    .student-card {
+      transition: transform 0.2s;
+      cursor: pointer;
+    }
+    
+    .student-card:hover {
+      transform: translateY(-5px);
+    }
+    
+    .grade-input {
+      width: 80px;
+    }
+    
+    @media print {
+      .no-print {
+        display: none !important;
+      }
+      body {
+        background: white;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container-fluid py-4">
+  <!-- Welcome Header -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-body d-flex justify-content-between align-items-center">
+          <div>
+            <h4 class="mb-1">Welcome, <span id="teacher-name">Teacher</span></h4>
+            <p class="text-muted mb-0">Subject: <span id="teacher-subject">-</span> • Teacher ID: <span id="teacher-id">-</span> • Bophelong Independent School</p>
+          </div>
+          <button class="btn btn-outline-danger btn-sm no-print" onclick="logout()">
+            <i class="fas fa-sign-out-alt"></i> Logout
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Stats Row -->
+  <div class="row g-4 mb-4">
+    <div class="col-md-3 col-sm-6">
+      <div class="card text-center h-100">
+        <div class="card-body">
+          <i class="fas fa-users text-primary stat-icon"></i>
+          <h6 class="mt-2">My Students</h6>
+          <h4 id="teacher-total-students">--</h4>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+      <div class="card text-center h-100">
+        <div class="card-body">
+          <i class="fas fa-book text-success stat-icon"></i>
+          <h6 class="mt-2">Classes</h6>
+          <h4 id="teacher-total-classes">--</h4>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+      <div class="card text-center h-100">
+        <div class="card-body">
+          <i class="fas fa-clipboard-list text-info stat-icon"></i>
+          <h6 class="mt-2">Pending Assignments</h6>
+          <h4 id="teacher-pending-assignments">--</h4>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+      <div class="card text-center h-100">
+        <div class="card-body">
+          <i class="fas fa-chart-line text-warning stat-icon"></i>
+          <h6 class="mt-2">Avg Class Performance</h6>
+          <h4 id="teacher-avg-performance">--%</h4>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content Tabs -->
+  <div class="card">
+    <div class="card-header">
+      <ul class="nav nav-tabs card-header-tabs" id="teacherPortalTabs" role="tablist">
+        <li class="nav-item">
+          <a class="nav-link active" id="dashboard-tab" data-bs-toggle="tab" href="#dashboard" role="tab">
+            <i class="fas fa-home"></i> Dashboard
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" id="students-tab" data-bs-toggle="tab" href="#students" role="tab">
+            <i class="fas fa-user-graduate"></i> My Students
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" id="grades-tab" data-bs-toggle="tab" href="#grades" role="tab">
+            <i class="fas fa-star"></i> Grade Management
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" id="attendance-tab" data-bs-toggle="tab" href="#attendance" role="tab">
+            <i class="fas fa-calendar-check"></i> Attendance
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" id="assignments-tab" data-bs-toggle="tab" href="#assignments" role="tab">
+            <i class="fas fa-tasks"></i> Assignments
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" id="schedule-tab" data-bs-toggle="tab" href="#schedule" role="tab">
+            <i class="fas fa-clock"></i> Schedule
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" id="analytics-tab" data-bs-toggle="tab" href="#analytics" role="tab">
+            <i class="fas fa-chart-bar"></i> Analytics
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" id="resources-tab" data-bs-toggle="tab" href="#resources" role="tab">
+            <i class="fas fa-folder-open"></i> Resources
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" id="messages-tab" data-bs-toggle="tab" href="#messages" role="tab">
+            <i class="fas fa-envelope"></i> Messages
+          </a>
+        </li>
+      </ul>
+    </div>
+    <div class="card-body">
+      <div class="tab-content" id="teacherPortalTabContent">
+        
+        <!-- Dashboard Tab -->
+        <div class="tab-pane fade show active" id="dashboard" role="tabpanel">
+          <h5 class="mb-3">Today's Overview</h5>
+          <div class="row">
+            <div class="col-md-6">
+              <div class="card">
+                <div class="card-body">
+                  <h6 class="card-title">Today's Classes</h6>
+                  <div id="today-classes-list">
+                    <p class="text-muted">Loading today's schedule...</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="card">
+                <div class="card-body">
+                  <h6 class="card-title">Recent Activities</h6>
+                  <div id="recent-activities-list">
+                    <p class="text-muted">Loading recent activities...</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <h5 class="mt-4 mb-3">Upcoming Tasks</h5>
+          <div id="upcoming-tasks-list">
+            <div class="alert alert-info">
+              <i class="fas fa-info-circle"></i> Loading upcoming tasks...
+            </div>
+          </div>
+        </div>
+        
+        <!-- Students Tab -->
+        <div class="tab-pane fade" id="students" role="tabpanel">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="mb-0">Student List</h5>
+            <div>
+              <select class="form-select d-inline-block w-auto me-2" id="class-filter" onchange="filterStudentsByClass()">
+                <option value="">All Classes</option>
+              </select>
+              <input type="text" class="form-control d-inline-block w-auto" id="student-search" placeholder="Search students..." onkeyup="searchStudents()">
+            </div>
+          </div>
+          <div class="row" id="students-list">
+            <div class="col-12">
+              <p class="text-muted">Loading students...</p>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Grades Tab -->
+        <div class="tab-pane fade" id="grades" role="tabpanel">
+          <h5 class="mb-3">Grade Entry & Management</h5>
+          <div class="row mb-3">
+            <div class="col-md-4">
+              <label class="form-label">Select Class</label>
+              <select class="form-select" id="grade-class-select" onchange="loadGradeSheet()">
+                <option value="">Select a class</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Assessment Type</label>
+              <select class="form-select" id="assessment-type">
+                <option value="test">Test</option>
+                <option value="exam">Exam</option>
+                <option value="assignment">Assignment</option>
+                <option value="project">Project</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Assessment Name</label>
+              <input type="text" class="form-control" id="assessment-name" placeholder="e.g., Midterm Exam">
+            </div>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-striped" id="grade-sheet-table">
+              <thead>
+                <tr>
+                  <th>Student Name</th>
+                  <th>Student ID</th>
+                  <th>Score (%)</th>
+                  <th>Grade</th>
+                  <th>Comments</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td colspan="5" class="text-center text-muted">Select a class to enter grades</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <button class="btn btn-success mt-3" onclick="saveGrades()" id="save-grades-btn" disabled>
+            <i class="fas fa-save"></i> Save Grades
+          </button>
+        </div>
+        
+        <!-- Attendance Tab -->
+        <div class="tab-pane fade" id="attendance" role="tabpanel">
+          <h5 class="mb-3">Mark Attendance</h5>
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label class="form-label">Select Class</label>
+              <select class="form-select" id="attendance-class-select" onchange="loadAttendanceSheet()">
+                <option value="">Select a class</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Date</label>
+              <input type="date" class="form-control" id="attendance-date" onchange="loadAttendanceSheet()">
+            </div>
+          </div>
+          <div class="mb-3">
+            <button class="btn btn-sm btn-success me-2" onclick="bulkMarkAttendance('present')">
+              <i class="fas fa-check"></i> Mark All Present
+            </button>
+            <button class="btn btn-sm btn-warning me-2" onclick="bulkMarkAttendance('absent')">
+              <i class="fas fa-times"></i> Mark All Absent
+            </button>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-striped" id="attendance-sheet-table">
+              <thead>
+                <tr>
+                  <th>Student Name</th>
+                  <th>Student ID</th>
+                  <th>Status</th>
+                  <th>Notes</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td colspan="4" class="text-center text-muted">Select a class to mark attendance</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <button class="btn btn-primary mt-3" onclick="saveAttendance()" id="save-attendance-btn" disabled>
+            <i class="fas fa-save"></i> Save Attendance
+          </button>
+        </div>
+        
+        <!-- Assignments Tab -->
+        <div class="tab-pane fade" id="assignments" role="tabpanel">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="mb-0">Assignment Management</h5>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createAssignmentModal">
+              <i class="fas fa-plus"></i> Create New Assignment
+            </button>
+          </div>
+          <div id="assignments-list">
+            <p class="text-muted">Loading assignments...</p>
+          </div>
+        </div>
+        
+        <!-- Schedule Tab -->
+        <div class="tab-pane fade" id="schedule" role="tabpanel">
+          <h5 class="mb-3">My Teaching Schedule</h5>
+          <div class="table-responsive">
+            <table class="table table-bordered" id="teacher-schedule-table">
+              <thead>
+                <tr>
+                  <th>Time</th>
+                  <th>Monday</th>
+                  <th>Tuesday</th>
+                  <th>Wednesday</th>
+                  <th>Thursday</th>
+                  <th>Friday</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td colspan="6" class="text-center text-muted">Loading your schedule...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        
+        <!-- Analytics Tab -->
+        <div class="tab-pane fade" id="analytics" role="tabpanel">
+          <h5 class="mb-3">Class Performance Analytics</h5>
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label class="form-label">Select Class</label>
+              <select class="form-select" id="analytics-class-select" onchange="loadAnalytics()">
+                <option value="">Select a class</option>
+              </select>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-6">
+              <div class="card">
+                <div class="card-body">
+                  <h6 class="card-title">Grade Distribution</h6>
+                  <canvas id="grade-distribution-chart"></canvas>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="card">
+                <div class="card-body">
+                  <h6 class="card-title">Attendance Trends</h6>
+                  <canvas id="attendance-trends-chart"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="row mt-3">
+            <div class="col-md-6">
+              <div class="card">
+                <div class="card-body">
+                  <h6 class="card-title">Top Performers</h6>
+                  <div id="top-performers-list">
+                    <p class="text-muted">Select a class to view analytics</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="card">
+                <div class="card-body">
+                  <h6 class="card-title">Students Needing Support</h6>
+                  <div id="needs-support-list">
+                    <p class="text-muted">Select a class to view analytics</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Resources Tab -->
+        <div class="tab-pane fade" id="resources" role="tabpanel">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="mb-0">Teaching Resources</h5>
+            <button class="btn btn-primary" onclick="document.getElementById('resource-upload').click()">
+              <i class="fas fa-upload"></i> Upload Resource
+            </button>
+            <input type="file" id="resource-upload" style="display: none;" onchange="uploadResource()" multiple>
+          </div>
+          <div class="row" id="resources-list">
+            <div class="col-12">
+              <p class="text-muted">Loading resources...</p>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Messages Tab -->
+        <div class="tab-pane fade" id="messages" role="tabpanel">
+          <h5 class="mb-3">Communication Center</h5>
+          <div class="row">
+            <div class="col-md-4">
+              <div class="card">
+                <div class="card-body">
+                  <h6 class="card-title">Send Message</h6>
+                  <form onsubmit="sendMessage(event)">
+                    <div class="mb-3">
+                      <label class="form-label">To</label>
+                      <select class="form-select" id="message-recipient-type">
+                        <option value="student">Student</option>
+                        <option value="parent">Parent</option>
+                        <option value="class">Entire Class</option>
+                      </select>
+                    </div>
+                    <div class="mb-3">
+                      <label class="form-label">Recipient</label>
+                      <select class="form-select" id="message-recipient">
+                        <option value="">Select recipient</option>
+                      </select>
+                    </div>
+                    <div class="mb-3">
+                      <label class="form-label">Subject</label>
+                      <input type="text" class="form-control" id="message-subject" required>
+                    </div>
+                    <div class="mb-3">
+                      <label class="form-label">Message</label>
+                      <textarea class="form-control" id="message-body" rows="4" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">
+                      <i class="fas fa-paper-plane"></i> Send Message
+                    </button>
+                  </form>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-8">
+              <div class="card">
+                <div class="card-body">
+                  <h6 class="card-title">Recent Messages</h6>
+                  <div id="messages-list">
+                    <p class="text-muted">Loading messages...</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Create Assignment Modal -->
+<div class="modal fade" id="createAssignmentModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Create New Assignment</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="create-assignment-form" onsubmit="createAssignment(event)">
+          <div class="mb-3">
+            <label class="form-label">Class</label>
+            <select class="form-select" id="assignment-class" required>
+              <option value="">Select class</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Assignment Title</label>
+            <input type="text" class="form-control" id="assignment-title" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Description</label>
+            <textarea class="form-control" id="assignment-description" rows="3" required></textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Due Date</label>
+            <input type="date" class="form-control" id="assignment-due-date" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Points</label>
+            <input type="number" class="form-control" id="assignment-points" min="0" value="100">
+          </div>
+          <button type="submit" class="btn btn-primary">Create Assignment</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Bootstrap 5 JS Bundle -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+// Teacher Portal JavaScript
+let teacherData = null;
+let teacherClasses = [];
+let students = [];
+let assignments = [];
+
+async function loadTeacherData(uid) {
+  try {
+    const db = window.firebaseDb;
+    const userDoc = await getDoc(doc(db, 'users', uid));
+    
+    if (!userDoc.exists()) {
+      alert('Teacher data not found.');
+      return;
+    }
+    
+    teacherData = userDoc.data();
+    updateDashboard();
+    loadClasses();
+    
+  } catch (error) {
+    console.error('Error loading teacher data:', error);
+    alert('Error loading teacher data. Please try again.');
+  }
+}
+
+function updateDashboard() {
+  if (!teacherData) return;
+  
+  // Update header
+  document.getElementById('teacher-name').textContent = teacherData.name || 'Teacher';
+  document.getElementById('teacher-subject').textContent = teacherData.subject || '-';
+  document.getElementById('teacher-id').textContent = teacherData.teacherId || '-';
+  
+  // Update stats (using sample data for now)
+  document.getElementById('teacher-total-students').textContent = '45';
+  document.getElementById('teacher-total-classes').textContent = '3';
+  document.getElementById('teacher-pending-assignments').textContent = '12';
+  document.getElementById('teacher-avg-performance').textContent = '76%';
+  
+  loadTodayClasses();
+  loadRecentActivities();
+  loadUpcomingTasks();
+  loadSchedule();
+  loadResources();
+  loadMessages();
+}
+
+function loadClasses() {
+  // Sample classes data
+  teacherClasses = [
+    { id: 1, name: 'Grade 10 Mathematics', students: 15 },
+    { id: 2, name: 'Grade 11 Mathematics', students: 18 },
+    { id: 3, name: 'Grade 12 Mathematics', students: 12 }
+  ];
+  
+  // Populate class dropdowns
+  const classSelects = ['class-filter', 'grade-class-select', 'attendance-class-select', 'analytics-class-select', 'assignment-class'];
+  classSelects.forEach(selectId => {
+    const select = document.getElementById(selectId);
+    if (select) {
+      teacherClasses.forEach(cls => {
+        const option = document.createElement('option');
+        option.value = cls.id;
+        option.textContent = cls.name;
+        select.appendChild(option);
+      });
+    }
+  });
+  
+  loadStudents();
+  loadAssignmentsList();
+}
+
+function loadStudents() {
+  // Sample students data
+  students = [
+    { id: 1, name: 'John Doe', grade: '10', classId: 1 },
+    { id: 2, name: 'Jane Smith', grade: '10', classId: 1 },
+    { id: 3, name: 'Mike Johnson', grade: '11', classId: 2 },
+    { id: 4, name: 'Sarah Williams', grade: '11', classId: 2 },
+    { id: 5, name: 'David Brown', grade: '12', classId: 3 }
+  ];
+  
+  displayStudents();
+}
+
+function displayStudents() {
+  const studentsHtml = students.map(student => `
+    <div class="col-md-4 mb-3">
+      <div class="card student-card" onclick="viewStudentDetails(${student.id})">
+        <div class="card-body">
+          <h6 class="card-title">${student.name}</h6>
+          <p class="card-text text-muted">Grade ${student.grade} • ID: ${student.id}</p>
+          <div class="d-flex justify-content-between">
+            <span class="badge bg-success">Active</span>
+            <small class="text-muted">View Details →</small>
+          </div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+  
+  document.getElementById('students-list').innerHTML = studentsHtml;
+}
+
+function loadTodayClasses() {
+  const classesHtml = `
+    <div class="list-group">
+      <div class="list-group-item">
+        <div class="d-flex w-100 justify-content-between">
+          <h6 class="mb-1">Grade 10 Mathematics</h6>
+          <small>08:00 - 09:00</small>
+        </div>
+        <p class="mb-1 text-muted">Room 201 • 15 students</p>
+      </div>
+      <div class="list-group-item">
+        <div class="d-flex w-100 justify-content-between">
+          <h6 class="mb-1">Grade 11 Mathematics</h6>
+          <small>10:00 - 11:00</small>
+        </div>
+        <p class="mb-1 text-muted">Room 201 • 18 students</p>
+      </div>
+      <div class="list-group-item">
+        <div class="d-flex w-100 justify-content-between">
+          <h6 class="mb-1">Grade 12 Mathematics</h6>
+          <small>13:00 - 14:00</small>
+        </div>
+        <p class="mb-1 text-muted">Room 201 • 12 students</p>
+      </div>
+    </div>
+  `;
+  document.getElementById('today-classes-list').innerHTML = classesHtml;
+}
+
+function loadRecentActivities() {
+  const activitiesHtml = `
+    <div class="list-group">
+      <div class="list-group-item">
+        <small class="text-muted">2 hours ago</small>
+        <p class="mb-0">Graded 15 assignments for Grade 10</p>
+      </div>
+      <div class="list-group-item">
+        <small class="text-muted">Yesterday</small>
+        <p class="mb-0">Marked attendance for all classes</p>
+      </div>
+      <div class="list-group-item">
+        <small class="text-muted">2 days ago</small>
+        <p class="mb-0">Created new assignment: Chapter 5 Exercises</p>
+      </div>
+    </div>
+  `;
+  document.getElementById('recent-activities-list').innerHTML = activitiesHtml;
+}
+
+function loadUpcomingTasks() {
+  const tasksHtml = `
+    <div class="list-group">
+      <div class="list-group-item">
+        <div class="d-flex w-100 justify-content-between">
+          <h6 class="mb-1"><span class="badge bg-danger me-2">Due Soon</span> Grade Submissions</h6>
+          <small class="text-danger">In 2 days</small>
+        </div>
+        <p class="mb-1">Submit term grades for Grade 10 Mathematics</p>
+      </div>
+      <div class="list-group-item">
+        <div class="d-flex w-100 justify-content-between">
+          <h6 class="mb-1"><span class="badge bg-warning me-2">Upcoming</span> Parent-Teacher Meeting</h6>
+          <small>Next Monday</small>
+        </div>
+        <p class="mb-1">Scheduled meetings with 5 parents</p>
+      </div>
+      <div class="list-group-item">
+        <div class="d-flex w-100 justify-content-between">
+          <h6 class="mb-1"><span class="badge bg-info me-2">Reminder</span> Department Meeting</h6>
+          <small>Next Wednesday</small>
+        </div>
+        <p class="mb-1">Monthly mathematics department meeting at 3:00 PM</p>
+      </div>
+    </div>
+  `;
+  document.getElementById('upcoming-tasks-list').innerHTML = tasksHtml;
+}
+
+function loadSchedule() {
+  const scheduleHtml = `
+    <tr>
+      <td>08:00 - 09:00</td>
+      <td>Grade 10 Math<br><small class="text-muted">Room 201</small></td>
+      <td>-</td>
+      <td>Grade 11 Math<br><small class="text-muted">Room 201</small></td>
+      <td>-</td>
+      <td>Grade 10 Math<br><small class="text-muted">Room 201</small></td>
+    </tr>
+    <tr>
+      <td>09:00 - 10:00</td>
+      <td>-</td>
+      <td>Grade 12 Math<br><small class="text-muted">Room 201</small></td>
+      <td>-</td>
+      <td>Grade 10 Math<br><small class="text-muted">Room 201</small></td>
+      <td>-</td>
+    </tr>
+    <tr>
+      <td>10:00 - 11:00</td>
+      <td>Grade 11 Math<br><small class="text-muted">Room 201</small></td>
+      <td>Grade 10 Math<br><small class="text-muted">Room 201</small></td>
+      <td>Grade 12 Math<br><small class="text-muted">Room 201</small></td>
+      <td>Grade 11 Math<br><small class="text-muted">Room 201</small></td>
+      <td>Grade 12 Math<br><small class="text-muted">Room 201</small></td>
+    </tr>
+    <tr>
+      <td>11:00 - 12:00</td>
+      <td colspan="5" class="text-center bg-light">Preparation / Office Hours</td>
+    </tr>
+    <tr>
+      <td>13:00 - 14:00</td>
+      <td>Grade 12 Math<br><small class="text-muted">Room 201</small></td>
+      <td>Grade 11 Math<br><small class="text-muted">Room 201</small></td>
+      <td>-</td>
+      <td>Grade 12 Math<br><small class="text-muted">Room 201</small></td>
+      <td>Study Hall<br><small class="text-muted">Room 201</small></td>
+    </tr>
+  `;
+  document.getElementById('teacher-schedule-table').querySelector('tbody').innerHTML = scheduleHtml;
+}
+
+function loadGradeSheet() {
+  const classId = document.getElementById('grade-class-select').value;
+  if (!classId) return;
+  
+  const classStudents = students.filter(s => s.classId == classId);
+  const tbody = document.getElementById('grade-sheet-table').querySelector('tbody');
+  
+  tbody.innerHTML = classStudents.map(student => `
+    <tr>
+      <td>${student.name}</td>
+      <td>${student.id}</td>
+      <td><input type="number" class="form-control grade-input" min="0" max="100" id="score-${student.id}"></td>
+      <td><span id="grade-${student.id}">-</span></td>
+      <td><input type="text" class="form-control" id="comment-${student.id}" placeholder="Optional comment"></td>
+    </tr>
+  `).join('');
+  
+  document.getElementById('save-grades-btn').disabled = false;
+}
+
+function loadAttendanceSheet() {
+  const classId = document.getElementById('attendance-class-select').value;
+  const date = document.getElementById('attendance-date').value;
+  
+  if (!classId || !date) return;
+  
+  const classStudents = students.filter(s => s.classId == classId);
+  const tbody = document.getElementById('attendance-sheet-table').querySelector('tbody');
+  
+  tbody.innerHTML = classStudents.map(student => `
+    <tr>
+      <td>${student.name}</td>
+      <td>${student.id}</td>
+      <td>
+        <select class="form-select" id="attendance-${student.id}">
+          <option value="present">Present</option>
+          <option value="absent">Absent</option>
+          <option value="late">Late</option>
+          <option value="excused">Excused</option>
+        </select>
+      </td>
+      <td><input type="text" class="form-control" id="notes-${student.id}" placeholder="Optional notes"></td>
+    </tr>
+  `).join('');
+  
+  document.getElementById('save-attendance-btn').disabled = false;
+}
+
+function bulkMarkAttendance(status) {
+  const tbody = document.getElementById('attendance-sheet-table').querySelector('tbody');
+  const selects = tbody.querySelectorAll('select[id^="attendance-"]');
+  selects.forEach(select => {
+    select.value = status;
+  });
+}
+
+function saveGrades() {
+  alert('Grades saved successfully! (This is a demo)');
+}
+
+function saveAttendance() {
+  alert('Attendance saved successfully! (This is a demo)');
+}
+
+function loadAssignmentsList() {
+  assignments = [
+    { id: 1, title: 'Chapter 5 Exercises', class: 'Grade 10 Math', dueDate: '2026-02-15', submissions: 12, total: 15 },
+    { id: 2, title: 'Trigonometry Project', class: 'Grade 11 Math', dueDate: '2026-02-20', submissions: 8, total: 18 },
+    { id: 3, title: 'Calculus Problem Set', class: 'Grade 12 Math', dueDate: '2026-02-18', submissions: 10, total: 12 }
+  ];
+  
+  const assignmentsHtml = `
+    <div class="table-responsive">
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th>Assignment</th>
+            <th>Class</th>
+            <th>Due Date</th>
+            <th>Submissions</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${assignments.map(a => `
+            <tr>
+              <td>${a.title}</td>
+              <td>${a.class}</td>
+              <td>${a.dueDate}</td>
+              <td><span class="badge bg-info">${a.submissions}/${a.total}</span></td>
+              <td>
+                <button class="btn btn-sm btn-primary" onclick="viewSubmissions(${a.id})">View</button>
+                <button class="btn btn-sm btn-secondary" onclick="editAssignment(${a.id})">Edit</button>
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+  document.getElementById('assignments-list').innerHTML = assignmentsHtml;
+}
+
+function createAssignment(event) {
+  event.preventDefault();
+  alert('Assignment created successfully! (This is a demo)');
+  document.getElementById('create-assignment-form').reset();
+  bootstrap.Modal.getInstance(document.getElementById('createAssignmentModal')).hide();
+  loadAssignmentsList();
+}
+
+function loadAnalytics() {
+  const classId = document.getElementById('analytics-class-select').value;
+  if (!classId) return;
+  
+  // Grade Distribution Chart
+  const gradeCtx = document.getElementById('grade-distribution-chart').getContext('2d');
+  new Chart(gradeCtx, {
+    type: 'bar',
+    data: {
+      labels: ['A (80-100)', 'B (70-79)', 'C (60-69)', 'D (50-59)', 'F (0-49)'],
+      datasets: [{
+        label: 'Number of Students',
+        data: [5, 8, 10, 5, 2],
+        backgroundColor: ['#28a745', '#17a2b8', '#ffc107', '#fd7e14', '#dc3545']
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true
+    }
+  });
+  
+  // Attendance Trends Chart
+  const attendanceCtx = document.getElementById('attendance-trends-chart').getContext('2d');
+  new Chart(attendanceCtx, {
+    type: 'line',
+    data: {
+      labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+      datasets: [{
+        label: 'Attendance Rate (%)',
+        data: [92, 95, 90, 93],
+        borderColor: '#28a745',
+        backgroundColor: 'rgba(40, 167, 69, 0.1)',
+        fill: true
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      scales: {
+        y: {
+          beginAtZero: false,
+          min: 80,
+          max: 100
+        }
+      }
+    }
+  });
+  
+  // Top Performers
+  document.getElementById('top-performers-list').innerHTML = `
+    <div class="list-group">
+      <div class="list-group-item">1. Jane Smith - 95%</div>
+      <div class="list-group-item">2. John Doe - 92%</div>
+      <div class="list-group-item">3. Mike Johnson - 88%</div>
+    </div>
+  `;
+  
+  // Needs Support
+  document.getElementById('needs-support-list').innerHTML = `
+    <div class="list-group">
+      <div class="list-group-item">David Brown - 55% <small class="text-muted">(Low test scores)</small></div>
+      <div class="list-group-item">Sarah Williams - 62% <small class="text-muted">(Missing assignments)</small></div>
+    </div>
+  `;
+}
+
+function loadResources() {
+  const resourcesHtml = `
+    <div class="col-md-4 mb-3">
+      <div class="card">
+        <div class="card-body">
+          <i class="fas fa-file-pdf fa-3x text-danger mb-2"></i>
+          <h6>Chapter 5 Notes.pdf</h6>
+          <small class="text-muted">Uploaded 3 days ago</small>
+          <div class="mt-2">
+            <button class="btn btn-sm btn-primary">Download</button>
+            <button class="btn btn-sm btn-danger">Delete</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4 mb-3">
+      <div class="card">
+        <div class="card-body">
+          <i class="fas fa-file-powerpoint fa-3x text-warning mb-2"></i>
+          <h6>Trigonometry Slides.pptx</h6>
+          <small class="text-muted">Uploaded 1 week ago</small>
+          <div class="mt-2">
+            <button class="btn btn-sm btn-primary">Download</button>
+            <button class="btn btn-sm btn-danger">Delete</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4 mb-3">
+      <div class="card">
+        <div class="card-body">
+          <i class="fas fa-file-word fa-3x text-info mb-2"></i>
+          <h6>Practice Problems.docx</h6>
+          <small class="text-muted">Uploaded 2 weeks ago</small>
+          <div class="mt-2">
+            <button class="btn btn-sm btn-primary">Download</button>
+            <button class="btn btn-sm btn-danger">Delete</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  document.getElementById('resources-list').innerHTML = resourcesHtml;
+}
+
+function loadMessages() {
+  const messagesHtml = `
+    <div class="list-group">
+      <div class="list-group-item">
+        <div class="d-flex w-100 justify-content-between">
+          <h6 class="mb-1">From: Parent of John Doe</h6>
+          <small>2 hours ago</small>
+        </div>
+        <p class="mb-1">Subject: Question about homework</p>
+        <small class="text-muted">Could you please clarify the instructions for...</small>
+      </div>
+      <div class="list-group-item">
+        <div class="d-flex w-100 justify-content-between">
+          <h6 class="mb-1">From: Jane Smith (Student)</h6>
+          <small>Yesterday</small>
+        </div>
+        <p class="mb-1">Subject: Absent from class</p>
+        <small class="text-muted">I was unable to attend class today due to...</small>
+      </div>
+    </div>
+  `;
+  document.getElementById('messages-list').innerHTML = messagesHtml;
+}
+
+function filterStudentsByClass() {
+  displayStudents();
+}
+
+function searchStudents() {
+  displayStudents();
+}
+
+function viewStudentDetails(studentId) {
+  alert(`View details for student ${studentId} (This is a demo)`);
+}
+
+function viewSubmissions(assignmentId) {
+  alert(`View submissions for assignment ${assignmentId} (This is a demo)`);
+}
+
+function editAssignment(assignmentId) {
+  alert(`Edit assignment ${assignmentId} (This is a demo)`);
+}
+
+function uploadResource() {
+  alert('Resource uploaded successfully! (This is a demo)');
+  document.getElementById('resource-upload').value = '';
+  loadResources();
+}
+
+function sendMessage(event) {
+  event.preventDefault();
+  alert('Message sent successfully! (This is a demo)');
+  document.getElementById('message-subject').value = '';
+  document.getElementById('message-body').value = '';
+}
+
+// Set default attendance date to today
+document.addEventListener('DOMContentLoaded', function() {
+  const today = new Date().toISOString().split('T')[0];
+  const dateInput = document.getElementById('attendance-date');
+  if (dateInput) {
+    dateInput.value = today;
+  }
+});
+</script>
+
+</body>
+</html>

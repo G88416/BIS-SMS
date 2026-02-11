@@ -4,11 +4,12 @@ A comprehensive web-based School Management System for managing students, teache
 
 ## Features
 
-- **Multi-User Portal System**
-  - Administrator Dashboard
-  - Teacher Portal
-  - Student Portal
-  - Parent/Guardian Portal
+- **Multi-User Portal System** ✨ NEW: Dedicated Portal Pages
+  - Administrator Dashboard (`admin.html`)
+  - **Student Portal** (`student-portal.html`) - View grades, assignments, attendance, schedule
+  - **Teacher Portal** (`teacher-portal.html`) - Manage grades, attendance, assignments, analytics
+  - **Parent Portal** (`parent-portal.html`) - Monitor child's performance, fees, communication
+  - Full Firebase authentication with role-based access control
 
 - **Student Management**: Add, edit, search, and export student records
 - **Teacher Management**: Manage teaching staff and class assignments
@@ -40,10 +41,55 @@ Then access the application at: http://localhost:3000
 For detailed login information for all user types, see **[LOGIN_CREDENTIALS.md](LOGIN_CREDENTIALS.md)**
 
 **Quick Reference:**
-- **Administrator**: Username `admin`, Password `admin123`
-- **Teacher**: Any Teacher ID (e.g., `1` or `2`), Password `teacher123`
-- **Student**: Any Student ID (e.g., `1` or `2`), Password `student123`
-- **Parent**: Child ID `C331`, Access Code `parent321`
+- **Administrator**: Username `admin`, Password `admin123` → Redirects to `admin.html`
+- **Teacher**: Email & Password with role `teacher` → Redirects to `teacher-portal.html`
+- **Student**: Email & Password with role `student` → Redirects to `student-portal.html`
+- **Parent**: Email & Password with role `parent` → Redirects to `parent-portal.html`
+
+📖 **Portal Documentation**: See [PORTALS_DOCUMENTATION.md](PORTALS_DOCUMENTATION.md) for comprehensive portal features and usage guide.
+
+## Portal System
+
+### NEW: Dedicated Portal Pages 🎉
+
+The system now includes three powerful, dedicated portals:
+
+#### Student Portal (`student-portal.html`)
+- Dashboard with quick stats (grades, attendance, assignments)
+- Grade viewing with progress tracking
+- Assignment submission and tracking
+- Attendance history with filtering
+- Class schedule and timetable
+- School announcements
+- Profile management
+
+#### Teacher Portal (`teacher-portal.html`)
+- Comprehensive dashboard with class overview
+- Student management and search
+- Grade entry with bulk operations
+- Attendance marking interface
+- Assignment creation and tracking
+- Performance analytics with charts
+- Resource management (upload materials)
+- Communication center
+
+#### Parent Portal (`parent-portal.html`)
+- Child's performance overview
+- Academic grades and progress
+- Attendance monitoring
+- Homework tracking
+- Fee management and payment history
+- Class schedule viewing
+- Teacher communication
+
+**Features:**
+- Firebase Authentication with role-based access
+- Session management with 30-minute auto-timeout
+- Responsive design for all devices
+- Print-friendly layouts
+- Sample data included for testing
+
+See [PORTALS_DOCUMENTATION.md](PORTALS_DOCUMENTATION.md) for detailed documentation.
 
 ## System Requirements
 
@@ -60,9 +106,14 @@ For detailed login information for all user types, see **[LOGIN_CREDENTIALS.md](
 
 ```
 BIS-SMS/
-├── index.html              # Main application (login page + dashboard with all portals)
-├── README.md               # This file
-└── LOGIN_CREDENTIALS.md    # Detailed login credentials documentation
+├── index.html                  # Login page with Firebase authentication
+├── admin.html                  # Administrator dashboard
+├── student-portal.html         # Dedicated student portal ⭐ NEW
+├── teacher-portal.html         # Dedicated teacher portal ⭐ NEW
+├── parent-portal.html          # Dedicated parent portal ⭐ NEW
+├── README.md                   # This file
+├── PORTALS_DOCUMENTATION.md    # Comprehensive portal documentation ⭐ NEW
+└── LOGIN_CREDENTIALS.md        # Detailed login credentials documentation
 ```
 
 ## Technologies Used
