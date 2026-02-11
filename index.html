@@ -145,7 +145,14 @@
                                     
                                     // Redirect based on role
                                     let redirectUrl = 'admin.html';
-                                    if (storedRole !== 'admin') {
+                                    if (storedRole === 'student') {
+                                        redirectUrl = 'student-portal.html';
+                                    } else if (storedRole === 'teacher') {
+                                        redirectUrl = 'teacher-portal.html';
+                                    } else if (storedRole === 'parent') {
+                                        redirectUrl = 'parent-portal.html';
+                                    } else if (storedRole !== 'admin') {
+                                        // Fallback for other roles to use hash routing in admin.html
                                         redirectUrl += `#${storedRole}-portal?id=${userId}`;
                                     }
                                     window.location.href = redirectUrl;
@@ -163,7 +170,14 @@
                                     }
                                     
                                     let redirectUrl = 'admin.html';
-                                    if (userType !== 'admin') {
+                                    if (userType === 'student') {
+                                        redirectUrl = 'student-portal.html';
+                                    } else if (userType === 'teacher') {
+                                        redirectUrl = 'teacher-portal.html';
+                                    } else if (userType === 'parent') {
+                                        redirectUrl = 'parent-portal.html';
+                                    } else if (userType !== 'admin') {
+                                        // Fallback for other roles to use hash routing in admin.html
                                         redirectUrl += `#${userType}-portal?id=${user.uid}`;
                                     }
                                     window.location.href = redirectUrl;
