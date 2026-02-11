@@ -929,7 +929,7 @@
               </div>
               <div class="card-footer">
                 <div class="input-group">
-                  <input type="text" class="form-control" id="choptso-message-input" placeholder="Type your message..." onkeypress="if(event.key==='Enter') sendChoptsoMessage()">
+                  <input type="text" class="form-control" id="choptso-message-input" placeholder="Type your message..." onkeypress="if(event.key==='Enter') sendChoptsoMessage()" oninput="updateTypingStatus(true)">
                   <input type="file" id="choptso-file-input" style="display: none;" onchange="handleFileAttachment()" accept="image/*,.pdf,.doc,.docx,.txt">
                   <button class="btn btn-outline-secondary" type="button" onclick="document.getElementById('choptso-file-input').click()" title="Attach file">
                     <i class="fas fa-paperclip"></i>
@@ -1054,10 +1054,153 @@
           margin-top: 5px;
         }
         
+        /* WhatsApp-style enhancements */
+        .choptso-read-receipt {
+          margin-left: 5px;
+          font-size: 0.85rem;
+        }
+        
+        .choptso-reply-indicator {
+          background: rgba(0, 0, 0, 0.05);
+          border-left: 3px solid #28a745;
+          padding: 8px 10px;
+          margin-bottom: 8px;
+          border-radius: 5px;
+          cursor: pointer;
+          transition: background 0.2s;
+        }
+        
+        .choptso-reply-indicator:hover {
+          background: rgba(0, 0, 0, 0.08);
+        }
+        
+        .choptso-reply-sender {
+          font-weight: 600;
+          color: #28a745;
+          font-size: 0.85rem;
+          margin-bottom: 2px;
+        }
+        
+        .choptso-reply-text {
+          font-size: 0.85rem;
+          color: #6c757d;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        
+        .choptso-reactions {
+          margin-top: 5px;
+          display: flex;
+          gap: 5px;
+          flex-wrap: wrap;
+        }
+        
+        .choptso-reaction-badge {
+          background: rgba(0, 0, 0, 0.1);
+          padding: 2px 8px;
+          border-radius: 12px;
+          font-size: 0.85rem;
+          display: inline-flex;
+          align-items: center;
+          gap: 3px;
+          cursor: pointer;
+          transition: transform 0.2s;
+        }
+        
+        .choptso-reaction-badge:hover {
+          transform: scale(1.1);
+        }
+        
+        .choptso-message.sent .choptso-reaction-badge {
+          background: rgba(255, 255, 255, 0.3);
+        }
+        
+        .choptso-message-actions {
+          position: absolute;
+          top: 5px;
+          right: 5px;
+          opacity: 0;
+          transition: opacity 0.2s;
+        }
+        
+        .choptso-message-content:hover .choptso-message-actions {
+          opacity: 1;
+        }
+        
+        .choptso-message-menu {
+          position: absolute;
+          background: white;
+          border: 1px solid #dee2e6;
+          border-radius: 8px;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+          min-width: 150px;
+          z-index: 1000;
+        }
+        
+        .choptso-message-menu .dropdown-item {
+          padding: 8px 15px;
+          cursor: pointer;
+          border: none;
+          background: none;
+          width: 100%;
+          text-align: left;
+          transition: background 0.2s;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+        
+        .choptso-message-menu .dropdown-item:hover {
+          background: #f8f9fa;
+        }
+        
+        .choptso-message-menu .dropdown-item:first-child {
+          border-radius: 8px 8px 0 0;
+        }
+        
+        .choptso-message-menu .dropdown-item:last-child {
+          border-radius: 0 0 8px 8px;
+        }
+        
+        .choptso-message-highlight {
+          animation: highlight-pulse 2s;
+        }
+        
+        @keyframes highlight-pulse {
+          0%, 100% { background: transparent; }
+          50% { background: rgba(40, 167, 69, 0.2); }
+        }
+        
+        .choptso-replying-to {
+          margin-bottom: 10px;
+        }
+        
+        .choptso-message-content {
+          position: relative;
+        }
+        
+        .choptso-message-text {
+          word-wrap: break-word;
+        }
+        
+        .choptso-unread-badge {
+          position: absolute;
+          top: 5px;
+          right: 10px;
+          background: #28a745;
+          color: white;
+          border-radius: 10px;
+          padding: 2px 7px;
+          font-size: 0.75rem;
+          font-weight: bold;
+        }
+        
         #choptso-contacts .list-group-item {
           cursor: pointer;
           border-left: 3px solid transparent;
           transition: all 0.2s;
+          position: relative;
         }
         
         #choptso-contacts .list-group-item:hover {
@@ -4189,25 +4332,98 @@
             const contactItem = document.createElement('a');
             contactItem.href = '#';
             contactItem.className = 'list-group-item list-group-item-action';
+            contactItem.setAttribute('data-user-id', userId);
             contactItem.onclick = (e) => { loadConversation(userId, e); return false; };
             contactItem.innerHTML = `
               <div class="d-flex align-items-center">
                 <div class="choptso-avatar" style="width: 30px; height: 30px; font-size: 0.8rem;">
                   ${user.displayName ? user.displayName.charAt(0).toUpperCase() : '?'}
                 </div>
-                <div class="ms-2">
+                <div class="ms-2 flex-grow-1">
                   <strong>${user.displayName || 'User'}</strong>
                   <br><small class="text-muted">${user.role || ''}</small>
                 </div>
+                <span class="choptso-unread-badge" data-user-id="${userId}" style="display: none;">0</span>
               </div>
             `;
             contactsList.appendChild(contactItem);
+            
+            // Load unread count for this contact
+            loadUnreadCount(userId);
           }
         });
+        
+        // Listen for new messages to update unread counts
+        listenForNewMessages();
       } catch (error) {
         console.error('Error loading contacts:', error);
         // Fallback to local users
         loadLocalContacts();
+      }
+    }
+    
+    // Load unread message count for a contact
+    async function loadUnreadCount(userId) {
+      try {
+        const currentUser = window.firebaseAuth.currentUser;
+        if (!currentUser) return;
+        
+        const messagesQuery = window.firebaseQuery(
+          window.firebaseCollection(window.firebaseDb, 'choptsoMessages'),
+          window.firebaseWhere('conversationId', '==', userId),
+          window.firebaseWhere('senderId', '==', userId)
+        );
+        
+        const snapshot = await window.firebaseGetDocs(messagesQuery);
+        let unreadCount = 0;
+        
+        snapshot.forEach((doc) => {
+          const message = doc.data();
+          if (!message.readBy || !message.readBy.includes(currentUser.uid)) {
+            unreadCount++;
+          }
+        });
+        
+        const badge = document.querySelector(`.choptso-unread-badge[data-user-id="${userId}"]`);
+        if (badge && unreadCount > 0) {
+          badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+          badge.style.display = 'block';
+        }
+      } catch (error) {
+        console.error('Error loading unread count:', error);
+      }
+    }
+    
+    // Listen for new messages globally
+    let newMessagesUnsubscribe = null;
+    function listenForNewMessages() {
+      if (newMessagesUnsubscribe) return; // Already listening
+      
+      try {
+        const currentUser = window.firebaseAuth.currentUser;
+        if (!currentUser) return;
+        
+        const messagesQuery = window.firebaseQuery(
+          window.firebaseCollection(window.firebaseDb, 'choptsoMessages'),
+          window.firebaseOrderBy('timestamp', 'desc')
+        );
+        
+        newMessagesUnsubscribe = window.firebaseOnSnapshot(messagesQuery, (snapshot) => {
+          snapshot.docChanges().forEach((change) => {
+            if (change.type === 'added') {
+              const message = change.doc.data();
+              // If message is not from current user and not in current conversation
+              if (message.senderId !== currentUser.uid && message.conversationId !== currentConversationId) {
+                // Update unread count
+                loadUnreadCount(message.senderId);
+                // Play notification sound
+                playMessageSound('receive');
+              }
+            }
+          });
+        });
+      } catch (error) {
+        console.error('Error listening for new messages:', error);
       }
     }
     
@@ -4302,7 +4518,8 @@
       if (conversationId === 'all') {
         titleElement.innerHTML = '<i class="fas fa-users"></i> All Users (Broadcast)';
       } else {
-        titleElement.innerHTML = `<i class="fas fa-comment-dots"></i> Chat`;
+        titleElement.innerHTML = `<i class="fas fa-comment-dots"></i> Chat <span id="choptso-typing-indicator"></span>`;
+        updateLastSeen(conversationId);
       }
       
       // Show call buttons for individual chats
@@ -4321,8 +4538,134 @@
         choptsoUnsubscribe();
       }
       
+      // Unsubscribe from previous typing listener
+      if (typingUnsubscribe) {
+        typingUnsubscribe();
+      }
+      
+      // Listen for typing indicators
+      listenForTyping(conversationId);
+      
       // Load messages from Firestore
       loadMessages(conversationId);
+      
+      // Mark messages as read
+      markMessagesAsRead(conversationId);
+    }
+    
+    // Typing indicator variables
+    let typingUnsubscribe = null;
+    let typingTimeout = null;
+    
+    // Listen for typing indicators
+    function listenForTyping(conversationId) {
+      if (conversationId === 'all') return;
+      
+      try {
+        const typingRef = window.firebaseDoc(window.firebaseDb, 'choptsoTyping', conversationId);
+        typingUnsubscribe = window.firebaseOnSnapshot(typingRef, (doc) => {
+          const data = doc.data();
+          const typingIndicator = document.getElementById('choptso-typing-indicator');
+          if (!typingIndicator) return;
+          
+          if (data && data.typing && data.userId !== window.firebaseAuth.currentUser?.uid) {
+            const timeElapsed = Date.now() - (data.timestamp?.seconds || 0) * 1000;
+            if (timeElapsed < 5000) {
+              typingIndicator.innerHTML = '<small class="text-muted ms-2"><i>typing...</i></small>';
+            } else {
+              typingIndicator.innerHTML = '';
+            }
+          } else {
+            typingIndicator.innerHTML = '';
+          }
+        });
+      } catch (error) {
+        console.error('Error listening for typing:', error);
+      }
+    }
+    
+    // Update typing status
+    async function updateTypingStatus(isTyping) {
+      if (!currentConversationId || currentConversationId === 'all') return;
+      
+      try {
+        const currentUser = window.firebaseAuth.currentUser;
+        if (!currentUser) return;
+        
+        const typingRef = window.firebaseDoc(window.firebaseDb, 'choptsoTyping', currentConversationId);
+        
+        if (isTyping) {
+          await window.firebaseSetDoc(typingRef, {
+            userId: currentUser.uid,
+            userName: currentUser.displayName || currentUser.email,
+            typing: true,
+            timestamp: window.firebaseTimestamp.now()
+          }, { merge: true });
+          
+          // Clear after 3 seconds
+          if (typingTimeout) clearTimeout(typingTimeout);
+          typingTimeout = setTimeout(() => updateTypingStatus(false), 3000);
+        } else {
+          await window.firebaseSetDoc(typingRef, {
+            userId: currentUser.uid,
+            typing: false
+          }, { merge: true });
+        }
+      } catch (error) {
+        console.error('Error updating typing status:', error);
+      }
+    }
+    
+    // Update last seen
+    async function updateLastSeen(userId) {
+      try {
+        const userStatusRef = window.firebaseDoc(window.firebaseDb, 'userStatus', userId);
+        const statusSnap = await window.firebaseGetDoc(userStatusRef);
+        
+        if (statusSnap.exists()) {
+          const status = statusSnap.data();
+          const titleElement = document.getElementById('choptso-chat-title');
+          const currentTitle = titleElement.textContent.split('\n')[0];
+          
+          if (status.status === 'online') {
+            titleElement.innerHTML = `${currentTitle} <span id="choptso-typing-indicator"></span><br><small class="text-success">online</small>`;
+          } else if (status.lastSeen) {
+            const lastSeenDate = new Date(status.lastSeen.seconds * 1000);
+            const lastSeenText = formatWhatsAppTimestamp({ seconds: status.lastSeen.seconds });
+            titleElement.innerHTML = `${currentTitle} <span id="choptso-typing-indicator"></span><br><small class="text-muted">last seen ${lastSeenText}</small>`;
+          }
+        }
+      } catch (error) {
+        console.error('Error updating last seen:', error);
+      }
+    }
+    
+    // Mark messages as read
+    async function markMessagesAsRead(conversationId) {
+      try {
+        const currentUser = window.firebaseAuth.currentUser;
+        if (!currentUser) return;
+        
+        const messagesQuery = window.firebaseQuery(
+          window.firebaseCollection(window.firebaseDb, 'choptsoMessages'),
+          window.firebaseWhere('conversationId', '==', conversationId),
+          window.firebaseWhere('senderId', '!=', currentUser.uid)
+        );
+        
+        const snapshot = await window.firebaseGetDocs(messagesQuery);
+        const userId = currentUser.uid;
+        
+        snapshot.forEach(async (doc) => {
+          const message = doc.data();
+          if (!message.readBy || !message.readBy.includes(userId)) {
+            const readBy = message.readBy || [];
+            readBy.push(userId);
+            await window.firebaseUpdateDoc(doc.ref, { readBy });
+          }
+        });
+      } catch (error) {
+        console.error('Error marking messages as read:', error);
+      }
     }
     
     // Load messages from Firestore with real-time updates
@@ -4357,7 +4700,11 @@
         }
         
         // Set up real-time listener
+        let isFirstLoad = true;
         choptsoUnsubscribe = window.firebaseOnSnapshot(messagesQuery, (snapshot) => {
+          const previousScrollHeight = messagesContainer.scrollHeight;
+          const isScrolledToBottom = messagesContainer.scrollHeight - messagesContainer.scrollTop <= messagesContainer.clientHeight + 50;
+          
           messagesContainer.innerHTML = '';
           
           if (snapshot.empty) {
@@ -4383,8 +4730,22 @@
             messagesContainer.appendChild(messageDiv);
           });
           
-          // Scroll to bottom
-          messagesContainer.scrollTop = messagesContainer.scrollHeight;
+          // Smart scrolling: scroll to bottom if was already at bottom or first load
+          if (isFirstLoad || isScrolledToBottom) {
+            setTimeout(() => {
+              messagesContainer.scrollTo({
+                top: messagesContainer.scrollHeight,
+                behavior: isFirstLoad ? 'auto' : 'smooth'
+              });
+            }, 100);
+            isFirstLoad = false;
+          }
+          
+          // Clear unread badge for this conversation
+          const badge = document.querySelector(`.choptso-unread-badge[data-user-id="${conversationId}"]`);
+          if (badge) {
+            badge.style.display = 'none';
+          }
         }, (error) => {
           console.error('Error loading messages:', error);
           messagesContainer.innerHTML = '<div class="text-center text-warning py-3">Error loading messages. Using local storage...</div>';
@@ -4397,10 +4758,35 @@
       }
     }
     
+    // Format timestamp in WhatsApp style
+    function formatWhatsAppTimestamp(timestamp) {
+      if (!timestamp) return '';
+      
+      const messageDate = timestamp.seconds ? new Date(timestamp.seconds * 1000) : new Date(timestamp);
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+      const messageDay = new Date(messageDate.getFullYear(), messageDate.getMonth(), messageDate.getDate());
+      
+      const timeString = messageDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+      
+      if (messageDay.getTime() === today.getTime()) {
+        return timeString; // Just show time for today
+      } else if (messageDay.getTime() === yesterday.getTime()) {
+        return `Yesterday ${timeString}`;
+      } else if (now - messageDate < 7 * 24 * 60 * 60 * 1000) {
+        return `${messageDate.toLocaleDateString('en-US', { weekday: 'short' })} ${timeString}`;
+      } else {
+        return `${messageDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} ${timeString}`;
+      }
+    }
+    
     // Create message HTML element
     function createMessageElement(message, isSent) {
       const messageDiv = document.createElement('div');
       messageDiv.className = `choptso-message ${isSent ? 'sent' : 'received'}`;
+      messageDiv.setAttribute('data-message-id', message.id);
       
       const avatar = document.createElement('div');
       avatar.className = 'choptso-avatar';
@@ -4411,6 +4797,14 @@
       
       let messageHTML = '';
       
+      // Add reply indicator if this is a reply
+      if (message.replyTo) {
+        messageHTML += `<div class="choptso-reply-indicator" onclick="scrollToMessage('${message.replyTo.messageId}')">
+          <div class="choptso-reply-sender">${escapeHtml(message.replyTo.senderName || 'Unknown')}</div>
+          <div class="choptso-reply-text">${escapeHtml(message.replyTo.text ? message.replyTo.text.substring(0, 50) : 'Attachment')}</div>
+        </div>`;
+      }
+      
       // Handle voice notes
       if (message.type === 'voice' && message.voiceUrl) {
         messageHTML += `<div class="mb-2">
@@ -4420,7 +4814,7 @@
           </audio>
         </div>`;
       } else {
-        messageHTML += `<div>${escapeHtml(message.text || '')}</div>`;
+        messageHTML += `<div class="choptso-message-text">${escapeHtml(message.text || '')}</div>`;
       }
       
       // Add attachment if present
@@ -4439,12 +4833,42 @@
         }
       }
       
-      const timestamp = message.timestamp ? 
-        new Date(message.timestamp.seconds * 1000).toLocaleString() : 
-        new Date().toLocaleString();
+      const timestamp = formatWhatsAppTimestamp(message.timestamp);
       
-      messageHTML += `<div class="choptso-message-meta">
-        ${isSent ? 'You' : message.senderName} • ${timestamp}
+      // Add reactions display
+      let reactionsHTML = '';
+      if (message.reactions && Object.keys(message.reactions).length > 0) {
+        reactionsHTML = '<div class="choptso-reactions">';
+        Object.entries(message.reactions).forEach(([emoji, users]) => {
+          reactionsHTML += `<span class="choptso-reaction-badge" title="${users.join(', ')}">${emoji} ${users.length}</span>`;
+        });
+        reactionsHTML += '</div>';
+      }
+      
+      // Build metadata with read receipts for sent messages
+      let metaHTML = `<div class="choptso-message-meta">
+        <span>${timestamp}</span>`;
+      
+      if (isSent) {
+        // Add read receipt checkmarks
+        const isRead = message.readBy && message.readBy.length > 1; // More than just sender
+        const isDelivered = message.delivered || message.readBy;
+        metaHTML += `<span class="choptso-read-receipt">
+          ${isRead ? '<i class="fas fa-check-double text-info"></i>' : 
+            isDelivered ? '<i class="fas fa-check-double"></i>' : 
+            '<i class="fas fa-check"></i>'}
+        </span>`;
+      }
+      
+      metaHTML += '</div>';
+      
+      messageHTML += metaHTML + reactionsHTML;
+      
+      // Add message actions menu
+      messageHTML += `<div class="choptso-message-actions">
+        <button class="btn btn-sm btn-link" onclick="showMessageMenu('${message.id}', event)" title="More options">
+          <i class="fas fa-chevron-down"></i>
+        </button>
       </div>`;
       
       content.innerHTML = messageHTML;
@@ -4453,6 +4877,186 @@
       messageDiv.appendChild(content);
       
       return messageDiv;
+    }
+    
+    // Scroll to a specific message
+    function scrollToMessage(messageId) {
+      const messageElement = document.querySelector(`[data-message-id="${messageId}"]`);
+      if (messageElement) {
+        messageElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        messageElement.classList.add('choptso-message-highlight');
+        setTimeout(() => messageElement.classList.remove('choptso-message-highlight'), 2000);
+      }
+    }
+    
+    // Show message context menu
+    function showMessageMenu(messageId, event) {
+      event.stopPropagation();
+      
+      // Remove any existing menu
+      const existingMenu = document.querySelector('.choptso-message-menu');
+      if (existingMenu) existingMenu.remove();
+      
+      const menu = document.createElement('div');
+      menu.className = 'choptso-message-menu';
+      menu.innerHTML = `
+        <button class="dropdown-item" onclick="replyToMessage('${messageId}'); this.parentElement.remove();">
+          <i class="fas fa-reply"></i> Reply
+        </button>
+        <button class="dropdown-item" onclick="addReactionToMessage('${messageId}'); this.parentElement.remove();">
+          <i class="fas fa-smile"></i> React
+        </button>
+        <button class="dropdown-item" onclick="forwardMessage('${messageId}'); this.parentElement.remove();">
+          <i class="fas fa-share"></i> Forward
+        </button>
+        <button class="dropdown-item text-danger" onclick="deleteMessage('${messageId}'); this.parentElement.remove();">
+          <i class="fas fa-trash"></i> Delete
+        </button>
+      `;
+      
+      const button = event.target.closest('button');
+      button.parentElement.appendChild(menu);
+      
+      // Position menu
+      const rect = button.getBoundingClientRect();
+      menu.style.position = 'absolute';
+      menu.style.top = '100%';
+      menu.style.right = '0';
+      menu.style.zIndex = '1000';
+      
+      // Close menu when clicking outside
+      setTimeout(() => {
+        document.addEventListener('click', function closeMenu() {
+          menu.remove();
+          document.removeEventListener('click', closeMenu);
+        });
+      }, 100);
+    }
+    
+    // Reply to message
+    let replyingToMessage = null;
+    function replyToMessage(messageId) {
+      const messageElement = document.querySelector(`[data-message-id="${messageId}"]`);
+      if (!messageElement) return;
+      
+      const messageText = messageElement.querySelector('.choptso-message-text')?.textContent || 'Attachment';
+      const senderName = messageElement.querySelector('.choptso-message-meta')?.textContent?.split('•')[0]?.trim() || 'Unknown';
+      
+      replyingToMessage = {
+        messageId: messageId,
+        text: messageText,
+        senderName: senderName
+      };
+      
+      // Show reply indicator above input
+      const inputArea = document.getElementById('choptso-message-input').parentElement;
+      let replyIndicator = document.getElementById('choptso-reply-indicator');
+      if (!replyIndicator) {
+        replyIndicator = document.createElement('div');
+        replyIndicator.id = 'choptso-reply-indicator';
+        replyIndicator.className = 'choptso-replying-to';
+        inputArea.parentElement.insertBefore(replyIndicator, inputArea);
+      }
+      
+      replyIndicator.innerHTML = `
+        <div class="d-flex align-items-center p-2 border-start border-success border-3 bg-light">
+          <div class="flex-grow-1">
+            <small class="text-success"><i class="fas fa-reply"></i> Replying to ${escapeHtml(senderName)}</small>
+            <div class="text-muted small">${escapeHtml(messageText.substring(0, 50))}</div>
+          </div>
+          <button class="btn btn-sm btn-link text-secondary" onclick="cancelReply()">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      `;
+      
+      document.getElementById('choptso-message-input').focus();
+    }
+    
+    // Cancel reply
+    function cancelReply() {
+      replyingToMessage = null;
+      const replyIndicator = document.getElementById('choptso-reply-indicator');
+      if (replyIndicator) replyIndicator.remove();
+    }
+    
+    // Add reaction to message
+    function addReactionToMessage(messageId) {
+      const emojis = ['👍', '❤️', '😂', '😮', '😢', '🙏'];
+      const emojiList = emojis.map(e => `<button class="btn btn-sm btn-light m-1" onclick="saveReaction('${messageId}', '${e}')">${e}</button>`).join('');
+      
+      const modal = `
+        <div class="modal fade show d-block" id="reactionModal" tabindex="-1" style="background: rgba(0,0,0,0.5);">
+          <div class="modal-dialog modal-sm modal-dialog-centered">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h6 class="modal-title">React to message</h6>
+                <button type="button" class="btn-close" onclick="document.getElementById('reactionModal').remove()"></button>
+              </div>
+              <div class="modal-body text-center">
+                ${emojiList}
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      document.body.insertAdjacentHTML('beforeend', modal);
+    }
+    
+    // Save reaction to message
+    async function saveReaction(messageId, emoji) {
+      try {
+        const currentUser = window.firebaseAuth.currentUser;
+        if (!currentUser) return;
+        
+        const messageRef = window.firebaseDoc(window.firebaseDb, 'choptsoMessages', messageId);
+        const messageSnap = await window.firebaseGetDoc(messageRef);
+        
+        if (messageSnap.exists()) {
+          const message = messageSnap.data();
+          const reactions = message.reactions || {};
+          
+          if (!reactions[emoji]) {
+            reactions[emoji] = [];
+          }
+          
+          const userName = currentUser.displayName || currentUser.email;
+          if (!reactions[emoji].includes(userName)) {
+            reactions[emoji].push(userName);
+          }
+          
+          await window.firebaseUpdateDoc(messageRef, { reactions });
+        }
+        
+        document.getElementById('reactionModal')?.remove();
+      } catch (error) {
+        console.error('Error adding reaction:', error);
+        alert('Failed to add reaction');
+      }
+    }
+    
+    // Forward message
+    function forwardMessage(messageId) {
+      alert('Forward functionality: Select a contact to forward this message to.');
+      // Implementation would show contact picker
+    }
+    
+    // Delete message
+    async function deleteMessage(messageId) {
+      if (!confirm('Delete this message for everyone?')) return;
+      
+      try {
+        const messageRef = window.firebaseDoc(window.firebaseDb, 'choptsoMessages', messageId);
+        await window.firebaseUpdateDoc(messageRef, {
+          text: 'This message was deleted',
+          deleted: true,
+          deletedAt: window.firebaseTimestamp.now()
+        });
+      } catch (error) {
+        console.error('Error deleting message:', error);
+        alert('Failed to delete message');
+      }
     }
     
     // Send message with Firestore
@@ -4483,8 +5087,15 @@
           timestamp: window.firebaseTimestamp.now(),
           broadcast: currentConversationId === 'all',
           conversationId: currentConversationId,
-          participants: currentConversationId === 'all' ? [] : [currentUser.uid, currentConversationId]
+          participants: currentConversationId === 'all' ? [] : [currentUser.uid, currentConversationId],
+          delivered: true,
+          readBy: [currentUser.uid]
         };
+        
+        // Add reply information if replying
+        if (replyingToMessage) {
+          message.replyTo = replyingToMessage;
+        }
         
         // Upload attachment if present
         if (choptsoAttachment) {
@@ -4500,16 +5111,44 @@
           message
         );
         
-        // Clear input and attachment
+        // Clear input, attachment, and reply indicator
         input.value = '';
         choptsoAttachment = null;
         document.getElementById('choptso-file-preview').innerHTML = '';
+        cancelReply();
+        
+        // Play send sound
+        playMessageSound('send');
         
       } catch (error) {
         console.error('Error sending message:', error);
         // Fallback to local storage
         saveMessageLocally(text);
         input.value = '';
+      }
+    }
+    
+    // Play message sound
+    function playMessageSound(type) {
+      // Simple beep using Web Audio API
+      try {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        oscillator.frequency.value = type === 'send' ? 800 : 600;
+        oscillator.type = 'sine';
+        
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+        
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.1);
+      } catch (error) {
+        // Silently fail if audio not supported
       }
     }
     
