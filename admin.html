@@ -10488,6 +10488,12 @@
             errorMessage += 'Invalid email format.';
           } else if (error.code === 'auth/weak-password') {
             errorMessage += 'Password is too weak.';
+          } else if (error.code === 'permission-denied' || error.message.includes('insufficient permissions')) {
+            errorMessage += 'Missing or insufficient permissions.\n\n';
+            errorMessage += '⚠️ SOLUTION: Firebase security rules need to be deployed.\n\n';
+            errorMessage += 'Run this command in your terminal:\n';
+            errorMessage += 'firebase deploy --only firestore:rules\n\n';
+            errorMessage += 'See DEPLOYMENT_GUIDE.md for details.';
           } else {
             errorMessage += error.message;
           }
