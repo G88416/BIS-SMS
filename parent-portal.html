@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Parent Portal - BIS-SMS</title>
+  
+  <!-- Firebase SDK -->
+  <script type="module">
+    // Import the functions you need from the SDKs you need
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-analytics.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+    import { getFirestore, doc, getDoc, collection, query, where, getDocs, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+    
+    // Your web app's Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyBsUOSF5eENLCq_4fH9lLx_WIVUa6QDeBE",
+      authDomain: "bis-management-system-d77f4.firebaseapp.com",
+      projectId: "bis-management-system-d77f4",
+      storageBucket: "bis-management-system-d77f4.firebasestorage.app",
+      messagingSenderId: "724917351295",
+      appId: "1:724917351295:web:d87a2da7979babda08e04a",
+      measurementId: "G-NQKBSS701Y"
+    };
+    
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    
+    // Initialize Analytics with error handling
+    let analytics = null;
+    try {
+      analytics = getAnalytics(app);
+    } catch (error) {
+      console.warn('Firebase Analytics could not be initialized:', error);
+    }
+    
+    // Initialize Auth
+    const auth = getAuth(app);
+    
+    // Initialize Firestore
+    const db = getFirestore(app);
+    
+    // Protect page: redirect to login if not authenticated
+    document.addEventListener('DOMContentLoaded', function() {
+      onAuthStateChanged(auth, async (user) => {
+        if (!user) {
+          window.location.href = 'index.html';
+          return;
+        }
+        
+        // Verify user is a parent
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        if (!userDoc.exists() || userDoc.data().role !== 'parent') {
+          alert('Access denied. This portal is for parents only.');
+          await signOut(auth);
+          window.location.href = 'index.html';
+          return;
+        }
+        
+        // Load parent/student data
+        loadParentData(user.uid);
+      });
+    });
+    
+    // Global logout function
+    window.logout = async function() {
+      try {
+        await signOut(auth);
+        sessionStorage.clear();
+        localStorage.removeItem('lastActiveTab');
+        window.location.href = 'index.html';
+      } catch (error) {
+        console.error('Logout error:', error);
+        alert('Error logging out. Please try again.');
+      }
+    };
+    
+    // Make available globally
+    window.firebaseApp = app;
+    window.firebaseAnalytics = analytics;
+    window.firebaseAuth = auth;
+    window.firebaseDb = db;
+  </script>
+  
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  
+  <!-- Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  
+  <style>
+    :root {
+      --primary: #28a745;
+      --secondary: #6c757d;
+      --light-bg: #f8f9fa;
+    }
+    
+    body {
+      background-color: var(--light-bg);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    .card {
+      border: none;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+      margin-bottom: 1.5rem;
+    }
+    
+    .stat-icon {
+      font-size: 2.2rem;
+      opacity: 0.9;
+    }
+    
+    .badge-status {
+      padding: 0.5rem 1rem;
+      font-size: 0.875rem;
+    }
+    
+    .nav-tabs .nav-link {
+      color: var(--secondary);
+    }
+    
+    .nav-tabs .nav-link.active {
+      color: var(--primary);
+      border-bottom: 2px solid var(--primary);
+    }
+    
+    @media print {
+      .no-print {
+        display: none !important;
+      }
+      body {
+        background: white;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container-fluid py-4">
+  <!-- Welcome Header -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-body d-flex justify-content-between align-items-center">
+          <div>
+            <h4 class="mb-1">Welcome, Parent of <span id="parent-student-name">Student</span></h4>
+            <p class="text-muted mb-0">Grade <span id="parent-student-grade">-</span> • Student ID: <span id="parent-student-id">-</span> • Bophelong Independent School</p>
+          </div>
+          <button class="btn btn-outline-danger btn-sm no-print" onclick="logout()">
+            <i class="fas fa-sign-out-alt"></i> Logout
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Stats Row -->
+  <div class="row g-4 mb-4">
+    <div class="col-md-3 col-sm-6">
+      <div class="card text-center h-100">
+        <div class="card-body">
+          <i class="fas fa-graduation-cap text-primary stat-icon"></i>
+          <h6 class="mt-2">Average Grade</h6>
+          <h4 id="parent-avg-grade">--%</h4>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+      <div class="card text-center h-100">
+        <div class="card-body">
+          <i class="fas fa-calendar-check text-success stat-icon"></i>
+          <h6 class="mt-2">Attendance Rate</h6>
+          <h4 id="parent-attendance-rate">--%</h4>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+      <div class="card text-center h-100">
+        <div class="card-body">
+          <i class="fas fa-tasks text-info stat-icon"></i>
+          <h6 class="mt-2">Pending Homework</h6>
+          <h4 id="parent-pending-homework">--</h4>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+      <div class="card text-center h-100">
+        <div class="card-body">
+          <i class="fas fa-file-invoice-dollar text-warning stat-icon"></i>
+          <h6 class="mt-2">Fee Balance (ZAR)</h6>
+          <h4 id="parent-fee-balance">R--</h4>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content Tabs -->
+  <div class="card">
+    <div class="card-header">
+      <ul class="nav nav-tabs card-header-tabs" id="parentPortalTabs" role="tablist">
+        <li class="nav-item">
+          <a class="nav-link active" id="dashboard-tab" data-bs-toggle="tab" href="#dashboard" role="tab">
+            <i class="fas fa-home"></i> Dashboard
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" id="grades-tab" data-bs-toggle="tab" href="#grades" role="tab">
+            <i class="fas fa-star"></i> Grades
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" id="attendance-tab" data-bs-toggle="tab" href="#attendance" role="tab">
+            <i class="fas fa-calendar-check"></i> Attendance
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" id="homework-tab" data-bs-toggle="tab" href="#homework" role="tab">
+            <i class="fas fa-clipboard-list"></i> Homework
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" id="fees-tab" data-bs-toggle="tab" href="#fees" role="tab">
+            <i class="fas fa-money-bill"></i> Fees
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" id="schedule-tab" data-bs-toggle="tab" href="#schedule" role="tab">
+            <i class="fas fa-clock"></i> Schedule
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" id="announcements-tab" data-bs-toggle="tab" href="#announcements" role="tab">
+            <i class="fas fa-bullhorn"></i> Announcements
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" id="communication-tab" data-bs-toggle="tab" href="#communication" role="tab">
+            <i class="fas fa-comments"></i> Messages
+          </a>
+        </li>
+      </ul>
+    </div>
+    <div class="card-body">
+      <div class="tab-content" id="parentPortalTabContent">
+        
+        <!-- Dashboard Tab -->
+        <div class="tab-pane fade show active" id="dashboard" role="tabpanel">
+          <h5 class="mb-3">Recent Updates</h5>
+          <div id="recent-updates-list">
+            <div class="alert alert-info">
+              <i class="fas fa-info-circle"></i> Loading recent updates...
+            </div>
+          </div>
+          
+          <h5 class="mt-4 mb-3">Upcoming Events</h5>
+          <div id="upcoming-events-list">
+            <div class="alert alert-info">
+              <i class="fas fa-calendar"></i> Loading upcoming events...
+            </div>
+          </div>
+        </div>
+        
+        <!-- Grades Tab -->
+        <div class="tab-pane fade" id="grades" role="tabpanel">
+          <h5 class="mb-3">Academic Performance</h5>
+          <div class="table-responsive">
+            <table class="table table-striped" id="grades-table">
+              <thead>
+                <tr>
+                  <th>Subject</th>
+                  <th>Term 1</th>
+                  <th>Term 2</th>
+                  <th>Term 3</th>
+                  <th>Average</th>
+                  <th>Teacher Comments</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td colspan="6" class="text-center text-muted">Loading grades...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <button class="btn btn-primary mt-3" onclick="downloadReportCard()">
+            <i class="fas fa-download"></i> Download Report Card
+          </button>
+        </div>
+        
+        <!-- Attendance Tab -->
+        <div class="tab-pane fade" id="attendance" role="tabpanel">
+          <h5 class="mb-3">Attendance History</h5>
+          <div class="row mb-3">
+            <div class="col-md-4">
+              <label class="form-label">From Date</label>
+              <input type="date" class="form-control" id="attendance-from" onchange="loadAttendanceHistory()">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">To Date</label>
+              <input type="date" class="form-control" id="attendance-to" onchange="loadAttendanceHistory()">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">&nbsp;</label>
+              <button class="btn btn-primary w-100" onclick="loadAttendanceHistory()">
+                <i class="fas fa-search"></i> View Records
+              </button>
+            </div>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-striped" id="attendance-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Day</th>
+                  <th>Status</th>
+                  <th>Notes</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td colspan="4" class="text-center text-muted">Select date range to view attendance records</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        
+        <!-- Homework Tab -->
+        <div class="tab-pane fade" id="homework" role="tabpanel">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="mb-0">Homework & Assignments</h5>
+            <select class="form-select w-auto" id="homework-filter" onchange="filterHomework()">
+              <option value="all">All</option>
+              <option value="pending">Pending</option>
+              <option value="submitted">Submitted</option>
+              <option value="overdue">Overdue</option>
+            </select>
+          </div>
+          <div id="homework-list">
+            <p class="text-muted">Loading homework...</p>
+          </div>
+        </div>
+        
+        <!-- Fees Tab -->
+        <div class="tab-pane fade" id="fees" role="tabpanel">
+          <h5 class="mb-3">Fee Management</h5>
+          <div class="row mb-4">
+            <div class="col-md-4">
+              <div class="card bg-primary text-white">
+                <div class="card-body">
+                  <h6>Total Fees</h6>
+                  <h4 id="total-fees">R0</h4>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="card bg-success text-white">
+                <div class="card-body">
+                  <h6>Paid</h6>
+                  <h4 id="paid-fees">R0</h4>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="card bg-warning text-white">
+                <div class="card-body">
+                  <h6>Balance</h6>
+                  <h4 id="balance-fees">R0</h4>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <h6 class="mb-3">Payment History</h6>
+          <div class="table-responsive">
+            <table class="table table-striped" id="payment-history-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Description</th>
+                  <th>Amount</th>
+                  <th>Method</th>
+                  <th>Receipt</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td colspan="5" class="text-center text-muted">Loading payment history...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <button class="btn btn-success mt-3" onclick="makePayment()">
+            <i class="fas fa-credit-card"></i> Make Payment
+          </button>
+        </div>
+        
+        <!-- Schedule Tab -->
+        <div class="tab-pane fade" id="schedule" role="tabpanel">
+          <h5 class="mb-3">Class Schedule</h5>
+          <div class="table-responsive">
+            <table class="table table-bordered" id="schedule-table">
+              <thead>
+                <tr>
+                  <th>Time</th>
+                  <th>Monday</th>
+                  <th>Tuesday</th>
+                  <th>Wednesday</th>
+                  <th>Thursday</th>
+                  <th>Friday</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td colspan="6" class="text-center text-muted">Loading schedule...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        
+        <!-- Announcements Tab -->
+        <div class="tab-pane fade" id="announcements" role="tabpanel">
+          <h5 class="mb-3">School Announcements</h5>
+          <div id="announcements-list">
+            <p class="text-muted">Loading announcements...</p>
+          </div>
+        </div>
+        
+        <!-- Communication Tab -->
+        <div class="tab-pane fade" id="communication" role="tabpanel">
+          <div class="row">
+            <div class="col-md-4">
+              <div class="card">
+                <div class="card-body">
+                  <h6 class="card-title">Send Message to Teacher</h6>
+                  <form onsubmit="sendMessage(event)">
+                    <div class="mb-3">
+                      <label class="form-label">Select Teacher</label>
+                      <select class="form-select" id="teacher-select" required>
+                        <option value="">Choose teacher...</option>
+                      </select>
+                    </div>
+                    <div class="mb-3">
+                      <label class="form-label">Subject</label>
+                      <input type="text" class="form-control" id="message-subject" required>
+                    </div>
+                    <div class="mb-3">
+                      <label class="form-label">Message</label>
+                      <textarea class="form-control" id="message-body" rows="4" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">
+                      <i class="fas fa-paper-plane"></i> Send Message
+                    </button>
+                  </form>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-8">
+              <div class="card">
+                <div class="card-body">
+                  <h6 class="card-title">Message History</h6>
+                  <div id="message-history-list">
+                    <p class="text-muted">Loading message history...</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Bootstrap 5 JS Bundle -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+// Parent Portal JavaScript
+let parentData = null;
+let studentData = null;
+
+async function loadParentData(uid) {
+  try {
+    const db = window.firebaseDb;
+    const userDoc = await getDoc(doc(db, 'users', uid));
+    
+    if (!userDoc.exists()) {
+      alert('Parent data not found.');
+      return;
+    }
+    
+    parentData = userDoc.data();
+    // In a real system, load the student data associated with this parent
+    // For now, using sample data
+    updateDashboard();
+    
+  } catch (error) {
+    console.error('Error loading parent data:', error);
+    alert('Error loading parent data. Please try again.');
+  }
+}
+
+function updateDashboard() {
+  // Update header with sample data
+  document.getElementById('parent-student-name').textContent = 'John Doe';
+  document.getElementById('parent-student-grade').textContent = '10';
+  document.getElementById('parent-student-id').textContent = '12345';
+  
+  // Update stats
+  document.getElementById('parent-avg-grade').textContent = '75.5%';
+  document.getElementById('parent-attendance-rate').textContent = '92.3%';
+  document.getElementById('parent-pending-homework').textContent = '3';
+  document.getElementById('parent-fee-balance').textContent = 'R2,500';
+  
+  loadRecentUpdates();
+  loadUpcomingEvents();
+  loadGrades();
+  loadHomework();
+  loadFees();
+  loadSchedule();
+  loadAnnouncements();
+  loadMessageHistory();
+  loadTeachers();
+}
+
+function loadRecentUpdates() {
+  const updatesHtml = `
+    <div class="list-group">
+      <div class="list-group-item">
+        <div class="d-flex w-100 justify-content-between">
+          <h6 class="mb-1"><i class="fas fa-star text-warning"></i> New Grade Posted</h6>
+          <small>Today</small>
+        </div>
+        <p class="mb-1">Mathematics: Test 3 - 85%</p>
+      </div>
+      <div class="list-group-item">
+        <div class="d-flex w-100 justify-content-between">
+          <h6 class="mb-1"><i class="fas fa-clipboard text-info"></i> New Homework Assigned</h6>
+          <small>Yesterday</small>
+        </div>
+        <p class="mb-1">English: Essay on Shakespeare - Due Feb 18</p>
+      </div>
+      <div class="list-group-item">
+        <div class="d-flex w-100 justify-content-between">
+          <h6 class="mb-1"><i class="fas fa-bullhorn text-primary"></i> School Announcement</h6>
+          <small>2 days ago</small>
+        </div>
+        <p class="mb-1">Exam schedule released for Term 1</p>
+      </div>
+    </div>
+  `;
+  document.getElementById('recent-updates-list').innerHTML = updatesHtml;
+}
+
+function loadUpcomingEvents() {
+  const eventsHtml = `
+    <div class="list-group">
+      <div class="list-group-item">
+        <div class="d-flex w-100 justify-content-between">
+          <h6 class="mb-1"><span class="badge bg-danger me-2">Urgent</span> Mathematics Test</h6>
+          <small class="text-danger">In 2 days</small>
+        </div>
+        <p class="mb-1">Chapter 5-6 • 08:00 AM, Room 201</p>
+      </div>
+      <div class="list-group-item">
+        <div class="d-flex w-100 justify-content-between">
+          <h6 class="mb-1"><span class="badge bg-info me-2">Event</span> Parent-Teacher Meeting</h6>
+          <small>Next Monday</small>
+        </div>
+        <p class="mb-1">Individual consultation • 3:00 PM</p>
+      </div>
+      <div class="list-group-item">
+        <div class="d-flex w-100 justify-content-between">
+          <h6 class="mb-1"><span class="badge bg-success me-2">Event</span> Science Fair</h6>
+          <small>Feb 25</small>
+        </div>
+        <p class="mb-1">Annual school science fair • School Hall</p>
+      </div>
+    </div>
+  `;
+  document.getElementById('upcoming-events-list').innerHTML = eventsHtml;
+}
+
+function loadGrades() {
+  const gradesHtml = `
+    <tr>
+      <td>Mathematics</td>
+      <td>78%</td>
+      <td>82%</td>
+      <td>-</td>
+      <td><strong>80%</strong></td>
+      <td>Good progress, keep it up!</td>
+    </tr>
+    <tr>
+      <td>English</td>
+      <td>85%</td>
+      <td>88%</td>
+      <td>-</td>
+      <td><strong>86.5%</strong></td>
+      <td>Excellent writing skills</td>
+    </tr>
+    <tr>
+      <td>Science</td>
+      <td>72%</td>
+      <td>75%</td>
+      <td>-</td>
+      <td><strong>73.5%</strong></td>
+      <td>Needs more practice in lab work</td>
+    </tr>
+    <tr>
+      <td>History</td>
+      <td>68%</td>
+      <td>70%</td>
+      <td>-</td>
+      <td><strong>69%</strong></td>
+      <td>Improving steadily</td>
+    </tr>
+  `;
+  document.getElementById('grades-table').querySelector('tbody').innerHTML = gradesHtml;
+}
+
+function loadHomework() {
+  const homeworkHtml = `
+    <div class="table-responsive">
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th>Subject</th>
+            <th>Assignment</th>
+            <th>Due Date</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Mathematics</td>
+            <td>Chapter 5 Exercises</td>
+            <td>2026-02-15</td>
+            <td><span class="badge bg-warning">Pending</span></td>
+          </tr>
+          <tr>
+            <td>English</td>
+            <td>Essay: Shakespeare Analysis</td>
+            <td>2026-02-18</td>
+            <td><span class="badge bg-warning">Pending</span></td>
+          </tr>
+          <tr>
+            <td>Science</td>
+            <td>Lab Report - Experiment 3</td>
+            <td>2026-02-12</td>
+            <td><span class="badge bg-success">Submitted</span></td>
+          </tr>
+          <tr>
+            <td>History</td>
+            <td>Research Project</td>
+            <td>2026-02-10</td>
+            <td><span class="badge bg-danger">Overdue</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  `;
+  document.getElementById('homework-list').innerHTML = homeworkHtml;
+}
+
+function loadFees() {
+  document.getElementById('total-fees').textContent = 'R10,000';
+  document.getElementById('paid-fees').textContent = 'R7,500';
+  document.getElementById('balance-fees').textContent = 'R2,500';
+  
+  const paymentHistoryHtml = `
+    <tr>
+      <td>2026-01-15</td>
+      <td>School Fees - Term 1</td>
+      <td>R5,000</td>
+      <td>Bank Transfer</td>
+      <td><button class="btn btn-sm btn-primary">View</button></td>
+    </tr>
+    <tr>
+      <td>2025-12-10</td>
+      <td>School Fees - Term 4</td>
+      <td>R2,500</td>
+      <td>Cash</td>
+      <td><button class="btn btn-sm btn-primary">View</button></td>
+    </tr>
+  `;
+  document.getElementById('payment-history-table').querySelector('tbody').innerHTML = paymentHistoryHtml;
+}
+
+function loadSchedule() {
+  const scheduleHtml = `
+    <tr>
+      <td>08:00 - 09:00</td>
+      <td>Mathematics<br><small class="text-muted">Ms. Johnson</small></td>
+      <td>English<br><small class="text-muted">Mr. Smith</small></td>
+      <td>Science<br><small class="text-muted">Dr. Brown</small></td>
+      <td>History<br><small class="text-muted">Mrs. Davis</small></td>
+      <td>Mathematics<br><small class="text-muted">Ms. Johnson</small></td>
+    </tr>
+    <tr>
+      <td>09:00 - 10:00</td>
+      <td>English<br><small class="text-muted">Mr. Smith</small></td>
+      <td>Science<br><small class="text-muted">Dr. Brown</small></td>
+      <td>Mathematics<br><small class="text-muted">Ms. Johnson</small></td>
+      <td>Physical Ed<br><small class="text-muted">Coach Wilson</small></td>
+      <td>English<br><small class="text-muted">Mr. Smith</small></td>
+    </tr>
+    <tr>
+      <td>10:00 - 10:30</td>
+      <td colspan="5" class="text-center bg-light">Break</td>
+    </tr>
+    <tr>
+      <td>10:30 - 11:30</td>
+      <td>Science<br><small class="text-muted">Dr. Brown</small></td>
+      <td>History<br><small class="text-muted">Mrs. Davis</small></td>
+      <td>English<br><small class="text-muted">Mr. Smith</small></td>
+      <td>Mathematics<br><small class="text-muted">Ms. Johnson</small></td>
+      <td>Science<br><small class="text-muted">Dr. Brown</small></td>
+    </tr>
+  `;
+  document.getElementById('schedule-table').querySelector('tbody').innerHTML = scheduleHtml;
+}
+
+function loadAnnouncements() {
+  const announcementsHtml = `
+    <div class="list-group">
+      <div class="list-group-item">
+        <div class="d-flex w-100 justify-content-between">
+          <h6 class="mb-1"><span class="badge bg-danger me-2">Urgent</span> Exam Schedule Released</h6>
+          <small>Today</small>
+        </div>
+        <p class="mb-1">The final examination schedule for Term 1 has been published. Please check with your child's class teacher.</p>
+      </div>
+      <div class="list-group-item">
+        <div class="d-flex w-100 justify-content-between">
+          <h6 class="mb-1"><span class="badge bg-info me-2">General</span> Library Hours Extended</h6>
+          <small>2 days ago</small>
+        </div>
+        <p class="mb-1">The school library will now be open until 6:00 PM on weekdays to support exam preparation.</p>
+      </div>
+      <div class="list-group-item">
+        <div class="d-flex w-100 justify-content-between">
+          <h6 class="mb-1"><span class="badge bg-success me-2">Events</span> Parent-Teacher Meeting</h6>
+          <small>5 days ago</small>
+        </div>
+        <p class="mb-1">Individual parent-teacher consultations scheduled for next Monday. Please RSVP by Friday.</p>
+      </div>
+    </div>
+  `;
+  document.getElementById('announcements-list').innerHTML = announcementsHtml;
+}
+
+function loadTeachers() {
+  const teachersHtml = `
+    <option value="1">Ms. Johnson (Mathematics)</option>
+    <option value="2">Mr. Smith (English)</option>
+    <option value="3">Dr. Brown (Science)</option>
+    <option value="4">Mrs. Davis (History)</option>
+  `;
+  document.getElementById('teacher-select').innerHTML = '<option value="">Choose teacher...</option>' + teachersHtml;
+}
+
+function loadMessageHistory() {
+  const messagesHtml = `
+    <div class="list-group">
+      <div class="list-group-item">
+        <div class="d-flex w-100 justify-content-between">
+          <h6 class="mb-1">To: Ms. Johnson (Mathematics)</h6>
+          <small>Yesterday</small>
+        </div>
+        <p class="mb-1"><strong>Subject:</strong> Question about homework</p>
+        <p class="mb-1 text-muted">Could you please clarify the instructions for...</p>
+        <small class="text-success"><i class="fas fa-check"></i> Replied</small>
+      </div>
+      <div class="list-group-item">
+        <div class="d-flex w-100 justify-content-between">
+          <h6 class="mb-1">To: Mr. Smith (English)</h6>
+          <small>3 days ago</small>
+        </div>
+        <p class="mb-1"><strong>Subject:</strong> Absence notification</p>
+        <p class="mb-1 text-muted">My child was unable to attend class due to...</p>
+        <small class="text-success"><i class="fas fa-check"></i> Acknowledged</small>
+      </div>
+    </div>
+  `;
+  document.getElementById('message-history-list').innerHTML = messagesHtml;
+}
+
+function loadAttendanceHistory() {
+  const from = document.getElementById('attendance-from').value;
+  const to = document.getElementById('attendance-to').value;
+  
+  if (!from || !to) {
+    alert('Please select both from and to dates');
+    return;
+  }
+  
+  const attendanceHtml = `
+    <tr>
+      <td>2026-02-11</td>
+      <td>Tuesday</td>
+      <td><span class="badge bg-success">Present</span></td>
+      <td>-</td>
+    </tr>
+    <tr>
+      <td>2026-02-10</td>
+      <td>Monday</td>
+      <td><span class="badge bg-success">Present</span></td>
+      <td>-</td>
+    </tr>
+    <tr>
+      <td>2026-02-09</td>
+      <td>Sunday</td>
+      <td><span class="badge bg-secondary">Weekend</span></td>
+      <td>-</td>
+    </tr>
+    <tr>
+      <td>2026-02-08</td>
+      <td>Saturday</td>
+      <td><span class="badge bg-secondary">Weekend</span></td>
+      <td>-</td>
+    </tr>
+    <tr>
+      <td>2026-02-07</td>
+      <td>Friday</td>
+      <td><span class="badge bg-warning">Late</span></td>
+      <td>Arrived 15 minutes late</td>
+    </tr>
+  `;
+  document.getElementById('attendance-table').querySelector('tbody').innerHTML = attendanceHtml;
+}
+
+function filterHomework() {
+  const filter = document.getElementById('homework-filter').value;
+  console.log('Filtering homework by:', filter);
+  loadHomework();
+}
+
+function downloadReportCard() {
+  alert('Downloading report card... (This is a demo)');
+}
+
+function makePayment() {
+  alert('Redirecting to payment gateway... (This is a demo)');
+}
+
+function sendMessage(event) {
+  event.preventDefault();
+  alert('Message sent successfully! (This is a demo)');
+  document.getElementById('message-subject').value = '';
+  document.getElementById('message-body').value = '';
+}
+
+// Set default dates for attendance
+document.addEventListener('DOMContentLoaded', function() {
+  const today = new Date();
+  const lastWeek = new Date(today);
+  lastWeek.setDate(lastWeek.getDate() - 7);
+  
+  document.getElementById('attendance-to').value = today.toISOString().split('T')[0];
+  document.getElementById('attendance-from').value = lastWeek.toISOString().split('T')[0];
+});
+</script>
+
+</body>
+</html>
