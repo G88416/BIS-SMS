@@ -6,7 +6,7 @@ Firebase Realtime Database security rules have been successfully created for the
 
 ## Files Created
 
-1. **database.rules** - Security rules for Firebase Realtime Database
+1. **database.rules.json** - Security rules for Firebase Realtime Database
 2. **FIREBASE_RTDB_RULES.md** - Comprehensive documentation
 3. **firebase.json** - Updated with database configuration
 

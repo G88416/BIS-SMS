@@ -268,7 +268,7 @@ To verify the fixes work correctly:
 
 - `admin.html` - Main application file with all functions
 - `firestore.rules` - Security rules (already fixed in previous update)
-- `database.rules` - Realtime Database rules (already fixed)
+- `database.rules.json` - Realtime Database rules (already fixed)
 
 ## Security Notes
 
