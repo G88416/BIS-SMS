@@ -4301,8 +4301,15 @@
     
     // Constants for magic numbers
     const TYPING_INDICATOR_TIMEOUT_MS = 5000;
+    const TYPING_CLEAR_DELAY_MS = 3000;
     const SEND_SOUND_FREQUENCY = 800;
     const RECEIVE_SOUND_FREQUENCY = 600;
+    const MESSAGE_HIGHLIGHT_DURATION_MS = 2000;
+    const MENU_CLOSE_DELAY_MS = 100;
+    const SCROLL_ANIMATION_DELAY_MS = 100;
+    const SCROLL_BOTTOM_THRESHOLD_PX = 50;
+    const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+    const MILLISECONDS_PER_SECOND = 1000;
     
     // Initialize Choptso Chat
     function initChoptso() {
@@ -4658,9 +4665,9 @@
             timestamp: window.firebaseTimestamp.now()
           }, { merge: true });
           
-          // Clear after 3 seconds
+          // Clear after TYPING_CLEAR_DELAY_MS
           if (typingTimeout) clearTimeout(typingTimeout);
-          typingTimeout = setTimeout(() => updateTypingStatus(false), 3000);
+          typingTimeout = setTimeout(() => updateTypingStatus(false), TYPING_CLEAR_DELAY_MS);
         } else {
           await window.firebaseSetDoc(typingRef, {
             userId: currentUser.uid,
@@ -4686,7 +4693,7 @@
           if (status.status === 'online') {
             titleElement.innerHTML = `${currentTitle} <span id="choptso-typing-indicator"></span><br><small class="text-success">online</small>`;
           } else if (status.lastSeen) {
-            const lastSeenDate = new Date(status.lastSeen.seconds * 1000);
+            const lastSeenDate = new Date(status.lastSeen.seconds * MILLISECONDS_PER_SECOND);
             const lastSeenText = formatWhatsAppTimestamp({ seconds: status.lastSeen.seconds });
             titleElement.innerHTML = `${currentTitle} <span id="choptso-typing-indicator"></span><br><small class="text-muted">last seen ${lastSeenText}</small>`;
           }
@@ -4763,7 +4770,7 @@
         let isFirstLoad = true;
         choptsoUnsubscribe = window.firebaseOnSnapshot(messagesQuery, (snapshot) => {
           const previousScrollHeight = messagesContainer.scrollHeight;
-          const isScrolledToBottom = messagesContainer.scrollHeight - messagesContainer.scrollTop <= messagesContainer.clientHeight + 50;
+          const isScrolledToBottom = messagesContainer.scrollHeight - messagesContainer.scrollTop <= messagesContainer.clientHeight + SCROLL_BOTTOM_THRESHOLD_PX;
           
           messagesContainer.innerHTML = '';
           
@@ -4797,7 +4804,7 @@
                 top: messagesContainer.scrollHeight,
                 behavior: isFirstLoad ? 'auto' : 'smooth'
               });
-            }, 100);
+            }, SCROLL_ANIMATION_DELAY_MS);
             isFirstLoad = false;
           }
           
@@ -4822,7 +4829,7 @@
     function formatWhatsAppTimestamp(timestamp) {
       if (!timestamp) return '';
       
-      const messageDate = timestamp.seconds ? new Date(timestamp.seconds * 1000) : new Date(timestamp);
+      const messageDate = timestamp.seconds ? new Date(timestamp.seconds * MILLISECONDS_PER_SECOND) : new Date(timestamp);
       const now = new Date();
       const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
       const yesterday = new Date(today);
@@ -4835,7 +4842,7 @@
         return timeString; // Just show time for today
       } else if (messageDay.getTime() === yesterday.getTime()) {
         return `Yesterday ${timeString}`;
-      } else if (now - messageDate < 7 * 24 * 60 * 60 * 1000) {
+      } else if (now - messageDate < ONE_WEEK_MS) {
         return `${messageDate.toLocaleDateString('en-US', { weekday: 'short' })} ${timeString}`;
       } else {
         return `${messageDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} ${timeString}`;
@@ -4974,7 +4981,7 @@
       if (messageElement) {
         messageElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
         messageElement.classList.add('choptso-message-highlight');
-        setTimeout(() => messageElement.classList.remove('choptso-message-highlight'), 2000);
+        setTimeout(() => messageElement.classList.remove('choptso-message-highlight'), MESSAGE_HIGHLIGHT_DURATION_MS);
       }
     }
     
@@ -5043,7 +5050,7 @@
           menu.remove();
           document.removeEventListener('click', closeMenu);
         });
-      }, 100);
+      }, MENU_CLOSE_DELAY_MS);
     }
     
     // Reply to message - improved to get data from Firestore
