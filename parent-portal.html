@@ -51,7 +51,9 @@
         
         // Verify user is a parent
         const userDoc = await getDoc(doc(db, 'users', user.uid));
-        if (!userDoc.exists() || userDoc.data().role !== 'parent') {
+        const userData = userDoc.data();
+        const userRole = userData?.role || userData?.userType;
+        if (!userDoc.exists() || userRole !== 'parent') {
           alert('Access denied. This portal is for parents only.');
           await signOut(auth);
           window.location.href = 'index.html';

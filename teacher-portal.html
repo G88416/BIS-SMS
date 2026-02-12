@@ -55,7 +55,9 @@
         
         // Verify user is a teacher
         const userDoc = await getDoc(doc(db, 'users', user.uid));
-        if (!userDoc.exists() || userDoc.data().role !== 'teacher') {
+        const userData = userDoc.data();
+        const userRole = userData?.role || userData?.userType;
+        if (!userDoc.exists() || userRole !== 'teacher') {
           alert('Access denied. This portal is for teachers only.');
           await signOut(auth);
           window.location.href = 'index.html';
