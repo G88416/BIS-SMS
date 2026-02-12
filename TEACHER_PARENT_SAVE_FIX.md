@@ -51,7 +51,7 @@ match /teachers/{teacherId} {
 }
 ```
 
-#### 2. database.rules (lines 21-26)
+#### 2. database.rules.json (lines 21-26)
 
 **Before:**
 ```json
@@ -106,5 +106,5 @@ For parents:
 ## Related Files
 
 - `firestore.rules` - Firestore security rules
-- `database.rules` - Realtime Database security rules
+- `database.rules.json` - Realtime Database security rules
 - `admin.html` - Contains `addTeacher()` function (line 6005)
