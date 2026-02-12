@@ -46,13 +46,22 @@ if (!fs.existsSync(rulesPath)) {
 }
 
 const rulesContent = fs.readFileSync(rulesPath, 'utf8');
-const hasUserCreateFix = rulesContent.includes('isOwner(userId)') && 
-                         rulesContent.includes('!exists(/databases/$(database)/documents/users/$(userId))');
+
+// Check for the key security patterns with flexible matching
+const hasOwnerCheck = /isOwner\s*\(\s*userId\s*\)/.test(rulesContent);
+const hasExistsCheck = rulesContent.includes('!exists') && /\/users\/\$\(userId\)/.test(rulesContent);
+const hasUserCreateFix = hasOwnerCheck && hasExistsCheck;
 
 if (hasUserCreateFix) {
   console.log('✅ Local rules file contains user self-creation fix');
 } else {
   console.log('❌ Local rules file MISSING user self-creation fix');
+  if (!hasOwnerCheck) {
+    console.log('   Missing: isOwner(userId) check');
+  }
+  if (!hasExistsCheck) {
+    console.log('   Missing: !exists(...) check for users collection');
+  }
 }
 
 // Calculate rules file hash for comparison

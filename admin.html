@@ -206,7 +206,20 @@
       });
     };
     
-    // Check for Firebase deployment issues and show warning banner if needed
+    /**
+     * Check Firebase deployment status and show warning banner if needed
+     * 
+     * This function is called on page load to determine if the deployment warning
+     * banner should be displayed to the admin user.
+     * 
+     * Display conditions:
+     * - Shows if sessionStorage indicates a recent permission error occurred
+     * - Shows once on first admin login (can be permanently dismissed)
+     * 
+     * Storage keys used:
+     * - sessionStorage.firebasePermissionError: Set to 'true' when permission denied
+     * - localStorage.fbDeployWarningSeen: Set to 'true' when user dismisses banner
+     */
     window.checkFirebaseDeployment = function() {
       // Check if there have been recent permission errors stored in session
       const recentPermissionError = sessionStorage.getItem('firebasePermissionError');
@@ -218,7 +231,7 @@
       }
       
       // Also show banner once when admin first logs in (can be dismissed)
-      const hasSeenWarning = localStorage.getItem('firebase-deployment-warning-seen');
+      const hasSeenWarning = localStorage.getItem('fbDeployWarningSeen');
       if (!hasSeenWarning && warningBanner) {
         // Show banner on first login
         warningBanner.style.display = 'block';
@@ -226,13 +239,18 @@
         const closeButton = warningBanner.querySelector('.btn-close');
         if (closeButton) {
           closeButton.addEventListener('click', () => {
-            localStorage.setItem('firebase-deployment-warning-seen', 'true');
+            localStorage.setItem('fbDeployWarningSeen', 'true');
           });
         }
       }
     };
     
-    // Mark when there's a permission error
+    /**
+     * Mark that a permission error has occurred
+     * 
+     * Called when a permission-denied error is encountered during user creation.
+     * Sets a flag in sessionStorage and immediately shows the warning banner.
+     */
     window.markPermissionError = function() {
       sessionStorage.setItem('firebasePermissionError', 'true');
       const warningBanner = document.getElementById('firebase-deployment-warning');
@@ -373,6 +391,12 @@
       }
     }
     
+    /* Deployment warning banner */
+    .deployment-warning {
+      display: none;
+      margin: 1rem;
+    }
+    
     .grade-input {
       width: 80px;
     }
@@ -430,7 +454,7 @@
   <!-- Main Content -->
   <div class="main-content">
     <!-- Firebase Deployment Warning Banner -->
-    <div id="firebase-deployment-warning" class="alert alert-warning alert-dismissible fade show" role="alert" style="display: none; margin: 1rem;">
+    <div id="firebase-deployment-warning" class="alert alert-warning alert-dismissible fade show deployment-warning" role="alert">
       <div class="d-flex align-items-start">
         <i class="fas fa-exclamation-triangle me-3 mt-1"></i>
         <div class="flex-grow-1">
