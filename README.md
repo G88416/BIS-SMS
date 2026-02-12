@@ -2,6 +2,25 @@
 
 A comprehensive web-based School Management System for managing students, teachers, classes, attendance, grades, and finances.
 
+## 🚨 IMPORTANT: Firebase Deployment Required
+
+**If you're getting "Missing or insufficient permissions" errors when creating users, you need to deploy the Firebase security rules:**
+
+```bash
+# Quick fix (30 seconds)
+firebase deploy --only firestore:rules
+```
+
+**OR use the automated script:**
+```bash
+./deploy-firebase-rules.sh --verify
+```
+
+📖 **See:** [QUICK_DEPLOYMENT_REFERENCE.md](QUICK_DEPLOYMENT_REFERENCE.md) for one-page reference  
+📖 **See:** [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) for complete deployment instructions
+
+---
+
 ## Features
 
 - **Multi-User Portal System** ✨ NEW: Dedicated Portal Pages
