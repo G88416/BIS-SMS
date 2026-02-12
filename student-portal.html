@@ -51,9 +51,15 @@
         
         // Verify user is a student
         const userDoc = await getDoc(doc(db, 'users', user.uid));
+        if (!userDoc.exists()) {
+          alert('Access denied. This portal is for students only.');
+          await signOut(auth);
+          window.location.href = 'index.html';
+          return;
+        }
         const userData = userDoc.data();
         const userRole = userData?.role || userData?.userType;
-        if (!userDoc.exists() || userRole !== 'student') {
+        if (userRole !== 'student') {
           alert('Access denied. This portal is for students only.');
           await signOut(auth);
           window.location.href = 'index.html';
