@@ -60,7 +60,7 @@ jobs:
         uses: actions/github-script@v6
         with:
           script: |
-            const output = \`### ✅ Firebase Rules Validation Passed
+            const output = `### ✅ Firebase Rules Validation Passed
             
             All Firebase security rules have been validated successfully!
             
@@ -73,17 +73,17 @@ jobs:
             
             **Next steps:**
             To deploy these rules to Firebase, run:
-            \\\`\\\`\\\`bash
+            \`\`\`bash
             firebase deploy --only firestore:rules
-            \\\`\\\`\\\`
+            \`\`\`
             
             Or use the automated script:
-            \\\`\\\`\\\`bash
+            \`\`\`bash
             ./deploy-firebase-rules.sh --verify
-            \\\`\\\`\\\`
+            \`\`\`
             
             📚 See [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) for more information.
-            \`;
+            `;
             
             github.rest.issues.createComment({
               issue_number: context.issue.number,
@@ -135,7 +135,7 @@ jobs:
           fi
           
           # Verify the rule includes existence check
-          if grep -q '!exists(/databases/\$(database)/documents/users/\$(userId))' firestore.rules; then
+          if grep -q '!exists(/databases/$(database)/documents/users/$(userId))' firestore.rules; then
             echo "✅ Existence check present"
           else
             echo "❌ ERROR: Missing existence check"
@@ -165,17 +165,17 @@ jobs:
           )
           
           MISSING=0
-          for doc in "\${DOCS[@]}"; do
-            if [ -f "\$doc" ]; then
-              echo "✅ \$doc found"
+          for doc in "${DOCS[@]}"; do
+            if [ -f "$doc" ]; then
+              echo "✅ $doc found"
             else
-              echo "❌ \$doc missing"
-              MISSING=\$((MISSING + 1))
+              echo "❌ $doc missing"
+              MISSING=$((MISSING + 1))
             fi
           done
           
-          if [ \$MISSING -gt 0 ]; then
-            echo "❌ \$MISSING documentation files missing"
+          if [ $MISSING -gt 0 ]; then
+            echo "❌ $MISSING documentation files missing"
             exit 1
           fi
           
