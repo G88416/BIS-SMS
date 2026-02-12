@@ -16,6 +16,13 @@ firebase deploy --only firestore:rules
 ./deploy-firebase-rules.sh --verify
 ```
 
+**Check deployment status:**
+```bash
+npm run check-deployment
+# or
+node check-firebase-deployment.js
+```
+
 📖 **See:** [QUICK_DEPLOYMENT_REFERENCE.md](QUICK_DEPLOYMENT_REFERENCE.md) for one-page reference  
 📖 **See:** [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) for complete deployment instructions
 
