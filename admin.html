@@ -10470,7 +10470,15 @@
       
       // Store current admin user for reference
       const currentAdminUser = window.firebaseAuth.currentUser;
-      console.log('Admin creating user:', currentAdminUser?.email);
+      
+      // Verify admin is authenticated before proceeding
+      if (!currentAdminUser) {
+        alert('Error: You must be logged in as an admin to create users.\n\nPlease refresh the page and log in again.');
+        return;
+      }
+      
+      console.log('Admin creating user:', currentAdminUser.email);
+      console.log('Admin UID:', currentAdminUser.uid);
       
       // Create user in Firebase Authentication using secondary auth
       // This prevents the new user from being automatically signed in to the main app
@@ -10548,6 +10556,15 @@
           // This ensures they don't interfere with the admin session
           return window.firebaseSecondaryAuth.signOut().then(() => {
             console.log('New user signed out from secondary auth');
+            
+            // Verify admin is still authenticated on primary auth before creating profile
+            const stillAuthenticated = window.firebaseAuth.currentUser;
+            if (!stillAuthenticated) {
+              throw new Error('Admin session lost during user creation. Please try again.');
+            }
+            console.log('Admin still authenticated:', stillAuthenticated.email);
+            console.log('Creating Firestore profile for new user:', user.uid);
+            
             // Now create the profile document while admin is still signed in to main auth
             return window.firebaseSetDoc(window.firebaseDoc(window.firebaseDb, 'users', user.uid), userProfileData);
           });
@@ -10571,6 +10588,12 @@
         })
         .catch((error) => {
           console.error('Error creating user:', error);
+          console.error('Error details:', {
+            code: error.code,
+            message: error.message,
+            stack: error.stack
+          });
+          
           let errorMessage = 'Failed to create user. ';
           
           if (error.code === 'auth/email-already-in-use') {
@@ -10579,7 +10602,7 @@
             errorMessage += 'Invalid email format.';
           } else if (error.code === 'auth/weak-password') {
             errorMessage += 'Password is too weak.';
-          } else if (error.code === 'permission-denied' || error.message.includes('insufficient permissions')) {
+          } else if (error.code === 'permission-denied' || error.message.includes('insufficient permissions') || error.message.includes('Missing or insufficient permissions')) {
             errorMessage += 'Missing or insufficient permissions.\n\n';
             errorMessage += '⚠️ SOLUTION: Firebase security rules need to be deployed.\n\n';
             errorMessage += 'Run this command in your terminal:\n';
@@ -10590,6 +10613,10 @@
             if (typeof window.markPermissionError === 'function') {
               window.markPermissionError();
             }
+          } else if (error.message.includes('Admin session lost')) {
+            errorMessage += error.message + '\n\n';
+            errorMessage += 'This can happen if you\'ve been idle for too long.\n';
+            errorMessage += 'Please refresh the page and log in again.';
           } else {
             errorMessage += error.message;
           }
@@ -10667,6 +10694,50 @@
         </tr>`;
       }
     }
+    
+    // Utility function to manually create a missing profile for an existing user
+    // This can be used to fix users who were created in Auth but have no Firestore profile
+    async function createMissingUserProfile(userId, userEmail, userRole, additionalData = {}) {
+      try {
+        // Verify admin is authenticated
+        const currentAdmin = window.firebaseAuth.currentUser;
+        if (!currentAdmin) {
+          alert('Error: You must be logged in as an admin to perform this action.');
+          return false;
+        }
+        
+        console.log('Creating missing profile for user:', userId, userEmail, userRole);
+        
+        // Check if profile already exists
+        const existingDoc = await window.firebaseGetDoc(window.firebaseDoc(window.firebaseDb, 'users', userId));
+        if (existingDoc.exists()) {
+          console.log('Profile already exists for user:', userId);
+          return true; // Profile already exists, nothing to do
+        }
+        
+        // Create the profile
+        const userProfileData = {
+          email: userEmail,
+          role: userRole.toLowerCase(),
+          userType: userRole.toLowerCase(),
+          userId: userId,
+          name: additionalData.name || userEmail.split('@')[0],
+          createdAt: window.firebaseServerTimestamp(),
+          ...additionalData
+        };
+        
+        await window.firebaseSetDoc(window.firebaseDoc(window.firebaseDb, 'users', userId), userProfileData);
+        console.log('Profile created successfully for user:', userId);
+        return true;
+      } catch (error) {
+        console.error('Error creating missing profile:', error);
+        alert('Failed to create profile: ' + error.message);
+        return false;
+      }
+    }
+    
+    // Make the function available globally for debugging/manual fixes
+    window.createMissingUserProfile = createMissingUserProfile;
     
     // Logout function
     function logout() {

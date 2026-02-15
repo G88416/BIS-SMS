@@ -11,7 +11,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
     import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-analytics.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-    import { getFirestore, doc, getDoc, collection, query, where, getDocs, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, setDoc, collection, query, where, getDocs, orderBy, limit, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
     
     // Your web app's Firebase configuration
     const firebaseConfig = {
@@ -53,6 +53,33 @@
         const userDoc = await getDoc(doc(db, 'users', user.uid));
         if (!userDoc.exists()) {
           console.error('User document does not exist in Firestore for UID:', user.uid);
+          
+          // Attempt to auto-create a basic profile based on sessionStorage data
+          const sessionUserType = sessionStorage.getItem('userType');
+          if (sessionUserType === 'parent') {
+            console.log('Attempting to auto-create missing parent profile...');
+            try {
+              const basicProfile = {
+                email: user.email,
+                role: 'parent',
+                userType: 'parent',
+                userId: sessionStorage.getItem('userId') || user.uid,
+                name: user.email.split('@')[0],
+                createdAt: serverTimestamp(),
+                autoCreated: true // Flag to indicate this was auto-created
+              };
+              
+              await setDoc(doc(db, 'users', user.uid), basicProfile);
+              console.log('Basic profile created successfully. Reloading page...');
+              // Reload the page to retry authentication with the new profile
+              window.location.reload();
+              return;
+            } catch (error) {
+              console.error('Failed to auto-create profile:', error);
+              // Fall through to show error message
+            }
+          }
+          
           alert('Access denied. This portal is for parents only.\n\nYour user account exists but has no profile data. Please contact an administrator.');
           await signOut(auth);
           window.location.href = 'index.html';
