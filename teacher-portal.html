@@ -56,15 +56,32 @@
         // Verify user is a teacher
         const userDoc = await getDoc(doc(db, 'users', user.uid));
         if (!userDoc.exists()) {
-          alert('Access denied. This portal is for teachers only.');
+          console.error('User document does not exist in Firestore for UID:', user.uid);
+          alert('Access denied. This portal is for teachers only.\n\nYour user account exists but has no profile data. Please contact an administrator.');
           await signOut(auth);
           window.location.href = 'index.html';
           return;
         }
         const userData = userDoc.data();
-        const userRole = userData.role || userData.userType;
+        const userRole = (userData.role || userData.userType || '').toString().toLowerCase().trim();
+        
+        // Debug logging (only in development)
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+          console.log('Teacher portal auth check:', {
+            uid: user.uid,
+            email: user.email,
+            rawRole: userData.role,
+            rawUserType: userData.userType,
+            normalizedRole: userRole,
+            userData: userData
+          });
+        }
+        
         if (userRole !== 'teacher') {
-          alert('Access denied. This portal is for teachers only.');
+          console.error('Role mismatch. Expected: teacher, Got:', userRole);
+          // Only show the normalized role value to avoid displaying unsanitized data
+          const displayRole = userRole || 'undefined';
+          alert(`Access denied. This portal is for teachers only.\n\nYour account role is: ${displayRole}\n\nPlease contact an administrator.`);
           await signOut(auth);
           window.location.href = 'index.html';
           return;
