@@ -75,7 +75,9 @@
         
         if (userRole !== 'student') {
           console.error('Role mismatch. Expected: student, Got:', userRole);
-          alert(`Access denied. This portal is for students only.\n\nYour account role is: ${userData.role || userData.userType || 'undefined'}\n\nPlease contact an administrator.`);
+          // Only show the normalized role value to avoid displaying unsanitized data
+          const displayRole = userRole || 'undefined';
+          alert(`Access denied. This portal is for students only.\n\nYour account role is: ${displayRole}\n\nPlease contact an administrator.`);
           await signOut(auth);
           window.location.href = 'index.html';
           return;

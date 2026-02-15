@@ -75,7 +75,9 @@
         
         if (userRole !== 'parent') {
           console.error('Role mismatch. Expected: parent, Got:', userRole);
-          alert(`Access denied. This portal is for parents only.\n\nYour account role is: ${userData.role || userData.userType || 'undefined'}\n\nPlease contact an administrator.`);
+          // Only show the normalized role value to avoid displaying unsanitized data
+          const displayRole = userRole || 'undefined';
+          alert(`Access denied. This portal is for parents only.\n\nYour account role is: ${displayRole}\n\nPlease contact an administrator.`);
           await signOut(auth);
           window.location.href = 'index.html';
           return;
