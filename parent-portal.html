@@ -52,15 +52,30 @@
         // Verify user is a parent
         const userDoc = await getDoc(doc(db, 'users', user.uid));
         if (!userDoc.exists()) {
-          alert('Access denied. This portal is for parents only.');
+          console.error('User document does not exist in Firestore for UID:', user.uid);
+          alert('Access denied. This portal is for parents only.\n\nYour user account exists but has no profile data. Please contact an administrator.');
           await signOut(auth);
           window.location.href = 'index.html';
           return;
         }
         const userData = userDoc.data();
-        const userRole = userData.role || userData.userType;
+        const userRole = (userData.role || userData.userType || '').toString().toLowerCase().trim();
+        
+        // Debug logging (only in development)
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+          console.log('Parent portal auth check:', {
+            uid: user.uid,
+            email: user.email,
+            rawRole: userData.role,
+            rawUserType: userData.userType,
+            normalizedRole: userRole,
+            userData: userData
+          });
+        }
+        
         if (userRole !== 'parent') {
-          alert('Access denied. This portal is for parents only.');
+          console.error('Role mismatch. Expected: parent, Got:', userRole);
+          alert(`Access denied. This portal is for parents only.\n\nYour account role is: ${userData.role || userData.userType || 'undefined'}\n\nPlease contact an administrator.`);
           await signOut(auth);
           window.location.href = 'index.html';
           return;
